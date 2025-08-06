@@ -1,47 +1,64 @@
 // src/components/dashboard/CsvUpload.tsx
-import React, { useContext } from "react";
+
+"use client";
+
+import React, { useState, useContext } from "react";
 import Papa from "papaparse";
 import { TradeContext } from "@/context/TradeContext";
+import { Trade } from "@/types/trade";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
+import { toast } from "sonner";
 
-const CsvUpload = () => {
-  const { setTrades } = useContext(TradeContext);
+const CsvUpload: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setTradesFromCsv } = useContext(TradeContext);
 
-  const handleCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    Papa.parse(file, {
+    Papa.parse<Trade>(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (result) => {
-        const formatted = result.data.map((row: any) => ({
-          symbol: row.Symbol || "",
-          direction: row.Direction || "",
-          openTime: row["Open Time"] || "",
-          closeTime: row["Close Time"] || "",
-          lotSize: parseFloat(row["Lot Size"]) || 0,
-          entryPrice: parseFloat(row["Entry Price"]) || 0,
-          exitPrice: parseFloat(row["Exit Price"]) || 0,
-          pnl: parseFloat(row["PNL ($)"]) || 0,
-          duration: row.Duration || "",
-          outcome: row.Outcome || "",
-          rr: row["Risk To Reward (RR)"] || "",
+      complete: function (results) {
+        const validTrades: Trade[] = results.data.map((row) => ({
+          ...row,
+          id: row.id || crypto.randomUUID(),
         }));
-        setTrades(formatted);
+        setTradesFromCsv(validTrades);
+        toast.success("CSV data uploaded successfully!");
+        setIsModalOpen(false);
+      },
+      error: function () {
+        toast.error("Failed to parse CSV. Please check the format.");
       },
     });
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-white/5 rounded-xl shadow-md w-full max-w-2xl mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-white">Upload Trade History CSV</h2>
-      <input
-        type="file"
-        accept=".csv"
-        onChange={handleCSV}
-        className="file:bg-white/10 file:border-none file:px-4 file:py-2 file:rounded-md file:text-white file:cursor-pointer text-sm text-white"
-      />
-    </div>
+    <>
+      <Button
+        variant="default"
+        onClick={() => setIsModalOpen(true)}
+        className="mt-4"
+      >
+        Upload CSV
+      </Button>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <div className="p-4">
+          <h2 className="text-lg font-semibold mb-4">Upload Trade CSV</h2>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            className="mb-4"
+          />
+          <Button onClick={() => setIsModalOpen(false)}>Close</Button>
+        </div>
+      </Modal>
+    </>
   );
 };
 

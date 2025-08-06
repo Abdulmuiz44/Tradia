@@ -1,28 +1,20 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+// app/dashboard/layout.tsx
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const session = await getServerSession(authOptions);
+import { ReactNode } from "react";
+import Footer from "@/components/Footer";  // Import Footer component
 
-  // ❌ Redirect unauthenticated users to the sign-in page
-  if (!session) {
-    redirect("/auth/signin");
-  }
-
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-[#0D1117] min-h-screen w-full">
-    <Navbar />  
-      <header className="mb-6">
-        <h1 className="text-1xl font-bold">Welcome, {session.user?.email}</h1>
-      </header>
-      <main>{children}</main>
-      <Footer />
-    </div>
-    
-  );
+    <div className="relative bg-[#0D1117] text-white min-h-screen w-full flex flex-col">
+      
+      {/* Top spacing */}
+      <div className="pt-1  px-1 flex-grow">
+        {children}
+      </div>
 
+      {/* Fixed Footer */}
+      <Footer />
+
+    </div>
+  );
 }

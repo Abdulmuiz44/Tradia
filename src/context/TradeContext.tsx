@@ -1,77 +1,130 @@
 // src/context/TradeContext.tsx
 
+"use client";
+
 import {
   createContext,
   useState,
-  ReactNode,
   useEffect,
+  ReactNode,
   useCallback,
+  useContext,
 } from "react";
 import { Trade } from "@/types/trade";
 
 interface TradeContextProps {
   trades: Trade[];
-  updateTrade: (updatedTrade: Trade) => void;
+  filteredTrades: Trade[];
   addTrade: (newTrade: Trade) => void;
+  updateTrade: (updatedTrade: Trade) => void;
   deleteTrade: (id: string) => void;
-  clearAllTrades: () => void;
+  setTradesFromCsv: (csvTrades: Trade[]) => void;
+  filterTrades: (fromDate: Date, toDate: Date) => void;
 }
 
 export const TradeContext = createContext<TradeContextProps>({
   trades: [],
-  updateTrade: () => {},
+  filteredTrades: [],
   addTrade: () => {},
+  updateTrade: () => {},
   deleteTrade: () => {},
-  clearAllTrades: () => {},
+  setTradesFromCsv: () => {},
+  filterTrades: () => {},
 });
 
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
 
-  // Load from localStorage on mount
+  // Load trades from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("tradia_trades");
+    const stored = localStorage.getItem("trade-history");
     if (stored) {
-      try {
-        setTrades(JSON.parse(stored));
-      } catch {
-        console.error("Could not parse trades from storage");
-      }
+      setTrades(JSON.parse(stored));
     }
   }, []);
 
-  // Persist on every change
+  // Save trades to localStorage when updated
   useEffect(() => {
-    localStorage.setItem("tradia_trades", JSON.stringify(trades));
+    localStorage.setItem("trade-history", JSON.stringify(trades));
   }, [trades]);
 
-  const updateTrade = useCallback((updated: Trade) => {
-    setTrades((prev) =>
-      prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
+  const isDuplicateId = useCallback(
+    (id: string) => trades.some((trade) => trade.id === id),
+    [trades]
+  );
+
+  const generateUniqueId = () => {
+    let newId = crypto.randomUUID();
+    while (isDuplicateId(newId)) {
+      newId = crypto.randomUUID();
+    }
+    return newId;
+  };
+
+  const addTrade = useCallback(
+    (newTrade: Trade) => {
+      const id =
+        newTrade.id && !isDuplicateId(newTrade.id)
+          ? newTrade.id
+          : generateUniqueId();
+      setTrades((prev) => [...prev, { ...newTrade, id }]);
+    },
+    [isDuplicateId]
+  );
+
+  const updateTrade = useCallback((updatedTrade: Trade) => {
+    setTrades((prevTrades) =>
+      prevTrades.map((trade) =>
+        trade.id === updatedTrade.id ? { ...trade, ...updatedTrade } : trade
+      )
     );
   }, []);
 
-  const addTrade = useCallback((newTrade: Trade) => {
-    setTrades((prev) => [
-      ...prev,
-      { ...newTrade, id: Date.now().toString() },
-    ]);
-  }, []);
-
   const deleteTrade = useCallback((id: string) => {
-    setTrades((prev) => prev.filter((t) => t.id !== id));
+    setTrades((prevTrades) => prevTrades.filter((trade) => trade.id !== id));
   }, []);
 
-  const clearAllTrades = useCallback(() => {
-    setTrades([]);
-    localStorage.removeItem("tradia_trades");
-  }, []);
+  const setTradesFromCsv = useCallback(
+    (csvTrades: Trade[]) => {
+      const tradesWithIds = csvTrades.map((trade) => {
+        let id = trade.id;
+        if (!id || isDuplicateId(id)) {
+          id = generateUniqueId();
+        }
+        return { ...trade, id };
+      });
+      setTrades((prev) => [...prev, ...tradesWithIds]);
+    },
+    [isDuplicateId]
+  );
+
+  const filterTrades = useCallback(
+    (fromDate: Date, toDate: Date) => {
+      const filtered = trades.filter((trade) => {
+        const tradeDate = new Date(trade.openTime);
+        return tradeDate >= fromDate && tradeDate <= toDate;
+      });
+      setFilteredTrades(filtered);
+    },
+    [trades]
+  );
 
   return (
     <TradeContext.Provider
-      value={{ trades, updateTrade, addTrade, deleteTrade, clearAllTrades }}
+      value={{
+        trades,
+        filteredTrades,
+        addTrade,
+        updateTrade,
+        deleteTrade,
+        setTradesFromCsv,
+        filterTrades,
+      }}
     >
       {children}
     </TradeContext.Provider>
   );
 };
+
+export const useTrade = () => useContext(TradeContext);

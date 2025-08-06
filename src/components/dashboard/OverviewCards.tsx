@@ -1,10 +1,10 @@
-// src/components/dashboard/OverviewCards.tsx
+// components/dashboard/OverviewCards.tsx
 
 "use client";
 
 import { useContext, useEffect, useState } from "react";
 import { TradeContext } from "@/context/TradeContext";
-import { differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import {
   BarChart2,
   CheckCircle,
@@ -15,168 +15,258 @@ import {
   ArrowUp,
   ArrowDown,
   PieChart,
-  Clock,
   Calendar,
+  Star,
+  ThumbsDown,
 } from "lucide-react";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-function ProgressBar({ percent, color }: { percent: number; color: string }) {
-  return (
-    <div className="w-full h-2 bg-gray-700 rounded mt-1">
-      <div
-        className={`h-full rounded ${color}`}
-        style={{ width: `${Math.min(percent, 100)}%` }}
-      />
-    </div>
-  );
+ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
+
+interface OverviewCardsProps {
+  fromDate: string;
+  toDate: string;
 }
 
-export default function OverviewCards() {
+export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps) {
   const { trades } = useContext(TradeContext);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!mounted) return null;
 
-  const totalTrades = trades.length;
-  const wins = trades.filter((t) => t.outcome === "Win");
-  const losses = trades.filter((t) => t.outcome === "Loss");
+  // 1) Filter trades by selected date range
+  const filtered = trades.filter((t) => {
+    const open = new Date(t.openTime),
+      close = new Date(t.closeTime),
+      from = new Date(fromDate),
+      to = new Date(toDate);
+    return open >= from && close <= to;
+  });
 
-  const totalWins = wins.length;
-  const totalLosses = losses.length;
-  const winRate = totalTrades ? (totalWins / totalTrades) * 100 : 0;
+  // 2) Basic metrics
+  const totalTrades = filtered.length;
+  const wins = filtered.filter((t) => t.outcome === "Win").length;
+  const losses = filtered.filter((t) => t.outcome === "Loss").length;
+  const winRate = totalTrades ? ((wins / totalTrades) * 100).toFixed(1) : "0";
 
-  const totalPnl = trades.reduce((sum, t) => sum + parseFloat(t.pnl || "0"), 0);
-  const pnlColor = totalPnl > 0 ? "text-green-400" : totalPnl < 0 ? "text-red-400" : "text-white";
+  const totalPnl = filtered.reduce((sum, t) => sum + parseFloat(t.pnl || "0"), 0);
+  const pnlClass =
+    totalPnl > 0
+      ? "text-green-400"
+      : totalPnl < 0
+      ? "text-red-400"
+      : "text-white";
 
-  const sumProfits = wins.reduce((sum, t) => sum + parseFloat(t.pnl || "0"), 0);
-  const sumLosses = Math.abs(losses.reduce((sum, t) => sum + parseFloat(t.pnl || "0"), 0));
-  const profitFactor = sumLosses > 0 ? sumProfits / sumLosses : Infinity;
-  const pfColor = profitFactor > 1 ? "text-green-400" : profitFactor < 1 ? "text-red-400" : "text-white";
+  const profitFactor = (() => {
+    const prof = filtered
+      .filter((t) => parseFloat(t.pnl || "0") >= 0)
+      .reduce((s, t) => s + parseFloat(t.pnl || "0"), 0);
+    const loss = Math.abs(
+      filtered
+        .filter((t) => parseFloat(t.pnl || "0") < 0)
+        .reduce((s, t) => s + parseFloat(t.pnl || "0"), 0)
+    );
+    return loss > 0 ? (prof / loss).toFixed(2) : "∞";
+  })();
 
-  const totalTP_RR = trades
-    .filter((t) => parseFloat(t.rr || "0") > 0)
-    .reduce((sum, t) => sum + parseFloat(t.rr || "0"), 0);
+  const best = filtered.reduce(
+    (b, c) =>
+      parseFloat(c.pnl || "0") > parseFloat(b.pnl || "-9999") ? c : b,
+    { pnl: "-9999" }
+  );
+  const worst = filtered.reduce(
+    (w, c) =>
+      parseFloat(c.pnl || "0") < parseFloat(w.pnl || "9999") ? c : w,
+    { pnl: "9999" }
+  );
+  const bestClass = parseFloat(best.pnl || "0") > 0 ? "text-green-400" : "text-white";
+  const worstClass = parseFloat(worst.pnl || "0") < 0 ? "text-red-400" : "text-white";
 
-  const totalSL_RR = trades
-    .filter((t) => parseFloat(t.rr || "0") < 0)
-    .reduce((sum) => sum - 1, 0); // Each SL = -1 RR
-
-  const rrProfit = totalTP_RR + totalSL_RR;
-  const rrColor = rrProfit > 0 ? "text-green-400" : rrProfit < 0 ? "text-red-400" : "text-white";
-
-  const avgHoldTime =
-    totalTrades > 0
-      ? (
-          trades.reduce((sum, t) => sum + parseFloat(t.duration || "0"), 0) / totalTrades
-        ).toFixed(2)
-      : "0.00";
-
-  const dates = trades
+  const dates = filtered
     .map((t) => new Date(t.openTime))
     .sort((a, b) => a.getTime() - b.getTime());
+  const days =
+    dates.length > 1
+      ? differenceInCalendarDays(dates[dates.length - 1], dates[0]) + 1
+      : 1;
+  const perDay = days ? (totalTrades / days).toFixed(2) : "0.00";
 
-  const first = dates[0];
-  const last = dates[dates.length - 1];
-  const days = dates.length > 1 ? differenceInCalendarDays(last, first) + 1 : 1;
-  const tradesPerDay = days > 0 ? (totalTrades / days).toFixed(2) : "0.00";
-
-  const symbolCounts = trades.reduce<Record<string, number>>((acc, t) => {
+  const symbolCounts = filtered.reduce<Record<string, number>>((acc, t) => {
     acc[t.symbol] = (acc[t.symbol] || 0) + 1;
     return acc;
   }, {});
-  const mostTraded = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  const mostTraded =
+    Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
 
-  const metrics = [
-    {
-      label: "Total Trades",
-      value: totalTrades,
-      icon: <BarChart2 size={20} />,
-    },
-    {
-      label: "Trades Won",
-      value: totalWins,
-      icon: <CheckCircle size={20} className="text-green-400" />,
-    },
-    {
-      label: "Trades Lost",
-      value: totalLosses,
-      icon: <XCircle size={20} className="text-red-400" />,
-    },
-    {
-      label: "Win Rate",
-      value: `${winRate.toFixed(1)}%`,
-      percent: winRate,
-      icon: <Percent size={20} />,
-    },
-    {
-      label: "PNL ($)",
-      value: `$${totalPnl.toFixed(2)}`,
-      icon: <DollarSign size={20} />,
-      color: pnlColor,
-      percent: Math.min((Math.abs(totalPnl) / 50000) * 100, 100),
-    },
-    {
-      label: "Profit Factor",
-      value: profitFactor === Infinity ? "∞" : profitFactor.toFixed(2),
-      icon: <Activity size={20} />,
-      color: pfColor,
-      percent: Math.min(profitFactor * 20, 100),
-    },
-    {
-      label: "Total TPs (RR)",
-      value: totalTP_RR.toFixed(2),
-      icon: <ArrowUp size={20} className="text-green-400" />,
-    },
-    {
-      label: "Total SLs (RR)",
-      value: totalSL_RR.toFixed(2),
-      icon: <ArrowDown size={20} className="text-red-400" />,
-    },
-    {
-      label: "Profit (RR)",
-      value: rrProfit.toFixed(2),
-      icon: <PieChart size={20} />,
-      color: rrColor,
-      percent: Math.min((Math.abs(rrProfit) / 100) * 100, 100),
-    },
-    {
-      label: "Avg Hold Time (min)",
-      value: avgHoldTime,
-      icon: <Clock size={20} />,
-    },
-    {
-      label: "Trades/Day",
-      value: tradesPerDay,
-      icon: <Calendar size={20} />,
-    },
-    {
-      label: "Most Traded Pair",
-      value: mostTraded,
-      icon: <PieChart size={20} />,
-    },
-  ];
+  // Win/Loss trend data
+  const trendLabels = filtered.map((t) => format(new Date(t.openTime), "MMM d"));
+  const winLossData = {
+    labels: trendLabels,
+    datasets: [
+      {
+        label: "Wins",
+        data: filtered.map((t) => (t.outcome === "Win" ? 1 : 0)),
+        borderColor: "#22c55e",
+        backgroundColor: "#22c55e66",
+      },
+      {
+        label: "Losses",
+        data: filtered.map((t) => (t.outcome === "Loss" ? 1 : 0)),
+        borderColor: "#ef4444",
+        backgroundColor: "#ef444466",
+      },
+    ],
+  };
 
+  // Streak tracker data
+  const streaks: number[] = [];
+  let curr = 0,
+    last: "Win" | "Loss" | null = null;
+  filtered.forEach((t) => {
+    if (t.outcome === last) curr++;
+    else {
+      curr = 1;
+      last = t.outcome as "Win" | "Loss";
+    }
+    streaks.push(curr);
+  });
+  const streakData = {
+    labels: streaks.map((_, i) => `#${i + 1}`),
+    datasets: [
+      {
+        label: "Streak",
+        data: streaks,
+        borderColor: "#3b82f6",
+        fill: false,
+      },
+    ],
+  };
+
+  // PNL over time
+  const pnlOverTime = {
+    labels: trendLabels,
+    datasets: [
+      {
+        label: "Cum. PnL",
+        data: trendLabels.map((_, i) =>
+          filtered
+            .slice(0, i + 1)
+            .reduce((s, t) => s + parseFloat(t.pnl || "0"), 0)
+        ),
+        borderColor: "#64748b",
+        fill: false,
+      },
+    ],
+  };
+
+  // Render
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-      {metrics.map(({ label, value, icon, color, percent }) => (
-        <div
-          key={label}
-          className="bg-gray-800 rounded-xl p-4 shadow hover:shadow-lg transition"
-        >
-          <div className="flex items-center gap-3">
-            {icon}
+    <div className="space-y-6">
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {[
+          {
+            icon: <BarChart2 size={24} className="text-blue-400" />,
+            label: "Total Trades",
+            value: totalTrades,
+            className: "text-white",
+          },
+          {
+            icon: <CheckCircle size={24} className="text-green-400" />,
+            label: "Trades Won",
+            value: wins,
+            className: "text-green-400",
+          },
+          {
+            icon: <XCircle size={24} className="text-red-400" />,
+            label: "Trades Lost",
+            value: losses,
+            className: "text-red-400",
+          },
+          {
+            icon: <Percent size={24} className="text-indigo-400" />,
+            label: "Win Rate",
+            value: `${winRate}%`,
+            className: "text-white",
+          },
+          {
+            icon: <DollarSign size={24} className={pnlClass} />,
+            label: "PNL ($)",
+            value: `$${totalPnl.toFixed(2)}`,
+            className: pnlClass,
+          },
+          {
+            icon: <Activity size={24} className="text-yellow-400" />,
+            label: "Profit Factor",
+            value: profitFactor,
+            className: "text-white",
+          },
+          {
+            icon: <Star size={24} className="text-yellow-300" />,
+            label: "Best Trade",
+            value: `$${parseFloat(best.pnl || "0").toFixed(2)}`,
+            className: bestClass,
+          },
+          {
+            icon: <ThumbsDown size={24} className="text-red-500" />,
+            label: "Worst Trade",
+            value: `$${parseFloat(worst.pnl || "0").toFixed(2)}`,
+            className: worstClass,
+          },
+          {
+            icon: <Calendar size={24} className="text-blue-300" />,
+            label: "Trades / Day",
+            value: perDay,
+            className: "text-white",
+          },
+          {
+            icon: <PieChart size={24} className="text-pink-400" />,
+            label: "Most Traded Pair",
+            value: mostTraded,
+            className: "text-white",
+          },
+        ].map(({ icon, label, value, className }) => (
+          <div
+            key={label}
+            className="bg-[#161B22] rounded-xl p-5 flex items-center gap-4 shadow-lg"
+          >
+            <div>{icon}</div>
             <div>
-              <h3 className="text-sm text-gray-400">{label}</h3>
-              <p className={`text-2xl font-semibold ${color || "text-white"}`}>{value}</p>
+              <p className="text-sm text-gray-400">{label}</p>
+              <p className={`text-2xl font-semibold ${className}`}>{value}</p>
             </div>
           </div>
-          {typeof percent === "number" && (
-            <ProgressBar
-              percent={percent}
-              color={color?.replace("text-", "bg-") || "bg-white"}
-            />
-          )}
+        ))}
+      </div>
+
+      {/* Charts */}
+      <div className="space-y-6">
+        <div className="bg-[#161B22] rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-200 mb-4">Win / Loss Trend</h3>
+          <Line data={winLossData} />
         </div>
-      ))}
+        <div className="bg-[#161B22] rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-200 mb-4">Streak Tracker</h3>
+          <Line data={streakData} />
+        </div>
+        <div className="bg-[#161B22] rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-200 mb-4">PNL Over Time</h3>
+          <Line data={pnlOverTime} />
+        </div>
+      </div>
     </div>
   );
 }

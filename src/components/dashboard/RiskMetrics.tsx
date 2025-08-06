@@ -26,8 +26,18 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { Trade } from "@/types/trade";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Info } from "lucide-react";
 
 export default function RiskMetrics() {
@@ -53,6 +63,31 @@ export default function RiskMetrics() {
       return { date: p.date, drawdown: Number(dd.toFixed(2)) };
     });
   }, [equitySeries]);
+
+  // NEW: VaR Calculations
+  const varEstimates = useMemo(() => {
+    const pnls = trades.map((t) => parseFloat(t.pnl as string)).sort((a, b) => a - b);
+    const percentile = 0.05;
+    const index = Math.floor(percentile * pnls.length);
+    const historicalVaR = pnls[index] ? -pnls[index].toFixed(2) : "—";
+
+    const mean = pnls.reduce((a, b) => a + b, 0) / pnls.length;
+    const stdDev = Math.sqrt(pnls.reduce((s, r) => s + (r - mean) ** 2, 0) / pnls.length);
+    const monteCarloVaR = (-1 * (mean - 1.65 * stdDev)).toFixed(2); // 95% confidence
+
+    return { historicalVaR, monteCarloVaR };
+  }, [trades]);
+
+  // NEW: Rolling Drawdown Metrics (last 7 days)
+  const rollingMetrics = useMemo(() => {
+    const recent = drawdownSeries.slice(-7);
+    const avg = recent.reduce((a, b) => a + b.drawdown, 0) / recent.length || 0;
+    const max = Math.max(...recent.map((d) => d.drawdown));
+    return {
+      avgDrawdown7d: avg.toFixed(2),
+      maxDrawdown7d: max.toFixed(2),
+    };
+  }, [drawdownSeries]);
 
   const stats = useMemo(() => {
     const pnls = trades.map((t) => parseFloat(t.pnl as string));
@@ -129,6 +164,7 @@ export default function RiskMetrics() {
 
   return (
     <div className="space-y-6">
+      {/* Risk Summary */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-bold">Risk Metrics Summary</CardTitle>
@@ -137,7 +173,7 @@ export default function RiskMetrics() {
               <Info className="h-5 w-5 text-muted-foreground cursor-pointer" />
             </PopoverTrigger>
             <PopoverContent className="max-w-md text-sm">
-              These are key risk metrics calculated based on your uploaded trading history. They help evaluate how consistent, risky, and efficient your trading system is.
+              These are key risk metrics calculated based on your uploaded trading history.
             </PopoverContent>
           </Popover>
         </CardHeader>
@@ -151,6 +187,12 @@ export default function RiskMetrics() {
           <div><p>Longest Loss Streak</p><p>{stats.maxLossStreak}</p></div>
           <div><p>Risk Score</p><p>{stats.riskScore}</p></div>
           <div><p>Performance Grade</p><p>{stats.performanceGrade}</p></div>
+          {/* NEW: Rolling Metrics */}
+          <div><p>Avg Drawdown (7d)</p><p>{rollingMetrics.avgDrawdown7d}%</p></div>
+          <div><p>Max Drawdown (7d)</p><p>{rollingMetrics.maxDrawdown7d}%</p></div>
+          {/* NEW: VaR */}
+          <div><p>Historical VaR (95%)</p><p>${varEstimates.historicalVaR}</p></div>
+          <div><p>Monte Carlo VaR (95%)</p><p>${varEstimates.monteCarloVaR}</p></div>
         </CardContent>
       </Card>
 
@@ -176,24 +218,19 @@ export default function RiskMetrics() {
       {/* Chart Renderer */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Trade Outcome Distribution
-          </CardTitle>
+          <CardTitle>Trade Outcome Distribution</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px]">
           {chartType === "bar" && (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={pnlData}>
-                <XAxis dataKey="idx" label={{ value: "Trade #", position: "insideBottom", offset: -5 }} />
-                <YAxis label={{ value: "PnL", angle: -90, position: "insideLeft" }} />
+                <XAxis dataKey="idx" />
+                <YAxis />
                 <Tooltip formatter={(val: number) => `$${val.toFixed(2)}`} />
                 <Legend />
                 <Bar dataKey="pnl">
                   {pnlData.map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={entry.pnl >= 0 ? "#10b981" : "#ef4444"}
-                    />
+                    <Cell key={index} fill={entry.pnl >= 0 ? "#10b981" : "#ef4444"} />
                   ))}
                 </Bar>
               </BarChart>
@@ -202,13 +239,7 @@ export default function RiskMetrics() {
           {chartType === "pie" && (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={100}
-                  label
-                >
+                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
                   {pieData.map((_, i) => (
                     <Cell key={i} fill={colors[i % colors.length]} />
                   ))}
@@ -247,17 +278,11 @@ export default function RiskMetrics() {
         <CardContent className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={drawdownSeries}>
-              <XAxis dataKey="date" label={{ value: "Date", position: "insideBottom", offset: -5 }} />
-              <YAxis unit="%" label={{ value: "Drawdown %", angle: -90, position: "insideLeft" }} />
+              <XAxis dataKey="date" />
+              <YAxis unit="%" />
               <Tooltip formatter={(val: number) => `${val}%`} />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="drawdown"
-                stroke="#fb7185"
-                strokeWidth={2}
-                dot={false}
-              />
+              <Line type="monotone" dataKey="drawdown" stroke="#fb7185" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

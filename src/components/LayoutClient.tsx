@@ -1,4 +1,4 @@
-// app/components/LayoutClient.tsx
+// components/LayoutClient.tsx
 
 "use client";
 

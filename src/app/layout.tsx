@@ -1,23 +1,23 @@
+// app/layout.tsx
 
+"use client";
 
 import "./globals.css";
-import type { Metadata } from "next";
-import LayoutClient from "@/components/LayoutClient";
+import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
+import { UserProvider } from "@/context/UserContext"; // ✅ import UserProvider
 
-export const metadata: Metadata = {
-  title: "Tradia",
-  description: "Advanced AI-powered trading assistant",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <LayoutClient>{children}</LayoutClient>
+        <SessionProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <UserProvider> {/* ✅ wrap everything with UserProvider */}
+              {children}
+            </UserProvider>
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );
