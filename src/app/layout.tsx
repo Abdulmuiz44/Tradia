@@ -1,10 +1,9 @@
-// app/layout.tsx
-
 "use client";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
+import Navbar from "@/components/Navbar";
 import { UserProvider } from "@/context/UserContext"; // ✅ import UserProvider
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <UserProvider> {/* ✅ wrap everything with UserProvider */}
+              <Navbar />
               {children}
             </UserProvider>
           </ThemeProvider>

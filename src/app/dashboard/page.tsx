@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -17,7 +17,7 @@ import ScreenshotUpload from "@/components/dashboard/ScreenshotUpload";
 import Spinner from "@/components/ui/spinner";
 import LayoutClient from "@/components/LayoutClient";
 import ClientOnly from "@/components/ClientOnly";
-import { TradeProvider, TradeContext } from "@/context/TradeContext";
+import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { Menu, X, Filter, RefreshCw } from "lucide-react";
 import {
   DropdownMenu,
@@ -84,21 +84,81 @@ function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { trades } = useContext(TradeContext);
+
+  // Use trade context hook to access trades + sync helper
+  const { trades, syncFromMT5 } = useTrade();
 
   // filter modal state
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
+  // --- NEW: Sync modal & states ---
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [platform, setPlatform] = useState<
+    "mt5" | "matchtrader" | "ctrader" | "tradelocker" | "other"
+  >("mt5");
+  const [mt5Login, setMt5Login] = useState("");
+  const [mt5Password, setMt5Password] = useState("");
+  const [mt5Server, setMt5Server] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [accountInfo, setAccountInfo] = useState<any | null>(null);
+  const [lastSync, setLastSync] = useState<string | null>(null);
+
   const handleFilterApply = () => {
     setFilterModalOpen(false);
   };
 
-  // placeholder for sync action
+  // Replaces prior placeholder: open the sync modal
   const handleSyncNow = () => {
-    // TODO: trigger account sync
-    alert("Starting account sync...");
+    setSyncModalOpen(true);
+  };
+
+  // Default backend URL for Python service (if you prefer Next API route, change here)
+  const DEFAULT_MT5_BACKEND = "http://localhost:5000/sync_mt5";
+
+  // Performs the actual sync — calls syncFromMT5 from TradeContext
+  const performSync = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setSyncError(null);
+
+    // basic validation for MT5
+    if (platform === "mt5") {
+      if (!mt5Login || !mt5Password || !mt5Server) {
+        setSyncError("Please provide MT5 account, password and server.");
+        return;
+      }
+    } else {
+      // for other platforms, currently not implemented
+      setSyncError(
+        `Integration for ${platform} not available yet. Only MT5 is supported in this flow.`
+      );
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      // call the context sync helper — which will call the backend and import trades
+      const result = await syncFromMT5(mt5Login, mt5Password, mt5Server, DEFAULT_MT5_BACKEND);
+
+      if (!result.success) {
+        throw new Error(result.error || "Sync failed");
+      }
+
+      // result.account and trades are returned from the context call
+      setAccountInfo(result.account ?? null);
+      setLastSync(new Date().toISOString());
+
+      // close modal and notify
+      setSyncModalOpen(false);
+      alert("Account synced successfully.");
+    } catch (err: any) {
+      console.error("Sync error:", err);
+      setSyncError(err?.message || "Unknown error during sync.");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -145,6 +205,20 @@ function DashboardContent() {
             >
               <RefreshCw size={20} />
             </button>
+
+            {/* display connected account summary (if any) */}
+            {accountInfo && (
+              <div className="hidden sm:flex flex-col text-right text-xs">
+                <span className="font-medium">{accountInfo.login}</span>
+                <span className="text-muted-foreground">
+                  {accountInfo.balance !== undefined
+                    ? `${accountInfo.currency ? accountInfo.currency + " " : "$"}${Number(
+                        accountInfo.balance
+                      ).toFixed(2)}`
+                    : "No balance"}
+                </span>
+              </div>
+            )}
 
             {/* only show filter on Overview */}
             {activeTab === "overview" && (
@@ -227,7 +301,8 @@ function DashboardContent() {
           ) : (
             <>
               {activeTab === "overview" && (
-                <OverviewCards fromDate={fromDate} toDate={toDate} />
+                // pass accountInfo into OverviewCards if you want the Overview to surface account details
+                <OverviewCards fromDate={fromDate} toDate={toDate} accountInfo={accountInfo} />
               )}
               {activeTab === "history" && <TradeHistoryTable trades={trades} />}
               {activeTab === "journal" && <TradeJournal />}
@@ -312,6 +387,114 @@ function DashboardContent() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* --- SYNC Modal --- */}
+        {syncModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <form
+              onSubmit={performSync}
+              className="bg-[#1F2329] p-6 rounded-md shadow-lg w-96 max-w-full"
+            >
+              <h2 className="text-lg font-semibold mb-4 text-white">Connect Account</h2>
+
+              <div className="mb-3">
+                <label className="block text-sm text-muted-foreground mb-2">Platform</label>
+                <select
+                  value={platform}
+                  onChange={(e) =>
+                    setPlatform(e.target.value as
+                      | "mt5"
+                      | "matchtrader"
+                      | "ctrader"
+                      | "tradelocker"
+                      | "other")
+                  }
+                  className="w-full p-2 bg-[#2D353F] rounded border border-gray-600 text-white"
+                >
+                  <option value="mt5">MetaTrader 5 (MT5)</option>
+                  <option value="matchtrader">MatchTrader</option>
+                  <option value="ctrader">cTrader</option>
+                  <option value="tradelocker">TradeLocker</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Show MT5 fields */}
+              {platform === "mt5" && (
+                <>
+                  <div className="mb-3">
+                    <label className="block text-sm text-muted-foreground mb-2">Account Login</label>
+                    <input
+                      value={mt5Login}
+                      onChange={(e) => setMt5Login(e.target.value)}
+                      className="w-full p-2 bg-[#2D353F] rounded border border-gray-600 text-white"
+                      placeholder="Account number"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm text-muted-foreground mb-2">Password</label>
+                    <input
+                      type="password"
+                      value={mt5Password}
+                      onChange={(e) => setMt5Password(e.target.value)}
+                      className="w-full p-2 bg-[#2D353F] rounded border border-gray-600 text-white"
+                      placeholder="Trading password"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm text-muted-foreground mb-2">Server</label>
+                    <input
+                      value={mt5Server}
+                      onChange={(e) => setMt5Server(e.target.value)}
+                      className="w-full p-2 bg-[#2D353F] rounded border border-gray-600 text-white"
+                      placeholder="Broker Server (e.g. Broker-Demo)"
+                    />
+                  </div>
+                </>
+              )}
+
+              {platform !== "mt5" && (
+                <div className="mb-3 text-sm text-muted-foreground">
+                  Integration for the selected platform is not yet available from the client.
+                  Contact support or choose MT5 for automatic sync.
+                </div>
+              )}
+
+              {syncError && (
+                <div className="text-sm text-red-400 mb-2">{syncError}</div>
+              )}
+
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSyncModalOpen(false);
+                    setSyncError(null);
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                >
+                  Cancel
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {isSyncing ? (
+                    <div className="flex items-center gap-2">
+                      <Spinner />
+                      <span className="text-sm text-muted-foreground">Syncing...</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                    >
+                      Connect & Sync
+                    </button>
+                  )}
+                </div>
+              </div>
+            </form>
           </div>
         )}
       </div>
