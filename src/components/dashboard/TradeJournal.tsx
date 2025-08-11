@@ -1,5 +1,3 @@
-// src/components/dashboard/TradeJournal.tsx
-
 "use client";
 
 import { useTrade } from "@/context/TradeContext";
@@ -219,7 +217,7 @@ export default function TradeJournal() {
       <Tabs
         items={[
           { value: "journal", label: "Journal" },
-          { value: "insights", label: "AI Insights" },
+          { value: "insights", label: "Insights" },
           { value: "patterns", label: "Patterns" },
           { value: "psychology", label: "Psychology" },
         ]}
@@ -346,11 +344,11 @@ export default function TradeJournal() {
         </div>
       )}
 
-      {/* 2) AI Insights (REPLACED: now uses generateInsights) */}
+      {/* 2) Insights */}
       {subTab === "insights" && (
         <Card className="p-6 rounded-2xl shadow-md border bg-white dark:bg-gray-900 dark:border-gray-800">
           <CardContent className="space-y-3 text-sm">
-            <h3 className="text-lg font-semibold">AI Trade Analysis</h3>
+            <h3 className="text-lg font-semibold">Trade Analysis</h3>
 
             <div className="space-y-3">
               {computedInsights.map((ins: any) => (
