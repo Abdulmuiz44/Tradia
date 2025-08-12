@@ -48,7 +48,7 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps) 
   if (!mounted) return null;
 
   // 1) Filter trades by selected date range
-  const filtered = trades.filter((t) => {
+  const filtered = trades.filter((t: any) => {
     const open = new Date(t.openTime),
       close = new Date(t.closeTime),
       from = new Date(fromDate),
@@ -58,73 +58,131 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps) 
 
   // 2) Basic metrics
   const totalTrades = filtered.length;
-  const wins = filtered.filter((t) => t.outcome === "Win").length;
-  const losses = filtered.filter((t) => t.outcome === "Loss").length;
+  const wins = filtered.filter((t: any) => t.outcome === "Win").length;
+  const losses = filtered.filter((t: any) => t.outcome === "Loss").length;
   const winRate = totalTrades ? ((wins / totalTrades) * 100).toFixed(1) : "0";
 
-  const totalPnl = filtered.reduce((sum, t) => sum + parseFloat(t.pnl || "0"), 0);
+  const totalPnl = filtered.reduce((sum: number, t: any) => sum + parseFloat(t.pnl || "0"), 0);
   const pnlClass =
-    totalPnl > 0
-      ? "text-green-400"
-      : totalPnl < 0
-      ? "text-red-400"
-      : "text-white";
+    totalPnl > 0 ? "text-green-400" : totalPnl < 0 ? "text-red-400" : "text-white";
 
   const profitFactor = (() => {
     const prof = filtered
-      .filter((t) => parseFloat(t.pnl || "0") >= 0)
-      .reduce((s, t) => s + parseFloat(t.pnl || "0"), 0);
+      .filter((t: any) => parseFloat(t.pnl || "0") >= 0)
+      .reduce((s: number, t: any) => s + parseFloat(t.pnl || "0"), 0);
     const loss = Math.abs(
       filtered
-        .filter((t) => parseFloat(t.pnl || "0") < 0)
-        .reduce((s, t) => s + parseFloat(t.pnl || "0"), 0)
+        .filter((t: any) => parseFloat(t.pnl || "0") < 0)
+        .reduce((s: number, t: any) => s + parseFloat(t.pnl || "0"), 0)
     );
     return loss > 0 ? (prof / loss).toFixed(2) : "∞";
   })();
 
   const best = filtered.reduce(
-    (b, c) =>
-      parseFloat(c.pnl || "0") > parseFloat(b.pnl || "-9999") ? c : b,
+    (b: any, c: any) => (parseFloat(c.pnl || "0") > parseFloat(b.pnl || "-9999") ? c : b),
     { pnl: "-9999" }
   );
   const worst = filtered.reduce(
-    (w, c) =>
-      parseFloat(c.pnl || "0") < parseFloat(w.pnl || "9999") ? c : w,
+    (w: any, c: any) => (parseFloat(c.pnl || "0") < parseFloat(w.pnl || "9999") ? c : w),
     { pnl: "9999" }
   );
   const bestClass = parseFloat(best.pnl || "0") > 0 ? "text-green-400" : "text-white";
   const worstClass = parseFloat(worst.pnl || "0") < 0 ? "text-red-400" : "text-white";
 
   const dates = filtered
-    .map((t) => new Date(t.openTime))
+    .map((t: any) => new Date(t.openTime))
     .sort((a, b) => a.getTime() - b.getTime());
-  const days =
-    dates.length > 1
-      ? differenceInCalendarDays(dates[dates.length - 1], dates[0]) + 1
-      : 1;
+  const days = dates.length > 1 ? differenceInCalendarDays(dates[dates.length - 1], dates[0]) + 1 : 1;
   const perDay = days ? (totalTrades / days).toFixed(2) : "0.00";
 
-  const symbolCounts = filtered.reduce<Record<string, number>>((acc, t) => {
+  const symbolCounts = filtered.reduce<Record<string, number>>((acc, t: any) => {
     acc[t.symbol] = (acc[t.symbol] || 0) + 1;
     return acc;
   }, {});
-  const mostTraded =
-    Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  const mostTraded = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+  // ---------- RR parsing and metrics ----------
+  // Attempt to robustly parse RR from common field names and formats.
+  const parseRR = (t: any): number => {
+    const candidates = [
+      t?.rr,
+      t?.RR,
+      t?.riskReward,
+      t?.risk_reward,
+      t?.rrRatio,
+      t?.rr_ratio,
+      t?.R_R,
+      t?.risk_reward_ratio,
+      t?.riskRewardRatio,
+    ];
+
+    for (const c of candidates) {
+      if (c === undefined || c === null) continue;
+
+      // If number already
+      if (typeof c === "number" && !isNaN(c)) return c;
+
+      if (typeof c === "string") {
+        const s = c.trim();
+        const sClean = s.replace(/\s+/g, "");
+
+        // handle colon format like "1:2" (assume risk:reward -> reward/risk)
+        if (sClean.includes(":")) {
+          const parts = sClean.split(":");
+          if (parts.length === 2) {
+            const a = parseFloat(parts[0]);
+            const b = parseFloat(parts[1]);
+            if (!isNaN(a) && !isNaN(b) && a !== 0) return b / a;
+          }
+        }
+
+        // handle fraction format like "1/2" or "2/1"
+        if (sClean.includes("/")) {
+          const parts = sClean.split("/");
+          if (parts.length === 2) {
+            const a = parseFloat(parts[0]);
+            const b = parseFloat(parts[1]);
+            if (!isNaN(a) && !isNaN(b) && a !== 0) return b / a;
+          }
+        }
+
+        // remove trailing 'R' or 'r' (e.g., "2R" -> 2)
+        const withoutR = sClean.replace(/R$/i, "");
+        const n = parseFloat(withoutR);
+        if (!isNaN(n)) return n;
+
+        // fallback: extract first numeric match (e.g., "-1" inside text)
+        const m = s.match(/-?\d+(\.\d+)?/);
+        if (m) return parseFloat(m[0]);
+      }
+    }
+
+    return NaN;
+  };
+
+  const rrValues = filtered.map((t: any) => parseRR(t)).filter((v) => !isNaN(v));
+  const totalTP = rrValues.filter((v) => v > 0).reduce((s, v) => s + v, 0);
+  const totalSLCount = filtered.reduce((cnt: number, t: any) => {
+    const rr = parseRR(t);
+    return cnt + (rr === -1 ? 1 : 0);
+  }, 0);
+  const profitRR = totalTP - totalSLCount;
+  // -------------------------------------------
 
   // Win/Loss trend data
-  const trendLabels = filtered.map((t) => format(new Date(t.openTime), "MMM d"));
+  const trendLabels = filtered.map((t: any) => format(new Date(t.openTime), "MMM d"));
   const winLossData = {
     labels: trendLabels,
     datasets: [
       {
         label: "Wins",
-        data: filtered.map((t) => (t.outcome === "Win" ? 1 : 0)),
+        data: filtered.map((t: any) => (t.outcome === "Win" ? 1 : 0)),
         borderColor: "#22c55e",
         backgroundColor: "#22c55e66",
       },
       {
         label: "Losses",
-        data: filtered.map((t) => (t.outcome === "Loss" ? 1 : 0)),
+        data: filtered.map((t: any) => (t.outcome === "Loss" ? 1 : 0)),
         borderColor: "#ef4444",
         backgroundColor: "#ef444466",
       },
@@ -135,7 +193,7 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps) 
   const streaks: number[] = [];
   let curr = 0,
     last: "Win" | "Loss" | null = null;
-  filtered.forEach((t) => {
+  filtered.forEach((t: any) => {
     if (t.outcome === last) curr++;
     else {
       curr = 1;
@@ -162,9 +220,7 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps) 
       {
         label: "Cum. PnL",
         data: trendLabels.map((_, i) =>
-          filtered
-            .slice(0, i + 1)
-            .reduce((s, t) => s + parseFloat(t.pnl || "0"), 0)
+          filtered.slice(0, i + 1).reduce((s, t) => s + parseFloat(t.pnl || "0"), 0)
         ),
         borderColor: "#64748b",
         fill: false,
@@ -214,6 +270,26 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps) 
             value: profitFactor,
             className: "text-white",
           },
+          // New RR metrics
+          {
+            icon: <ArrowUp size={24} className="text-green-400" />,
+            label: "Total TP (RR)",
+            value: `${totalTP.toFixed(2)}R`,
+            className: "text-green-400",
+          },
+          {
+            icon: <ArrowDown size={24} className="text-red-400" />,
+            label: "Total SL (RR)",
+            value: totalSLCount,
+            className: "text-red-400",
+          },
+          {
+            icon: <Activity size={24} className={profitRR > 0 ? "text-green-400" : profitRR < 0 ? "text-red-400" : "text-white"} />,
+            label: "Profit (RR)",
+            value: `${profitRR >= 0 ? "+" : ""}${profitRR.toFixed(2)}R`,
+            className: profitRR > 0 ? "text-green-400" : profitRR < 0 ? "text-red-400" : "text-white",
+          },
+          // Existing best/worst + others
           {
             icon: <Star size={24} className="text-yellow-300" />,
             label: "Best Trade",

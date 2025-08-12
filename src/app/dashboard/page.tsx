@@ -243,10 +243,10 @@ function DashboardContent() {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
-                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <DropdownMenuItem onClick={() => router.push("dashboard/profile")}>
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <DropdownMenuItem onClick={() => router.push("dashboard/settings")}>
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => signOut()}>

@@ -1,261 +1,174 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { FcGoogle } from "react-icons/fc";
+import { signIn } from "next-auth/react";
 
 export default function SignupPage() {
   const router = useRouter();
+
   const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    accountType: 'retail',
-    experienceLevel: '',
-    tradingStyle: '',
-    agree: false,
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    const {
-      fullName,
-      email,
-      password,
-      confirmPassword,
-      experienceLevel,
-      tradingStyle,
-      agree,
-    } = form;
-
-    if (
-      !fullName ||
-      !email ||
-      !password ||
-      !confirmPassword ||
-      !experienceLevel ||
-      !tradingStyle ||
-      !agree
-    ) {
-      setError('Please fill in all fields and accept terms.');
-      return;
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+      return setError("All fields are required.");
     }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
+    if (form.password !== form.confirmPassword) {
+      return setError("Passwords do not match.");
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+      // Create account via API
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+        }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.message || 'Registration failed');
+        const text = await res.text();
+        let msg = text || "Signup failed";
+        try {
+          const json = JSON.parse(text);
+          if (json?.error) msg = json.error;
+          if (json?.message) msg = json.message;
+        } catch {}
+        setError(msg);
+        return;
       }
 
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
+      // Auto sign in after successful signup
+      const signInRes = await signIn("credentials", {
+        redirect: false,
+        email: form.email,
+        password: form.password,
+      });
+
+      if (signInRes?.error) {
+        setError("Account created but auto-login failed. Please log in manually.");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      console.error("Signup request failed:", err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleSignup = async () => {
+    await signIn("google", { callbackUrl: "/dashboard" });
+  };
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <div className="max-w-xl w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md space-y-6">
-        <h1 className="text-2xl font-bold text-center text-gray-800 dark:text-white">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 py-8">
+      <div className="w-full max-w-lg bg-white dark:bg-gray-800 shadow-md rounded-2xl p-8 space-y-6">
+        <h2 className="text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400">
           Create Your Tradia Account
-        </h1>
-        <p className="text-center text-sm text-gray-600 dark:text-gray-300">
-          Already have an account?{' '}
-          <Link href="/login" className="text-indigo-600 underline font-medium">
-            Log in
-          </Link>
-        </p>
+        </h2>
 
-        {error && <div className="text-red-600 font-medium">{error}</div>}
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="fullName"
-              value={form.fullName}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-              required
-            />
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md text-sm text-center">
+            {error}
           </div>
+        )}
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onChange={handleChange}
+            value={form.name}
+            aria-label="Full Name"
+            required
+          />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="mt-1 w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onChange={handleChange}
+            value={form.email}
+            aria-label="Email Address"
+            required
+          />
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                className="mt-1 w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
-          </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onChange={handleChange}
+            value={form.password}
+            aria-label="Password"
+            required
+          />
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Experience Level
-            </label>
-            <select
-              name="experienceLevel"
-              value={form.experienceLevel}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-              required
-            >
-              <option value="">Select</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Trading Style
-            </label>
-            <select
-              name="tradingStyle"
-              value={form.tradingStyle}
-              onChange={handleChange}
-              className="mt-1 w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-              required
-            >
-              <option value="">Select</option>
-              <option value="scalping">Scalping</option>
-              <option value="day">Day Trading</option>
-              <option value="swing">Swing Trading</option>
-              <option value="position">Position Trading</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Account Type
-            </label>
-            <div className="space-x-4 mt-1">
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  name="accountType"
-                  value="retail"
-                  checked={form.accountType === 'retail'}
-                  onChange={handleChange}
-                  className="text-indigo-600"
-                />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">Retail</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  name="accountType"
-                  value="institutional"
-                  checked={form.accountType === 'institutional'}
-                  onChange={handleChange}
-                  className="text-indigo-600"
-                />
-                <span className="ml-2 text-gray-700 dark:text-gray-300">Institutional</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex items-start">
-            <input
-              type="checkbox"
-              name="agree"
-              checked={form.agree}
-              onChange={handleChange}
-              className="mt-1 mr-2"
-            />
-            <label className="text-sm text-gray-700 dark:text-gray-300">
-              I agree to the{' '}
-              <a href="#" className="text-indigo-600 underline">
-                Terms and Conditions
-              </a>{' '}
-              and{' '}
-              <a href="#" className="text-indigo-600 underline">
-                Privacy Policy
-              </a>
-              .
-            </label>
-          </div>
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onChange={handleChange}
+            value={form.confirmPassword}
+            aria-label="Confirm Password"
+            required
+          />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-150"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
+
+        <div className="text-center text-gray-500 dark:text-gray-400">OR</div>
+
+        <button
+          onClick={handleGoogleSignup}
+          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+        >
+          <FcGoogle size={22} />
+          <span>Continue with Google</span>
+        </button>
+
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
+          Already have an account?{" "}
+          <Link href="/login" className="text-indigo-600 hover:underline">
+            Login here
+          </Link>
+        </p>
       </div>
-    </main>
+    </div>
   );
 }

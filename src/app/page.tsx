@@ -54,7 +54,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              href="/auth/signup"
+              href="/signup"
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-2"
             >
               Start Free Trial <AiOutlineArrowRight />
@@ -103,7 +103,7 @@ export default function Home() {
               Join the community of traders using Tradia to unlock consistent improvement and real growth.
             </p>
             <Link
-              href="/auth/signup"
+              href="/signup"
               className="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-lg"
             >
               Get Started for Free
