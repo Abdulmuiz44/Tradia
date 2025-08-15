@@ -1,15 +1,17 @@
-// /src/app/page.tsx
+// app/page.tsx
+"use client";
 
-'use client';
-
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 import {
   AiOutlineArrowRight,
   AiOutlineBarChart,
   AiOutlineLock,
   AiOutlineThunderbolt,
-  AiOutlineGlobal
-} from 'react-icons/ai';
+  AiOutlineGlobal,
+  AiOutlineCheck,
+  AiOutlineStar,
+} from "react-icons/ai";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -19,95 +21,365 @@ export default function Home() {
     {
       icon: <AiOutlineBarChart className="w-8 h-8" />,
       title: "Smart Performance Tracking",
-      description: "Track your trades with real-time metrics, charts, and behavior insights."
+      description: "Real-time metrics, charts, and behavior insights to level-up your trading.",
     },
     {
       icon: <AiOutlineLock className="w-8 h-8" />,
       title: "Secure & Private",
-      description: "Your trading data is encrypted and accessible only to you."
+      description: "Your trading data is encrypted and accessible only to you.",
     },
     {
       icon: <AiOutlineThunderbolt className="w-8 h-8" />,
       title: "Lightning-Fast Feedback",
-      description: "AI-powered insights on your trading behavior in seconds."
+      description: "AI-powered trade reviews & suggestions in seconds.",
     },
     {
       icon: <AiOutlineGlobal className="w-8 h-8" />,
       title: "Trade Anywhere",
-      description: "Responsive design works perfectly on mobile, tablet, and desktop."
-    }
+      description: "Responsive web app and mobile-friendly dashboards for traders on the move.",
+    },
   ];
+
+  const benefits = [
+    { title: "Win Rate & P/L", desc: "Understand your profitability at a glance." },
+    { title: "Risk Metrics", desc: "Drawdown, lot-size averages and quick risk checks." },
+    { title: "Trade Timeline", desc: "Visualize your performance over time." },
+    { title: "AI Hints", desc: "Automated notes on recurring mistakes (Pro)." },
+    { title: "Strategy Tags", desc: "Label trades and filter performance per strategy." },
+    { title: "Multi-Account View", desc: "Aggregate accounts into a single portfolio view." },
+  ];
+
+  const howItWorks = [
+    {
+      title: "Connect Your Broker",
+      desc: "Link a MatchTrader, MT5 or supported broker account securely.",
+      step: "1",
+    },
+    {
+      title: "Sync Trade History",
+      desc: "We pull trades, normalize them and analyze your performance.",
+      step: "2",
+    },
+    {
+      title: "Get Actionable Insights",
+      desc: "AI reviews trades and provides improvement suggestions.",
+      step: "3",
+    },
+  ];
+
+  const plans = [
+    {
+      id: "starter",
+      name: "Starter",
+      price: "Free",
+      monthly: 0,
+      highlights: [
+        "Basic trade analytics",
+        "30 days trade history",
+        "1 account connection (MT5)",
+        "Daily summary",
+      ],
+      cta: "Get started",
+      tag: "Free forever",
+    },
+    {
+      id: "plus",
+      name: "Trader Plus",
+      price: "$9",
+      monthly: 9,
+      highlights: [
+        "All Starter features",
+        "6 months trade history",
+        "3 account connections",
+        "AI weekly summary",
+        "Advanced risk metrics",
+      ],
+      cta: "Start 7-day trial",
+      tag: "Popular",
+    },
+    {
+      id: "pro",
+      name: "Pro Trader",
+      price: "$19",
+      monthly: 19,
+      highlights: [
+        "All Plus features",
+        "Unlimited history",
+        "5 account connections",
+        "AI trade reviews & SL/TP suggestions",
+        "Lifecycle analysis",
+      ],
+      cta: "Start 7-day trial",
+      tag: "For active traders",
+    },
+    {
+      id: "elite",
+      name: "Elite Trader",
+      price: "$39",
+      monthly: 39,
+      highlights: [
+        "Everything in Pro",
+        "Unlimited connections",
+        "Strategy simulator",
+        "AI strategy builder",
+        "Prop-firm dashboard",
+      ],
+      cta: "Contact sales",
+      tag: "Advanced",
+    },
+  ];
+
+  const faqs = [
+    {
+      q: "Is there a free plan?",
+      a: "Yes — the Starter plan is free forever and includes core analytics and a 30-day history.",
+    },
+    {
+      q: "Which brokers are supported?",
+      a: "We support MT5 and MatchTrader (and are adding more). You can link accounts securely from the dashboard.",
+    },
+    {
+      q: "Can I upgrade later?",
+      a: "Absolutely — upgrading keeps all your data and unlocks more history and AI features.",
+    },
+    {
+      q: "How do trials work?",
+      a: "Plus & Pro include a 7-day trial so you can test premium features before billing.",
+    },
+  ];
+
+  // UI state
+  const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string>("plus");
 
   return (
     <>
       <Navbar />
 
       <main className="bg-white dark:bg-black text-gray-900 dark:text-white">
-        {/* HERO SECTION */}
+        {/* HERO */}
         <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 sm:px-12 md:px-20 py-16">
-          <h1 className="text-4xl sm:text-6xl font-bold mb-6 leading-tight">
-            Your <span className="text-indigo-600">AI Trading Assistant</span><br />
-            to Trade Smarter, Not Harder
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mb-10">
-            Tradia helps retail traders like you track performance, identify patterns, and get smarter with every trade — from anywhere, anytime.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/signup"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-2"
-            >
-              Start Free Trial <AiOutlineArrowRight />
-            </Link>
-            <Link
-              href="/demo"
-              className="border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-indigo-50 transition-all duration-300"
-            >
-              Try Demo
-            </Link>
-          </div>
-        </section>
+          <div className="max-w-4xl">
+            <h1 className="text-4xl sm:text-6xl font-bold mb-6 leading-tight">
+              Your <span className="text-indigo-600">AI Trading Assistant</span>
+              <br />
+              Track performance, find edge, and trade smarter.
+            </h1>
 
-        {/* FEATURES SECTION */}
-        <section className="py-20 px-6 sm:px-12 md:px-20 bg-gray-50 dark:bg-gray-900">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">What Tradia Offers</h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Designed for serious traders who want clarity, control, and AI-driven feedback.
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+              Tradia gives retail traders transparent analytics, AI-driven trade reviews and
+              portfolio-level performance tools — built for real traders who want real results.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/auth/signup"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-2"
               >
-                <div className="text-indigo-600 dark:text-indigo-400 mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+                Get started for free <AiOutlineArrowRight />
+              </Link>
+
+              <Link
+                href="/pricing"
+                className="border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-indigo-50 transition-all duration-300 flex items-center justify-center"
+              >
+                See pricing
+              </Link>
+            </div>
+
+            {/* Social proof / trust */}
+            <div className="mt-8 flex items-center justify-center gap-6">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Trusted by</div>
+              <div className="flex gap-4 items-center">
+                {/* placeholder circles as logos */}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700" />
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </section>
 
-        {/* CALL TO ACTION SECTION */}
+        {/* BENEFITS / VALUE */}
+        <section className="py-20 px-6 sm:px-12 md:px-20 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3">Benefits</h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                The features traders need to analyze, improve, and scale their edge.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {benefits.map((b, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="p-2 rounded-full bg-indigo-50 text-indigo-600">
+                      <AiOutlineCheck className="w-5 h-5" />
+                    </span>
+                    <h3 className="text-lg font-semibold">{b.title}</h3>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400">{b.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
         <section className="py-20 px-6 sm:px-12 md:px-20">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-12 text-center text-white shadow-xl">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-              Ready to Trade Smarter?
-            </h2>
-            <p className="max-w-xl mx-auto mb-8 text-indigo-100">
-              Join the community of traders using Tradia to unlock consistent improvement and real growth.
-            </p>
-            <Link
-              href="/signup"
-              className="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-lg"
-            >
-              Get Started for Free
-            </Link>
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3">How it works</h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Connect, sync and get insights — it takes just a few steps.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {howItWorks.map((h) => (
+                <div key={h.step} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-2xl font-bold text-indigo-600">{h.step}</div>
+                    <div className="text-sm text-gray-500">{h.title}</div>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400">{h.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING */}
+        <section className="py-20 px-6 sm:px-12 md:px-20 bg-gradient-to-b from-white to-gray-50 dark:from-black dark:to-gray-900">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3">Pricing</h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Start for free — upgrade anytime to unlock AI reviews and advanced tools.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {plans.map((p) => {
+                const highlighted = selectedPlan === p.id;
+                return (
+                  <div
+                    key={p.id}
+                    className={`p-6 rounded-2xl border ${
+                      highlighted ? "border-indigo-600 shadow-xl" : "border-gray-200 dark:border-gray-700"
+                    } bg-white dark:bg-gray-800`}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold">{p.name}</h3>
+                      <span className="text-sm text-gray-500">{p.tag}</span>
+                    </div>
+
+                    <div className="mb-4">
+                      <div className="text-3xl font-extrabold">
+                        {p.price}
+                        <span className="text-base font-medium text-gray-500"> {p.price === "Free" ? "" : "/mo"}</span>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 mt-2">{p.cta === "Contact sales" ? "Custom plan for teams" : "Try premium features with a 7-day trial"}</p>
+                    </div>
+
+                    <ul className="mb-6 space-y-2 text-gray-600 dark:text-gray-400">
+                      {p.highlights.map((h, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <AiOutlineCheck className="mt-1 text-indigo-600" />
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => setSelectedPlan(p.id)}
+                        className={`w-full py-3 rounded-lg font-semibold ${
+                          highlighted ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                        }`}
+                      >
+                        {p.cta}
+                      </button>
+
+                      {p.id !== "starter" && (
+                        <button
+                          onClick={() => alert("Show pricing comparison or start trial flow")}
+                          className="w-full py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:underline"
+                        >
+                          Compare plans
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+              <em>Need a custom plan or prop-firm support? <Link href="/contact" className="text-indigo-600 hover:underline">Contact us</Link>.</em>
+            </div>
+          </div>
+        </section>
+
+        {/* TESTIMONIALS */}
+        <section className="py-20 px-6 sm:px-12 md:px-20">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3">Loved by traders worldwide</h2>
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Real traders using Tradia to improve strategy and consistency.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    <div>
+                      <div className="font-semibold">Trader {i + 1}</div>
+                      <div className="text-sm text-gray-500">Retail trader</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-400 mb-3">
+                    {Array.from({ length: 5 }).map((_, s) => <AiOutlineStar key={s} className="w-5 h-5" />)}
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400">"Tradia helped me spot recurring mistakes and improve my risk sizing — the AI hints are a game changer."</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ + CTA */}
+        <section className="py-20 px-6 sm:px-12 md:px-20 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+              <div className="space-y-3">
+                {faqs.map((f, idx) => (
+                  <div key={idx} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                    <button
+                      onClick={() => setActiveFAQ(activeFAQ === idx ? null : idx)}
+                      className="w-full text-left flex items-center justify-between gap-3"
+                    >
+                      <span className="font-medium">{f.q}</span>
+                      <span className="text-gray-500">{activeFAQ === idx ? "−" : "+"}</span>
+                    </button>
+                    {activeFAQ === idx && <p className="mt-3 text-gray-600 dark:text-gray-400">{f.a}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold mb-3">Ready to improve your trading?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Start for free and upgrade when you’re ready — no hard paywall.</p>
+              <Link href="/auth/signup" className="w-full inline-block text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">Get started (Free)</Link>
+              <div className="mt-4 text-sm text-gray-500">Or explore pricing to find the right plan.</div>
+            </div>
           </div>
         </section>
       </main>
