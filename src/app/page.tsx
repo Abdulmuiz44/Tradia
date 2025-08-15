@@ -173,7 +173,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/auth/signup"
+                href="/signup"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md flex items-center justify-center gap-2"
               >
                 Get started for free <AiOutlineArrowRight />
@@ -377,7 +377,7 @@ export default function Home() {
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
               <h3 className="text-xl font-bold mb-3">Ready to improve your trading?</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">Start for free and upgrade when you’re ready — no hard paywall.</p>
-              <Link href="/auth/signup" className="w-full inline-block text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">Get started (Free)</Link>
+              <Link href="/signup" className="w-full inline-block text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">Get started (Free)</Link>
               <div className="mt-4 text-sm text-gray-500">Or explore pricing to find the right plan.</div>
             </div>
           </div>
