@@ -1,5 +1,4 @@
 // src/context/TradeContext.tsx
-
 "use client";
 
 import React, {
@@ -14,8 +13,8 @@ import { Trade } from "@/types/trade";
 
 /**
  * TradeContextProps
- * - keeps the previous API surface so existing components still work
- * - adds syncFromMT5 and importTrades utilities
+ * - keeps previous API surface
+ * - adds refreshTrades and switches syncFromMT5 to Next API
  */
 interface TradeContextProps {
   trades: Trade[];
@@ -23,14 +22,15 @@ interface TradeContextProps {
   addTrade: (newTrade: Trade) => void;
   updateTrade: (updatedTrade: Trade) => void;
   deleteTrade: (id: string) => void;
-  setTradesFromCsv: (csvTrades: any[]) => void; // keep name for compatibility, accepts broker shaped objects
+  setTradesFromCsv: (csvTrades: any[]) => void;
   importTrades: (trades: any[]) => void;
   filterTrades: (fromDate: Date, toDate: Date) => void;
+  refreshTrades: () => Promise<void>;
   syncFromMT5: (
     login: string,
     password: string,
     server: string,
-    backendUrl?: string
+    backendUrl?: string // ignored; we use /api/mt5/connect
   ) => Promise<{
     success: boolean;
     account?: any;
@@ -50,6 +50,7 @@ export const TradeContext = createContext<TradeContextProps>({
   setTradesFromCsv: () => {},
   importTrades: () => {},
   filterTrades: () => {},
+  refreshTrades: async () => {},
   syncFromMT5: async () => ({ success: false }),
   clearTrades: () => {},
 });
@@ -57,29 +58,6 @@ export const TradeContext = createContext<TradeContextProps>({
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
-
-  // --- Persist / Load from localStorage (client-only) ---
-  useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      const stored = localStorage.getItem("trade-history");
-      if (stored) {
-        const parsed = JSON.parse(stored) as Trade[];
-        setTrades(parsed);
-      }
-    } catch (err) {
-      console.error("Failed to load trade-history from localStorage:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      localStorage.setItem("trade-history", JSON.stringify(trades));
-    } catch (err) {
-      console.error("Failed to save trade-history to localStorage:", err);
-    }
-  }, [trades]);
 
   // --- Utility: generate unique id ---
   const generateUniqueId = useCallback((existingIds?: Set<string>) => {
@@ -98,7 +76,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     return id;
   }, []);
 
-  // --- Normalizer: defensive mapping of backend trade -> Trade shape ---
+  // --- Normalizer: backend trade -> Trade shape (unchanged) ---
   const normalizeBrokerTrade = useCallback((t: any): Trade => {
     const profitRaw =
       t.profit ??
@@ -155,6 +133,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       t.ticket_no ??
       t.ticketId ??
       t.ticket_id ??
+      t.deal_id ??
       undefined;
 
     const toISOStringIfValid = (v: any) => {
@@ -195,7 +174,6 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           ? String(t.lots)
           : "1",
       pnl: profit,
-      // keep a readable formatted P/L field for UIs
       profitLoss: typeof profit === "number" ? `$${profit.toFixed(2)}` : String(profitRaw ?? "0"),
       openTime: toISOStringIfValid(openTimeRaw) || (t.time ? toISOStringIfValid(t.time) : ""),
       closeTime: toISOStringIfValid(closeTimeRaw) || "",
@@ -204,8 +182,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       reasonForTrade: t.reasonForTrade ?? t.reason ?? t.strategy ?? t.strategyName ?? "",
       strategy: t.strategy ?? t.reason ?? t.reasonForTrade ?? "",
       emotion: t.emotion ?? "neutral",
-      // attach original raw for traceability
-      // @ts-ignore
+      // @ts-ignore keep raw for debugging
       raw: t,
     };
 
@@ -237,17 +214,13 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * setTradesFromCsv
-   * - Accepts array of broker/backend-shaped trades
-   * - Normalizes each entry to our Trade shape
-   * - Upserts into state (if id exists -> replace, else add)
-   * - Ensures unique ids
+   * - Normalizes array and upserts into state
    */
   const setTradesFromCsv = useCallback(
     (csvTrades: any[]) => {
       if (!Array.isArray(csvTrades) || csvTrades.length === 0) return;
 
       setTrades((prev) => {
-        // Map existing trades by id for upsert
         const byId = new Map<string, Trade>();
         const prevIds = new Set<string>();
         prev.forEach((p) => {
@@ -261,10 +234,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           }
         });
 
-        // Normalize incoming
         const normalized = csvTrades.map((t) => normalizeBrokerTrade(t));
 
-        // Upsert normalized
         normalized.forEach((nt) => {
           const ntId = nt.id ? String(nt.id) : undefined;
           if (ntId && byId.has(ntId)) {
@@ -277,30 +248,24 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           }
         });
 
-        // Return array in insertion order (existing first, then new ones)
         return Array.from(byId.values());
       });
     },
     [normalizeBrokerTrade, generateUniqueId]
   );
 
-  // alias importTrades => same behavior but clearer naming
   const importTrades = useCallback((incoming: any[]) => {
     setTradesFromCsv(incoming);
   }, [setTradesFromCsv]);
 
-  // Clear trades
   const clearTrades = useCallback(() => {
     setTrades([]);
     setFilteredTrades([]);
     try {
       if (typeof window !== "undefined") localStorage.removeItem("trade-history");
-    } catch (e) {
-      // ignore
-    }
+    } catch {}
   }, []);
 
-  // Filter trades by date range (inclusive)
   const filterTrades = useCallback(
     (fromDate: Date, toDate: Date) => {
       const filtered = trades.filter((trade) => {
@@ -314,20 +279,32 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   );
 
   /**
+   * Refresh trades from Next API (/api/trades) and normalize into state.
+   */
+  const refreshTrades = useCallback(async () => {
+    try {
+      const res = await fetch("/api/trades", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load trades");
+      const data = await res.json();
+      const rows = Array.isArray(data.trades) ? data.trades : [];
+      setTradesFromCsv(rows);
+    } catch (e) {
+      console.error("refreshTrades error:", e);
+    }
+  }, [setTradesFromCsv]);
+
+  /**
    * syncFromMT5
-   * - calls backend endpoint to fetch account, trades, positions
-   * - normalizes trades and imports them into context (and into localStorage via effect)
-   *
-   * backendUrl default:
-   * - "http://127.0.0.1:5000/sync_mt5" (Flask backend)
-   * - Or your Next API route: "/api/integrations/mt5/sync"
+   * - Calls our Next API (/api/mt5/connect)
+   * - On success, refreshes trades from DB
+   * - Ignores provided backendUrl; we always use server route now
    */
   const syncFromMT5 = useCallback(
     async (
       login: string,
       password: string,
       server: string,
-      backendUrl = (process.env.NEXT_PUBLIC_MT5_BACKEND as string) || "http://127.0.0.1:5000/sync_mt5"
+      _backendUrl?: string
     ): Promise<{
       success: boolean;
       account?: any;
@@ -335,86 +312,65 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       positions?: any[];
       error?: string;
     }> => {
-      // validate input quickly
       if (!login || !password || !server) {
         return { success: false, error: "Missing login, password or server." };
       }
 
-      // Abortable fetch with timeout
-      const controller = new AbortController();
-      const timeoutMs = 20000; // 20s
-      const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
       try {
-        const res = await fetch(backendUrl, {
+        const res = await fetch("/api/mt5/connect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ login, password, server }),
-          signal: controller.signal,
         });
 
-        clearTimeout(timeout);
-
-        if (!res.ok) {
-          // try to extract JSON error if provided
-          let bodyText = "";
-          try {
-            const t = await res.text();
-            bodyText = t;
-          } catch (_) {
-            bodyText = `HTTP ${res.status}`;
-          }
-          const msg =
-            bodyText ||
-            `Sync failed with status ${res.status} - ${res.statusText || "Unknown status"}`;
-          return { success: false, error: msg };
+        const data = await res.json();
+        if (!res.ok || !data?.success) {
+          return { success: false, error: data?.error || "Sync failed" };
         }
 
-        const data = await res.json();
+        // Pull fresh trades into state for UI
+        await refreshTrades();
 
-        const brokerTrades = Array.isArray(data.trades) ? data.trades : [];
-
-        // normalize + import (upsert)
-        setTradesFromCsv(brokerTrades);
-
-        const normalizedTrades = brokerTrades.map(normalizeBrokerTrade);
-
+        // Optionally return normalized trades from state after refresh
         return {
           success: true,
           account: data.account,
-          trades: normalizedTrades,
-          positions: data.positions || [],
+          trades: undefined,
+          positions: undefined,
         };
       } catch (err: any) {
-        clearTimeout(timeout);
         console.error("syncFromMT5 error:", err);
-
-        // Friendly guidance for typical 'Failed to fetch' / network / CORS issues
-        const isAbort = err && (err.name === "AbortError" || err.code === "ECONNABORTED");
-        if (isAbort) {
-          return { success: false, error: `Request timed out after ${timeoutMs / 1000}s.` };
-        }
-
         const msg =
-          (err && err.message) ||
-          String(err) ||
-          "Unknown error during MT5 sync. Ensure the backend is running and reachable, and CORS is enabled.";
-
-        // Helpful hint for developers / users
-        const hint =
-          msg.includes("Failed to fetch") || msg.includes("NetworkError")
-            ? `${msg} — frontend couldn't reach the backend. Check that your backend (e.g. Flask on port 5000) is running and accessible from the browser and that CORS is enabled. If you're testing on a mobile device or a VM, replace 'localhost' with your machine's LAN IP (e.g. http://127.0.0.1:5000).`
-            : msg;
-
-        return { success: false, error: hint };
-      } finally {
-        clearTimeout(timeout);
+          err?.message ||
+          "Unknown error during MT5 sync. Ensure you are signed in and the server route is reachable.";
+        return { success: false, error: msg };
       }
     },
-    [setTradesFromCsv, normalizeBrokerTrade]
+    [refreshTrades]
   );
 
-  // Provide context value
+  // --- Load initial trades ---
+  useEffect(() => {
+    // Try to show cached trades quickly, then refresh from server
+    try {
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("trade-history");
+        if (stored) setTrades(JSON.parse(stored) as Trade[]);
+      }
+    } catch {}
+
+    refreshTrades();
+  }, [refreshTrades]);
+
+  // --- Persist to localStorage as cache ---
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("trade-history", JSON.stringify(trades));
+      }
+    } catch {}
+  }, [trades]);
+
   return (
     <TradeContext.Provider
       value={{
@@ -426,6 +382,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         setTradesFromCsv,
         importTrades,
         filterTrades,
+        refreshTrades,
         syncFromMT5,
         clearTrades,
       }}
@@ -435,13 +392,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-/**
- * convenience hook used across the app (keeps previous useTrade usage)
- */
 export const useTrade = () => {
   const ctx = useContext(TradeContext);
-  if (!ctx) {
-    throw new Error("useTrade must be used within a TradeProvider");
-  }
+  if (!ctx) throw new Error("useTrade must be used within a TradeProvider");
   return ctx;
 };

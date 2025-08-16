@@ -13,72 +13,40 @@ CREATE DATABASE tradia
     CONNECTION LIMIT = -1
     IS_TEMPLATE = False;
 
-
-/* Users Table */
-
-CREATE TABLE users (
-    id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	name TEXT,
-	email TEXT UNIQUE,
-	email_verified TIMESTAMP,
-	image TEXT,
-	password TEXT,
-	verification_token TEXT,
-	created_at TIMESTAMP DEFAULT NOW(),
-	updated_at TIMESTAMP
+	-- mt5_accounts
+CREATE TABLE IF NOT EXISTS mt5_accounts (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(128) NOT NULL,
+  login VARCHAR(64) NOT NULL,
+  server VARCHAR(128) NOT NULL,
+  metaapi_account_id VARCHAR(64) UNIQUE NOT NULL,
+  name VARCHAR(255),
+  currency VARCHAR(16),
+  balance NUMERIC,
+  state VARCHAR(32),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
-/* Accounts Table */
-
-CREATE TABLE accounts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-	type TEXT NOT NULL,
-	provider TEXT NOT NULL,
-	provider_account_id TEXT NOT NULL,
-	refresh_token TEXT,
-	access_token TEXT,
-	expires_at INT,
-    token_type TEXT,
-	scope TEXT,
-	id_token TEXT,
-	session_state TEXT,
-	UNIQUE (provider, provider_account_id)
+-- trades
+CREATE TABLE IF NOT EXISTS trades (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(128) NOT NULL,
+  metaapi_account_id VARCHAR(64) NOT NULL,
+  deal_id VARCHAR(64) UNIQUE NOT NULL,
+  order_id VARCHAR(64),
+  symbol VARCHAR(64),
+  type VARCHAR(32),
+  volume NUMERIC,
+  open_time TIMESTAMP,      -- optional if you add it later
+  close_time TIMESTAMP,
+  open_price NUMERIC,       -- optional if you add it later
+  close_price NUMERIC,
+  profit NUMERIC,
+  commission NUMERIC,
+  swap NUMERIC,
+  magic INTEGER,
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
-
-/* Sessions Table */
-
-CREATE TABLE sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	session_token TEXT UNIQUE NOT NULL,
-	user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-	expires TIMESTAMP NOT NULL
-);
-
-
-/* Verification Tokens Table */
-
-CREATE TABLE verification_tokens (
-    identifier TEXT NOT NULL,
-	token TEXT UNIQUE NOT NULL,
-	expires TIMESTAMP NOT NULL,
-	UNIQUE(identifier, token)
-);
-
-
-/* Password Reset Tokens Table */
-
-CREATE TABLE password_reset_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	token TEXT UNIQUE NOT NULL,
-	user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-	expires_at TIMESTAMP NOT NULL,
-	created_at TIMESTAMP DEFAULT NOW()
-	
-);
-
-
-
-
-
-
