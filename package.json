@@ -40,6 +40,7 @@
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.525.0",
+    "metaapi.cloud-sdk": "^29.3.1",
     "mongod": "^2.0.0",
     "netstat": "^0.0.2",
     "next": "15.4.6",
@@ -69,6 +70,7 @@
     "tailwind-merge": "^3.3.1",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",
+    "zod": "^4.0.17",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

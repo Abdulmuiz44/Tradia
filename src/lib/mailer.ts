@@ -25,7 +25,8 @@ const transporter = nodemailer.createTransport({
 
 // Send verification email function
 export async function sendVerificationEmail(to: string, token: string) {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email?token=${token}`;
+  // IMPORTANT: point to the API route, not directly to /verify-email
+  const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify-email?token=${token}`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
@@ -34,7 +35,10 @@ export async function sendVerificationEmail(to: string, token: string) {
     html: `
       <h2>Welcome to Tradia!</h2>
       <p>Please verify your email by clicking the link below:</p>
-      <a href="${verifyUrl}" style="padding:10px 20px; background:#4CAF50; color:white; text-decoration:none;">Verify Email</a>
+      <a href="${verifyUrl}" 
+         style="padding:10px 20px; background:#4CAF50; color:white; text-decoration:none;">
+         Verify Email
+      </a>
       <p>If you did not sign up, please ignore this email.</p>
     `,
   };

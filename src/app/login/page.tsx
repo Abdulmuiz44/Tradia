@@ -1,4 +1,3 @@
-// app/login/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,16 +15,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Prefill saved email if remembered
     try {
-      const saved = typeof window !== "undefined" && localStorage.getItem("tradia_remember_email");
+      const saved =
+        typeof window !== "undefined" &&
+        localStorage.getItem("tradia_remember_email");
       if (saved) {
         setForm((f) => ({ ...f, email: saved }));
         setRemember(true);
       }
-    } catch (e) {
-      // ignore localStorage errors
-    }
+    } catch {}
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,15 +39,13 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem("tradia_remember_email");
       }
-    } catch (e) {
-      // ignore storage issues
-    }
+    } catch {}
   };
 
   useEffect(() => {
-    // keep stored email updated while remember is enabled
     try {
-      if (remember && form.email) localStorage.setItem("tradia_remember_email", form.email);
+      if (remember && form.email)
+        localStorage.setItem("tradia_remember_email", form.email);
     } catch {}
   }, [form.email, remember]);
 
@@ -64,30 +60,27 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      // Use NextAuth credentials provider. redirect:false returns result object
       const result: any = await signIn("credentials", {
         redirect: false,
         email: form.email,
         password: form.password,
       });
 
-      // result.ok === true => sign-in success
-      if (result && result.ok) {
-        // Persist remembered email if needed
+      if (result?.error) {
+        // Custom error from NextAuth (like unverified email)
+        setError(result.error);
+        return;
+      }
+
+      if (result?.ok) {
         try {
           if (remember) localStorage.setItem("tradia_remember_email", form.email);
           else localStorage.removeItem("tradia_remember_email");
         } catch {}
-
-        // Navigate explicitly to dashboard to avoid unexpected NextAuth redirects
         router.push("/dashboard");
-        return;
+      } else {
+        setError("Invalid credentials or sign-in failed.");
       }
-
-      // If not ok, try to extract message
-      // next-auth often returns error codes like "CredentialsSignin"
-      const msg = (result && result.error) || "Invalid credentials or sign-in failed.";
-      setError(typeof msg === "string" ? msg : "Sign-in failed");
     } catch (err: any) {
       console.error("Sign-in error:", err);
       setError(err?.message || "Sign-in request failed.");
@@ -97,7 +90,6 @@ export default function LoginPage() {
   };
 
   const handleGoogle = async () => {
-    // This will redirect browser to Google and then return to /dashboard on success
     await signIn("google", { callbackUrl: "/dashboard" });
   };
 
@@ -145,11 +137,15 @@ export default function LoginPage() {
                 onChange={toggleRemember}
                 className="h-4 w-4"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Remember me</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Remember me
+              </span>
             </label>
 
-            {/* Link to the dedicated forgot password page */}
-            <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-indigo-600 hover:underline"
+            >
               Forgot Password?
             </Link>
           </div>

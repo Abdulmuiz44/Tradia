@@ -8,10 +8,11 @@ export async function GET(req: Request) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/failed`);
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/failed`
+      );
     }
 
-    // Find user with this verification token
     const result = await pool.query(
       `SELECT * FROM users WHERE verification_token = $1`,
       [token]
@@ -19,7 +20,9 @@ export async function GET(req: Request) {
     const user = result.rows[0];
 
     if (!user) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/failed`);
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/failed`
+      );
     }
 
     // Update user: set email_verified and remove token
@@ -32,10 +35,14 @@ export async function GET(req: Request) {
       [user.id]
     );
 
-    // Redirect to success page
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/success`);
+    // ✅ Redirect instead of JSON
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/success`
+    );
   } catch (err) {
     console.error("Email verification error:", err);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/failed`);
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email/failed`
+    );
   }
 }

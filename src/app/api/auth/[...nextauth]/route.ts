@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { PostgresAdapter } from "@/lib/pgAdapter";
+import { pool } from "@/lib/db"; // Ensure you have a db.ts that exports pool
 
 export const authOptions = {
   adapter: PostgresAdapter(),
@@ -19,16 +20,39 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required.");
+        }
 
-        // fetch user by email
-        const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/user?email=${credentials.email}`);
-        const user = await res.json();
+        try {
+          // Query user directly from Postgres
+          const { rows } = await pool.query(
+            "SELECT id, email, password, email_verified, name FROM users WHERE email = $1 LIMIT 1",
+            [credentials.email]
+          );
 
-        if (!user || !user.password) return null;
+          const user = rows[0];
+          if (!user) throw new Error("No account found with this email.");
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        return isValid ? user : null;
+          // Require verified email before login
+          if (!user.email_verified) {
+            throw new Error("Please verify your email before logging in.");
+          }
+
+          // Compare password
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          if (!isValid) throw new Error("Invalid password.");
+
+          // Return user object (without password!)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
+        } catch (err: any) {
+          console.error("Authorize error:", err.message);
+          throw new Error(err.message || "Invalid login credentials.");
+        }
       },
     }),
   ],
@@ -37,9 +61,12 @@ export const authOptions = {
       try {
         // Link Google account to existing user if email exists
         if (account?.provider === "google" && user?.email) {
-          const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/user?email=${user.email}`);
-          const existingUser = await res.json();
+          const { rows } = await pool.query(
+            "SELECT id FROM users WHERE email = $1 LIMIT 1",
+            [user.email]
+          );
 
+          const existingUser = rows[0];
           if (existingUser) {
             await fetch(`${process.env.NEXTAUTH_URL}/api/auth/linkAccount`, {
               method: "POST",
@@ -49,7 +76,6 @@ export const authOptions = {
               }),
               headers: { "Content-Type": "application/json" },
             });
-            return true;
           }
         }
         return true;
@@ -57,6 +83,20 @@ export const authOptions = {
         console.error("NextAuth signIn callback error:", err);
         return false;
       }
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id;
+        session.user.email = token.email;
+      }
+      return session;
     },
   },
   session: {
