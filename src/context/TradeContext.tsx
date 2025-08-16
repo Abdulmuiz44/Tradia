@@ -14,7 +14,7 @@ import { Trade } from "@/types/trade";
 /**
  * TradeContextProps
  * - keeps previous API surface
- * - adds refreshTrades and switches syncFromMT5 to Next API
+ * - adds refreshTrades and switches syncFromMT5 to Next API + Python backend
  */
 interface TradeContextProps {
   trades: Trade[];
@@ -30,7 +30,7 @@ interface TradeContextProps {
     login: string,
     password: string,
     server: string,
-    backendUrl?: string // ignored; we use /api/mt5/connect
+    backendUrl?: string
   ) => Promise<{
     success: boolean;
     account?: any;
@@ -144,6 +144,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         return v;
       }
       if (typeof v === "number") {
+        // unix seconds -> ms
         if (String(v).length === 10) return new Date(v * 1000).toISOString();
         return new Date(v).toISOString();
       }
@@ -295,16 +296,16 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * syncFromMT5
-   * - Calls our Next API (/api/mt5/connect)
-   * - On success, refreshes trades from DB
-   * - Ignores provided backendUrl; we always use server route now
+   * - Calls Python backend (NEXT_PUBLIC_MT5_BACKEND / fallback)
+   * - Persists returned trades via Next API /api/mt5/import
+   * - Refreshes persisted trades from server
    */
   const syncFromMT5 = useCallback(
     async (
       login: string,
       password: string,
       server: string,
-      _backendUrl?: string
+      backendUrl?: string
     ): Promise<{
       success: boolean;
       account?: any;
@@ -316,37 +317,111 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error: "Missing login, password or server." };
       }
 
+      // default python backend url (client-provided override allowed)
+      const backend =
+        backendUrl ||
+        (process.env.NEXT_PUBLIC_MT5_BACKEND as string) ||
+        "http://127.0.0.1:5000/sync_mt5";
+
+      // Abortable fetch with timeout
+      const controller = new AbortController();
+      const timeoutMs = 60000; // 60s
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
       try {
-        const res = await fetch("/api/mt5/connect", {
+        // 1) fetch from python mt5 backend
+        const mtRes = await fetch(backend, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ login, password, server }),
+          signal: controller.signal,
         });
 
-        const data = await res.json();
-        if (!res.ok || !data?.success) {
-          return { success: false, error: data?.error || "Sync failed" };
+        clearTimeout(timeout);
+
+        // try parse JSON response
+        let mtData: any = null;
+        try {
+          mtData = await mtRes.json();
+        } catch (e) {
+          const txt = await mtRes.text().catch(() => "");
+          return { success: false, error: `MT backend returned non-JSON: ${txt}` };
         }
 
-        // Pull fresh trades into state for UI
+        if (!mtRes.ok) {
+          return { success: false, error: mtData?.detail || mtData?.error || `MT backend failed: ${mtRes.status}` };
+        }
+        if (!mtData?.success) {
+          return { success: false, error: mtData?.detail || mtData?.error || "MT backend reported failure" };
+        }
+
+        // 2) get trades array (backend uses "trades" or "deals")
+        const tradesFromBackend = Array.isArray(mtData.trades)
+          ? mtData.trades
+          : Array.isArray(mtData.deals)
+          ? mtData.deals
+          : [];
+
+        // 3) Persist to your Next.js import route so DB stores them
+        try {
+          const importRes = await fetch("/api/mt5/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ account: mtData.account || { login, server }, trades: tradesFromBackend }),
+          });
+
+          let importData: any = null;
+          try {
+            importData = await importRes.json();
+          } catch (e) {
+            const txt = await importRes.text().catch(() => "");
+            console.warn("Import route returned non-JSON:", txt);
+            // still continue and import into memory
+            const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
+            importTrades(normalizedInMemory);
+            return { success: true, account: mtData.account, trades: normalizedInMemory, error: "Imported to memory; DB import returned non-JSON" };
+          }
+
+          if (!importRes.ok || !importData?.success) {
+            console.warn("Import to DB failed:", importData);
+            // still import into memory to give user immediate feedback
+            const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
+            importTrades(normalizedInMemory);
+            return { success: true, account: mtData.account, trades: normalizedInMemory, error: importData?.error || "Persist to DB failed" };
+          }
+        } catch (impErr) {
+          console.error("Error calling /api/mt5/import:", impErr);
+          // import into memory as fallback
+          const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
+          importTrades(normalizedInMemory);
+          return { success: true, account: mtData.account, trades: normalizedInMemory, error: "Failed to persist trades to DB; shown in-memory" };
+        }
+
+        // 4) Refresh persisted trades from DB and return success
         await refreshTrades();
 
-        // Optionally return normalized trades from state after refresh
-        return {
-          success: true,
-          account: data.account,
-          trades: undefined,
-          positions: undefined,
-        };
+        // convert to normalized trades to return
+        const normalizedTrades = tradesFromBackend.map(normalizeBrokerTrade);
+
+        return { success: true, account: mtData.account, trades: normalizedTrades };
       } catch (err: any) {
+        clearTimeout(timeout);
         console.error("syncFromMT5 error:", err);
-        const msg =
-          err?.message ||
-          "Unknown error during MT5 sync. Ensure you are signed in and the server route is reachable.";
-        return { success: false, error: msg };
+        const isAbort = err && (err.name === "AbortError" || err.code === "ECONNABORTED");
+        if (isAbort) {
+          return { success: false, error: `Request timed out after ${timeoutMs / 1000}s.` };
+        }
+        const msg = err?.message || "Unknown error during MT5 sync. Ensure backend reachable.";
+        const hint =
+          msg.includes("Failed to fetch") || msg.includes("NetworkError")
+            ? `${msg} — frontend couldn't reach the MT backend or /api/mt5/import. Check both services.`
+            : msg;
+        return { success: false, error: hint };
+      } finally {
+        clearTimeout(timeout);
       }
     },
-    [refreshTrades]
+    [refreshTrades, importTrades, normalizeBrokerTrade]
   );
 
   // --- Load initial trades ---
