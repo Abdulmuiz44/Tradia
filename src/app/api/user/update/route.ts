@@ -6,38 +6,48 @@ import { pool } from "@/lib/db";
 import bcrypt from "bcrypt";
 
 type UpdateBody = {
-  name?: string;
-  image?: string;
-  oldPassword?: string;
-  newPassword?: string;
+  name?: unknown;
+  image?: unknown;
+  oldPassword?: unknown;
+  newPassword?: unknown;
 };
+
+function asStringOrUndefined(u: unknown): string | undefined {
+  if (typeof u === "string") {
+    const s = u.trim();
+    return s.length ? s : undefined;
+  }
+  return undefined;
+}
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions as any);
-    const userId = session?.user?.id;
+    const session = await getServerSession(authOptions);
+    const userId = typeof session?.user?.id === "string" ? session.user.id : undefined;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json()) as UpdateBody;
-    const name = typeof body?.name === "string" ? body.name.trim() : undefined;
-    const image = typeof body?.image === "string" ? body.image.trim() : undefined;
+    const name = asStringOrUndefined(body?.name);
+    const image = asStringOrUndefined(body?.image);
     const oldPassword = typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
     const newPassword = typeof body?.newPassword === "string" ? body.newPassword : undefined;
 
-    // Validate
     if (!name && !image && !newPassword) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    // If password change requested, validate old password
+    // If changing password — verify old password first
     if (newPassword) {
       if (!oldPassword) {
         return NextResponse.json({ error: "Old password is required to change password" }, { status: 400 });
       }
-      // Fetch existing hashed password
-      const r = await pool.query(`SELECT password FROM users WHERE id=$1 LIMIT 1`, [userId]);
+
+      const r = await pool.query<{ password: string }>(
+        `SELECT password FROM users WHERE id=$1 LIMIT 1`,
+        [userId] as unknown[]
+      );
       const hashed = r.rows[0]?.password;
       if (!hashed) {
         return NextResponse.json({ error: "No existing password set; cannot change" }, { status: 400 });
@@ -46,12 +56,11 @@ export async function PATCH(req: NextRequest) {
       if (!ok) {
         return NextResponse.json({ error: "Old password is incorrect" }, { status: 400 });
       }
-      // Hash new password
-      const saltRounds = 10;
-      const newHashed = await bcrypt.hash(newPassword, saltRounds);
-      // Update password along with name/image if provided
+
+      const newHashed = await bcrypt.hash(newPassword, 10);
+
       const parts: string[] = [];
-      const params: any[] = [];
+      const params: unknown[] = [];
       let idx = 1;
 
       if (name) {
@@ -67,13 +76,14 @@ export async function PATCH(req: NextRequest) {
 
       params.push(userId);
       const query = `UPDATE users SET ${parts.join(", ")}, updated_at=NOW() WHERE id=$${idx}`;
-      await pool.query(query, params);
+      await pool.query(query, params as unknown[]);
+
       return NextResponse.json({ success: true });
     }
 
-    // No password change: update name/image only
+    // update name/image only
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let i = 1;
     if (name) {
       fields.push(`name=$${i++}`);
@@ -90,11 +100,12 @@ export async function PATCH(req: NextRequest) {
 
     values.push(userId);
     const q = `UPDATE users SET ${fields.join(", ")}, updated_at=NOW() WHERE id=$${i}`;
-    await pool.query(q, values);
+    await pool.query(q, values as unknown[]);
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("user update error:", err);
-    return NextResponse.json({ error: err?.message || "Update failed" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg || "Update failed" }, { status: 500 });
   }
 }

@@ -1,330 +1,180 @@
 // src/components/modals/JournalModal.tsx
-
 "use client";
 
-import { useEffect, useState } from "react";
-import { Trade } from "@/types/trade";
+import React, { useEffect, useState } from "react";
+import type { Trade } from "@/types/trade";
 
-type Props = {
+type JournalModalProps = {
   isOpen: boolean;
-  onClose: () => void;
   trade: Trade | null;
-  onSave: (updatedTrade: Trade) => void;
+  onClose: () => void;
+  /**
+   * Called when user saves the trade. The implementation in parent
+   * typically expects a fully formed Trade object (with id).
+   */
+  onSave: (updated: Trade) => void;
 };
 
-export default function JournalModal({ isOpen, onClose, trade, onSave }: Props) {
-  const [form, setForm] = useState<Partial<Trade>>({});
+export default function JournalModal({ isOpen, trade, onClose, onSave }: JournalModalProps) {
+  const [notes, setNotes] = useState<string>("");
+  const [reasonForTrade, setReasonForTrade] = useState<string>("");
+  const [emotion, setEmotion] = useState<string>("neutral");
+  const [outcome, setOutcome] = useState<Trade["outcome"]>("Breakeven");
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize form from the passed-in trade
   useEffect(() => {
-    if (trade) {
-      setForm({ ...trade });
+    if (!trade) {
+      setNotes("");
+      setReasonForTrade("");
+      setEmotion("neutral");
+      setOutcome("Breakeven");
+      setError(null);
+      setSaving(false);
+      return;
     }
-  }, [trade]);
 
-  const handleChange = (field: keyof Trade, value: any) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-  };
+    // Populate fields from the provided trade
+    setNotes(String(trade.journalNotes ?? trade.notes ?? ""));
+    setReasonForTrade(String(trade.reasonForTrade ?? ""));
+    setEmotion(String(trade.emotion ?? "neutral"));
+    setOutcome((trade.outcome as Trade["outcome"]) ?? "Breakeven");
+    setError(null);
+    setSaving(false);
+  }, [trade, isOpen]);
 
-  // Calculates how long the trade was open
-  const calculateDuration = (start: string, end: string): string => {
-    const diff = new Date(end).getTime() - new Date(start).getTime();
-    if (diff < 0) return "Invalid";
-    const minutes = Math.floor(diff / 60000);
-    return `${minutes} min`;
-  };
-
-  // Compute RR string based on entry/sl/tp and outcome
-  const calculateRR = (entry: number, sl: number, tp: number, outcome: string): string => {
-    const risk = Math.abs(entry - sl);
-    const reward = Math.abs(tp - entry);
-    if (risk === 0) return "0RR";
-    const ratio = (reward / risk).toFixed(2);
-    if (outcome === "Loss") return `-${ratio}RR`;
-    if (outcome === "Breakeven") return `0RR`;
-    return `+${ratio}RR`;
-  };
+  if (!isOpen) return null;
 
   const handleSave = () => {
-    // All required fields
-    const required: (keyof Trade)[] = [
-      "symbol", "direction", "orderType",
-      "openTime", "closeTime", "session",
-      "lotSize", "entryPrice", "stopLossPrice", "takeProfitPrice",
-      "pnl", "outcome", "reasonForTrade", "emotion", "journalNotes"
-    ];
-
-    for (let f of required) {
-      if (form[f] === undefined || form[f] === "") {
-        alert(`Please fill in "${f}"`);
-        return;
-      }
+    if (!trade) {
+      setError("No trade selected.");
+      return;
     }
-    if (!trade) return;
 
-    // parse numeric fields
-    const entry = parseFloat(form.entryPrice as any);
-    const sl = parseFloat(form.stopLossPrice as any);
-    const tp = parseFloat(form.takeProfitPrice as any);
-    const pnl = parseFloat(form.pnl as any);
-    const outcome = form.outcome as string;
+    setError(null);
+    setSaving(true);
 
-    const updated: Trade = {
-      ...trade,
-      ...form,
-      entryPrice: entry,
-      stopLossPrice: sl,
-      takeProfitPrice: tp,
-      lotSize: parseFloat(form.lotSize as any),
-      pnl,
-      duration: calculateDuration(form.openTime as string, form.closeTime as string),
-      resultRR: calculateRR(entry, sl, tp, outcome),
-      reasonForTrade: form.reasonForTrade ?? "",
-      journalNotes: form.journalNotes ?? "",
-    } as Trade;
+    try {
+      const updated: Trade = {
+        ...trade,
+        journalNotes: notes,
+        notes,
+        reasonForTrade: reasonForTrade || trade.reasonForTrade,
+        emotion: emotion || trade.emotion,
+        outcome: outcome || trade.outcome,
+        updated_at: new Date().toISOString(),
+      } as Trade;
 
-    onSave(updated);
-    onClose();
+      onSave(updated);
+      setSaving(false);
+      onClose();
+    } catch (err) {
+      setError("Failed to save note.");
+      setSaving(false);
+    }
   };
 
-  if (!isOpen || !trade) return null;
-
-  const inputClass =
-    "w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white";
+  const emotionOptions = ["confident", "fear", "greed", "doubt", "fomo", "neutral"];
+  const outcomeOptions: Trade["outcome"][] = ["Win", "Loss", "Breakeven"];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-lg w-full max-w-2xl z-50 shadow-xl relative max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          Edit Trade Details
-        </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-black/50"
+        onClick={() => {
+          if (!saving) onClose();
+        }}
+        aria-hidden
+      />
+      <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-[#0b1220] rounded-lg shadow-lg overflow-auto p-6">
+        <header className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">{trade ? `Journal — ${trade.symbol}` : "Journal"}</h3>
+          <button
+            onClick={() => {
+              if (!saving) onClose();
+            }}
+            className="text-sm text-zinc-500 hover:text-zinc-300"
+            aria-label="Close journal"
+          >
+            Close
+          </button>
+        </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Symbol */}
+        <section className="grid grid-cols-1 gap-3">
           <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Symbol</label>
-            <input
-              className={inputClass}
-              value={form.symbol ?? ""}
-              onChange={e => handleChange("symbol", e.target.value)}
-              placeholder="e.g. EURUSD"
-            />
-          </div>
-
-          {/* Direction */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Direction</label>
-            <select
-              className={inputClass}
-              value={form.direction ?? "Buy"}
-              onChange={e => handleChange("direction", e.target.value)}
-            >
-              {["Buy", "Sell"].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-
-          {/* Order Type */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Order Type</label>
-            <select
-              className={inputClass}
-              value={form.orderType ?? "Market execution"}
-              onChange={e => handleChange("orderType", e.target.value)}
-            >
-              {["Market execution","Buy limit","Sell limit","Buy stop","Sell stop"]
-                .map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-
-          {/* Session */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Session</label>
-            <select
-              className={inputClass}
-              value={form.session ?? "London"}
-              onChange={e => handleChange("session", e.target.value)}
-            >
-              {["London","Asian","New York"].map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-
-          {/* Open Time */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Open Time</label>
-            <input
-              type="datetime-local"
-              className={inputClass}
-              value={form.openTime ?? ""}
-              onChange={e => handleChange("openTime", e.target.value)}
-            />
-          </div>
-
-          {/* Close Time */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Close Time</label>
-            <input
-              type="datetime-local"
-              className={inputClass}
-              value={form.closeTime ?? ""}
-              onChange={e => handleChange("closeTime", e.target.value)}
-            />
-          </div>
-
-          {/* Lot Size */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Lot Size</label>
-            <input
-              type="number"
-              className={inputClass}
-              value={form.lotSize ?? ""}
-              onChange={e => handleChange("lotSize", parseFloat(e.target.value))}
-              placeholder="e.g. 0.01"
-            />
-          </div>
-
-          {/* Entry Price */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Entry Price</label>
-            <input
-              type="number"
-              className={inputClass}
-              value={form.entryPrice ?? ""}
-              onChange={e => handleChange("entryPrice", parseFloat(e.target.value))}
-              placeholder="e.g. 1.2345"
-            />
-          </div>
-
-          {/* Stop Loss Price */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Stop Loss Price</label>
-            <input
-              type="number"
-              className={inputClass}
-              value={form.stopLossPrice ?? ""}
-              onChange={e => handleChange("stopLossPrice", parseFloat(e.target.value))}
-              placeholder="e.g. 1.2300"
-            />
-          </div>
-
-          {/* Take Profit Price */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Take Profit Price</label>
-            <input
-              type="number"
-              className={inputClass}
-              value={form.takeProfitPrice ?? ""}
-              onChange={e => handleChange("takeProfitPrice", parseFloat(e.target.value))}
-              placeholder="e.g. 1.2400"
-            />
-          </div>
-
-          {/* PNL ($) */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">PNL ($)</label>
+            <label className="block text-sm text-zinc-400 mb-1">Reason for trade</label>
             <input
               type="text"
-              className={inputClass}
-              value={form.pnl ?? ""}
-              onChange={e => handleChange("pnl", e.target.value)}
-              placeholder="+50.00 or -25.00"
+              value={reasonForTrade}
+              onChange={(e) => setReasonForTrade(e.target.value)}
+              placeholder="Why did you enter this trade?"
+              className="w-full p-2 rounded bg-[#0f1724] text-white border border-zinc-700"
             />
           </div>
 
-          {/* Duration */}
           <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Duration (Min)</label>
-            <input
-              className={inputClass}
-              value={form.duration ?? ""}
-              readOnly
-            />
-          </div>
-
-          {/* Outcome */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Outcome</label>
+            <label className="block text-sm text-zinc-400 mb-1">Emotion</label>
             <select
-              className={inputClass}
-              value={form.outcome ?? "Win"}
-              onChange={e => handleChange("outcome", e.target.value)}
+              value={emotion}
+              onChange={(e) => setEmotion(e.target.value)}
+              className="w-full p-2 rounded bg-[#0f1724] text-white border border-zinc-700"
             >
-              {["Win", "Loss", "Breakeven"].map(o => <option key={o}>{o}</option>)}
+              {emotionOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt[0].toUpperCase() + opt.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Result (RR) */}
           <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Result (RR)</label>
-            <input
-              className={inputClass}
-              value={
-                form.entryPrice != null &&
-                form.stopLossPrice != null &&
-                form.takeProfitPrice != null &&
-                form.outcome
-                  ? calculateRR(
-                      form.entryPrice as number,
-                      form.stopLossPrice as number,
-                      form.takeProfitPrice as number,
-                      form.outcome as string
-                    )
-                  : form.resultRR ?? ""
-              }
-              readOnly
-              placeholder="auto-calculated"
-            />
-          </div>
-
-          {/* Reason For Trade */}
-          <div className="sm:col-span-2">
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Reason For Trade</label>
-            <input
-              className={inputClass}
-              value={form.reasonForTrade ?? ""}
-              onChange={e => handleChange("reasonForTrade", e.target.value)}
-              placeholder="e.g. breakout on H1"
-            />
-          </div>
-
-          {/* Emotion */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Emotion</label>
+            <label className="block text-sm text-zinc-400 mb-1">Outcome</label>
             <select
-              className={inputClass}
-              value={form.emotion ?? "Confident"}
-              onChange={e => handleChange("emotion", e.target.value)}
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value as Trade["outcome"])}
+              className="w-full p-2 rounded bg-[#0f1724] text-white border border-zinc-700"
             >
-              {["Confident","Fear","Greed","Doubt","FOMO"].map(em => <option key={em}>{em}</option>)}
+              {outcomeOptions.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Journal Notes */}
-          <div className="sm:col-span-2">
-            <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Journal Notes</label>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">Journal notes</label>
             <textarea
-              className={`${inputClass} h-28 resize-none`}
-              value={form.journalNotes ?? ""}
-              onChange={e => handleChange("journalNotes", e.target.value)}
-              placeholder="Write your reflections or trade review..."
+              rows={6}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Write your trade hindsight, what went well, what you can improve..."
+              className="w-full p-2 rounded bg-[#0f1724] text-white border border-zinc-700"
             />
           </div>
-        </div>
 
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Save
-          </button>
-        </div>
+          {error && <div className="text-sm text-red-400">{error}</div>}
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!saving) onClose();
+              }}
+              className="px-4 py-2 bg-zinc-700 text-white rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "Save Note"}
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );

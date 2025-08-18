@@ -1,4 +1,4 @@
-// app/page.tsx
+// src/app/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -200,8 +200,39 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FEATURES - added to use previously unused `features` */}
+        <section className="py-16 px-6 sm:px-12 md:px-20 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">Key features</h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Everything you need to analyze trades, discover edge and build consistent habits.
+            </p>
+          </div>
+
+          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f, idx) => (
+              <div key={idx} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 text-left">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600">{f.icon}</div>
+                  <h3 className="text-lg font-semibold">{f.title}</h3>
+                </div>
+                <p className="text-gray-600 dark:text-gray-400">{f.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/signup"
+              className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-semibold"
+            >
+              Try it free — Start improving today
+            </Link>
+          </div>
+        </section>
+
         {/* BENEFITS / VALUE */}
-        <section className="py-20 px-6 sm:px-12 md:px-20 bg-gray-50 dark:bg-gray-900">
+        <section className="py-20 px-6 sm:px-12 md:px-20">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl font-bold mb-3">Benefits</h2>
@@ -346,7 +377,9 @@ export default function Home() {
                   <div className="flex items-center gap-1 text-yellow-400 mb-3">
                     {Array.from({ length: 5 }).map((_, s) => <AiOutlineStar key={s} className="w-5 h-5" />)}
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400">"Tradia helped me spot recurring mistakes and improve my risk sizing — the AI hints are a game changer."</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    &ldquo;Tradia helped me spot recurring mistakes and improve my risk sizing — the AI hints are a game changer.&rdquo;
+                  </p>
                 </div>
               ))}
             </div>
@@ -376,7 +409,7 @@ export default function Home() {
 
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
               <h3 className="text-xl font-bold mb-3">Ready to improve your trading?</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Start for free and upgrade when you’re ready — no hard paywall.</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Start for free and upgrade when you're ready — no hard paywall.</p>
               <Link href="/signup" className="w-full inline-block text-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">Get started (Free)</Link>
               <div className="mt-4 text-sm text-gray-500">Or explore pricing to find the right plan.</div>
             </div>

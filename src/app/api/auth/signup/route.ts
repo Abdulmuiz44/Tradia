@@ -5,42 +5,38 @@ import crypto from "crypto";
 import { pool } from "@/lib/db";
 import { sendVerificationEmail } from "@/lib/mailer";
 
+type SignupBody = { name?: unknown; email?: unknown; password?: unknown };
+
+function asString(v: unknown): string {
+  return typeof v === "string" ? v : v === undefined || v === null ? "" : String(v);
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const name = String(body?.name ?? "").trim();
-    const email = String(body?.email ?? "").trim().toLowerCase();
-    const password = String(body?.password ?? "");
+    const body = (await req.json()) as SignupBody;
+    const name = asString(body?.name).trim();
+    const email = asString(body?.email).trim().toLowerCase();
+    const password = asString(body?.password);
 
     if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: "All fields required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "All fields required." }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    // Check if pool is working
     if (!pool) {
-      return NextResponse.json(
-        { error: "Database connection not initialized." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Database connection not initialized." }, { status: 500 });
     }
 
-    const existingRes = await pool.query(
-      `SELECT * FROM users WHERE email=$1`,
+    const existingRes = await pool.query<{ id: string; email_verified?: Date | null }>(
+      `SELECT id, email_verified FROM users WHERE email=$1`,
       [email]
     );
     const existing = existingRes.rows[0];
 
     if (existing && existing.email_verified) {
-      return NextResponse.json(
-        { error: "Email already registered." },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "Email already registered." }, { status: 409 });
     }
 
     if (existing && !existing.email_verified) {
@@ -58,11 +54,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Send verification email
     try {
       await sendVerificationEmail(email, verificationToken);
-    } catch (err) {
-      console.error("Failed to send verification email:", err);
+    } catch (err: unknown) {
+      console.error("Failed to send verification email:", err instanceof Error ? err.message : String(err));
       return NextResponse.json(
         {
           error: "Account created but failed to send verification email. Please request a resend."
@@ -71,15 +66,9 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(
-      { message: "Account created. Please check your email to verify." }
-    );
-
-  } catch (err: any) {
-    console.error("Signup error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Account created. Please check your email to verify." });
+  } catch (err: unknown) {
+    console.error("Signup error:", err instanceof Error ? err.message : String(err));
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

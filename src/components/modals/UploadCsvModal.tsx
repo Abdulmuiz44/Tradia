@@ -1,159 +1,250 @@
+// src/components/modals/UploadCsvModal.tsx
 "use client";
 
-import { useRef, useState, useContext } from "react";
-import { Dialog } from "@headlessui/react";
-import { TradeContext } from "@/context/TradeContext";
-import { Trade } from "@/types/trade";
-import Papa from "papaparse";
-import { X } from "lucide-react";
-import { toast } from "sonner";
+import React, { useState } from "react";
+import type { Trade } from "@/types/trade";
 
-type Props = {
+type UploadCsvModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * Callback invoked with an array of parsed trades.
+   * The parent will typically insert them into the store/context.
+   */
+  onImport: (trades: Trade[]) => void;
 };
 
-export default function UploadCsvModal({ isOpen, onClose }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const { trades, setTradesFromCsv } = useContext(TradeContext);
+/**
+ * Lightweight CSV parser that supports quoted values and commas inside quotes.
+ * Returns array of rows, each row is an array of cell strings.
+ */
+function parseCsvRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let cur: string[] = [];
+  let curCell = "";
+  let inQuotes = false;
+  let i = 0;
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSelectedFile(file);
+  while (i < text.length) {
+    const ch = text[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          // escaped quote
+          curCell += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i += 1;
+        continue;
+      }
+      curCell += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === '"') {
+      inQuotes = true;
+      i += 1;
+      continue;
+    }
+
+    if (ch === ",") {
+      cur.push(curCell);
+      curCell = "";
+      i += 1;
+      continue;
+    }
+
+    if (ch === "\r") {
+      // ignore CR, handle CRLF via LF logic
+      i += 1;
+      continue;
+    }
+
+    if (ch === "\n") {
+      cur.push(curCell);
+      rows.push(cur);
+      // reset
+      cur = [];
+      curCell = "";
+      i += 1;
+      continue;
+    }
+
+    curCell += ch;
+    i += 1;
+  }
+
+  // trailing cell
+  if (curCell !== "" || cur.length > 0) {
+    cur.push(curCell);
+    rows.push(cur);
+  }
+
+  return rows;
+}
+
+/**
+ * Attempts to map a CSV row object to a Trade object.
+ * Uses permissive coercion of common column names.
+ */
+function rowToTradeObject(row: Record<string, string>, idx: number): Trade {
+  const get = (keys: string[], fallback = ""): string =>
+    keys.reduce<string>((acc, k) => acc || (row[k]?.trim() ?? ""), "").trim() || fallback;
+
+  const parseNumber = (v: string): number => {
+    if (!v) return 0;
+    const cleaned = v.replace(/[^0-9.\-eE]/g, "");
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
   };
 
-  const handleFileUpload = () => {
-    if (!selectedFile) return;
-
-    setUploading(true);
-
-    Papa.parse(selectedFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const parsed = results.data as any[];
-
-        const mapped: Trade[] = parsed.map((row) => ({
-          id: `${row.symbol}-${row.openTime}-${crypto.randomUUID()}`,
-          symbol: row.symbol || "",
-          direction: row.direction || "",
-          orderType: row.orderType || "",
-          openTime: row.openTime || new Date().toISOString(),
-          closeTime: row.closeTime || new Date().toISOString(),
-          session: row.session || "",
-          lotSize: parseFloat(row.lotSize) || 0,
-          entryPrice: parseFloat(row.entryPrice) || 0,
-          stopLossPrice: parseFloat(row.stopLossPrice) || 0,
-          takeProfitPrice: parseFloat(row.takeProfitPrice) || 0,
-          pnl: parseFloat(row.pnl) || 0,
-          duration: parseFloat(row.duration) || 0,
-          outcome: row.outcome || "",
-          rr: parseFloat(row.rr) || 0,
-          reasonForTrade: row.reasonForTrade || "",
-          emotion: row.emotion || "",
-          journalNotes: row.journalNotes || "",
-        }));
-
-        // ✅ Append to existing trades
-        const newTrades = [...trades, ...mapped];
-        setTradesFromCsv(newTrades);
-
-        setUploading(false);
-        setSelectedFile(null);
-        onClose();
-
-        // ✅ Toast success
-        toast.success(`${mapped.length} trade(s) uploaded successfully!`);
-      },
-      error: (err) => {
-        console.error("CSV Parse Error:", err);
-        toast.error("Failed to parse CSV file.");
-        setUploading(false);
-      },
-    });
+  const toISO = (v: string): string => {
+    if (!v) return "";
+    const d = new Date(v);
+    if (!isNaN(d.getTime())) return d.toISOString();
+    // try numeric epoch seconds or ms
+    if (/^\d{10}$/.test(v)) return new Date(Number(v) * 1000).toISOString();
+    if (/^\d{13}$/.test(v)) return new Date(Number(v)).toISOString();
+    return v;
   };
 
-  const csvColumns = [
-    "symbol",
-    "direction",
-    "orderType",
-    "openTime",
-    "closeTime",
-    "session",
-    "lotSize",
-    "entryPrice",
-    "stopLossPrice",
-    "takeProfitPrice",
-    "pnl",
-    "duration",
-    "outcome",
-    "rr",
-    "reasonForTrade",
-    "emotion",
-    "journalNotes",
-  ];
+  const trade: Trade = {
+    id: get(["id", "deal_id", "ticket", "trade_id"], `imported-${idx}-${Date.now()}`),
+    symbol: get(["symbol", "pair", "instrument"], "UNKNOWN"),
+    entryPrice: get(["entryPrice", "entry_price", "openPrice", "open_price", "price_open"], ""),
+    exitPrice: get(["exitPrice", "exit_price", "closePrice", "close_price", "price_close"], ""),
+    lotSize: get(["lotSize", "lots", "volume", "size"], "1"),
+    pnl: parseNumber(get(["pnl", "profit", "netpl", "profit_loss"], "0")),
+    profitLoss: get(["profitLoss", "profit_loss", "profit_formatted"], ""),
+    openTime: toISO(get(["openTime", "open_time", "time", "entry_time"], "")),
+    closeTime: toISO(get(["closeTime", "close_time", "time_close", "exit_time"], "")),
+    outcome: (get(["outcome", "result"], "Breakeven") as Trade["outcome"]) ?? "Breakeven",
+    notes: get(["notes", "comment", "journalNotes", "client_comment"], ""),
+    reasonForTrade: get(["reason", "reasonForTrade", "strategy"], ""),
+    strategy: get(["strategy", "strategyName"], ""),
+    emotion: get(["emotion"], ""),
+    // keep timestamps for server if present (optional fields on your Trade type)
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as Trade;
+
+  return trade;
+}
+
+export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvModalProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [parsing, setParsing] = useState<boolean>(false);
+
+  if (!isOpen) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+    setError(null);
+  };
+
+  const doImport = async () => {
+    setError(null);
+
+    if (!file) {
+      setError("Please choose a CSV file to import.");
+      return;
+    }
+
+    setParsing(true);
+
+    try {
+      const text = await file.text();
+      const rows = parseCsvRows(text);
+      if (rows.length === 0) {
+        setError("CSV file appears empty.");
+        setParsing(false);
+        return;
+      }
+
+      const header = rows[0].map((h) => h.trim());
+      const dataRows = rows.slice(1);
+
+      const parsed: Trade[] = dataRows
+        .map((r, i) => {
+          const obj: Record<string, string> = {};
+          for (let j = 0; j < header.length; j += 1) {
+            const key = header[j] ?? `col${j}`;
+            obj[key] = r[j] ?? "";
+          }
+          return rowToTradeObject(obj, i);
+        })
+        .filter(Boolean);
+
+      if (parsed.length === 0) {
+        setError("No data rows found in CSV.");
+        setParsing(false);
+        return;
+      }
+
+      onImport(parsed);
+      setFile(null);
+      onClose();
+    } catch (err) {
+      setError("Failed to parse CSV file.");
+      console.error("CSV import error:", err);
+    } finally {
+      setParsing(false);
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white dark:bg-gray-900 p-6 rounded-xl max-w-lg w-full shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <Dialog.Title className="text-lg font-semibold">
-              Upload Trade CSV
-            </Dialog.Title>
-            <button onClick={onClose} className="hover:text-red-500">
-              <X />
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50" onClick={() => onClose()} aria-hidden />
+      <div className="relative z-10 w-full max-w-xl bg-white dark:bg-[#0b1220] rounded-lg shadow-lg overflow-hidden p-6">
+        <header className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Import trades from CSV</h3>
+          <button onClick={() => onClose()} className="text-sm text-zinc-500 hover:text-zinc-300">Close</button>
+        </header>
+
+        <div className="space-y-3">
+          <p className="text-sm text-zinc-400">
+            Upload a CSV where the first row is the header (e.g. id,symbol,openTime,closeTime,pnl,entryPrice,exitPrice,lotSize,notes).
+            The importer will attempt to map common column names.
+          </p>
+
+          <div>
+            <input type="file" accept=".csv,text/csv" onChange={handleFileChange} />
           </div>
 
-          <p className="text-sm mb-2">
-            Make sure your CSV includes the following columns:
-          </p>
-          <ul className="text-xs text-gray-700 dark:text-gray-300 mb-4 grid grid-cols-2 gap-2 list-disc list-inside">
-            {csvColumns.map((col) => (
-              <li key={col}>{col}</li>
-            ))}
-          </ul>
-
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileSelect}
-            ref={fileInputRef}
-            className="w-full mb-4 text-sm"
-          />
-
-          {uploading && (
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-              <div
-                className="bg-blue-500 h-2 rounded-full animate-pulse"
-                style={{ width: "100%" }}
-              />
+          {file && (
+            <div className="text-sm text-zinc-300">
+              Selected file: <strong>{file.name}</strong> — {(file.size / 1024).toFixed(1)} KB
             </div>
           )}
 
-          <div className="flex justify-end space-x-2">
+          {error && <div className="text-sm text-red-400">{error}</div>}
+
+          <div className="flex justify-end gap-2 mt-4">
             <button
-              onClick={onClose}
-              className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600"
-              disabled={uploading}
+              type="button"
+              onClick={() => onClose()}
+              className="px-4 py-2 bg-zinc-700 text-white rounded"
+              disabled={parsing}
             >
               Cancel
             </button>
             <button
-              onClick={handleFileUpload}
-              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-              disabled={!selectedFile || uploading}
+              type="button"
+              onClick={doImport}
+              disabled={parsing}
+              className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-60"
             >
-              {uploading ? "Uploading..." : "Upload"}
+              {parsing ? "Importing…" : "Import CSV"}
             </button>
           </div>
-        </Dialog.Panel>
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
 }

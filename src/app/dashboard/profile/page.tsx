@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, UploadCloud } from "lucide-react";
 
 /**
- * Small list of countries — expand as needed. Each option value is "cca2|+CODE"
- * where cca2 is the two-letter country code and +CODE is the dialing prefix.
+ * Small list of countries — expand as needed. Each option value is "CCA2|+CODE"
  */
 const COUNTRIES: { label: string; value: string }[] = [
   { label: "United States (+1)", value: "US|+1" },
@@ -19,7 +18,6 @@ const COUNTRIES: { label: string; value: string }[] = [
   { label: "Australia (+61)", value: "AU|+61" },
   { label: "Germany (+49)", value: "DE|+49" },
   { label: "France (+33)", value: "FR|+33" },
-  // add others you need...
 ];
 
 const TRADING_STYLES = [
@@ -28,85 +26,86 @@ const TRADING_STYLES = [
   { label: "Swing trading", value: "swing" },
   { label: "Position trading", value: "position" },
   { label: "Algorithmic / Quant", value: "algo" },
-];
+] as const;
 
 const EXPERIENCE_LEVELS = [
   { label: "Beginner", value: "beginner" },
   { label: "Intermediate", value: "intermediate" },
   { label: "Advanced", value: "advanced" },
   { label: "Professional", value: "professional" },
-];
+] as const;
 
-export default function ProfilePage() {
+type UpdatePayload = {
+  name?: string;
+  image?: string | null;
+  phone?: string;
+  country?: string;
+  tradingStyle?: string;
+  tradingExperience?: string;
+  bio?: string;
+  oldPassword?: string;
+  newPassword?: string;
+};
+
+export default function ProfilePage(): JSX.Element {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const initialName = (session?.user?.name as string) ?? "";
-  const initialEmail = (session?.user?.email as string) ?? "";
-  const initialImage = (session?.user?.image as string) ?? "";
+  const initialName = String(session?.user?.name ?? "");
+  const initialEmail = String(session?.user?.email ?? "");
+  const initialImage = String(session?.user?.image ?? "");
 
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(initialName);
-  const [email] = useState(initialEmail); // read only
+  const [editing, setEditing] = useState<boolean>(false);
+  const [name, setName] = useState<string>(initialName);
+  const [email] = useState<string>(initialEmail); // read-only
   const [imageUrl, setImageUrl] = useState<string | null>(initialImage || null);
 
-  // New persistent fields (country/phone/trading style/experience/bio)
-  const [country, setCountry] = useState<string>("US|+1"); // default
-  const [phoneNumber, setPhoneNumber] = useState<string>(""); // without country code
+  const [country, setCountry] = useState<string>("US|+1");
+  const [phoneNumber, setPhoneNumber] = useState<string>(""); // without code
   const [tradingStyle, setTradingStyle] = useState<string>("");
   const [tradingExperience, setTradingExperience] = useState<string>("");
   const [bio, setBio] = useState<string>("");
 
-  // optional local-only fields left for backward compatibility
-  const [localPhone, setLocalPhone] = useState<string>(""); // unused if using phoneNumber
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  // Password change UI
-  const [wantChangePassword, setWantChangePassword] = useState(false);
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [wantChangePassword, setWantChangePassword] = useState<boolean>(false);
+  const [oldPassword, setOldPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
 
   useEffect(() => {
     setName(initialName);
     setImageUrl(initialImage || null);
   }, [initialName, initialImage]);
 
-  // Try to fetch extended profile (optional endpoint). If your backend later supports
-  // GET /api/user/profile it should return a JSON object with fields: country, phone, tradingStyle, tradingExperience, bio, image, name
+  // Try to load an extended profile if present on backend: /api/user/profile
   useEffect(() => {
     let mounted = true;
-    async function loadProfile() {
+    async function loadProfile(): Promise<void> {
       try {
         const res = await fetch("/api/user/profile", { cache: "no-store" });
         if (!res.ok) return;
-        const json = await res.json();
+        const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
         if (!mounted || !json) return;
-        // Safely set known fields if present
         if (json.name) setName(String(json.name));
         if (json.image) setImageUrl(String(json.image));
         if (json.country) setCountry(String(json.country));
         if (json.phone) {
-          // Expect phone either with code like "+1 555..." or without. Try to split code.
           const p = String(json.phone);
-          // if it begins with +, try to find matching country code in our list
           if (p.startsWith("+")) {
-            // naive: split first space
             const parts = p.split(/\s+/);
             const code = parts[0];
-            // find country with that dialing code
             const match = COUNTRIES.find((c) => c.value.endsWith(`|${code}`));
             if (match) {
               setCountry(match.value);
               setPhoneNumber(parts.slice(1).join(" "));
             } else {
-              // fallback to storing whole number in phoneNumber
               setPhoneNumber(p);
             }
           } else {
@@ -116,9 +115,8 @@ export default function ProfilePage() {
         if (json.tradingStyle) setTradingStyle(String(json.tradingStyle));
         if (json.tradingExperience) setTradingExperience(String(json.tradingExperience));
         if (json.bio) setBio(String(json.bio));
-      } catch (e) {
-        // ignore if endpoint not available
-        // console.debug("No extended profile endpoint or failed to load:", e);
+      } catch {
+        // ignore — endpoint optional
       }
     }
     loadProfile();
@@ -130,9 +128,8 @@ export default function ProfilePage() {
   if (status === "loading") return <p className="text-white p-4">Loading profile…</p>;
   if (!session) return <p className="text-white p-4">Access denied. Please sign in.</p>;
 
-  const goBack = () => router.push("/dashboard");
+  const goBack = (): void => void router.push("/dashboard");
 
-  // Convert file to data URL
   const fileToDataUrl = (file: File): Promise<string> =>
     new Promise((res, rej) => {
       const reader = new FileReader();
@@ -141,13 +138,11 @@ export default function ProfilePage() {
       reader.readAsDataURL(file);
     });
 
-  // Upload avatar flow: convert file -> POST { fileName, data } -> get imageUrl
-  const uploadAvatar = async (file: File) => {
+  const uploadAvatar = async (file: File): Promise<void> => {
     setUploading(true);
     setError(null);
     setMessage(null);
     try {
-      // basic size limit check (1.5MB)
       const maxBytes = 1.5 * 1024 * 1024;
       if (file.size > maxBytes) throw new Error("File too large (max 1.5MB).");
 
@@ -161,41 +156,39 @@ export default function ProfilePage() {
       });
 
       if (!res.ok) {
-        const txt = await res.text();
+        const txt = await res.text().catch(() => "");
         throw new Error(txt || `Upload failed (${res.status})`);
       }
 
-      const json = await res.json();
-      if (!json?.imageUrl) throw new Error("No image URL returned from server");
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!json?.imageUrl || typeof json.imageUrl !== "string") throw new Error("No image URL returned from server");
       setImageUrl(json.imageUrl);
       setPreviewSrc(null);
       setMessage("Profile image uploaded.");
-    } catch (err: any) {
-      console.error("Avatar upload failed:", err);
-      setError(err?.message || "Avatar upload failed.");
+    } catch (unknownErr) {
+      const message = unknownErr instanceof Error ? unknownErr.message : String(unknownErr);
+      console.error("Avatar upload failed:", message);
+      setError(message || "Avatar upload failed.");
     } finally {
       setUploading(false);
     }
   };
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.[0];
     if (!file) return;
     await uploadAvatar(file);
   };
 
-  // Trigger the hidden file input
-  const triggerFileInput = () => fileRef.current?.click();
+  const triggerFileInput = (): void => void fileRef.current?.click();
 
-  // Extract dial code from selected country value (value is "CC|+CODE")
   const selectedDialCode = country.split("|")[1] ?? "+1";
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     setSaving(true);
     setError(null);
     setMessage(null);
 
-    // Validate
     if (!name || name.trim().length === 0) {
       setError("Name cannot be empty.");
       setSaving(false);
@@ -221,15 +214,12 @@ export default function ProfilePage() {
     }
 
     try {
-      // Combine dialing code + phoneNumber into single canonical phone string
-      const phoneToSend = phoneNumber
-        ? `${selectedDialCode} ${phoneNumber.trim()}`
-        : "";
+      const phoneToSend = phoneNumber ? `${selectedDialCode} ${phoneNumber.trim()}` : "";
 
-      const payload: any = {
+      const payload: UpdatePayload = {
         name,
-        image: imageUrl,
-        phone: phoneToSend,
+        image: imageUrl ?? null,
+        phone: phoneToSend || undefined,
         country,
         tradingStyle,
         tradingExperience,
@@ -247,26 +237,38 @@ export default function ProfilePage() {
         body: JSON.stringify(payload),
       });
 
+      const text = await res.text();
+      // If server returned non-JSON or error, handle it
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `Save failed (${res.status})`);
+        // try parse as json message if possible
+        let parsed: unknown = null;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          parsed = null;
+        }
+        const serverErr =
+          parsed && typeof parsed === "object" && (parsed as Record<string, unknown>)["error"]
+            ? String((parsed as Record<string, unknown>)["error"])
+            : text || `Save failed (${res.status})`;
+        throw new Error(serverErr);
       }
 
-      const json = await res.json();
-      if (!json?.success) {
-        throw new Error(json?.error || "Save failed");
+      const json = (text ? JSON.parse(text) : {}) as Record<string, unknown>;
+      if (!json?.success && json?.success !== true) {
+        throw new Error(typeof json?.error === "string" ? json.error : "Save failed");
       }
 
       setMessage("Profile updated successfully.");
-
-      // Refresh UI / server components and stop editing
       router.refresh();
 
-      // update fields if backend returned updated user
-      if (json.user) {
-        if (json.user.image) setImageUrl(json.user.image);
-        if (json.user.name) setName(json.user.name);
-        // if backend includes phone/country/etc in response, you can update them here
+      if (json.user && typeof json.user === "object") {
+        if (typeof (json.user as Record<string, unknown>).image === "string") {
+          setImageUrl((json.user as Record<string, unknown>).image as string);
+        }
+        if (typeof (json.user as Record<string, unknown>).name === "string") {
+          setName((json.user as Record<string, unknown>).name as string);
+        }
       }
 
       setEditing(false);
@@ -274,15 +276,16 @@ export default function ProfilePage() {
       setNewPassword("");
       setConfirmPassword("");
       setWantChangePassword(false);
-    } catch (err: any) {
-      console.error("Profile update failed:", err);
-      setError(err?.message || "Failed to save profile.");
+    } catch (unknownErr) {
+      const message = unknownErr instanceof Error ? unknownErr.message : String(unknownErr);
+      console.error("Profile update failed:", message);
+      setError(message || "Failed to save profile.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     setEditing(false);
     setError(null);
     setMessage(null);
@@ -290,7 +293,6 @@ export default function ProfilePage() {
     setImageUrl(initialImage || null);
     setPreviewSrc(null);
     setPhoneNumber("");
-    setLocalPhone("");
     setBio("");
     setTradingStyle("");
     setTradingExperience("");
@@ -326,7 +328,12 @@ export default function ProfilePage() {
 
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <button onClick={triggerFileInput} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-white" disabled={uploading} title="Upload avatar">
+              <button
+                onClick={triggerFileInput}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-white"
+                disabled={uploading}
+                title="Upload avatar"
+              >
                 <UploadCloud className="w-4 h-4" />
                 {uploading ? "Uploading..." : "Upload Avatar"}
               </button>
@@ -351,12 +358,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label className="block mb-2 text-sm text-zinc-300">Country</label>
-            <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              disabled={!editing}
-              className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
-            >
+            <select value={country} onChange={(e) => setCountry(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
               {COUNTRIES.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
@@ -369,22 +371,10 @@ export default function ProfilePage() {
             <label className="block mb-2 text-sm text-zinc-300">Phone</label>
             <div className="flex gap-2">
               <div className="min-w-[90px]">
-                <input
-                  type="text"
-                  value={selectedDialCode}
-                  disabled
-                  className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-zinc-300"
-                />
+                <input type="text" value={selectedDialCode} disabled className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-zinc-300" />
               </div>
               <div className="flex-1">
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. 555 555 5555"
-                  disabled={!editing}
-                  className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
-                />
+                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="e.g. 555 555 5555" disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" />
               </div>
             </div>
             <p className="text-xs text-zinc-500 mt-1">Phone is combined with selected country code on save.</p>
@@ -395,12 +385,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block mb-2 text-sm text-zinc-300">Trading Style</label>
-            <select
-              value={tradingStyle}
-              onChange={(e) => setTradingStyle(e.target.value)}
-              disabled={!editing}
-              className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
-            >
+            <select value={tradingStyle} onChange={(e) => setTradingStyle(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
               <option value="">Select style</option>
               {TRADING_STYLES.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -412,12 +397,7 @@ export default function ProfilePage() {
 
           <div>
             <label className="block mb-2 text-sm text-zinc-300">Trading Experience</label>
-            <select
-              value={tradingExperience}
-              onChange={(e) => setTradingExperience(e.target.value)}
-              disabled={!editing}
-              className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
-            >
+            <select value={tradingExperience} onChange={(e) => setTradingExperience(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
               <option value="">Select experience</option>
               {EXPERIENCE_LEVELS.map((lvl) => (
                 <option key={lvl.value} value={lvl.value}>
@@ -433,7 +413,6 @@ export default function ProfilePage() {
           <textarea value={bio} onChange={(e) => setBio(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white min-h-[90px]" placeholder="Tell people a little about your trading style or goals." />
         </div>
 
-        {/* Password change toggle */}
         {editing && (
           <div className="p-3 border border-zinc-700 rounded">
             <label className="inline-flex items-center gap-2 mb-2">

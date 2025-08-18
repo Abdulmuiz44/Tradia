@@ -4,39 +4,36 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { pool } from "@/lib/db";
 
-type Body = {
-  settings?: any;
-};
+type SettingsBody = { settings?: unknown };
 
 export async function GET() {
   try {
-    // session required
-    const session = await getServerSession(authOptions as any);
-    const userId = (session as any)?.user?.id;
+    const session = await getServerSession(authOptions);
+    const userId = typeof session?.user?.id === "string" ? session.user.id : "";
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const r = await pool.query(`SELECT settings FROM user_settings WHERE user_id=$1 LIMIT 1`, [userId]);
+    const r = await pool.query<{ settings: unknown }>(`SELECT settings FROM user_settings WHERE user_id=$1 LIMIT 1`, [userId]);
     if (!r.rows[0]) {
       return NextResponse.json({ success: true, settings: {} });
     }
     return NextResponse.json({ success: true, settings: r.rows[0].settings ?? {} });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("GET /api/user/settings error:", err);
-    return NextResponse.json({ error: err?.message || "Failed to load settings" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg || "Failed to load settings" }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions as any);
-    const userId = (session as any)?.user?.id;
+    const session = await getServerSession(authOptions);
+    const userId = typeof session?.user?.id === "string" ? session.user.id : "";
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = (await req.json()) as Body;
+    const body = (await req.json()) as SettingsBody;
     if (!body?.settings) return NextResponse.json({ error: "No settings provided" }, { status: 400 });
 
-    // We merge existing JSONB with provided settings using jsonb || new_jsonb
-    // first ensure a row exists
+    // Ensure row exists
     await pool.query(
       `INSERT INTO user_settings (user_id, settings, updated_at)
        VALUES ($1, $2::jsonb, NOW())
@@ -44,7 +41,7 @@ export async function PATCH(req: NextRequest) {
       [userId, body.settings]
     );
 
-    // Now merge
+    // Merge provided settings into existing JSONB
     await pool.query(
       `UPDATE user_settings
        SET settings = COALESCE(settings, '{}'::jsonb) || $2::jsonb, updated_at = NOW()
@@ -52,10 +49,11 @@ export async function PATCH(req: NextRequest) {
       [userId, body.settings]
     );
 
-    const rr = await pool.query(`SELECT settings FROM user_settings WHERE user_id=$1 LIMIT 1`, [userId]);
+    const rr = await pool.query<{ settings: unknown }>(`SELECT settings FROM user_settings WHERE user_id=$1 LIMIT 1`, [userId]);
     return NextResponse.json({ success: true, settings: rr.rows[0]?.settings ?? {} });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("PATCH /api/user/settings error:", err);
-    return NextResponse.json({ error: err?.message || "Failed to save settings" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg || "Failed to save settings" }, { status: 500 });
   }
 }

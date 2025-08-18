@@ -1,320 +1,270 @@
 // src/components/dashboard/TradeHistoryTable.tsx
-
 "use client";
 
-import { useContext, useEffect, useState, useRef } from "react";
-import { format } from "date-fns";
-import {
-  Trash2,
-  Pencil,
-  Filter,
-  DownloadCloud,
-  FilePlus,
-} from "lucide-react";
-import { TradeContext } from "@/context/TradeContext";
-import { Trade } from "@/types/trade";
-import JournalModal from "@/components/modals/JournalModal";
-import AddTradeModal from "@/components/modals/AddTradeModal";
-import CsvUpload from "@/components/dashboard/CsvUpload";
+import React, { useMemo, useState } from "react";
+import type { Trade } from "@/types/trade";
 
-const LOCAL_STORAGE_KEY = "userTrades";
+interface TradeHistoryTableProps {
+  trades: ReadonlyArray<Trade>;
+}
 
-export default function TradeHistoryTable() {
-  const { trades, updateTrade, addTrade, deleteTrade } =
-    useContext(TradeContext);
+/**
+ * Helpers to coerce unknown trade fields into usable types without using `any`.
+ */
+function toNumber(v: unknown): number {
+  if (v === undefined || v === null || v === "") return 0;
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  if (typeof v === "bigint") return Number(v);
+  if (typeof v === "string") {
+    const cleaned = v.replace(/[^0-9eE\.\-+]/g, "");
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
 
-  const [mounted, setMounted] = useState(false);
-  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [csvOpen, setCsvOpen] = useState(false);
-  const hasLoaded = useRef(false);
+function toStringSafe(v: unknown): string {
+  if (v === undefined || v === null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v);
+  if (v instanceof Date) return v.toISOString();
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
+}
 
-  const [filters, setFilters] = useState({
-    symbol: "",
-    outcome: "",
-    fromDate: "",
-    toDate: "",
-    minPNL: "",
-    maxPNL: "",
-  });
+function toDateOrNull(v: unknown): Date | null {
+  if (v === undefined || v === null || v === "") return null;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if (typeof v === "number") {
+    const s = String(v);
+    // 10-digit -> seconds
+    if (/^\d{10}$/.test(s)) return new Date(Number(v) * 1000);
+    // 13-digit -> ms
+    if (/^\d{13}$/.test(s)) return new Date(Number(v));
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (/^\d{10}$/.test(s)) return new Date(Number(s) * 1000);
+    if (/^\d{13}$/.test(s)) return new Date(Number(s));
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
 
-  // load from localStorage once
-  useEffect(() => {
-    if (!hasLoaded.current) {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        try {
-          const parsed: Trade[] = JSON.parse(stored);
-          parsed.forEach((t, i) => {
-            const id = t.id || `${t.symbol}-${t.openTime}-${i}`;
-            if (!trades.some((x) => x.id === id)) addTrade({ ...t, id });
-          });
-        } catch {
-          console.error("Failed to load trades from localStorage");
-        }
+/**
+ * Safe accessor for unknown trade shape. Avoids `any` casts.
+ */
+function getField(trade: Trade, key: string): unknown {
+  if (trade && typeof trade === "object") {
+    return (trade as unknown as Record<string, unknown>)[key];
+  }
+  return undefined;
+}
+
+export default function TradeHistoryTable({ trades }: TradeHistoryTableProps) {
+  const [query, setQuery] = useState<string>("");
+  const [sortField, setSortField] = useState<"openTime" | "closeTime" | "pnl" | "symbol">(
+    "closeTime"
+  );
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState<number>(1);
+  const pageSize = 20;
+
+  const processed = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    // Copy the array to avoid mutating props
+    let filtered = trades.slice();
+
+    if (q) {
+      filtered = filtered.filter((t) => {
+        const sym = toStringSafe(getField(t, "symbol")).toLowerCase();
+        const notes = toStringSafe(getField(t, "notes") ?? getField(t, "journalNotes")).toLowerCase();
+        const id = toStringSafe(getField(t, "id")).toLowerCase();
+        return sym.includes(q) || notes.includes(q) || id.includes(q);
+      });
+    }
+
+    filtered.sort((a, b) => {
+      if (sortField === "pnl") {
+        const pa = toNumber(getField(a, "pnl") ?? getField(a, "profit") ?? getField(a, "netpl"));
+        const pb = toNumber(getField(b, "pnl") ?? getField(b, "profit") ?? getField(b, "netpl"));
+        return sortDir === "asc" ? pa - pb : pb - pa;
       }
-      hasLoaded.current = true;
+
+      if (sortField === "symbol") {
+        const sa = toStringSafe(getField(a, "symbol"));
+        const sb = toStringSafe(getField(b, "symbol"));
+        const cmp = sa.localeCompare(sb);
+        return sortDir === "asc" ? cmp : -cmp;
+      }
+
+      // openTime / closeTime -> date compare
+      const ta = toDateOrNull(getField(a, sortField));
+      const tb = toDateOrNull(getField(b, sortField));
+      const tAms = ta ? ta.getTime() : 0;
+      const tBms = tb ? tb.getTime() : 0;
+      return sortDir === "asc" ? tAms - tBms : tBms - tAms;
+    });
+
+    return filtered;
+  }, [trades, query, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(processed.length / pageSize));
+  const pageItems = processed.slice((page - 1) * pageSize, page * pageSize);
+
+  const toggleSort = (f: typeof sortField) => {
+    if (sortField === f) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(f);
+      setSortDir("desc");
     }
-    setMounted(true);
-  }, []);
-
-  // persist to localStorage
-  useEffect(() => {
-    if (mounted && hasLoaded.current) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trades));
-    }
-  }, [trades, mounted]);
-
-  const handleEdit = (t: Trade) => setSelectedTrade(t);
-  const handleSave = (t: Trade) => {
-    updateTrade(t);
-    setSelectedTrade(null);
+    setPage(1);
   };
-  const handleAdd = (t: Trade) => {
-    const id = t.id || `${t.symbol}-${Date.now()}`;
-    addTrade({ ...t, id });
-    setIsAddOpen(false);
-  };
-  const handleDelete = (id: string) => deleteTrade(id);
-  const handleFilterChange = (f: string, v: string) =>
-    setFilters((p) => ({ ...p, [f]: v }));
-
-  const filtered = trades.filter((t) => {
-    const { symbol, outcome, fromDate, toDate, minPNL, maxPNL } = filters;
-    const pnl = parseFloat(t.pnl as string);
-    return (
-      (!symbol || t.symbol.toLowerCase().includes(symbol.toLowerCase())) &&
-      (!outcome || t.outcome === outcome) &&
-      (!fromDate || new Date(t.openTime) >= new Date(fromDate)) &&
-      (!toDate || new Date(t.closeTime) <= new Date(toDate)) &&
-      (!minPNL || pnl >= parseFloat(minPNL)) &&
-      (!maxPNL || pnl <= parseFloat(maxPNL))
-    );
-  });
-
-  if (!mounted) return null;
 
   return (
-    <div className="space-y-6">
-      {/* Top controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <div className="bg-[#0B1220] rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex gap-2">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search symbol, id or notes..."
+            className="px-3 py-2 rounded bg-[#0F1724] border border-zinc-700 text-white w-[320px]"
+            aria-label="Search trades"
+          />
           <button
-            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
-            onClick={() => setFilterOpen(!filterOpen)}
-            title="Filters"
+            onClick={() => {
+              setQuery("");
+              setPage(1);
+            }}
+            className="px-3 py-2 rounded bg-zinc-700 text-white"
+            aria-label="Clear search"
           >
-            <Filter size={18} className="text-gray-300" />
-          </button>
-          <button
-            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
-            onClick={() => setExportOpen(true)}
-            title="Export"
-          >
-            <DownloadCloud size={18} className="text-gray-300" />
-          </button>
-          <button
-            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
-            onClick={() => setCsvOpen(true)}
-            title="Import CSV"
-          >
-            <FilePlus size={18} className="text-gray-300" />
+            Clear
           </button>
         </div>
-        <button
-          className="px-3 py-1 bg-green-600 rounded hover:bg-green-500 text-sm"
-          onClick={() => setIsAddOpen(true)}
-        >
-          Add Trade
-        </button>
+
+        <div className="flex items-center gap-2 text-sm text-zinc-300">
+          <span>Sort:</span>
+          <button
+            onClick={() => toggleSort("closeTime")}
+            className={`px-2 py-1 rounded ${sortField === "closeTime" ? "bg-zinc-700" : ""}`}
+            aria-pressed={sortField === "closeTime"}
+          >
+            Close Time
+          </button>
+          <button
+            onClick={() => toggleSort("openTime")}
+            className={`px-2 py-1 rounded ${sortField === "openTime" ? "bg-zinc-700" : ""}`}
+            aria-pressed={sortField === "openTime"}
+          >
+            Open Time
+          </button>
+          <button
+            onClick={() => toggleSort("pnl")}
+            className={`px-2 py-1 rounded ${sortField === "pnl" ? "bg-zinc-700" : ""}`}
+            aria-pressed={sortField === "pnl"}
+          >
+            PnL
+          </button>
+          <button
+            onClick={() => toggleSort("symbol")}
+            className={`px-2 py-1 rounded ${sortField === "symbol" ? "bg-zinc-700" : ""}`}
+            aria-pressed={sortField === "symbol"}
+          >
+            Symbol
+          </button>
+        </div>
       </div>
 
-      {/* Filters panel */}
-      {filterOpen && (
-        <div className="grid md:grid-cols-6 gap-2 mb-4 text-sm">
-          {["symbol", "outcome"].map((f) => (
-            <input
-              key={f}
-              type="text"
-              className="p-2 rounded bg-gray-800 text-white"
-              placeholder={f}
-              value={(filters as any)[f]}
-              onChange={(e) => handleFilterChange(f, e.target.value)}
-            />
-          ))}
-          {["fromDate", "toDate"].map((f) => (
-            <input
-              key={f}
-              type="date"
-              className="p-2 rounded bg-gray-800 text-white"
-              value={(filters as any)[f]}
-              onChange={(e) => handleFilterChange(f, e.target.value)}
-            />
-          ))}
-          {["minPNL", "maxPNL"].map((f) => (
-            <input
-              key={f}
-              type="number"
-              className="p-2 rounded bg-gray-800 text-white"
-              placeholder={f}
-              value={(filters as any)[f]}
-              onChange={(e) => handleFilterChange(f, e.target.value)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="overflow-auto bg-gray-800 rounded-xl shadow-lg">
-        <table className="min-w-full text-sm text-left">
-          <thead className="bg-gray-700 text-gray-200 sticky top-0">
-            <tr>
-              {[
-                "Symbol",
-                "Direction",
-                "Order Type",
-                "Open Time",
-                "Close Time",
-                "Session",
-                "Lot Size",
-                "Entry Price",
-                "Stop Loss",
-                "Take Profit",
-                "PNL ($)",
-                "Duration",
-                "Outcome",
-                "RR",
-                "Reason",
-                "Emotion",
-                "Notes",
-                "Action",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="px-3 py-2 font-medium border-b border-gray-600"
-                >
-                  {h}
-                </th>
-              ))}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-fixed">
+          <thead>
+            <tr className="text-left text-zinc-400 border-b border-zinc-700">
+              <th className="p-2 w-1/6">Close Time</th>
+              <th className="p-2 w-1/6">Open Time</th>
+              <th className="p-2 w-1/6">Symbol</th>
+              <th className="p-2 w-1/6">Outcome</th>
+              <th className="p-2 w-1/6">PnL</th>
+              <th className="p-2 w-1/6">Notes</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((t) => {
-              const pnl = parseFloat(t.pnl as string);
-              return (
-                <tr
-                  key={t.id}
-                  className="hover:bg-gray-700 transition-colors"
-                >
-                  <td className="px-3 py-2">{t.symbol}</td>
-                  <td className="px-3 py-2">{t.direction}</td>
-                  <td className="px-3 py-2">{t.orderType}</td>
-                  <td className="px-3 py-2">
-                    {format(new Date(t.openTime), "Pp")}
-                  </td>
-                  <td className="px-3 py-2">
-                    {format(new Date(t.closeTime), "Pp")}
-                  </td>
-                  <td className="px-3 py-2">{t.session}</td>
-                  <td className="px-3 py-2">{t.lotSize}</td>
-                  <td className="px-3 py-2">{t.entryPrice}</td>
-                  <td className="px-3 py-2">{t.stopLossPrice}</td>
-                  <td className="px-3 py-2">{t.takeProfitPrice}</td>
-                  <td
-                    className={`px-3 py-2 ${
-                      pnl >= 0 ? "text-green-400" : "text-red-400"
-                    }`}
-                  >
-                    ${pnl.toFixed(2)}
-                  </td>
-                  <td className="px-3 py-2">{t.duration}</td>
-                  <td className="px-3 py-2">{t.outcome}</td>
-                  <td className="px-3 py-2">{t.rr}</td>
-                  <td className="px-3 py-2">{t.reasonForTrade}</td>
-                  <td className="px-3 py-2">{t.emotion}</td>
-                  <td className="px-3 py-2">{t.journalNotes}</td>
-                  <td className="px-3 py-2 flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(t)}
-                      className="p-1 hover:text-blue-400"
+            {pageItems.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-4 text-center text-zinc-400">
+                  No trades found.
+                </td>
+              </tr>
+            ) : (
+              pageItems.map((t) => {
+                const closeDate = toDateOrNull(getField(t, "closeTime"));
+                const openDate = toDateOrNull(getField(t, "openTime"));
+                const pnlValue =
+                  toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
+                const notes = toStringSafe(getField(t, "notes") ?? getField(t, "journalNotes"));
+                const idKey = toStringSafe(getField(t, "id") ?? `${toStringSafe(getField(t, "symbol"))}-${toStringSafe(getField(t, "openTime"))}`);
+
+                return (
+                  <tr key={idKey} className="border-b border-zinc-800">
+                    <td className="p-2 align-top">{closeDate ? closeDate.toLocaleString() : "—"}</td>
+                    <td className="p-2 align-top">{openDate ? openDate.toLocaleString() : "—"}</td>
+                    <td className="p-2 align-top font-medium">{toStringSafe(getField(t, "symbol")) || "—"}</td>
+                    <td className="p-2 align-top">{toStringSafe(getField(t, "outcome")) || "—"}</td>
+                    <td
+                      className={`p-2 align-top ${
+                        pnlValue > 0 ? "text-green-400" : pnlValue < 0 ? "text-red-400" : "text-white"
+                      }`}
                     >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="p-1 hover:text-red-400"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                      {Number.isFinite(pnlValue) ? `$${pnlValue.toFixed(2)}` : toStringSafe(getField(t, "pnl"))}
+                    </td>
+                    <td className="p-2 align-top">
+                      <div className="truncate max-w-[240px]">{notes}</div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Modals */}
-      <JournalModal
-        isOpen={!!selectedTrade}
-        trade={selectedTrade}
-        onClose={() => setSelectedTrade(null)}
-        onSave={handleSave}
-      />
-      <AddTradeModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onSave={handleAdd}
-      />
-
-      {/* CSV Upload Modal */}
-      {csvOpen && (
-        <CsvUpload
-          isOpen
-          onClose={() => setCsvOpen(false)}
-          onImport={(importedTrades) => {
-            importedTrades.forEach((t) => handleAdd(t));
-            setCsvOpen(false);
-          }}
-        />
-      )}
-
-      {/* Export Options Modal */}
-      {exportOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-            <h3 className="text-lg text-gray-200 mb-4">Export As</h3>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  /* CSV export logic */
-                  setExportOpen(false);
-                }}
-                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
-              >
-                CSV
-              </button>
-              <button
-                onClick={() => {
-                  /* PDF export logic */
-                  setExportOpen(false);
-                }}
-                className="px-4 py-2 bg-purple-600 rounded hover:bg-purple-500"
-              >
-                PDF
-              </button>
-            </div>
-            <button
-              onClick={() => setExportOpen(false)}
-              className="mt-4 text-sm text-gray-400 hover:underline"
-            >
-              Cancel
-            </button>
-          </div>
+      <div className="mt-3 flex items-center justify-between text-sm text-zinc-300">
+        <div>
+          Showing {processed.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, processed.length)} of {processed.length}
         </div>
-      )}
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-3 py-1 rounded bg-zinc-700 disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <div>
+            Page {page} / {totalPages}
+          </div>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-3 py-1 rounded bg-zinc-700 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

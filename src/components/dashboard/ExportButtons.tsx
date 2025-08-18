@@ -6,19 +6,21 @@ import { utils, writeFile } from "xlsx";
 import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
 
+type Row = Record<string, unknown>;
+
 interface ExportButtonsProps {
-  data: any[];
+  data: ReadonlyArray<Row>;
 }
 
-export default function ExportButtons({ data }: ExportButtonsProps) {
-  const exportExcel = () => {
-    const ws = utils.json_to_sheet(data);
+export default function ExportButtons({ data }: ExportButtonsProps): JSX.Element {
+  const exportExcel = (): void => {
+    const ws = utils.json_to_sheet<Row>([...data]);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Trades");
     writeFile(wb, "trades.xlsx");
   };
 
-  const exportJSON = () => {
+  const exportJSON = (): void => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
     });
@@ -36,4 +38,3 @@ export default function ExportButtons({ data }: ExportButtonsProps) {
     </div>
   );
 }
-

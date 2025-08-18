@@ -1,3 +1,4 @@
+// src/components/planner/TradePlannerForm.tsx
 "use client";
 
 import { useContext, useState } from "react";
@@ -16,55 +17,53 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+/**
+ * Form state type: everything in TradePlan except id and status
+ */
+type TradePlanFormState = Omit<TradePlan, "id" | "status">;
+
+const defaultFormState = (): TradePlanFormState => ({
+  symbol: "",
+  setupType: "",
+  plannedEntry: 0,
+  stopLoss: 0,
+  takeProfit: 0,
+  riskReward: 0,
+  lotSize: 0,
+  reason: "",
+  confidence: 50,
+  preChecklist: [],
+  emotion: "",
+  date: new Date().toISOString().split("T")[0],
+  screenshotUrl: "",
+});
+
 const TradePlannerForm = () => {
   const { addPlan } = useContext(TradePlanContext);
 
-  const [form, setForm] = useState<Omit<TradePlan, "id" | "status">>({
-    symbol: "",
-    setupType: "",
-    plannedEntry: 0,
-    stopLoss: 0,
-    takeProfit: 0,
-    riskReward: 0,
-    lotSize: 0,
-    reason: "",
-    confidence: 50,
-    preChecklist: [],
-    emotion: "",
-    date: new Date().toISOString().split("T")[0],
-    screenshotUrl: "",
-  });
+  const [form, setForm] = useState<TradePlanFormState>(defaultFormState());
 
-  const handleChange = (key: keyof typeof form, value: any) => {
+  // Strongly typed handler for form fields
+  function handleChange<K extends keyof TradePlanFormState>(key: K, value: TradePlanFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  }
 
   const handleSubmit = () => {
-    if (!form.symbol || !form.setupType || !form.plannedEntry)
+    if (!form.symbol || !form.setupType || !form.plannedEntry) {
       return alert("Please fill required fields");
+    }
 
+    // crypto.randomUUID is available in modern browsers; TypeScript may require lib DOM.
     const newPlan: TradePlan = {
       ...form,
-      id: crypto.randomUUID(),
+      id: typeof crypto !== "undefined" && typeof (crypto as unknown as { randomUUID?: () => string }).randomUUID === "function"
+        ? (crypto as unknown as { randomUUID: () => string }).randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       status: "Planned",
     };
 
     addPlan(newPlan);
-    setForm({
-      symbol: "",
-      setupType: "",
-      plannedEntry: 0,
-      stopLoss: 0,
-      takeProfit: 0,
-      riskReward: 0,
-      lotSize: 0,
-      reason: "",
-      confidence: 50,
-      preChecklist: [],
-      emotion: "",
-      date: new Date().toISOString().split("T")[0],
-      screenshotUrl: "",
-    });
+    setForm(defaultFormState());
     alert("Trade plan saved successfully");
   };
 
@@ -91,9 +90,9 @@ const TradePlannerForm = () => {
           className="bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring"
           type="number"
           placeholder="Planned Entry Price"
-          value={form.plannedEntry}
+          value={String(form.plannedEntry)}
           onChange={(e) =>
-            handleChange("plannedEntry", parseFloat(e.target.value))
+            handleChange("plannedEntry", parseFloat(e.target.value || "0"))
           }
         />
 
@@ -101,9 +100,9 @@ const TradePlannerForm = () => {
           className="bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring"
           type="number"
           placeholder="Stop Loss"
-          value={form.stopLoss}
+          value={String(form.stopLoss)}
           onChange={(e) =>
-            handleChange("stopLoss", parseFloat(e.target.value))
+            handleChange("stopLoss", parseFloat(e.target.value || "0"))
           }
         />
 
@@ -111,9 +110,9 @@ const TradePlannerForm = () => {
           className="bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring"
           type="number"
           placeholder="Take Profit"
-          value={form.takeProfit}
+          value={String(form.takeProfit)}
           onChange={(e) =>
-            handleChange("takeProfit", parseFloat(e.target.value))
+            handleChange("takeProfit", parseFloat(e.target.value || "0"))
           }
         />
 
@@ -121,9 +120,9 @@ const TradePlannerForm = () => {
           className="bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring"
           type="number"
           placeholder="Risk Reward Ratio"
-          value={form.riskReward}
+          value={String(form.riskReward)}
           onChange={(e) =>
-            handleChange("riskReward", parseFloat(e.target.value))
+            handleChange("riskReward", parseFloat(e.target.value || "0"))
           }
         />
 
@@ -131,9 +130,9 @@ const TradePlannerForm = () => {
           className="bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring"
           type="number"
           placeholder="Lot Size"
-          value={form.lotSize}
+          value={String(form.lotSize)}
           onChange={(e) =>
-            handleChange("lotSize", parseFloat(e.target.value))
+            handleChange("lotSize", parseFloat(e.target.value || "0"))
           }
         />
 
@@ -161,7 +160,7 @@ const TradePlannerForm = () => {
           defaultValue={[form.confidence]}
           max={100}
           step={1}
-          onValueChange={(val) => handleChange("confidence", val[0])}
+          onValueChange={(val: number[]) => handleChange("confidence", val[0])}
         />
       </div>
 

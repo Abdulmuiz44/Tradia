@@ -1,24 +1,24 @@
 // src/lib/metaapi.ts
-import MetaApi from 'metaapi.cloud-sdk';
+import MetaApi, { MetaApi as MetaApiType } from "metaapi.cloud-sdk";
 
 if (!process.env.METAAPI_TOKEN) {
-  throw new Error('METAAPI_TOKEN is missing in env');
+  throw new Error("METAAPI_TOKEN is missing in env");
 }
 if (!process.env.METAAPI_ACCOUNT_ID) {
-  throw new Error('METAAPI_ACCOUNT_ID is missing in env');
+  throw new Error("METAAPI_ACCOUNT_ID is missing in env");
 }
 
-let metaApi: MetaApi | null = null;
+let metaApiClient: MetaApiType | null = null;
 
-/** Singleton MetaApi client */
-export function getMetaApi() {
-  if (!metaApi) {
-    metaApi = new MetaApi(process.env.METAAPI_TOKEN);
+export function getMetaApi(): MetaApiType {
+  if (!metaApiClient) {
+    metaApiClient = new MetaApi(process.env.METAAPI_TOKEN);
   }
-  return metaApi;
+  return metaApiClient;
 }
 
-/** Defaults (overridable with env) */
-export const METAAPI_REGION = process.env.METAAPI_REGION || 'new-york';
-export const METAAPI_ACCOUNT_TYPE = process.env.METAAPI_ACCOUNT_TYPE || 'cloud-g1';
-export const METAAPI_ACCOUNT_ID = process.env.METAAPI_ACCOUNT_ID as string;
+export const metaapi: MetaApiType = getMetaApi();
+
+export const METAAPI_REGION: string = process.env.METAAPI_REGION || "new-york";
+export const METAAPI_ACCOUNT_TYPE: string = process.env.METAAPI_ACCOUNT_TYPE || "cloud-g1";
+export const METAAPI_ACCOUNT_ID: string = process.env.METAAPI_ACCOUNT_ID as string;

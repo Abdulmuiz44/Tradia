@@ -1,79 +1,81 @@
 // src/app/api/mt5/sync/route.ts
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { pool } from '@/lib/db';
-import { metaapi } from '@/lib/metaapi';
-import { normalizeDeals } from '@/lib/mt5-map';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { pool } from "@/lib/db";
+import { getMetaApi } from "@/lib/metaapi";
+import { mapMt5Deals } from "@/lib/mt5-map";
+import { z } from "zod";
 
 const bodySchema = z.object({
-  mt5AccountId: z.string().uuid(),
-  from: z.string().optional(), // ISO
-  to: z.string().optional(),   // ISO
+  mt5AccountId: z.string(),
+  from: z.string().optional(),
+  to: z.string().optional(),
 });
+
+function toDateOrNull(u: unknown): Date | null {
+  if (!u) return null;
+  if (u instanceof Date) return isNaN(u.getTime()) ? null : u;
+  const s = String(u);
+  if (/^\d{10}$/.test(s)) return new Date(Number(s) * 1000);
+  if (/^\d{13}$/.test(s)) return new Date(Number(s));
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions as any);
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id as string | undefined;
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const body = await req.json();
-    const { mt5AccountId, from, to } = bodySchema.parse(body);
+    const bodyRaw = (await req.json()) as unknown;
+    const parsed = bodySchema.safeParse(bodyRaw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    const { mt5AccountId, from, to } = parsed.data;
 
-    // Fetch the account & check ownership
-    const accRes = await pool.query(
-      `SELECT * FROM mt5_accounts WHERE id=$1 AND user_id=$2`,
-      [mt5AccountId, session.user.id]
+    // fetch account and check ownership
+    const accRes = await pool.query<Record<string, unknown>>(
+      `SELECT * FROM mt5_accounts WHERE id=$1 AND user_id=$2 LIMIT 1`,
+      [mt5AccountId, userId]
     );
     const acc = accRes.rows[0];
-    if (!acc) return NextResponse.json({ error: 'Account not found' }, { status: 404 });
-    if (!acc.metaapi_account_id) return NextResponse.json({ error: 'Account not connected' }, { status: 400 });
+    if (!acc) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
-    // Pull history from MetaApi
-    const account = await metaapi.metatraderAccountApi.getAccount(acc.metaapi_account_id);
-    const connection = await account.getHistoryStorage(); // aggregated cache
-    // In case storage not populated yet, we can also pull via RPC:
+    const metaapiAccountId = (acc as Record<string, unknown>)["metaapi_account_id"] as string | undefined;
+    if (!metaapiAccountId) return NextResponse.json({ error: "Account not connected to MetaApi" }, { status: 400 });
+
+    // initialize MetaApi client
+    const metaApi = getMetaApi();
+    const mtAccountApi = metaApi.metatraderAccountApi;
+    const account = await mtAccountApi.getAccount(metaapiAccountId);
     const rpc = await account.getRPCConnection();
     if (!rpc.isConnected()) await rpc.connect();
 
-    const fromTs = from ? new Date(from) : new Date(Date.now() - 1000 * 60 * 60 * 24 * 90); // last 90 days by default
+    const fromTs = from ? new Date(from) : new Date(Date.now() - 1000 * 60 * 60 * 24 * 90); // last 90 days
     const toTs = to ? new Date(to) : new Date();
 
-    // MetaApi returns deals with pagination; use RPC for a simple call:
-    const deals = await rpc.getDealsByTimeRange(fromTs, toTs);
-    const normalized = normalizeDeals(
-      deals.map(d => ({
-        id: String(d.id),
-        orderId: d.orderId ? String(d.orderId) : undefined,
-        positionId: d.positionId ? String(d.positionId) : undefined,
-        symbol: d.symbol,
-        type: d.type,       // e.g. DEAL_TYPE_BUY/SELL/etc
-        time: d.time,       // ISO
-        volume: Number(d.volume),
-        price: Number(d.price),
-        commission: Number(d.commission || 0),
-        swap: Number(d.swap || 0),
-        profit: Number(d.profit || 0),
-        comment: d.comment,
-        entryType: d.entryType,
-        reason: d.reason
-      }))
-    );
+    // get deals via RPC
+    const dealsRaw = await rpc.getDealsByTimeRange(fromTs, toTs);
+    const normalized = mapMt5Deals(Array.isArray(dealsRaw) ? dealsRaw : []);
 
-    // Upsert into mt5_trades
+    // upsert into mt5_trades in a transaction
     const client = await pool.connect();
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
       for (const t of normalized) {
+        // t is Partial<Trade> shape coming from mapMt5Deals
         await client.query(
           `
           INSERT INTO mt5_trades
             (user_id, mt5_account_id, deal_id, order_id, position_id, symbol, side,
              volume, price, profit, commission, swap, taxes, reason, comment, opened_at, closed_at, updated_at)
           VALUES
-            ($1,$2,$3,$4,$5,$6,$7,
-             $8,$9,$10,$11,$12,$13,$14,$15,$16,$17,NOW())
+            ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,NOW())
           ON CONFLICT (mt5_account_id, deal_id)
           DO UPDATE SET
             price=EXCLUDED.price,
@@ -85,24 +87,39 @@ export async function POST(req: Request) {
             updated_at=NOW()
           `,
           [
-            session.user.id, acc.id,
-            t.deal_id, t.order_id, t.position_id, t.symbol, t.side,
-            t.volume, t.price, t.profit, t.commission, t.swap, t.taxes, t.reason, t.comment,
-            t.opened_at, t.closed_at
-          ]
+            userId,
+            acc.id,
+            (t as Record<string, unknown>)["id"] ?? (t as Record<string, unknown>)["deal_id"] ?? null,
+            (t as Record<string, unknown>)["orderId"] ?? (t as Record<string, unknown>)["order_id"] ?? null,
+            (t as Record<string, unknown>)["positionId"] ?? (t as Record<string, unknown>)["position_id"] ?? null,
+            (t as Record<string, unknown>)["symbol"] ?? null,
+            (t as Record<string, unknown>)["side"] ?? (t as Record<string, unknown>)["type"] ?? null,
+            (t as Record<string, unknown>)["lotSize"] ?? (t as Record<string, unknown>)["volume"] ?? null,
+            (t as Record<string, unknown>)["price"] ?? null,
+            (t as Record<string, unknown>)["pnl"] ?? (t as Record<string, unknown>)["profit"] ?? null,
+            (t as Record<string, unknown>)["commission"] ?? null,
+            (t as Record<string, unknown>)["swap"] ?? null,
+            (t as Record<string, unknown>)["taxes"] ?? null,
+            (t as Record<string, unknown>)["reason"] ?? null,
+            (t as Record<string, unknown>)["notes"] ?? (t as Record<string, unknown>)["comment"] ?? null,
+            toDateOrNull((t as Record<string, unknown>)["openTime"]) ?? null,
+            toDateOrNull((t as Record<string, unknown>)["closeTime"]) ?? null,
+          ] as (string | number | null | Date)[]
         );
       }
-      await client.query('COMMIT');
+      await client.query("COMMIT");
     } catch (e) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
+      console.error("mt5 sync transaction error:", e);
       throw e;
     } finally {
       client.release();
     }
 
     return NextResponse.json({ imported: normalized.length });
-  } catch (err: any) {
-    console.error('mt5 sync error:', err);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("mt5 sync error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg || "Internal error" }, { status: 500 });
   }
 }

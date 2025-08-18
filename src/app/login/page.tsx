@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,6 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import { signIn } from "next-auth/react";
+
+type SignInResult = {
+  error?: string;
+  ok?: boolean;
+  status?: number;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +30,9 @@ export default function LoginPage() {
         setForm((f) => ({ ...f, email: saved }));
         setRemember(true);
       }
-    } catch {}
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,12 +53,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     try {
-      if (remember && form.email)
-        localStorage.setItem("tradia_remember_email", form.email);
+      if (remember && form.email) localStorage.setItem("tradia_remember_email", form.email);
     } catch {}
   }, [form.email, remember]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
@@ -60,14 +68,13 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const result: any = await signIn("credentials", {
+      const result = (await signIn("credentials", {
         redirect: false,
         email: form.email,
         password: form.password,
-      });
+      })) as SignInResult | undefined;
 
       if (result?.error) {
-        // Custom error from NextAuth (like unverified email)
         setError(result.error);
         return;
       }
@@ -81,9 +88,9 @@ export default function LoginPage() {
       } else {
         setError("Invalid credentials or sign-in failed.");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Sign-in error:", err);
-      setError(err?.message || "Sign-in request failed.");
+      setError((err as Error)?.message || "Sign-in request failed.");
     } finally {
       setLoading(false);
     }
@@ -170,7 +177,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-indigo-600 hover:underline">
             Create one
           </Link>

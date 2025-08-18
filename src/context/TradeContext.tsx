@@ -12,18 +12,24 @@ import React, {
 import { Trade } from "@/types/trade";
 
 /**
- * TradeContextProps
- * - keeps previous API surface
- * - adds refreshTrades and switches syncFromMT5 to Next API + Python backend
+ * TradeContext types
  */
+interface SyncResult {
+  success: boolean;
+  account?: unknown;
+  trades?: Trade[];
+  positions?: unknown[];
+  error?: string;
+}
+
 interface TradeContextProps {
   trades: Trade[];
   filteredTrades: Trade[];
   addTrade: (newTrade: Trade) => void;
   updateTrade: (updatedTrade: Trade) => void;
   deleteTrade: (id: string) => void;
-  setTradesFromCsv: (csvTrades: any[]) => void;
-  importTrades: (trades: any[]) => void;
+  setTradesFromCsv: (csvTrades: unknown[]) => void;
+  importTrades: (trades: unknown[]) => void;
   filterTrades: (fromDate: Date, toDate: Date) => void;
   refreshTrades: () => Promise<void>;
   syncFromMT5: (
@@ -31,13 +37,7 @@ interface TradeContextProps {
     password: string,
     server: string,
     backendUrl?: string
-  ) => Promise<{
-    success: boolean;
-    account?: any;
-    trades?: Trade[];
-    positions?: any[];
-    error?: string;
-  }>;
+  ) => Promise<SyncResult>;
   clearTrades: () => void;
 }
 
@@ -55,148 +55,132 @@ export const TradeContext = createContext<TradeContextProps>({
   clearTrades: () => {},
 });
 
+function getRandomUUID(): string {
+  const g = globalThis as unknown as { crypto?: { randomUUID?: () => string } };
+  if (g.crypto && typeof g.crypto.randomUUID === "function") {
+    try {
+      return g.crypto.randomUUID();
+    } catch {
+      // fall through to fallback
+    }
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
 
-  // --- Utility: generate unique id ---
   const generateUniqueId = useCallback((existingIds?: Set<string>) => {
-    let id =
-      (typeof crypto !== "undefined" && (crypto as any).randomUUID
-        ? (crypto as any).randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+    let id = getRandomUUID();
     if (existingIds) {
       while (existingIds.has(id)) {
-        id =
-          (typeof crypto !== "undefined" && (crypto as any).randomUUID
-            ? (crypto as any).randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+        id = getRandomUUID();
       }
     }
     return id;
   }, []);
 
-  // --- Normalizer: backend trade -> Trade shape (unchanged) ---
-  const normalizeBrokerTrade = useCallback((t: any): Trade => {
-    const profitRaw =
-      t.profit ??
-      t.pnl ??
-      t.profitLoss ??
-      t.profit_loss ??
-      t.netProfit ??
-      t.profitAmount ??
-      t.netpl ??
-      t.net_pnl;
-    const profit =
-      typeof profitRaw === "number"
-        ? profitRaw
-        : parseFloat(String(profitRaw ?? "0").replace(/[^0-9\.-]/g, "")) || 0;
+  // Safe conversion helpers
+  const toNumberSafe = (v: unknown): number => {
+    if (v === undefined || v === null || v === "") return 0;
+    if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+    if (typeof v === "string") {
+      const cleaned = v.replace(/[^0-9\.\-eE]/g, "");
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : 0;
+    }
+    if (typeof v === "bigint") return Number(v);
+    return 0;
+  };
 
-    const entryRaw =
-      t.entryPrice ??
-      t.entry_price ??
-      t.open_price ??
-      t.open ??
-      t.price_open ??
-      t.openPrice ??
-      t.openPriceRaw;
-    const exitRaw =
-      t.exitPrice ??
-      t.exit_price ??
-      t.close_price ??
-      t.close ??
-      t.price_close ??
-      t.closePrice ??
-      t.closePriceRaw;
-
-    const lotsRaw =
-      t.lotSize ?? t.lots ?? t.volume ?? t.size ?? t.contractsize ?? t.quantity ?? t.qty;
-
-    const openTimeRaw =
-      t.openTime ??
-      t.open_time ??
-      t.time_setup ??
-      t.entry_time ??
-      t.time ??
-      t.create_time ??
-      t.open_dt;
-    const closeTimeRaw =
-      t.closeTime ?? t.close_time ?? t.time_done ?? t.exit_time ?? t.close_dt ?? t.close;
-
-    const idCandidate =
-      t.id ??
-      t.ticket ??
-      t.order ??
-      t.orderId ??
-      t.order_id ??
-      t.trade_id ??
-      t.ticket_no ??
-      t.ticketId ??
-      t.ticket_id ??
-      t.deal_id ??
-      undefined;
-
-    const toISOStringIfValid = (v: any) => {
-      if (v === undefined || v === null || v === "") return "";
-      if (typeof v === "string") {
-        const maybeDate = new Date(v);
-        if (!isNaN(maybeDate.getTime())) return maybeDate.toISOString();
-        return v;
-      }
-      if (typeof v === "number") {
-        // unix seconds -> ms
-        if (String(v).length === 10) return new Date(v * 1000).toISOString();
-        return new Date(v).toISOString();
-      }
+  const toStringSafe = (v: unknown): string => {
+    if (v === undefined || v === null) return "";
+    if (typeof v === "string") return v;
+    if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") {
       return String(v);
-    };
+    }
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
+  };
+
+  const toISOStringSafe = (v: unknown): string => {
+    if (v === undefined || v === null || v === "") return "";
+    if (v instanceof Date) {
+      return isNaN(v.getTime()) ? "" : v.toISOString();
+    }
+    if (typeof v === "number") {
+      const s = String(v);
+      if (/^\d{10}$/.test(s)) return new Date(v * 1000).toISOString();
+      if (/^\d{13}$/.test(s)) return new Date(v).toISOString();
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? "" : d.toISOString();
+    }
+    if (typeof v === "string") {
+      if (/^\d{10}$/.test(v)) return new Date(Number(v) * 1000).toISOString();
+      if (/^\d{13}$/.test(v)) return new Date(Number(v)).toISOString();
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d.toISOString();
+    }
+    const s = toStringSafe(v);
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? s : d.toISOString();
+  };
+
+  // Normalize a broker trade (unknown) into our Trade shape
+  const normalizeBrokerTrade = useCallback((t: unknown): Trade => {
+    const rec = (t && typeof t === "object") ? (t as Record<string, unknown>) : {};
+
+    const profitRaw =
+      rec["profit"] ??
+      rec["pnl"] ??
+      rec["profitLoss"] ??
+      rec["profit_loss"] ??
+      rec["netProfit"] ??
+      rec["profitAmount"] ??
+      rec["netpl"] ??
+      rec["net_pnl"];
+
+    const profit = toNumberSafe(profitRaw);
+
+    const entryRaw = rec["entryPrice"] ?? rec["entry_price"] ?? rec["open_price"] ?? rec["open"];
+    const exitRaw = rec["exitPrice"] ?? rec["exit_price"] ?? rec["close_price"] ?? rec["close"];
+    const lotsRaw = rec["lotSize"] ?? rec["lots"] ?? rec["volume"] ?? rec["size"] ?? rec["contractsize"];
+    const openTimeRaw = rec["openTime"] ?? rec["open_time"] ?? rec["time"] ?? rec["entry_time"] ?? rec["create_time"];
+    const closeTimeRaw = rec["closeTime"] ?? rec["close_time"] ?? rec["time_done"] ?? rec["exit_time"] ?? rec["close_dt"] ?? rec["close"];
+
+    const idCandidate = rec["id"] ?? rec["ticket"] ?? rec["deal"] ?? rec["trade_id"] ?? rec["ticket_no"];
 
     const normalized: Partial<Trade> = {
-      id: idCandidate ? String(idCandidate) : undefined,
-      symbol: t.symbol ?? t.instrument ?? t.ticker ?? "UNKNOWN",
-      entryPrice:
-        entryRaw !== undefined
-          ? String(entryRaw)
-          : t.entry !== undefined
-          ? String(t.entry)
-          : "",
-      exitPrice:
-        exitRaw !== undefined
-          ? String(exitRaw)
-          : t.exit !== undefined
-          ? String(t.exit)
-          : "",
-      lotSize:
-        lotsRaw !== undefined
-          ? String(lotsRaw)
-          : t.volume
-          ? String(t.volume)
-          : t.lots
-          ? String(t.lots)
-          : "1",
+      id: idCandidate ? toStringSafe(idCandidate) : undefined,
+      symbol: toStringSafe(rec["symbol"] ?? rec["instrument"] ?? rec["ticker"] ?? "UNKNOWN"),
+      entryPrice: Number(toStringSafe(entryRaw) || 0),
+      stopLossPrice: Number(toStringSafe(rec["stopLossPrice"] ?? rec["stop_loss"] ?? 0)),
+      takeProfitPrice: Number(toStringSafe(rec["takeProfitPrice"] ?? rec["take_profit"] ?? 0)),
+      lotSize: Number(toStringSafe(lotsRaw) || 1),
       pnl: profit,
-      profitLoss: typeof profit === "number" ? `$${profit.toFixed(2)}` : String(profitRaw ?? "0"),
-      openTime: toISOStringIfValid(openTimeRaw) || (t.time ? toISOStringIfValid(t.time) : ""),
-      closeTime: toISOStringIfValid(closeTimeRaw) || "",
+      resultRR: 0,
+      openTime: toISOStringSafe(openTimeRaw),
+      closeTime: toISOStringSafe(closeTimeRaw),
       outcome: profit > 0 ? "Win" : profit < 0 ? "Loss" : "Breakeven",
-      notes: t.notes ?? t.note ?? t.comment ?? t.client_comment ?? "",
-      reasonForTrade: t.reasonForTrade ?? t.reason ?? t.strategy ?? t.strategyName ?? "",
-      strategy: t.strategy ?? t.reason ?? t.reasonForTrade ?? "",
-      emotion: t.emotion ?? "neutral",
-      // @ts-ignore keep raw for debugging
-      raw: t,
+      duration: "",
+      reasonForTrade: toStringSafe(rec["reasonForTrade"] ?? rec["reason"] ?? rec["strategy"] ?? ""),
+      emotion: toStringSafe(rec["emotion"] ?? ""),
+      journalNotes: toStringSafe(rec["notes"] ?? rec["note"] ?? rec["comment"] ?? ""),
     };
 
     return normalized as Trade;
   }, []);
 
-  // ---- core handlers (add/update/delete) ----
+  // Add / update / delete handlers
   const addTrade = useCallback(
     (newTrade: Trade) => {
       setTrades((prev) => {
         const prevIds = new Set(prev.map((p) => p.id));
-        const id =
-          newTrade.id && !prevIds.has(newTrade.id) ? newTrade.id : generateUniqueId(prevIds);
+        const id = newTrade.id && !prevIds.has(newTrade.id) ? newTrade.id : generateUniqueId(prevIds);
         return [...prev, { ...newTrade, id }];
       });
     },
@@ -204,21 +188,16 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const updateTrade = useCallback((updatedTrade: Trade) => {
-    setTrades((prevTrades) =>
-      prevTrades.map((trade) => (trade.id === updatedTrade.id ? { ...trade, ...updatedTrade } : trade))
-    );
+    setTrades((prevTrades) => prevTrades.map((trade) => (trade.id === updatedTrade.id ? { ...trade, ...updatedTrade } : trade)));
   }, []);
 
   const deleteTrade = useCallback((id: string) => {
     setTrades((prevTrades) => prevTrades.filter((trade) => trade.id !== id));
   }, []);
 
-  /**
-   * setTradesFromCsv
-   * - Normalizes array and upserts into state
-   */
+  // setTradesFromCsv: normalize and upsert
   const setTradesFromCsv = useCallback(
-    (csvTrades: any[]) => {
+    (csvTrades: unknown[]) => {
       if (!Array.isArray(csvTrades) || csvTrades.length === 0) return;
 
       setTrades((prev) => {
@@ -255,7 +234,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     [normalizeBrokerTrade, generateUniqueId]
   );
 
-  const importTrades = useCallback((incoming: any[]) => {
+  const importTrades = useCallback((incoming: unknown[]) => {
     setTradesFromCsv(incoming);
   }, [setTradesFromCsv]);
 
@@ -264,7 +243,9 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     setFilteredTrades([]);
     try {
       if (typeof window !== "undefined") localStorage.removeItem("trade-history");
-    } catch {}
+    } catch {
+      // ignore localStorage errors
+    }
   }, []);
 
   const filterTrades = useCallback(
@@ -279,9 +260,6 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     [trades]
   );
 
-  /**
-   * Refresh trades from Next API (/api/trades) and normalize into state.
-   */
   const refreshTrades = useCallback(async () => {
     try {
       const res = await fetch("/api/trades", { cache: "no-store" });
@@ -289,47 +267,31 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       const data = await res.json();
       const rows = Array.isArray(data.trades) ? data.trades : [];
       setTradesFromCsv(rows);
-    } catch (e) {
-      console.error("refreshTrades error:", e);
+    } catch (err: unknown) {
+      // eslint-disable-next-line no-console
+      console.error("refreshTrades error:", err);
     }
   }, [setTradesFromCsv]);
 
-  /**
-   * syncFromMT5
-   * - Calls Python backend (NEXT_PUBLIC_MT5_BACKEND / fallback)
-   * - Persists returned trades via Next API /api/mt5/import
-   * - Refreshes persisted trades from server
-   */
   const syncFromMT5 = useCallback(
     async (
       login: string,
       password: string,
       server: string,
       backendUrl?: string
-    ): Promise<{
-      success: boolean;
-      account?: any;
-      trades?: Trade[];
-      positions?: any[];
-      error?: string;
-    }> => {
+    ): Promise<SyncResult> => {
       if (!login || !password || !server) {
         return { success: false, error: "Missing login, password or server." };
       }
 
-      // default python backend url (client-provided override allowed)
       const backend =
-        backendUrl ||
-        (process.env.NEXT_PUBLIC_MT5_BACKEND as string) ||
-        "http://127.0.0.1:5000/sync_mt5";
+        backendUrl || (process.env.NEXT_PUBLIC_MT5_BACKEND as string) || "http://127.0.0.1:5000/sync_mt5";
 
-      // Abortable fetch with timeout
       const controller = new AbortController();
-      const timeoutMs = 60000; // 60s
+      const timeoutMs = 60000;
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        // 1) fetch from python mt5 backend
         const mtRes = await fetch(backend, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -339,83 +301,75 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
         clearTimeout(timeout);
 
-        // try parse JSON response
-        let mtData: any = null;
+        let mtData: unknown = null;
         try {
           mtData = await mtRes.json();
-        } catch (e) {
+        } catch {
           const txt = await mtRes.text().catch(() => "");
           return { success: false, error: `MT backend returned non-JSON: ${txt}` };
         }
 
+        const mtObj = (mtData && typeof mtData === "object") ? (mtData as Record<string, unknown>) : {};
         if (!mtRes.ok) {
-          return { success: false, error: mtData?.detail || mtData?.error || `MT backend failed: ${mtRes.status}` };
+          return { success: false, error: (mtObj.detail as string) || (mtObj.error as string) || `MT backend failed: ${mtRes.status}` };
         }
-        if (!mtData?.success) {
-          return { success: false, error: mtData?.detail || mtData?.error || "MT backend reported failure" };
+        if (!(mtObj.success === true)) {
+          return { success: false, error: (mtObj.detail as string) || (mtObj.error as string) || "MT backend reported failure" };
         }
 
-        // 2) get trades array (backend uses "trades" or "deals")
-        const tradesFromBackend = Array.isArray(mtData.trades)
-          ? mtData.trades
-          : Array.isArray(mtData.deals)
-          ? mtData.deals
+        const tradesFromBackend = Array.isArray(mtObj.trades)
+          ? (mtObj.trades as unknown[])
+          : Array.isArray(mtObj.deals)
+          ? (mtObj.deals as unknown[])
           : [];
 
-        // 3) Persist to your Next.js import route so DB stores them
         try {
           const importRes = await fetch("/api/mt5/import", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ account: mtData.account || { login, server }, trades: tradesFromBackend }),
+            body: JSON.stringify({ account: mtObj.account ?? { login, server }, trades: tradesFromBackend }),
           });
 
-          let importData: any = null;
+          let importData: unknown = null;
           try {
             importData = await importRes.json();
-          } catch (e) {
-            const txt = await importRes.text().catch(() => "");
-            console.warn("Import route returned non-JSON:", txt);
-            // still continue and import into memory
+          } catch {
             const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
             importTrades(normalizedInMemory);
-            return { success: true, account: mtData.account, trades: normalizedInMemory, error: "Imported to memory; DB import returned non-JSON" };
+            return { success: true, account: mtObj.account, trades: normalizedInMemory, error: "Imported to memory; DB import returned non-JSON" };
           }
 
-          if (!importRes.ok || !importData?.success) {
-            console.warn("Import to DB failed:", importData);
-            // still import into memory to give user immediate feedback
+          const importObj = (importData && typeof importData === "object") ? (importData as Record<string, unknown>) : {};
+          if (!importRes.ok || importObj.success !== true) {
             const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
             importTrades(normalizedInMemory);
-            return { success: true, account: mtData.account, trades: normalizedInMemory, error: importData?.error || "Persist to DB failed" };
+            return { success: true, account: mtObj.account, trades: normalizedInMemory, error: importObj.error as string || "Persist to DB failed" };
           }
-        } catch (impErr) {
+        } catch (impErr: unknown) {
+          // eslint-disable-next-line no-console
           console.error("Error calling /api/mt5/import:", impErr);
-          // import into memory as fallback
           const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
           importTrades(normalizedInMemory);
-          return { success: true, account: mtData.account, trades: normalizedInMemory, error: "Failed to persist trades to DB; shown in-memory" };
+          return { success: true, account: mtObj.account, trades: normalizedInMemory, error: "Failed to persist trades to DB; shown in-memory" };
         }
 
-        // 4) Refresh persisted trades from DB and return success
         await refreshTrades();
 
-        // convert to normalized trades to return
         const normalizedTrades = tradesFromBackend.map(normalizeBrokerTrade);
 
-        return { success: true, account: mtData.account, trades: normalizedTrades };
-      } catch (err: any) {
+        return { success: true, account: mtObj.account, trades: normalizedTrades };
+      } catch (err: unknown) {
         clearTimeout(timeout);
+        // eslint-disable-next-line no-console
         console.error("syncFromMT5 error:", err);
-        const isAbort = err && (err.name === "AbortError" || err.code === "ECONNABORTED");
+        const isAbort = typeof err === "object" && err !== null && ("name" in err ? (err as any).name === "AbortError" : false);
         if (isAbort) {
           return { success: false, error: `Request timed out after ${timeoutMs / 1000}s.` };
         }
-        const msg = err?.message || "Unknown error during MT5 sync. Ensure backend reachable.";
-        const hint =
-          msg.includes("Failed to fetch") || msg.includes("NetworkError")
-            ? `${msg} — frontend couldn't reach the MT backend or /api/mt5/import. Check both services.`
-            : msg;
+        const msg = err instanceof Error ? err.message : String(err);
+        const hint = msg.includes("Failed to fetch") || msg.includes("NetworkError")
+          ? `${msg} — frontend couldn't reach the MT backend or /api/mt5/import. Check both services.`
+          : msg;
         return { success: false, error: hint };
       } finally {
         clearTimeout(timeout);
@@ -424,26 +378,29 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     [refreshTrades, importTrades, normalizeBrokerTrade]
   );
 
-  // --- Load initial trades ---
+  // Load initial trades (cache then refresh)
   useEffect(() => {
-    // Try to show cached trades quickly, then refresh from server
     try {
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem("trade-history");
         if (stored) setTrades(JSON.parse(stored) as Trade[]);
       }
-    } catch {}
+    } catch {
+      // ignore parse errors
+    }
 
     refreshTrades();
   }, [refreshTrades]);
 
-  // --- Persist to localStorage as cache ---
+  // Persist to localStorage
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
         localStorage.setItem("trade-history", JSON.stringify(trades));
       }
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, [trades]);
 
   return (

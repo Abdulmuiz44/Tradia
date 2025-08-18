@@ -1,29 +1,37 @@
-// src/app/mt5/sync/page.tsx
-'use client';
+// src/app/dashboard/mt5/sync/page.tsx
+"use client";
 
-import { useState } from 'react';
+import React, { useState } from "react";
 
-export default function MT5SyncPage() {
-  const [mt5AccountId, setMt5AccountId] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function MT5SyncPage(): JSX.Element {
+  const [mt5AccountId, setMt5AccountId] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [resMsg, setResMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const sync = async (e: React.FormEvent) => {
+  const sync = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setErr(null); setResMsg(null);
+    setErr(null);
+    setResMsg(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/mt5/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mt5AccountId })
+      const res = await fetch("/api/mt5/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mt5AccountId }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Sync failed');
-      setResMsg(`Imported ${data.imported} trades`);
-    } catch (e: any) {
-      setErr(e.message);
+
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        const serverError = typeof data?.error === "string" ? data.error : `Sync failed (${res.status})`;
+        throw new Error(serverError);
+      }
+
+      const imported = typeof data?.imported === "number" ? data.imported : 0;
+      setResMsg(`Imported ${imported} trades`);
+    } catch (unknownErr) {
+      const message = unknownErr instanceof Error ? unknownErr.message : String(unknownErr);
+      setErr(message);
     } finally {
       setLoading(false);
     }
@@ -43,11 +51,15 @@ export default function MT5SyncPage() {
         />
 
         {err && <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded">{err}</div>}
+
         {loading ? (
-          <button disabled className="w-full py-3 bg-gray-300 rounded">Syncing…</button>
+          <button disabled className="w-full py-3 bg-gray-300 rounded">
+            Syncing…
+          </button>
         ) : (
           <button className="w-full py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700">Sync now</button>
         )}
+
         {resMsg && <p className="text-sm text-green-700">{resMsg}</p>}
       </form>
     </div>
