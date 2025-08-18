@@ -5,6 +5,13 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { pool } from "@/lib/db";
 import bcrypt from "bcrypt";
 
+type UpdateBody = {
+  name?: string;
+  image?: string;
+  oldPassword?: string;
+  newPassword?: string;
+};
+
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions as any);
@@ -13,7 +20,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as UpdateBody;
     const name = typeof body?.name === "string" ? body.name.trim() : undefined;
     const image = typeof body?.image === "string" ? body.image.trim() : undefined;
     const oldPassword = typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
@@ -61,10 +68,7 @@ export async function PATCH(req: NextRequest) {
       params.push(userId);
       const query = `UPDATE users SET ${parts.join(", ")}, updated_at=NOW() WHERE id=$${idx}`;
       await pool.query(query, params);
-
-      // return updated user
-      const ures = await pool.query(`SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`, [userId]);
-      return NextResponse.json({ success: true, user: ures.rows[0] });
+      return NextResponse.json({ success: true });
     }
 
     // No password change: update name/image only
@@ -88,8 +92,7 @@ export async function PATCH(req: NextRequest) {
     const q = `UPDATE users SET ${fields.join(", ")}, updated_at=NOW() WHERE id=$${i}`;
     await pool.query(q, values);
 
-    const ures = await pool.query(`SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`, [userId]);
-    return NextResponse.json({ success: true, user: ures.rows[0] });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("user update error:", err);
     return NextResponse.json({ error: err?.message || "Update failed" }, { status: 500 });
