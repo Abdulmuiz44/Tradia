@@ -10,3 +10,12 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS trading_style TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS trading_experience TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_country_code TEXT;
+
+-- Add user_settings table for storing per-user JSON settings
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_settings_updated_at ON user_settings(updated_at);
