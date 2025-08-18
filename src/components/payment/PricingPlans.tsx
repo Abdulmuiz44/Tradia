@@ -1,7 +1,7 @@
 // src/components/payment/PricingPlans.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { CheckCircle, X, Star } from "lucide-react";
@@ -16,39 +16,41 @@ type Plan = {
   priceMonthly: number;
   priceYearly?: number;
   tagline?: string;
-  features: string[];
+  baseFeatures: string[]; // features for the base (Free) plan
+  additionalFeatures?: string[]; // features that are added on top of previous tier
   highlight?: boolean;
 };
 
-const basePlans: Plan[] = [
+const plansData: Plan[] = [
   {
     name: "free",
     label: "Free",
     priceMonthly: 0,
     priceYearly: 0,
     tagline: "Forever free — get started",
-    features: [
+    baseFeatures: [
       "User Dashboard & Account Sync",
       "Performance Metrics Engine",
-      "Interactive Analytics (Plotly)",
-      "Risk Metrics (basic)",
-      "AI Summaries — weekly",
-      "Trade Journaling (manual + auto)",
-      "Export: CSV / PDF (limited)",
+      "Interactive Analytics",
+      "Basic risk metrics",
+      "Weekly AI summaries",
+      "Manual trade journaling",
+      "CSV / PDF export (limited)",
     ],
   },
   {
     name: "plus",
     label: "Plus",
     priceMonthly: 9,
-    priceYearly: 90,
+    priceYearly: 90, // monthly * 10 (2 months free)
     tagline: "Daily analysis & faster improvement",
-    features: [
+    baseFeatures: [], // will inherit Free
+    additionalFeatures: [
       "Unlimited charts & saved views",
       "Daily AI insights & trade tips",
       "Advanced filters & exports",
       "Behavioral & pattern analytics",
-      "Smart timeline, calendar view",
+      "Smart timeline & calendar view",
     ],
     highlight: true,
   },
@@ -58,11 +60,11 @@ const basePlans: Plan[] = [
     priceMonthly: 19,
     priceYearly: 190,
     tagline: "For serious, scaling traders",
-    features: [
-      "Everything in Plus",
+    baseFeatures: [],
+    additionalFeatures: [
       "AI forecasting & pattern prediction",
-      "SL/TP Optimization engine",
-      "Risk metrics: drawdown, VaR, sharpe",
+      "SL/TP optimization engine",
+      "Advanced risk metrics (drawdown, VaR, Sharpe)",
       "Strategy tagging & success tracking",
       "Prop-firm & milestone tracker",
     ],
@@ -73,32 +75,16 @@ const basePlans: Plan[] = [
     priceMonthly: 39,
     priceYearly: 390,
     tagline: "White-glove coaching & enterprise",
-    features: [
-      "Everything in Pro",
+    baseFeatures: [],
+    additionalFeatures: [
       "Custom AI coaching sessions",
       "Private strategy repository",
       "Priority support & onboarding",
-      "Custom integrations & prop firm mentoring",
+      "Custom integrations & prop-firm mentoring",
     ],
   },
 ];
 
-// Merge cumulative features so higher tiers show everything below them
-const mergeFeatures = (plans: Plan[]) => {
-  const merged: Plan[] = [];
-  let accumulated: string[] = [];
-
-  for (const plan of plans) {
-    accumulated = Array.from(new Set([...accumulated, ...plan.features]));
-    merged.push({ ...plan, features: [...accumulated] });
-  }
-
-  return merged;
-};
-
-const plans: Plan[] = mergeFeatures(basePlans);
-
-// testimonials with escaped apostrophes / smart quotes to satisfy eslint rule
 const testimonials: { name: string; quote: string }[] = [
   {
     name: "Aisha • FX Trader",
@@ -117,34 +103,66 @@ const testimonials: { name: string; quote: string }[] = [
   },
 ];
 
-const getDisplayPrice = (p: Plan, billing: BillingType): number =>
-  billing === "monthly" ? p.priceMonthly : typeof p.priceYearly === "number" ? p.priceYearly : Math.round(p.priceMonthly * 10);
-
-const getAnnualSavings = (p: Plan): number => {
-  const monthly = p.priceMonthly;
-  const yearly = typeof p.priceYearly === "number" ? p.priceYearly : monthly * 10;
-  const saved = Math.round(monthly * 12 - yearly);
-  return saved > 0 ? saved : 0;
-};
-
-const PricingPlans: React.FC = () => {
+export default function PricingPlans(): JSX.Element {
   const { plan, setPlan } = useUser();
   const [billingType, setBillingType] = useState<BillingType>("monthly");
   const router = useRouter();
 
   useEffect(() => {
     if (!plan) {
+      // ensure user has a plan value; useUser likely accepts string
       setPlan("free");
     }
+    // we intentionally don't add setPlan to deps here to avoid re-triggering on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const getDisplayPrice = (p: Plan, billing: BillingType): number => {
+    if (billing === "monthly") return p.priceMonthly;
+    if (typeof p.priceYearly === "number") return p.priceYearly;
+    return Math.round(p.priceMonthly * 10);
+  };
+
+  const getAnnualSavings = (p: Plan): number => {
+    const monthly = p.priceMonthly;
+    const yearly = typeof p.priceYearly === "number" ? p.priceYearly : monthly * 10;
+    const saved = Math.round(monthly * 12 - yearly);
+    return saved > 0 ? saved : 0;
+  };
+
   const handleUpgrade = (selectedPlan: PlanName) => {
-    // setPlan expects a string in UserContext; PlanName is a string subtype so this is safe
-    setPlan(selectedPlan);
-    const trialDays = selectedPlan === "free" ? 0 : 3;
+    // setPlan expects string in your UserContext — cast safely
+    setPlan(selectedPlan as unknown as string);
+    const trialDays = selectedPlan === "free" ? 0 : 7; // keep 7-day trial consistent with app/page.tsx
     router.push(`/checkout?plan=${selectedPlan}&billing=${billingType}&trial=${trialDays}`);
   };
+
+  // Build derived view where each tier shows "Everything in previous tier" + its own additions
+  const freePlan = plansData.find((p) => p.name === "free")!;
+  const plusPlan = plansData.find((p) => p.name === "plus")!;
+  const proPlan = plansData.find((p) => p.name === "pro")!;
+  const elitePlan = plansData.find((p) => p.name === "elite")!;
+
+  // Compose lists
+  const plusWhole = {
+    ...plusPlan,
+    inherited: [...freePlan.baseFeatures],
+    additions: plusPlan.additionalFeatures ?? [],
+  };
+
+  const proWhole = {
+    ...proPlan,
+    inherited: [...freePlan.baseFeatures, ...(plusPlan.additionalFeatures ?? [])],
+    additions: proPlan.additionalFeatures ?? [],
+  };
+
+  const eliteWhole = {
+    ...elitePlan,
+    inherited: [...freePlan.baseFeatures, ...(plusPlan.additionalFeatures ?? []), ...(proPlan.additionalFeatures ?? [])],
+    additions: elitePlan.additionalFeatures ?? [],
+  };
+
+  const allPlansView = [freePlan, plusWhole, proWhole, eliteWhole];
 
   return (
     <div className="p-6 md:p-10 min-h-screen bg-gradient-to-br from-[#0f111a] via-[#111827] to-[#0c1118] text-white">
@@ -156,7 +174,7 @@ const PricingPlans: React.FC = () => {
               Trade smarter. <span className="text-blue-400">Grow faster.</span>
             </h1>
             <p className="mt-3 text-gray-300 max-w-2xl">
-              Tradia is your AI trading coach — automatically analyze trades, find leaks, and receive daily, actionable insights that help you preserve capital and improve returns.
+              Tradia is your AI trading coach &mdash; automatically analyze trades, find leaks, and receive daily, actionable insights that help preserve capital and improve returns.
             </p>
 
             <div className="mt-5 flex items-center gap-3">
@@ -165,7 +183,7 @@ const PricingPlans: React.FC = () => {
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
                 aria-label="Start Plus free trial"
               >
-                Start Plus — 3-Day Trial
+                Start Plus &mdash; 7-Day Trial
               </button>
 
               <button
@@ -193,7 +211,9 @@ const PricingPlans: React.FC = () => {
                 onChange={() => setBillingType((prev) => (prev === "monthly" ? "yearly" : "monthly"))}
                 aria-label="Toggle billing frequency"
               />
-              <span className={`w-14 h-7 block rounded-full transition-all ${billingType === "yearly" ? "bg-blue-600" : "bg-gray-600"}`} />
+              <span
+                className={`w-14 h-7 block rounded-full transition-all ${billingType === "yearly" ? "bg-blue-600" : "bg-gray-600"}`}
+              />
               <span
                 className={`absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${billingType === "yearly" ? "translate-x-7" : "translate-x-0"}`}
               />
@@ -205,9 +225,12 @@ const PricingPlans: React.FC = () => {
 
       {/* PRICING CARDS */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {plans.map((p) => {
+        {allPlansView.map((p) => {
           const isSelected = plan === p.name;
-          const displayPrice = getDisplayPrice(p, billingType);
+          const displayPrice = getDisplayPrice(
+            plansData.find((x) => x.name === p.name) ?? p,
+            billingType
+          );
 
           return (
             <motion.div
@@ -231,7 +254,9 @@ const PricingPlans: React.FC = () => {
                 </div>
 
                 <div className="mt-5 flex items-baseline gap-3">
-                  <span className="text-3xl md:text-4xl font-extrabold">{displayPrice === 0 ? "$0" : `$${displayPrice}`}</span>
+                  <span className="text-3xl md:text-4xl font-extrabold">
+                    {displayPrice === 0 ? "$0" : `$${displayPrice}`}
+                  </span>
                   <span className="text-sm text-gray-400">/{billingType === "monthly" ? "mo" : "yr"}</span>
                 </div>
 
@@ -239,16 +264,35 @@ const PricingPlans: React.FC = () => {
                   {billingType === "yearly" && getAnnualSavings(p) > 0 && <span>Save ${getAnnualSavings(p)} with yearly billing</span>}
                 </div>
 
-                <ul className="mt-5 space-y-2 text-gray-200 text-sm">
-                  {p.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                {/* Feature presentation: Free shows base features; other tiers show "Everything in previous tier" then additional items */}
+                <div className="mt-5 text-sm text-gray-200">
+                  {p.name === "free" ? (
+                    <ul className="space-y-2">
+                      {freePlan.baseFeatures.map((f, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      <div className="mb-2 font-medium">Everything in Free, plus:</div>
+                      <ul className="space-y-2">
+                        {(p as typeof plusWhole | typeof proWhole | typeof eliteWhole).additions.map((f, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
 
-                {isSelected && <div className="mt-4 inline-block text-sm font-semibold text-blue-300">✓ Currently Selected</div>}
+                {isSelected && (
+                  <div className="mt-4 inline-block text-sm font-semibold text-blue-300">✓ Currently Selected</div>
+                )}
               </div>
 
               <div className="mt-6">
@@ -257,11 +301,15 @@ const PricingPlans: React.FC = () => {
                   className={`w-full py-2 rounded-lg font-semibold transition ${p.name === "free" ? "bg-transparent border border-gray-600 text-gray-200 hover:border-blue-500" : p.highlight ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-white"}`}
                 >
                   {p.name === "free" ? "Continue with Free" : `Start ${p.label}`}
-                  {p.name !== "free" && <span className="text-xs ml-2">3-day trial</span>}
+                  {p.name !== "free" && <span className="text-xs ml-2">7-day trial</span>}
                 </button>
 
                 <div className="mt-3 text-xs text-gray-400">
-                  {p.name !== "free" ? <span>Cancel anytime during trial. Annual billed plans have 2 months free.</span> : <span>Your account starts with the Free plan — upgrade anytime.</span>}
+                  {p.name !== "free" ? (
+                    <span>Cancel anytime during trial. Annual plans are billed upfront and offer 2 months free.</span>
+                  ) : (
+                    <span>Your account starts on the Free plan — upgrade anytime.</span>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -278,35 +326,71 @@ const PricingPlans: React.FC = () => {
             <thead>
               <tr>
                 <th className="py-2 px-3 text-gray-400">Feature</th>
-                {plans.map((p) => (
+                {plansData.map((p) => (
                   <th key={p.name} className="py-2 px-3 text-gray-300 text-center">{p.label}</th>
                 ))}
               </tr>
             </thead>
 
             <tbody>
-              {Array.from(new Set(plans.flatMap((p) => p.features))).map((feature) => (
+              {freePlan.baseFeatures.map((feature) => (
                 <tr key={feature} className="border-t border-gray-800">
                   <td className="py-3 px-3 text-gray-300 max-w-sm">{feature}</td>
-                  {plans.map((p) => {
-                    const included = p.features.includes(feature);
-                    return (
-                      <td key={p.name + feature} className="py-3 px-3 text-center">
-                        {included ? <CheckCircle className="w-4 h-4 inline-block text-green-400" /> : <X className="w-4 h-4 inline-block text-red-500" />}
-                      </td>
-                    );
-                  })}
+                  {plansData.map((p) => (
+                    <td key={p.name + feature} className="py-3 px-3 text-center">
+                      <CheckCircle className="w-4 h-4 inline-block text-green-400" />
+                    </td>
+                  ))}
                 </tr>
               ))}
 
-              <tr className="border-t border-gray-800">
-                <td className="py-3 px-3 text-gray-300">AI Forecasting</td>
-                {plans.map((p) => (
-                  <td key={p.name + "forecast"} className="py-3 px-3 text-center">
-                    {["pro", "elite"].includes(p.name) ? <CheckCircle className="w-4 h-4 inline-block text-green-400" /> : <X className="w-4 h-4 inline-block text-red-500" />}
-                  </td>
-                ))}
-              </tr>
+              {/* Plus additions */}
+              {plusPlan.additionalFeatures?.map((feature) => (
+                <tr key={feature} className="border-t border-gray-800">
+                  <td className="py-3 px-3 text-gray-300 max-w-sm">{feature}</td>
+                  {plansData.map((p) => (
+                    <td key={p.name + feature} className="py-3 px-3 text-center">
+                      {["plus", "pro", "elite"].includes(p.name) ? (
+                        <CheckCircle className="w-4 h-4 inline-block text-green-400" />
+                      ) : (
+                        <X className="w-4 h-4 inline-block text-red-500" />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+
+              {/* Pro additions */}
+              {proPlan.additionalFeatures?.map((feature) => (
+                <tr key={feature} className="border-t border-gray-800">
+                  <td className="py-3 px-3 text-gray-300 max-w-sm">{feature}</td>
+                  {plansData.map((p) => (
+                    <td key={p.name + feature} className="py-3 px-3 text-center">
+                      {["pro", "elite"].includes(p.name) ? (
+                        <CheckCircle className="w-4 h-4 inline-block text-green-400" />
+                      ) : (
+                        <X className="w-4 h-4 inline-block text-red-500" />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+
+              {/* Elite additions */}
+              {elitePlan.additionalFeatures?.map((feature) => (
+                <tr key={feature} className="border-t border-gray-800">
+                  <td className="py-3 px-3 text-gray-300 max-w-sm">{feature}</td>
+                  {plansData.map((p) => (
+                    <td key={p.name + feature} className="py-3 px-3 text-center">
+                      {p.name === "elite" ? (
+                        <CheckCircle className="w-4 h-4 inline-block text-green-400" />
+                      ) : (
+                        <X className="w-4 h-4 inline-block text-red-500" />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -343,13 +427,13 @@ const PricingPlans: React.FC = () => {
           <div>
             <h5 className="text-lg font-bold">Risk-free trial & guarantee</h5>
             <p className="text-gray-400 mt-2">
-              Start Plus or Pro with a 3-day free trial. Cancel within the trial — no charges. We are confident Tradia will reveal meaningful insights in the first 7 days.
+              Start Plus or Pro with a 7-day free trial. Cancel within the trial &mdash; no charges. We&rsquo;re confident Tradia will reveal meaningful insights in the first 7 days.
             </p>
           </div>
 
           <div className="text-sm text-gray-300">
             <div className="font-semibold">Need help?</div>
-            <div className="text-gray-400">Email: support@tradia.app • Live chat inside the app</div>
+            <div className="text-gray-400">Email: support@tradia.app &bull; Live chat inside the app</div>
           </div>
         </div>
       </div>
@@ -357,21 +441,19 @@ const PricingPlans: React.FC = () => {
       {/* tiny FAQ */}
       <div className="max-w-6xl mx-auto mt-6 text-sm text-gray-400">
         <details className="mb-2">
-          <summary className="cursor-pointer font-semibold">How does the 3-day trial work?</summary>
+          <summary className="cursor-pointer font-semibold">How does the 7-day trial work?</summary>
           <div className="mt-2 text-gray-300">
-            You can explore Plus/Pro features during the trial. Cancel anytime in the trial period to avoid billing.
+            Explore Plus/Pro features during the trial. Cancel anytime in the trial period to avoid billing.
           </div>
         </details>
 
         <details>
           <summary className="cursor-pointer font-semibold">Can I switch plans later?</summary>
           <div className="mt-2 text-gray-300">
-            Yes — upgrade or downgrade anytime. Annual plans are billed up-front and prorates/credits may apply.
+            Yes &mdash; upgrade or downgrade anytime. Annual plans are billed up-front and prorates/credits may apply.
           </div>
         </details>
       </div>
     </div>
   );
-};
-
-export default PricingPlans;
+}
