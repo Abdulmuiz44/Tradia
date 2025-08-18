@@ -1,10 +1,11 @@
-// app/dashboard/profile/page.tsx
+// src/app/dashboard/profile/page.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UploadCloud } from "lucide-react";
+import countries from "@/lib/countries";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -19,9 +20,12 @@ export default function ProfilePage() {
   const [email] = useState(initialEmail); // read only
   const [imageUrl, setImageUrl] = useState<string | null>(initialImage || null);
 
-  // optional local-only fields (not persisted by default)
-  const [phone, setPhone] = useState<string>("");
-  const [bio, setBio] = useState<string>("");
+  // persisted user fields
+  const [country, setCountry] = useState<string | null>(null);
+  const [phoneCountryCode, setPhoneCountryCode] = useState<string | null>(null);
+  const [phoneLocal, setPhoneLocal] = useState<string>(""); // local number without prefix
+  const [tradingStyle, setTradingStyle] = useState<string>("");
+  const [tradingExperience, setTradingExperience] = useState<string>("");
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,17 +35,35 @@ export default function ProfilePage() {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
+  // Password change UI
+  const [wantChangePassword, setWantChangePassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   useEffect(() => {
     setName(initialName);
     setImageUrl(initialImage || null);
-  }, [initialName, initialImage]);
+
+    // Try to prefill profile fields from session (if server put them into the session.user)
+    if (session?.user) {
+      const su = session.user as any;
+      if (su.country) setCountry(su.country);
+      if (su.phone) {
+        // if phone is stored in session as full phone, try to infer
+        setPhoneLocal(su.phone ?? "");
+      }
+      if (su.phone_country_code) setPhoneCountryCode(su.phone_country_code ?? null);
+      if (su.trading_style) setTradingStyle(su.trading_style ?? "");
+      if (su.trading_experience) setTradingExperience(su.trading_experience ?? "");
+    }
+  }, [initialName, initialImage, session]);
 
   if (status === "loading") return <p className="text-white p-4">Loading profile…</p>;
   if (!session) return <p className="text-white p-4">Access denied. Please sign in.</p>;
 
   const goBack = () => router.push("/dashboard");
 
-  // Convert file to data URL
   const fileToDataUrl = (file: File): Promise<string> =>
     new Promise((res, rej) => {
       const reader = new FileReader();
@@ -50,12 +72,15 @@ export default function ProfilePage() {
       reader.readAsDataURL(file);
     });
 
-  // Upload avatar flow: convert file -> POST { fileName, data } -> get imageUrl
+  // Upload avatar to /api/user/upload-avatar (doesn't persist to DB)
   const uploadAvatar = async (file: File) => {
     setUploading(true);
     setError(null);
     setMessage(null);
     try {
+      const maxBytes = 1.5 * 1024 * 1024;
+      if (file.size > maxBytes) throw new Error("File too large (max 1.5MB).");
+
       const dataUrl = await fileToDataUrl(file);
       setPreviewSrc(dataUrl);
 
@@ -72,9 +97,10 @@ export default function ProfilePage() {
 
       const json = await res.json();
       if (!json?.imageUrl) throw new Error("No image URL returned from server");
+      // Set image in the UI, but DO NOT persist to DB here
       setImageUrl(json.imageUrl);
       setPreviewSrc(null);
-      setMessage("Profile image uploaded.");
+      setMessage("Profile image uploaded (not yet saved). Click Save to persist.");
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
       setError(err?.message || "Avatar upload failed.");
@@ -89,16 +115,63 @@ export default function ProfilePage() {
     await uploadAvatar(file);
   };
 
-  // Trigger the hidden file input
   const triggerFileInput = () => fileRef.current?.click();
+
+  // When user picks country -> update phone country code automatically
+  const onCountryChange = (c: string) => {
+    setCountry(c);
+    const found = countries.find((x) => x.code === c || x.name === c);
+    if (found) {
+      setPhoneCountryCode(found.dial_code);
+    } else {
+      setPhoneCountryCode(null);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
     setError(null);
     setMessage(null);
+
+    if (!name || name.trim().length === 0) {
+      setError("Name cannot be empty.");
+      setSaving(false);
+      return;
+    }
+
+    if (wantChangePassword) {
+      if (!oldPassword || !newPassword || !confirmPassword) {
+        setError("To change password, fill all password fields.");
+        setSaving(false);
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError("New password and confirmation do not match.");
+        setSaving(false);
+        return;
+      }
+      if (newPassword.length < 8) {
+        setError("New password must be at least 8 characters.");
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
-      // We only persist `name` and `image` in the DB because your current Prisma schema includes those.
-      const payload = { name, image: imageUrl };
+      const payload: any = {
+        name,
+        image: imageUrl ?? null,
+        country: country ?? null,
+        trading_style: tradingStyle ?? null,
+        trading_experience: tradingExperience ?? null,
+        phone: phoneLocal ?? null,
+        phone_country_code: phoneCountryCode ?? null,
+      };
+
+      if (wantChangePassword) {
+        payload.oldPassword = oldPassword;
+        payload.newPassword = newPassword;
+      }
 
       const res = await fetch("/api/user/update", {
         method: "PATCH",
@@ -112,13 +185,19 @@ export default function ProfilePage() {
       }
 
       const json = await res.json();
-      setMessage("Profile updated successfully.");
+      if (!json?.success) {
+        throw new Error(json?.error || "Save failed");
+      }
 
-      // refresh UI / server components. This helps pick up server-side changes.
+      setMessage("Profile updated successfully.");
+      // refresh server components so session/user info updates
       router.refresh();
 
-      // stop editing
       setEditing(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setWantChangePassword(false);
     } catch (err: any) {
       console.error("Profile update failed:", err);
       setError(err?.message || "Failed to save profile.");
@@ -134,8 +213,16 @@ export default function ProfilePage() {
     setName(initialName);
     setImageUrl(initialImage || null);
     setPreviewSrc(null);
-    setPhone("");
-    setBio("");
+    // reset local-only fields (you may want to re-read session values instead)
+    setPhoneLocal("");
+    setPhoneCountryCode(session?.user?.phone_country_code ?? null);
+    setCountry(session?.user?.country ?? null);
+    setTradingStyle(session?.user?.trading_style ?? "");
+    setTradingExperience(session?.user?.trading_experience ?? "");
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setWantChangePassword(false);
   };
 
   return (
@@ -168,9 +255,9 @@ export default function ProfilePage() {
                 {uploading ? "Uploading..." : "Upload Avatar"}
               </button>
               <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-              <span className="text-sm text-zinc-400">Recommended: square image, ≤1MB</span>
+              <span className="text-sm text-zinc-400">Recommended: square image, ≤1.5MB</span>
             </div>
-            <p className="text-sm text-zinc-300 mt-3">Your profile image is used across Tradia to help personalize your account.</p>
+            <p className="text-sm text-zinc-300 mt-3">Your profile image is used across Tradia to help personalize your account. Uploading does not persist until you click Save.</p>
           </div>
         </div>
 
@@ -185,14 +272,70 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <label className="block mb-2 text-sm text-zinc-300">Phone (local only)</label>
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" placeholder="+1 555 555 5555" />
+          <label className="block mb-2 text-sm text-zinc-300">Country</label>
+          <select value={country ?? ""} onChange={(e) => onCountryChange(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
+            <option value="">Select country</option>
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block mb-2 text-sm text-zinc-300">Phone country code</label>
+            <input type="text" value={phoneCountryCode ?? ""} disabled className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" />
+          </div>
+          <div className="col-span-2">
+            <label className="block mb-2 text-sm text-zinc-300">Phone number (local)</label>
+            <input type="tel" value={phoneLocal} onChange={(e) => setPhoneLocal(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" placeholder="e.g. 555 1234" />
+          </div>
         </div>
 
         <div>
-          <label className="block mb-2 text-sm text-zinc-300">About / Bio (local only)</label>
-          <textarea value={bio} onChange={(e) => setBio(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white min-h-[90px]" placeholder="Tell people a little about your trading style or goals." />
+          <label className="block mb-2 text-sm text-zinc-300">Trading style</label>
+          <input type="text" value={tradingStyle} onChange={(e) => setTradingStyle(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" placeholder="e.g. Swing, Scalping, Micro" />
         </div>
+
+        <div>
+          <label className="block mb-2 text-sm text-zinc-300">Trading experience</label>
+          <select value={tradingExperience} onChange={(e) => setTradingExperience(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
+            <option value="">Select experience</option>
+            <option value="beginner">Beginner (&lt; 1 year)</option>
+            <option value="intermediate">Intermediate (1-3 years)</option>
+            <option value="advanced">Advanced (3+ years)</option>
+            <option value="professional">Professional</option>
+          </select>
+        </div>
+
+        {/* Password change toggle */}
+        {editing && (
+          <div className="p-3 border border-zinc-700 rounded">
+            <label className="inline-flex items-center gap-2 mb-2">
+              <input type="checkbox" checked={wantChangePassword} onChange={() => setWantChangePassword((v) => !v)} className="h-4 w-4" />
+              <span className="text-sm text-zinc-300">Change password</span>
+            </label>
+
+            {wantChangePassword && (
+              <div className="space-y-2 mt-2">
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">Current password</label>
+                  <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">New password</label>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">Confirm new password</label>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {message && <div className="p-2 bg-green-700 text-white rounded">{message}</div>}
         {error && <div className="p-2 bg-red-700 text-white rounded">{error}</div>}
