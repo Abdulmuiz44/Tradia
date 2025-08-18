@@ -14,82 +14,82 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-
-    // Allowed updatable fields map: incoming key -> db column name
-    const allowedFields: Record<string, string> = {
-      name: "name",
-      image: "image",
-      country: "country",
-      trading_style: "trading_style",
-      trading_experience: "trading_experience",
-      phone: "phone",
-      phone_country_code: "phone_country_code",
-    };
-
+    const name = typeof body?.name === "string" ? body.name.trim() : undefined;
+    const image = typeof body?.image === "string" ? body.image.trim() : undefined;
     const oldPassword = typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
     const newPassword = typeof body?.newPassword === "string" ? body.newPassword : undefined;
 
-    const parts: string[] = [];
-    const values: any[] = [];
-    let idx = 1;
-
-    for (const [k, col] of Object.entries(allowedFields)) {
-      if (Object.prototype.hasOwnProperty.call(body, k)) {
-        const raw = body[k];
-        const val = raw === "" ? null : raw;
-        parts.push(`${col}=$${idx++}`);
-        values.push(val);
-      }
+    // Validate
+    if (!name && !image && !newPassword) {
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    // Password change handling
+    // If password change requested, validate old password
     if (newPassword) {
       if (!oldPassword) {
         return NextResponse.json({ error: "Old password is required to change password" }, { status: 400 });
       }
-      // fetch current hashed password
+      // Fetch existing hashed password
       const r = await pool.query(`SELECT password FROM users WHERE id=$1 LIMIT 1`, [userId]);
       const hashed = r.rows[0]?.password;
       if (!hashed) {
-        return NextResponse.json({ error: "No existing password to verify against" }, { status: 400 });
+        return NextResponse.json({ error: "No existing password set; cannot change" }, { status: 400 });
       }
       const ok = await bcrypt.compare(oldPassword, hashed);
       if (!ok) {
         return NextResponse.json({ error: "Old password is incorrect" }, { status: 400 });
       }
-      if (typeof newPassword !== "string" || newPassword.length < 8) {
-        return NextResponse.json({ error: "New password must be at least 8 characters" }, { status: 400 });
+      // Hash new password
+      const saltRounds = 10;
+      const newHashed = await bcrypt.hash(newPassword, saltRounds);
+      // Update password along with name/image if provided
+      const parts: string[] = [];
+      const params: any[] = [];
+      let idx = 1;
+
+      if (name) {
+        parts.push(`name=$${idx++}`);
+        params.push(name);
       }
-      const newHashed = await bcrypt.hash(newPassword, 10);
+      if (image) {
+        parts.push(`image=$${idx++}`);
+        params.push(image);
+      }
       parts.push(`password=$${idx++}`);
-      values.push(newHashed);
+      params.push(newHashed);
+
+      params.push(userId);
+      const query = `UPDATE users SET ${parts.join(", ")}, updated_at=NOW() WHERE id=$${idx}`;
+      await pool.query(query, params);
+
+      // return updated user
+      const ures = await pool.query(`SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`, [userId]);
+      return NextResponse.json({ success: true, user: ures.rows[0] });
     }
 
-    if (parts.length === 0) {
+    // No password change: update name/image only
+    const fields: string[] = [];
+    const values: any[] = [];
+    let i = 1;
+    if (name) {
+      fields.push(`name=$${i++}`);
+      values.push(name);
+    }
+    if (image) {
+      fields.push(`image=$${i++}`);
+      values.push(image);
+    }
+
+    if (fields.length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    // Build final query
-    const q = `UPDATE users SET ${parts.join(", ")}, updated_at=NOW() WHERE id=$${idx}`;
     values.push(userId);
+    const q = `UPDATE users SET ${fields.join(", ")}, updated_at=NOW() WHERE id=$${i}`;
+    await pool.query(q, values);
 
-    try {
-      await pool.query(q, values);
-    } catch (err: any) {
-      // If column missing, return helpful message suggesting migration
-      if (err?.code === "42703") {
-        return NextResponse.json(
-          {
-            error:
-              `Database column missing (code 42703). Run migration to add missing columns (e.g. ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT;). DB error: ${err?.message}`,
-          },
-          { status: 500 }
-        );
-      }
-      throw err;
-    }
-
-    return NextResponse.json({ success: true });
+    const ures = await pool.query(`SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`, [userId]);
+    return NextResponse.json({ success: true, user: ures.rows[0] });
   } catch (err: any) {
     console.error("user update error:", err);
     return NextResponse.json({ error: err?.message || "Update failed" }, { status: 500 });

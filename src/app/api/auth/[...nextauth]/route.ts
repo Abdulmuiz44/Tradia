@@ -1,12 +1,10 @@
-// app/api/auth/[...nextauth]/route.ts
+// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { pool } from "@/lib/db";
 import { NextAuthOptions } from "next-auth";
-
-const ADMIN_EMAIL = "abdulmuizproject@gmail.com";
 
 if (!process.env.NEXTAUTH_URL) {
   console.warn("WARNING: NEXTAUTH_URL not set. Set NEXTAUTH_URL=http://localhost:3000 in .env.local");
@@ -37,17 +35,8 @@ export const authOptions: NextAuthOptions = {
           const res = await pool.query(`SELECT * FROM users WHERE email=$1 LIMIT 1`, [email]);
           const u = res.rows[0];
           if (!u || !u.password) return null;
-
           const ok = await bcrypt.compare(credentials.password, u.password);
-          return ok
-            ? {
-                id: u.id,
-                name: u.name ?? undefined,
-                email: u.email,
-                // include role so jwt callback can stash it without another query
-                role: u.role ?? "trader",
-              } as any
-            : null;
+          return ok ? { id: u.id, name: u.name ?? undefined, email: u.email } : null;
         } catch (err) {
           console.error("Credentials authorize error:", err);
           return null;
@@ -57,6 +46,10 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
+    /**
+     * signIn: unchanged behavior (links Google -> users table + accounts table)
+     * kept same flow but we ensure we do not reference created_at/updated_at columns that may differ.
+     */
     async signIn({ user, account, profile }) {
       try {
         if (account?.provider === "google") {
@@ -69,38 +62,27 @@ export const authOptions: NextAuthOptions = {
             return false;
           }
 
-          // If link already exists, ensure admin role if needed and allow
+          // If provider-account link already exists => allow sign in
           const acc = await pool.query(
             `SELECT user_id FROM accounts WHERE provider=$1 AND provider_account_id=$2 LIMIT 1`,
             [provider, providerAccountId]
           );
-          if (acc.rows[0]?.user_id) {
-            if (email === ADMIN_EMAIL) {
-              await pool.query(`UPDATE users SET role='admin' WHERE id=$1 AND role <> 'admin'`, [
-                acc.rows[0].user_id,
-              ]);
-            }
+          if (acc.rows[0]) {
             return true;
           }
 
           // Find user by email
-          const ures = await pool.query(`SELECT id, role FROM users WHERE email=$1 LIMIT 1`, [email]);
-          let userId: string | null = ures.rows[0]?.id ?? null;
+          const ures = await pool.query(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [email]);
+          let userId = ures.rows[0]?.id ?? null;
 
-          // Create user if doesn't exist (role: admin only for ADMIN_EMAIL, else trader)
+          // Create user if doesn't exist (mark email_verified)
           if (!userId) {
             const ins = await pool.query(
-              `INSERT INTO users (name, email, email_verified, role, created_at, updated_at)
-               VALUES ($1,$2,NOW(), CASE WHEN lower($2)=lower($3) THEN 'admin' ELSE 'trader' END, NOW(), NOW())
-               RETURNING id`,
-              [user?.name ?? profile?.name ?? null, email, ADMIN_EMAIL]
+              `INSERT INTO users (name, email, email_verified, created_at, updated_at)
+               VALUES ($1,$2,NOW(), NOW(), NOW()) RETURNING id`,
+              [user?.name ?? profile?.name ?? null, email]
             );
-            userId = ins.rows[0]?.id ?? null;
-          } else {
-            // Ensure correct role for the special admin email
-            if (email === ADMIN_EMAIL && ures.rows[0]?.role !== "admin") {
-              await pool.query(`UPDATE users SET role='admin' WHERE id=$1`, [userId]);
-            }
+            userId = ins.rows[0]?.id;
           }
 
           if (!userId) {
@@ -108,7 +90,7 @@ export const authOptions: NextAuthOptions = {
             return false;
           }
 
-          // Upsert account link
+          // Upsert account link (keep minimal columns so schema differences are tolerated)
           await pool.query(
             `INSERT INTO accounts (
                user_id, type, provider, provider_account_id,
@@ -149,34 +131,37 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
+    /**
+     * jwt:
+     * - ensure we compute token.userId on sign-in or from DB via email
+     * - always fetch the latest user record (name, email, image, role) from DB when token.userId exists
+     *   so token contains fresh image and role for session().
+     */
     async jwt({ token, user }) {
       try {
-        // carry over basics
+        // When a user signs in, NextAuth passes `user` object once (on signin)
         if (user?.id) {
           (token as any).userId = (user as any).id;
           token.email = (user as any).email ?? token.email;
           token.name = (user as any).name ?? token.name;
+        } else if (!(token as any).userId && token.email) {
+          // try to resolve user id from email
+          const r = await pool.query(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [token.email]);
+          if (r.rows[0]?.id) (token as any).userId = r.rows[0].id;
         }
 
-        // Prefer role from freshly-authorized user (credentials flow includes role)
-        if ((user as any)?.role) {
-          (token as any).role = (user as any).role;
-          return token;
-        }
-
-        // If role not on token, fetch once from DB (by id if possible, else by email)
-        if (!(token as any).role) {
-          if ((token as any).userId) {
-            const r = await pool.query(`SELECT role FROM users WHERE id=$1 LIMIT 1`, [
-              (token as any).userId,
-            ]);
-            if (r.rows[0]?.role) (token as any).role = r.rows[0].role;
-          } else if (token.email) {
-            const r = await pool.query(`SELECT id, role FROM users WHERE email=$1 LIMIT 1`, [
-              token.email,
-            ]);
-            if (r.rows[0]?.role) (token as any).role = r.rows[0].role;
-            if (r.rows[0]?.id) (token as any).userId = r.rows[0].id;
+        // If we have a userId, fetch latest fields (name, email, image, role)
+        if ((token as any).userId) {
+          const r2 = await pool.query(
+            `SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`,
+            [(token as any).userId]
+          );
+          const u = r2.rows[0];
+          if (u) {
+            token.name = u.name ?? token.name;
+            token.email = u.email ?? token.email;
+            token.image = u.image ?? token.image;
+            token.role = u.role ?? token.role ?? "trader";
           }
         }
       } catch (e) {
@@ -185,9 +170,21 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
+    /**
+     * session:
+     * - expose id, name, email, image and role on the session.user object returned by useSession/getSession
+     */
     async session({ session, token }) {
-      if ((token as any)?.userId) (session.user as any).id = (token as any).userId;
-      if ((token as any)?.role) (session.user as any).role = (token as any).role;
+      try {
+        if ((token as any)?.userId) (session.user as any).id = (token as any).userId;
+        if ((token as any)?.name) (session.user as any).name = (token as any).name;
+        if ((token as any)?.email) (session.user as any).email = (token as any).email;
+        if ((token as any)?.image) (session.user as any).image = (token as any).image;
+        // role defaults to 'trader' if absent
+        (session.user as any).role = (token as any)?.role ?? "trader";
+      } catch (e) {
+        console.error("session callback error:", e);
+      }
       return session;
     },
   },

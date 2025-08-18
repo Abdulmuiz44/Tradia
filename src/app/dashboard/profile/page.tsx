@@ -5,7 +5,37 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UploadCloud } from "lucide-react";
-import countries from "@/lib/countries";
+
+/**
+ * Small list of countries — expand as needed. Each option value is "cca2|+CODE"
+ * where cca2 is the two-letter country code and +CODE is the dialing prefix.
+ */
+const COUNTRIES: { label: string; value: string }[] = [
+  { label: "United States (+1)", value: "US|+1" },
+  { label: "United Kingdom (+44)", value: "GB|+44" },
+  { label: "Nigeria (+234)", value: "NG|+234" },
+  { label: "India (+91)", value: "IN|+91" },
+  { label: "Canada (+1)", value: "CA|+1" },
+  { label: "Australia (+61)", value: "AU|+61" },
+  { label: "Germany (+49)", value: "DE|+49" },
+  { label: "France (+33)", value: "FR|+33" },
+  // add others you need...
+];
+
+const TRADING_STYLES = [
+  { label: "Scalping", value: "scalping" },
+  { label: "Day trading", value: "day" },
+  { label: "Swing trading", value: "swing" },
+  { label: "Position trading", value: "position" },
+  { label: "Algorithmic / Quant", value: "algo" },
+];
+
+const EXPERIENCE_LEVELS = [
+  { label: "Beginner", value: "beginner" },
+  { label: "Intermediate", value: "intermediate" },
+  { label: "Advanced", value: "advanced" },
+  { label: "Professional", value: "professional" },
+];
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -20,13 +50,15 @@ export default function ProfilePage() {
   const [email] = useState(initialEmail); // read only
   const [imageUrl, setImageUrl] = useState<string | null>(initialImage || null);
 
-  // persisted user fields
-  const [country, setCountry] = useState<string | null>(null);
-  const [phoneCountryCode, setPhoneCountryCode] = useState<string | null>(null);
-  const [phoneLocal, setPhoneLocal] = useState<string>(""); // local number without prefix
+  // New persistent fields (country/phone/trading style/experience/bio)
+  const [country, setCountry] = useState<string>("US|+1"); // default
+  const [phoneNumber, setPhoneNumber] = useState<string>(""); // without country code
   const [tradingStyle, setTradingStyle] = useState<string>("");
   const [tradingExperience, setTradingExperience] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
 
+  // optional local-only fields left for backward compatibility
+  const [localPhone, setLocalPhone] = useState<string>(""); // unused if using phoneNumber
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -44,26 +76,63 @@ export default function ProfilePage() {
   useEffect(() => {
     setName(initialName);
     setImageUrl(initialImage || null);
+  }, [initialName, initialImage]);
 
-    // Try to prefill profile fields from session (if server put them into the session.user)
-    if (session?.user) {
-      const su = session.user as any;
-      if (su.country) setCountry(su.country);
-      if (su.phone) {
-        // if phone is stored in session as full phone, try to infer
-        setPhoneLocal(su.phone ?? "");
+  // Try to fetch extended profile (optional endpoint). If your backend later supports
+  // GET /api/user/profile it should return a JSON object with fields: country, phone, tradingStyle, tradingExperience, bio, image, name
+  useEffect(() => {
+    let mounted = true;
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/user/profile", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!mounted || !json) return;
+        // Safely set known fields if present
+        if (json.name) setName(String(json.name));
+        if (json.image) setImageUrl(String(json.image));
+        if (json.country) setCountry(String(json.country));
+        if (json.phone) {
+          // Expect phone either with code like "+1 555..." or without. Try to split code.
+          const p = String(json.phone);
+          // if it begins with +, try to find matching country code in our list
+          if (p.startsWith("+")) {
+            // naive: split first space
+            const parts = p.split(/\s+/);
+            const code = parts[0];
+            // find country with that dialing code
+            const match = COUNTRIES.find((c) => c.value.endsWith(`|${code}`));
+            if (match) {
+              setCountry(match.value);
+              setPhoneNumber(parts.slice(1).join(" "));
+            } else {
+              // fallback to storing whole number in phoneNumber
+              setPhoneNumber(p);
+            }
+          } else {
+            setPhoneNumber(p);
+          }
+        }
+        if (json.tradingStyle) setTradingStyle(String(json.tradingStyle));
+        if (json.tradingExperience) setTradingExperience(String(json.tradingExperience));
+        if (json.bio) setBio(String(json.bio));
+      } catch (e) {
+        // ignore if endpoint not available
+        // console.debug("No extended profile endpoint or failed to load:", e);
       }
-      if (su.phone_country_code) setPhoneCountryCode(su.phone_country_code ?? null);
-      if (su.trading_style) setTradingStyle(su.trading_style ?? "");
-      if (su.trading_experience) setTradingExperience(su.trading_experience ?? "");
     }
-  }, [initialName, initialImage, session]);
+    loadProfile();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   if (status === "loading") return <p className="text-white p-4">Loading profile…</p>;
   if (!session) return <p className="text-white p-4">Access denied. Please sign in.</p>;
 
   const goBack = () => router.push("/dashboard");
 
+  // Convert file to data URL
   const fileToDataUrl = (file: File): Promise<string> =>
     new Promise((res, rej) => {
       const reader = new FileReader();
@@ -72,12 +141,13 @@ export default function ProfilePage() {
       reader.readAsDataURL(file);
     });
 
-  // Upload avatar to /api/user/upload-avatar (doesn't persist to DB)
+  // Upload avatar flow: convert file -> POST { fileName, data } -> get imageUrl
   const uploadAvatar = async (file: File) => {
     setUploading(true);
     setError(null);
     setMessage(null);
     try {
+      // basic size limit check (1.5MB)
       const maxBytes = 1.5 * 1024 * 1024;
       if (file.size > maxBytes) throw new Error("File too large (max 1.5MB).");
 
@@ -97,10 +167,9 @@ export default function ProfilePage() {
 
       const json = await res.json();
       if (!json?.imageUrl) throw new Error("No image URL returned from server");
-      // Set image in the UI, but DO NOT persist to DB here
       setImageUrl(json.imageUrl);
       setPreviewSrc(null);
-      setMessage("Profile image uploaded (not yet saved). Click Save to persist.");
+      setMessage("Profile image uploaded.");
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
       setError(err?.message || "Avatar upload failed.");
@@ -115,24 +184,18 @@ export default function ProfilePage() {
     await uploadAvatar(file);
   };
 
+  // Trigger the hidden file input
   const triggerFileInput = () => fileRef.current?.click();
 
-  // When user picks country -> update phone country code automatically
-  const onCountryChange = (c: string) => {
-    setCountry(c);
-    const found = countries.find((x) => x.code === c || x.name === c);
-    if (found) {
-      setPhoneCountryCode(found.dial_code);
-    } else {
-      setPhoneCountryCode(null);
-    }
-  };
+  // Extract dial code from selected country value (value is "CC|+CODE")
+  const selectedDialCode = country.split("|")[1] ?? "+1";
 
   const handleSave = async () => {
     setSaving(true);
     setError(null);
     setMessage(null);
 
+    // Validate
     if (!name || name.trim().length === 0) {
       setError("Name cannot be empty.");
       setSaving(false);
@@ -158,14 +221,19 @@ export default function ProfilePage() {
     }
 
     try {
+      // Combine dialing code + phoneNumber into single canonical phone string
+      const phoneToSend = phoneNumber
+        ? `${selectedDialCode} ${phoneNumber.trim()}`
+        : "";
+
       const payload: any = {
         name,
-        image: imageUrl ?? null,
-        country: country ?? null,
-        trading_style: tradingStyle ?? null,
-        trading_experience: tradingExperience ?? null,
-        phone: phoneLocal ?? null,
-        phone_country_code: phoneCountryCode ?? null,
+        image: imageUrl,
+        phone: phoneToSend,
+        country,
+        tradingStyle,
+        tradingExperience,
+        bio,
       };
 
       if (wantChangePassword) {
@@ -190,8 +258,16 @@ export default function ProfilePage() {
       }
 
       setMessage("Profile updated successfully.");
-      // refresh server components so session/user info updates
+
+      // Refresh UI / server components and stop editing
       router.refresh();
+
+      // update fields if backend returned updated user
+      if (json.user) {
+        if (json.user.image) setImageUrl(json.user.image);
+        if (json.user.name) setName(json.user.name);
+        // if backend includes phone/country/etc in response, you can update them here
+      }
 
       setEditing(false);
       setOldPassword("");
@@ -213,16 +289,16 @@ export default function ProfilePage() {
     setName(initialName);
     setImageUrl(initialImage || null);
     setPreviewSrc(null);
-    // reset local-only fields (you may want to re-read session values instead)
-    setPhoneLocal("");
-    setPhoneCountryCode(session?.user?.phone_country_code ?? null);
-    setCountry(session?.user?.country ?? null);
-    setTradingStyle(session?.user?.trading_style ?? "");
-    setTradingExperience(session?.user?.trading_experience ?? "");
+    setPhoneNumber("");
+    setLocalPhone("");
+    setBio("");
+    setTradingStyle("");
+    setTradingExperience("");
     setOldPassword("");
     setNewPassword("");
     setConfirmPassword("");
     setWantChangePassword(false);
+    setCountry("US|+1");
   };
 
   return (
@@ -255,9 +331,9 @@ export default function ProfilePage() {
                 {uploading ? "Uploading..." : "Upload Avatar"}
               </button>
               <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-              <span className="text-sm text-zinc-400">Recommended: square image, ≤1.5MB</span>
+              <span className="text-sm text-zinc-400">Recommended: square image, ≤1MB</span>
             </div>
-            <p className="text-sm text-zinc-300 mt-3">Your profile image is used across Tradia to help personalize your account. Uploading does not persist until you click Save.</p>
+            <p className="text-sm text-zinc-300 mt-3">Your profile image is used across Tradia to help personalize your account.</p>
           </div>
         </div>
 
@@ -271,43 +347,90 @@ export default function ProfilePage() {
           <input type="email" value={email} disabled className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-zinc-400" />
         </div>
 
-        <div>
-          <label className="block mb-2 text-sm text-zinc-300">Country</label>
-          <select value={country ?? ""} onChange={(e) => onCountryChange(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
-            <option value="">Select country</option>
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
+        {/* Country & phone */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block mb-2 text-sm text-zinc-300">Phone country code</label>
-            <input type="text" value={phoneCountryCode ?? ""} disabled className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" />
+            <label className="block mb-2 text-sm text-zinc-300">Country</label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              disabled={!editing}
+              className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="col-span-2">
-            <label className="block mb-2 text-sm text-zinc-300">Phone number (local)</label>
-            <input type="tel" value={phoneLocal} onChange={(e) => setPhoneLocal(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" placeholder="e.g. 555 1234" />
+
+          <div className="md:col-span-2">
+            <label className="block mb-2 text-sm text-zinc-300">Phone</label>
+            <div className="flex gap-2">
+              <div className="min-w-[90px]">
+                <input
+                  type="text"
+                  value={selectedDialCode}
+                  disabled
+                  className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-zinc-300"
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="e.g. 555 555 5555"
+                  disabled={!editing}
+                  className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-zinc-500 mt-1">Phone is combined with selected country code on save.</p>
+          </div>
+        </div>
+
+        {/* Trading style & experience */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block mb-2 text-sm text-zinc-300">Trading Style</label>
+            <select
+              value={tradingStyle}
+              onChange={(e) => setTradingStyle(e.target.value)}
+              disabled={!editing}
+              className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
+            >
+              <option value="">Select style</option>
+              {TRADING_STYLES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-2 text-sm text-zinc-300">Trading Experience</label>
+            <select
+              value={tradingExperience}
+              onChange={(e) => setTradingExperience(e.target.value)}
+              disabled={!editing}
+              className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white"
+            >
+              <option value="">Select experience</option>
+              {EXPERIENCE_LEVELS.map((lvl) => (
+                <option key={lvl.value} value={lvl.value}>
+                  {lvl.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         <div>
-          <label className="block mb-2 text-sm text-zinc-300">Trading style</label>
-          <input type="text" value={tradingStyle} onChange={(e) => setTradingStyle(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white" placeholder="e.g. Swing, Scalping, Micro" />
-        </div>
-
-        <div>
-          <label className="block mb-2 text-sm text-zinc-300">Trading experience</label>
-          <select value={tradingExperience} onChange={(e) => setTradingExperience(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white">
-            <option value="">Select experience</option>
-            <option value="beginner">Beginner (&lt; 1 year)</option>
-            <option value="intermediate">Intermediate (1-3 years)</option>
-            <option value="advanced">Advanced (3+ years)</option>
-            <option value="professional">Professional</option>
-          </select>
+          <label className="block mb-2 text-sm text-zinc-300">About / Bio</label>
+          <textarea value={bio} onChange={(e) => setBio(e.target.value)} disabled={!editing} className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-white min-h-[90px]" placeholder="Tell people a little about your trading style or goals." />
         </div>
 
         {/* Password change toggle */}
