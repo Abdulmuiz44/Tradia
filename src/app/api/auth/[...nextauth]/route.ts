@@ -7,7 +7,9 @@ import { pool } from "@/lib/db";
 import type { NextAuthOptions } from "next-auth";
 
 if (!process.env.NEXTAUTH_URL) {
-  console.warn("WARNING: NEXTAUTH_URL not set. Set NEXTAUTH_URL=http://localhost:3000 in .env.local");
+  console.warn(
+    "WARNING: NEXTAUTH_URL not set. Set NEXTAUTH_URL=http://localhost:3000 (or http://127.0.0.1:3000) in .env.local"
+  );
 }
 if (!process.env.NEXTAUTH_SECRET) {
   console.warn("WARNING: NEXTAUTH_SECRET not set. Set a long random string in .env.local");
@@ -35,11 +37,64 @@ function getNumber(obj: unknown, key: string): number | undefined {
   return undefined;
 }
 
+/**
+ * Minimal shape that pg's query returns that we depend on:
+ * { rows: T[] }
+ */
+type QueryResultLike<T> = {
+  rows: T[];
+};
+
+/**
+ * Returns the first row from a query result if present, otherwise undefined.
+ * This avoids casting to `any` to access `.rows`.
+ */
+function getFirstRow<T>(res: unknown): T | undefined {
+  if (!res || typeof res !== "object") return undefined;
+  const maybe = res as Record<string, unknown>;
+  const rows = maybe.rows;
+  if (!Array.isArray(rows) || rows.length === 0) return undefined;
+  // rows is unknown[]; we cast the first element to T since we validated it's present.
+  return rows[0] as T;
+}
+
+/**
+ * Run a database query but fail fast if the DB does not respond within `timeoutMs`.
+ * Returns a small shape compatible with pg QueryResult.
+ */
+async function safeQuery<T = Record<string, unknown>>(
+  text: string,
+  params: unknown[] = [],
+  timeoutMs = 3000
+): Promise<QueryResultLike<T>> {
+  if (!pool || typeof pool.query !== "function") {
+    throw new Error("DB pool not available");
+  }
+
+  // race between the real query and a timeout promise
+  const qPromise = pool.query<T>(text, params);
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("DB_QUERY_TIMEOUT")), timeoutMs)
+  );
+
+  const result = await Promise.race([qPromise, timeout]);
+  // We don't rely on pg-specific types here; just return as QueryResultLike<T>
+  return result as unknown as QueryResultLike<T>;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      // Add authorization params to try to get refresh tokens where possible
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -51,8 +106,12 @@ export const authOptions: NextAuthOptions = {
         try {
           if (!credentials?.email || !credentials?.password) return null;
           const email = String(credentials.email).toLowerCase().trim();
-          const res = await pool.query(`SELECT * FROM users WHERE email=$1 LIMIT 1`, [email]);
-          const u = res.rows[0] as { id?: string; name?: string | null; email?: string; password?: string | null } | undefined;
+          const res = await safeQuery<{ id?: string; name?: string | null; email?: string; password?: string | null }>(
+            `SELECT * FROM users WHERE email=$1 LIMIT 1`,
+            [email]
+          );
+
+          const u = getFirstRow<{ id?: string; name?: string | null; email?: string; password?: string | null }>(res);
           if (!u || !u.password) return null;
           const ok = await bcrypt.compare(String(credentials.password), u.password);
           return ok ? { id: u.id, name: u.name ?? undefined, email: u.email } : null;
@@ -67,8 +126,19 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     /**
      * signIn: google linking/creation logic
+     * NOTE: This callback is defensive: DB failures will not block OAuth sign-in.
+     * If the DB is down or unreachable we log the error and allow the sign-in to proceed
+     * so the OAuth part doesn't fail with an ETIMEDOUT originating from DB connection attempts.
      */
-    async signIn({ user, account, profile }: { user?: Record<string, unknown>; account?: Record<string, unknown> | null; profile?: Record<string, unknown> | null }) {
+    async signIn({
+      user,
+      account,
+      profile,
+    }: {
+      user?: Record<string, unknown>;
+      account?: Record<string, unknown> | null;
+      profile?: Record<string, unknown> | null;
+    }) {
       try {
         if (account?.provider === "google") {
           const provider = getString(account, "provider") ?? "google";
@@ -80,60 +150,71 @@ export const authOptions: NextAuthOptions = {
             return false;
           }
 
-          // check existing account link
-          const acc = await pool.query(`SELECT user_id FROM accounts WHERE provider=$1 AND provider_account_id=$2 LIMIT 1`, [provider, providerAccountId]);
-          if (acc.rows[0]) return true;
-
-          // find user by email
-          const ures = await pool.query<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [email]);
-          let userId: string | null = ures.rows[0]?.id ?? null;
-
-          // create user if not exists - mark email_verified
-          if (!userId) {
-            const ins = await pool.query<{ id: string }>(
-              `INSERT INTO users (name, email, email_verified, created_at, updated_at)
-               VALUES ($1,$2,NOW(), NOW(), NOW()) RETURNING id`,
-              [getString(user, "name") ?? getString(profile, "name") ?? null, email]
+          // Try the DB ops but do not let DB errors block OAuth
+          try {
+            // check existing account link
+            const acc = await safeQuery<{ user_id?: string }>(
+              `SELECT user_id FROM accounts WHERE provider=$1 AND provider_account_id=$2 LIMIT 1`,
+              [provider, providerAccountId]
             );
-            userId = ins.rows[0]?.id ?? null;
+            if (getFirstRow<{ user_id?: string }>(acc)) return true;
+
+            // find user by email
+            const ures = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [email]);
+            let userId: string | null = getFirstRow<{ id: string }>(ures)?.id ?? null;
+
+            // create user if not exists - mark email_verified
+            if (!userId) {
+              const ins = await safeQuery<{ id: string }>(
+                `INSERT INTO users (name, email, email_verified, created_at, updated_at)
+                 VALUES ($1,$2,NOW(), NOW(), NOW()) RETURNING id`,
+                [getString(user, "name") ?? getString(profile, "name") ?? null, email]
+              );
+              userId = getFirstRow<{ id: string }>(ins)?.id ?? null;
+            }
+
+            if (!userId) {
+              console.error("Failed to get or create user for google sign-in", { email });
+              // do not return false here — allow sign-in to proceed even if DB failed to create a local user
+              return true;
+            }
+
+            // insert/update account link (minimal columns)
+            await safeQuery(
+              `INSERT INTO accounts (
+                 user_id, type, provider, provider_account_id,
+                 refresh_token, access_token, expires_at, token_type, scope, id_token, session_state
+               )
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+               ON CONFLICT (provider, provider_account_id) DO UPDATE
+                 SET user_id = EXCLUDED.user_id,
+                     access_token = EXCLUDED.access_token,
+                     refresh_token = EXCLUDED.refresh_token,
+                     id_token = EXCLUDED.id_token,
+                     expires_at = EXCLUDED.expires_at,
+                     token_type = EXCLUDED.token_type,
+                     scope = EXCLUDED.scope`,
+              [
+                userId,
+                getString(account, "type") ?? null,
+                provider,
+                providerAccountId,
+                getString(account, "refresh_token") ?? null,
+                getString(account, "access_token") ?? null,
+                getNumber(account, "expires_at") ? Math.floor(getNumber(account, "expires_at") as number) : null,
+                getString(account, "token_type") ?? null,
+                getString(account, "scope") ?? null,
+                getString(account, "id_token") ?? null,
+                getString(account, "session_state") ?? null,
+              ]
+            );
+
+            return true;
+          } catch (dbErr: unknown) {
+            // If DB is down/unreachable we explicitly log and allow sign-in to continue.
+            console.error("Google signIn DB error (continuing OAuth):", dbErr instanceof Error ? dbErr.message : String(dbErr));
+            return true;
           }
-
-          if (!userId) {
-            console.error("Failed to get or create user for google sign-in", { email });
-            return false;
-          }
-
-          // insert/update account link (minimal columns)
-          await pool.query(
-            `INSERT INTO accounts (
-               user_id, type, provider, provider_account_id,
-               refresh_token, access_token, expires_at, token_type, scope, id_token, session_state
-             )
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-             ON CONFLICT (provider, provider_account_id) DO UPDATE
-               SET user_id = EXCLUDED.user_id,
-                   access_token = EXCLUDED.access_token,
-                   refresh_token = EXCLUDED.refresh_token,
-                   id_token = EXCLUDED.id_token,
-                   expires_at = EXCLUDED.expires_at,
-                   token_type = EXCLUDED.token_type,
-                   scope = EXCLUDED.scope`,
-            [
-              userId,
-              getString(account, "type") ?? null,
-              provider,
-              providerAccountId,
-              getString(account, "refresh_token") ?? null,
-              getString(account, "access_token") ?? null,
-              getNumber(account, "expires_at") ? Math.floor(getNumber(account, "expires_at") as number) : null,
-              getString(account, "token_type") ?? null,
-              getString(account, "scope") ?? null,
-              getString(account, "id_token") ?? null,
-              getString(account, "session_state") ?? null,
-            ]
-          );
-
-          return true;
         }
 
         return true;
@@ -156,22 +237,33 @@ export const authOptions: NextAuthOptions = {
           if (getString(user, "name")) token.name = getString(user, "name");
         } else if (!("userId" in token) && typeof token.email === "string") {
           // try resolve user id by email
-          const r = await pool.query<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(token.email)]);
-          if (r.rows[0]?.id) token.userId = r.rows[0].id;
+          try {
+            const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(token.email)], 2000);
+            const row = getFirstRow<{ id: string }>(r);
+            if (row?.id) token.userId = row.id;
+          } catch (err) {
+            // DB lookup failed - swallow error (we still want the token)
+            console.error("jwt callback DB lookup failed:", err instanceof Error ? err.message : String(err));
+          }
         }
 
         // if we have userId, refresh name/email/image/role from DB
         if (typeof token.userId === "string") {
-          const r2 = await pool.query<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(
-            `SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`,
-            [String(token.userId)]
-          );
-          const u = r2.rows[0];
-          if (u) {
-            token.name = u.name ?? token.name;
-            token.email = u.email ?? token.email;
-            token.image = u.image ?? token.image;
-            token.role = u.role ?? token.role ?? "trader";
+          try {
+            const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(
+              `SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`,
+              [String(token.userId)],
+              2000
+            );
+            const u = getFirstRow<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(r2);
+            if (u) {
+              token.name = u.name ?? token.name;
+              token.email = u.email ?? token.email;
+              token.image = u.image ?? token.image;
+              token.role = u.role ?? token.role ?? "trader";
+            }
+          } catch (err) {
+            console.error("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
           }
         }
       } catch (err: unknown) {

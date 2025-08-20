@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -73,7 +72,6 @@ function DashboardContent() {
       // eslint-disable-next-line no-alert
       alert("Trades refreshed.");
     } catch (err: unknown) {
-      // safe error extraction
       const msg = err instanceof Error ? err.message : String(err);
       // eslint-disable-next-line no-console
       console.error("Sync/refresh error:", msg);
@@ -178,7 +176,8 @@ function DashboardContent() {
             <Spinner />
           ) : (
             <>
-              {activeTab === "overview" && <OverviewCards fromDate={""} toDate={""} accountInfo={undefined} />}
+              {/* PASS trades from context directly into OverviewCards so Overview uses same list as history */}
+              {activeTab === "overview" && <OverviewCards tradesProp={trades} />}
               {activeTab === "history" && <TradeHistoryTable trades={trades} />}
               {activeTab === "journal" && <TradeJournal />}
               {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
