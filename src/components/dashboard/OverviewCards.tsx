@@ -1,7 +1,9 @@
+// src/components/dashboard/OverviewCards.tsx
 "use client";
 
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { TradeContext } from "@/context/TradeContext";
+import type { Trade as TradeType } from "@/types/trade";
 import { differenceInCalendarDays, format } from "date-fns";
 import {
   BarChart2,
@@ -9,444 +11,955 @@ import {
   XCircle,
   Percent,
   DollarSign,
-  Activity,
   ArrowUp,
   ArrowDown,
-  PieChart,
-  Calendar,
   Star,
   ThumbsDown,
+  Award,
+  Info,
+  X,
+  TrendingUp,
+  Zap,
+  PieChart,
+  Calendar,
 } from "lucide-react";
-import { Line } from "react-chartjs-2";
+import { Line, Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   LineElement,
-  LineController,
   CategoryScale,
   LinearScale,
   PointElement,
   Tooltip,
   Legend,
+  ArcElement,
+  BarElement,
+  Filler,
 } from "chart.js";
 
-ChartJS.register(LineElement, LineController, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
+ChartJS.register(
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend,
+  ArcElement,
+  BarElement,
+  Filler
+);
 
 interface OverviewCardsProps {
-  // optional: if provided, OverviewCards will use this array instead of the TradeContext trades
-  tradesProp?: Trade[];
-  // optional date range — when omitted (or invalid) no date filter will be applied
-  fromDate?: string;
-  toDate?: string;
+  fromDate: string;
+  toDate: string;
 }
 
-type Outcome = "Win" | "Loss" | (string & {});
-type RRString =
-  | "rr"
-  | "RR"
-  | "riskReward"
-  | "risk_reward"
-  | "rrRatio"
-  | "rr_ratio"
-  | "R_R"
-  | "risk_reward_ratio"
-  | "riskRewardRatio";
+/** ---------- Helpers (robust parsing & safety) ---------- */
+const toNumber = (v: unknown): number => {
+  if (v === undefined || v === null || v === "") return 0;
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  if (typeof v === "bigint") return Number(v);
+  if (typeof v === "string") {
+    const cleaned = v.replace(/[^0-9eE\.\-+]/g, "");
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+};
+const toStringSafe = (v: unknown): string => {
+  if (v === undefined || v === null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint") return String(v);
+  if (v instanceof Date) return v.toISOString();
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
+};
+const toDateOrNull = (v: unknown): Date | null => {
+  if (v === undefined || v === null || v === "") return null;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if (typeof v === "number") {
+    const s = String(v);
+    if (/^\d{10}$/.test(s)) return new Date(Number(v) * 1000);
+    if (/^\d{13}$/.test(s)) return new Date(Number(v));
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof v === "string") {
+    const s = v.trim();
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+};
+const getField = (t: TradeType, key: string): unknown => (t as unknown as Record<string, unknown>)[key];
 
-type Trade = {
-  openTime: string | Date;
-  closeTime: string | Date;
-  outcome?: Outcome;
-  pnl?: number | string;
-  symbol?: string;
-} & Partial<Record<RRString, number | string>>;
-
-type TradeContextShape = {
-  trades: Trade[];
+const tradeTime = (t: TradeType) => toDateOrNull(getField(t, "openTime")) ?? toDateOrNull(getField(t, "closeTime"));
+const endOfDay = (d: Date) => {
+  const r = new Date(d);
+  r.setHours(23, 59, 59, 999);
+  return r;
 };
 
-export default function OverviewCards({ tradesProp, fromDate, toDate }: OverviewCardsProps): JSX.Element | null {
-  // HOOK ORDER: useContext -> useState -> useMemo -> useEffect (keeps hooks stable)
-  const tradeCtx = (useContext(TradeContext) as unknown as TradeContextShape) ?? { trades: [] };
-  const contextTrades = tradeCtx?.trades ?? [];
-
-  const [mounted, setMounted] = useState<boolean>(false);
-
-  // helper to safely parse pnl numbers
-  const nPnL = (v: number | string | undefined): number => {
-    if (typeof v === "number") return v;
-    const parsed = parseFloat(String(v ?? "0"));
-    return Number.isFinite(parsed) ? parsed : 0;
-  };
-
-  // All heavy metric calculations memoized and always executed (no early returns)
-  const {
-    filtered,
-    sortedTrades,
-    totalTrades,
-    wins,
-    losses,
-    winRate,
-    totalPnl,
-    pnlClass,
-    profitFactor,
-    bestTrade,
-    worstTrade,
-    perDay,
-    mostTraded,
-    totalTP,
-    totalSLCount,
-    profitRR,
-    winLossData,
-    streakData,
-    pnlOverTime,
-  } = useMemo(() => {
-    // Which trades to operate on: explicit prop takes precedence over context
-    const effectiveTrades: Trade[] = (tradesProp ?? contextTrades) || [];
-
-    const safeDate = (d: string | Date | undefined | null): Date | null => {
-      if (d == null) return null;
-      const dt = new Date(d as any);
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-
-    // Decide whether to apply date filtering. Only apply if both fromDate and toDate are provided and valid.
-    const fromCandidate = safeDate(fromDate ?? null);
-    const toCandidate = safeDate(toDate ?? null);
-    const doDateFilter = Boolean(fromCandidate && toCandidate);
-
-    // normalize from/to to full-day boundaries if valid
-    let from: Date | null = null;
-    let to: Date | null = null;
-    if (doDateFilter) {
-      from = new Date(fromCandidate!.getTime());
-      from.setHours(0, 0, 0, 0);
-      to = new Date(toCandidate!.getTime());
-      to.setHours(23, 59, 59, 999);
+function bucketCounts(values: number[], buckets: number[]): number[] {
+  const counts = new Array(buckets.length - 1).fill(0);
+  for (const v of values) {
+    for (let i = 0; i < buckets.length - 1; i++) {
+      if (v >= buckets[i] && v < buckets[i + 1]) {
+        counts[i] += 1;
+        break;
+      }
     }
+  }
+  return counts;
+}
 
-    // Filtering: if doDateFilter true, include trades overlapping the date range; otherwise keep all trades
-    const filteredTrades: Trade[] = doDateFilter
-      ? effectiveTrades.filter((t) => {
-          const open = safeDate(t.openTime);
-          const close = safeDate(t.closeTime);
-          if (!open && !close) return false; // skip invalid-date trades
-          const o = open ?? close!;
-          const c = close ?? open!;
-          return o.getTime() <= (to as Date).getTime() && c.getTime() >= (from as Date).getTime();
-        })
-      : [...effectiveTrades];
+/** RR parsing (robust) */
+const rrFromTrade = (t: TradeType): number => {
+  const outcome = toStringSafe(getField(t, "outcome"));
+  const candidates: unknown[] = [
+    getField(t, "resultRR"),
+    getField(t, "rr"),
+    getField(t, "RR"),
+    getField(t, "riskReward"),
+    getField(t, "risk_reward"),
+    getField(t, "rrRatio"),
+    getField(t, "rr_ratio"),
+    getField(t, "R_R"),
+    getField(t, "risk_reward_ratio"),
+    getField(t, "riskRewardRatio"),
+  ];
 
-    // Sort for time series visuals (by openTime ascending)
-    const sorted = [...filteredTrades].sort((a, b) => {
-      const A = safeDate(a.openTime)?.getTime() ?? 0;
-      const B = safeDate(b.openTime)?.getTime() ?? 0;
-      return A - B;
-    });
-
-    // Basic metrics
-    const totalTrades = filteredTrades.length;
-    const wins = filteredTrades.filter((t) => String(t.outcome).toLowerCase() === "win").length;
-    const losses = filteredTrades.filter((t) => String(t.outcome).toLowerCase() === "loss").length;
-    const winRate = totalTrades ? ((wins / totalTrades) * 100).toFixed(1) : "0";
-
-    const totalPnl = filteredTrades.reduce((s, t) => s + nPnL(t.pnl), 0);
-    const pnlClass = totalPnl > 0 ? "text-green-400" : totalPnl < 0 ? "text-red-400" : "text-white";
-
-    // Profit factor
-    const grossProfit = filteredTrades.filter((t) => nPnL(t.pnl) > 0).reduce((s, t) => s + nPnL(t.pnl), 0);
-    const grossLoss = Math.abs(
-      filteredTrades.filter((t) => nPnL(t.pnl) < 0).reduce((s, t) => s + nPnL(t.pnl), 0)
-    );
-    const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : grossProfit > 0 ? "∞" : "0.00";
-
-    // Best / Worst trades
-    let bestTrade: Trade | null = null;
-    let worstTrade: Trade | null = null;
-    if (filteredTrades.length > 0) {
-      bestTrade = filteredTrades.reduce((b, c) => (nPnL(c.pnl) > nPnL(b.pnl) ? c : b), filteredTrades[0]!);
-      worstTrade = filteredTrades.reduce((w, c) => (nPnL(c.pnl) < nPnL(w.pnl) ? c : w), filteredTrades[0]!);
+  let parsed: number | null = null;
+  for (const c of candidates) {
+    if (typeof c === "number" && Number.isFinite(c)) {
+      parsed = c;
+      break;
     }
-
-    // Trades per day
-    const dateList = sorted.map((t) => safeDate(t.openTime)).filter((d): d is Date => Boolean(d));
-    const days = dateList.length > 1 ? differenceInCalendarDays(dateList[dateList.length - 1]!, dateList[0]!) + 1 : 1;
-    const perDay = days ? (totalTrades / days).toFixed(2) : "0.00";
-
-    // Most traded symbol
-    const symbolCounts = filteredTrades.reduce<Record<string, number>>((acc, t) => {
-      const sym = t.symbol ?? "N/A";
-      acc[sym] = (acc[sym] || 0) + 1;
-      return acc;
-    }, {});
-    const mostTraded = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A";
-
-    // RR parsing and metrics
-    const rrKeys: RRString[] = [
-      "rr",
-      "RR",
-      "riskReward",
-      "risk_reward",
-      "rrRatio",
-      "rr_ratio",
-      "R_R",
-      "risk_reward_ratio",
-      "riskRewardRatio",
-    ];
-
-    const parseRR = (t: Trade): number => {
-      for (const k of rrKeys) {
-        const c = (t as any)[k];
-        if (c === undefined || c === null) continue;
-        if (typeof c === "number" && Number.isFinite(c)) return c as number;
-        if (typeof c === "string") {
-          const s = c.trim();
-          const sClean = s.replace(/\s+/g, "");
-
-          if (sClean.includes(":")) {
-            const parts = sClean.split(":");
-            if (parts.length === 2) {
-              const a = parseFloat(parts[0]!);
-              const b = parseFloat(parts[1]!);
-              if (!Number.isNaN(a) && !Number.isNaN(b) && a !== 0) return b / a;
-            }
+    if (typeof c === "string") {
+      const s = c.trim();
+      const sClean = s.replace(/\s+/g, "");
+      if (sClean.includes(":") || sClean.includes("/")) {
+        const sep = sClean.includes(":") ? ":" : "/";
+        const parts = sClean.split(sep);
+        if (parts.length === 2) {
+          const a = parseFloat(parts[0]);
+          const b = parseFloat(parts[1]);
+          if (!Number.isNaN(a) && !Number.isNaN(b) && a !== 0) {
+            parsed = b / a;
+            break;
           }
-
-          if (sClean.includes("/")) {
-            const parts = sClean.split("/");
-            if (parts.length === 2) {
-              const a = parseFloat(parts[0]!);
-              const b = parseFloat(parts[1]!);
-              if (!Number.isNaN(a) && !Number.isNaN(b) && a !== 0) return b / a;
-            }
-          }
-
-          const withoutR = sClean.replace(/R$/i, "");
-          const n = parseFloat(withoutR);
-          if (!Number.isNaN(n)) return n;
-
-          const m = s.match(/-?\d+(?:\.\d+)?/);
-          if (m) return parseFloat(m[0]!);
         }
       }
-      return Number.NaN;
+      const withoutR = sClean.replace(/R{1,2}$/i, "");
+      const n = parseFloat(withoutR);
+      if (!Number.isNaN(n)) {
+        parsed = n;
+        break;
+      }
+      const m = s.match(/-?\d+(\.\d+)?/);
+      if (m) {
+        const n2 = parseFloat(m[0]);
+        if (!Number.isNaN(n2)) {
+          parsed = n2;
+          break;
+        }
+      }
+    }
+  }
+
+  if (outcome === "Loss") return -1;
+  if (outcome === "Breakeven") return 0;
+  if (outcome === "Win") {
+    return parsed !== null && Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+  }
+  return parsed !== null && Number.isFinite(parsed) ? parsed : Number.NaN;
+};
+
+/** Presentational progress bar */
+function ProgressBar({ value, color = "bg-green-500" }: { value: number; color?: string }) {
+  const pct = Math.max(0, Math.min(100, Math.round(value)));
+  return (
+    <div className="w-full bg-slate-900/60 rounded h-2 overflow-hidden">
+      <div className={`${color} h-2 transition-all duration-300`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+/** small metric explanation map */
+const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
+  totalTrades: { title: "Total trades", body: "Total number of trades in the selected range." },
+  wins: { title: "Wins", body: "Number of trades marked as Win." },
+  losses: { title: "Losses", body: "Number of trades marked as Loss." },
+  pnl: { title: "PNL ($)", body: "Net profit / loss across selected trades." },
+  profitFactor: { title: "Profit Factor", body: "Profit / Loss (absolute). Values >1 are preferable." },
+  rrTP: { title: "Total TP (RR)", body: "Sum of winning trades' reward-to-risk (R) values." },
+  rrSL: { title: "Total SL (RR)", body: "Count of trades that resulted in -1R (stop loss)." },
+  best: { title: "Best trade", body: "Single trade with highest positive PnL." },
+  worst: { title: "Worst trade", body: "Single trade with largest negative PnL." },
+  tradesPerDay: { title: "Trades per day", body: "Average trades taken per active day." },
+  mostTraded: { title: "Most traded pair", body: "Symbol with the most trades in the selected range." },
+  rrOverTime: { title: "RR performance over time", body: "Average R (reward-to-risk) per day shown across the date range." },
+  tradiaScore: { title: "Tradia Score", body: "Composite score combining win rate, profit factor, avg RR and consistency." },
+};
+
+/** Greeting */
+const getGreeting = (name = "Abdulmuiz") => {
+  const hr = new Date().getHours();
+  if (hr < 12) return `Good morning, ${name}`;
+  if (hr < 18) return `Good afternoon, ${name}`;
+  return `Good evening, ${name}`;
+};
+
+/** Format value and color numeric results automatically
+ * - If numeric (>0) => green
+ * - If numeric (<0) => red
+ * - Else default white
+ */
+function ColoredValue({ value }: { value: React.ReactNode }) {
+  // try to extract numeric
+  let num: number | null = null;
+  if (typeof value === "number") num = value;
+  else if (typeof value === "string") {
+    const m = value.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+    if (m) num = Number(m[0]);
+  }
+  const cls = num !== null ? (num > 0 ? "text-green-400" : num < 0 ? "text-red-400" : "text-white") : "text-white";
+  return <span className={cls}>{value}</span>;
+}
+
+export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps): JSX.Element | null {
+  // hooks (stable order)
+  const { trades } = useContext(TradeContext);
+  const [mounted, setMounted] = useState(false);
+
+  // UI state
+  const [pnlMode, setPnlMode] = useState<"cumulative" | "perTrade">("cumulative");
+  const [showRR, setShowRR] = useState(true);
+  const [showStreak, setShowStreak] = useState(true);
+  const [monthlyTarget, setMonthlyTarget] = useState<number>(1000);
+  const [explainKey, setExplainKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const allTrades = Array.isArray(trades) ? trades : [];
+
+  // metrics memo
+  const metrics = useMemo(() => {
+    const from = fromDate && !Number.isNaN(new Date(fromDate).getTime()) ? new Date(fromDate) : new Date(-8640000000000000);
+    const to = toDate && !Number.isNaN(new Date(toDate).getTime()) ? endOfDay(new Date(toDate)) : new Date(8640000000000000);
+
+    const inRange = (t: TradeType) => {
+      const tt = tradeTime(t);
+      if (!tt) return false;
+      return tt >= from && tt <= to;
     };
 
-    const rrValuesAll = filteredTrades.map((t) => parseRR(t));
-    const rrValues = rrValuesAll.filter((v) => Number.isFinite(v));
-    const totalTP = rrValues.filter((v) => v > 0).reduce((s, v) => s + v, 0);
-    const totalSLCount = rrValues.filter((v) => v <= 0).length;
+    const filtered = allTrades.filter(inRange);
+
+    const total = filtered.length;
+    const wins = filtered.filter((t) => toStringSafe(getField(t, "outcome")) === "Win").length;
+    const losses = filtered.filter((t) => toStringSafe(getField(t, "outcome")) === "Loss").length;
+    const breakevens = filtered.filter((t) => toStringSafe(getField(t, "outcome")) === "Breakeven").length;
+    const winRate = total ? (wins / total) * 100 : 0;
+
+    const pnlOf = (t: TradeType) => toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
+    const totalPnl = filtered.reduce((s, t) => s + pnlOf(t), 0);
+    const profit = filtered.filter((t) => pnlOf(t) >= 0).reduce((s, t) => s + pnlOf(t), 0);
+    const loss = Math.abs(filtered.filter((t) => pnlOf(t) < 0).reduce((s, t) => s + pnlOf(t), 0));
+    const profitFactor = loss > 0 ? profit / loss : Infinity;
+
+    // best/worst
+    let best: TradeType | null = null;
+    let worst: TradeType | null = null;
+    for (const t of filtered) {
+      if (!best || pnlOf(t) > pnlOf(best)) best = t;
+      if (!worst || pnlOf(t) < pnlOf(worst)) worst = t;
+    }
+
+    // trades/day
+    const times = filtered.map((t) => tradeTime(t)).filter(Boolean) as Date[];
+    times.sort((a, b) => a.getTime() - b.getTime());
+    const days = times.length > 1 ? differenceInCalendarDays(times[times.length - 1]!, times[0]!) + 1 : times.length === 1 ? 1 : 0;
+    const tradesPerDay = days ? (total / days).toFixed(2) : "0.00";
+
+    // most traded
+    const symCounts = filtered.reduce<Record<string, number>>((acc, t) => {
+      const s = toStringSafe(getField(t, "symbol")) || "N/A";
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+    const mostTraded = Object.entries(symCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A";
+
+    // RR values
+    const rrVals = filtered.map(rrFromTrade).filter((v) => Number.isFinite(v));
+    const avgRR = rrVals.length ? rrVals.reduce((s, v) => s + v, 0) / rrVals.length : 0;
+    const rrBucketsEdges = [-5, -1, 0, 0.5, 1, 1.5, 2, 3, 5];
+    const rrCounts = bucketCounts(rrVals, rrBucketsEdges);
+    const rrLabels = rrBucketsEdges.slice(0, -1).map((b, i) => `${b}–${rrBucketsEdges[i + 1]}`);
+    const totalTP = rrVals.filter((r) => r > 0).reduce((s, r) => s + r, 0);
+    const totalSLCount = rrVals.filter((r) => r === -1).length;
     const profitRR = totalTP - totalSLCount;
 
-    // Win/Loss trend & charts (time-ordered)
-    const labels = sorted.map((t) => format(new Date(t.openTime), "MMM d"));
-    const winLossData = {
-      labels,
-      datasets: [
-        {
-          label: "Wins",
-          data: sorted.map((t) => (String(t.outcome).toLowerCase() === "win" ? 1 : 0)),
-          borderColor: "#22c55e",
-          backgroundColor: "#22c55e66",
-        },
-        {
-          label: "Losses",
-          data: sorted.map((t) => (String(t.outcome).toLowerCase() === "loss" ? 1 : 0)),
-          borderColor: "#ef4444",
-          backgroundColor: "#ef444466",
-        },
-      ],
-    };
+    // chronological & pnl
+    const chrono = [...filtered].sort((a, b) => (tradeTime(a)?.getTime() ?? 0) - (tradeTime(b)?.getTime() ?? 0));
+    const labelsChrono = chrono.map((t) => (tradeTime(t) ? format(tradeTime(t)!, "MMM d") : ""));
+    const perTradePnls = chrono.map((t) => pnlOf(t));
+    const cumPnls = perTradePnls.map((_, i) => perTradePnls.slice(0, i + 1).reduce((s, v) => s + v, 0));
 
-    // Streaks
+    // streaks
     const streaks: number[] = [];
     let curr = 0;
-    let last: "win" | "loss" | null = null;
-    sorted.forEach((t) => {
-      const o = String(t.outcome).toLowerCase();
-      if (o !== "win" && o !== "loss") {
+    let last: "Win" | "Loss" | null = null;
+    for (const t of chrono) {
+      const oc = toStringSafe(getField(t, "outcome"));
+      if (oc !== "Win" && oc !== "Loss") {
+        if (curr > 0) streaks.push(curr);
         curr = 0;
         last = null;
-        streaks.push(curr);
-        return;
+        continue;
       }
-      if (o === last) curr++;
+      if (oc === last) curr++;
       else {
+        if (curr > 0) streaks.push(curr);
         curr = 1;
-        last = o as "win" | "loss";
+        last = oc as "Win" | "Loss";
       }
-      streaks.push(curr);
+    }
+    if (curr > 0) streaks.push(curr);
+    const longestWinStreak = streaks.length ? Math.max(...streaks) : 0;
+
+    // daily aggregation for RR-over-time & daily net
+    const dayMapPnL = new Map<string, number>();
+    const dayMapRR = new Map<string, number[]>();
+    for (const t of filtered) {
+      const dt = tradeTime(t);
+      if (!dt) continue;
+      const key = dt.toISOString().slice(0, 10);
+      const p = pnlOf(t);
+      dayMapPnL.set(key, (dayMapPnL.get(key) ?? 0) + p);
+      const rr = rrFromTrade(t);
+      if (Number.isFinite(rr)) {
+        const arr = dayMapRR.get(key) ?? [];
+        arr.push(rr);
+        dayMapRR.set(key, arr);
+      }
+    }
+    const dayKeys = Array.from(new Set([...dayMapPnL.keys(), ...dayMapRR.keys()])).sort();
+    const dailyLabels = dayKeys;
+    const dailyNet = dayKeys.map((k) => dayMapPnL.get(k) ?? 0);
+    const cumulativeDaily = dailyNet.reduce<number[]>((acc, v, i) => {
+      const prev = i > 0 ? acc[i - 1] : 0;
+      acc.push(prev + v);
+      return acc;
+    }, []);
+    // RR over time (avg RR per day)
+    const rrOverTime = dayKeys.map((k) => {
+      const arr = dayMapRR.get(k) ?? [];
+      if (!arr.length) return 0;
+      return arr.reduce((s, v) => s + v, 0) / arr.length;
     });
-    const streakData = {
-      labels: streaks.map((_, i) => `#${i + 1}`),
+
+    // recent sparkline
+    const recent = chrono.slice(-8);
+    const recentLabels = recent.map((t) => (tradeTime(t) ? format(tradeTime(t)!, "d") : ""));
+    const recentPnls = recent.map((t) => pnlOf(t));
+
+    // tradia score (simple heuristic)
+    const consistency = days > 0 ? Math.min(1, dayKeys.length / Math.max(1, days)) : 0;
+    const pfVal = Number.isFinite(profitFactor) ? profitFactor : 3;
+    const tradiaScore = (() => {
+      const winScore = winRate; // 0..100
+      const pfScore = Math.min(3, pfVal) / 3 * 100;
+      const ar = Math.max(-1, Math.min(3, avgRR));
+      const rrScore = ((ar + 1) / 4) * 100;
+      const score = winScore * 0.3 + pfScore * 0.3 + rrScore * 0.25 + consistency * 100 * 0.15;
+      return Math.round(Math.max(0, Math.min(100, score)));
+    })();
+
+    // charts
+    const doughnutData = {
+      labels: ["Wins", "Losses", "Breakeven"],
+      datasets: [{ data: [wins, losses, breakevens], backgroundColor: ["#16a34a", "#ef4444", "#94a3b8"] }],
+    };
+    const pnlLineData = {
+      labels: labelsChrono,
       datasets: [
         {
-          label: "Streak",
-          data: streaks,
-          borderColor: "#3b82f6",
-          fill: false,
+          label: pnlMode === "cumulative" ? "Cumulative PnL" : "Per-trade PnL",
+          data: pnlMode === "cumulative" ? cumPnls : perTradePnls,
+          borderColor: "#60a5fa",
+          backgroundColor: "rgba(96,165,250,0.08)",
+          tension: 0.2,
+          fill: pnlMode === "cumulative",
         },
       ],
     };
-
-    // Cumulative PnL over time
-    const pnlOverTime = {
-      labels,
+    const dailyAreaData = {
+      labels: dailyLabels,
+      datasets: [
+        { label: "Daily Net", data: dailyNet, borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.08)", fill: true, tension: 0.2 },
+        { label: "Cumulative", data: cumulativeDaily, borderColor: "#f97316", backgroundColor: "rgba(249,115,22,0.04)", fill: false, tension: 0.2 },
+      ],
+    };
+    const rrOverTimeData = {
+      labels: dailyLabels,
       datasets: [
         {
-          label: "Cum. PnL",
-          data: sorted.map((_, i) => sorted.slice(0, i + 1).reduce((s, t) => s + nPnL(t.pnl), 0)),
-          borderColor: "#64748b",
-          fill: false,
+          label: "Avg RR / day",
+          data: rrOverTime,
+          borderColor: "#7c3aed",
+          backgroundColor: "rgba(124,58,237,0.06)",
+          fill: true,
+          tension: 0.2,
         },
       ],
     };
 
     return {
-      filtered: filteredTrades,
-      sortedTrades: sorted,
-      totalTrades,
+      filtered,
+      total,
       wins,
       losses,
+      breakevens,
       winRate,
       totalPnl,
-      pnlClass,
       profitFactor,
-      bestTrade,
-      worstTrade,
-      perDay,
+      best,
+      worst,
+      tradesPerDay,
       mostTraded,
+      rrVals,
+      rrCounts,
+      rrLabels,
       totalTP,
       totalSLCount,
       profitRR,
-      winLossData,
-      streakData,
-      pnlOverTime,
+      avgRR,
+      streaks,
+      longestWinStreak,
+      dailyLabels,
+      dailyNet,
+      cumulativeDaily,
+      doughnutData,
+      pnlLineData,
+      dailyAreaData,
+      rrOverTimeData,
+      streakData: {
+        labels: chrono.map((_, i) => i + 1),
+        datasets: [
+          {
+            label: "Streak length",
+            data: (() => {
+              const arr: number[] = [];
+              let c = 0;
+              let last2: "Win" | "Loss" | null = null;
+              for (const t of chrono) {
+                const oc = toStringSafe(getField(t, "outcome"));
+                if (oc !== "Win" && oc !== "Loss") {
+                  arr.push(0);
+                  last2 = null;
+                  c = 0;
+                  continue;
+                }
+                if (oc === last2) c++;
+                else c = 1;
+                last2 = oc as "Win" | "Loss";
+                arr.push(c);
+              }
+              return arr;
+            })(),
+            borderColor: "#f43f5e",
+            fill: false,
+            tension: 0.2,
+          },
+        ],
+      },
+      recentLabels,
+      recentPnls,
+      tradiaScore,
+      consistency,
     };
-  }, [contextTrades, tradesProp, fromDate, toDate]); // depend on both source trades and date inputs
+  }, [allTrades, fromDate, toDate, pnlMode]);
 
-  // set mounted after first client render (keeps Chart SSR safe)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // equity data (unconditional hook)
+  const equityData = useMemo(() => {
+    const d = metrics.pnlLineData;
+    const dataset = Array.isArray(d.datasets) ? d.datasets[0] : undefined;
+    const data = Array.isArray(dataset?.data) ? (dataset.data as number[]).map((v) => Number(v) || 0) : [];
+    return {
+      labels: d.labels ?? [],
+      datasets: [
+        {
+          label: "Equity (Cumulative)",
+          data,
+          borderColor: "#34d399",
+          backgroundColor: "rgba(52,211,153,0.08)",
+          fill: true,
+          tension: 0.2,
+        },
+      ],
+    };
+  }, [metrics.pnlLineData]);
 
-  // RENDER
-  return (
-    <div className="space-y-6">
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {[
-          {
-            icon: <BarChart2 size={24} className="text-blue-400" />,
-            label: "Total Trades",
-            value: totalTrades,
-            className: "text-white",
-          },
-          {
-            icon: <CheckCircle size={24} className="text-green-400" />,
-            label: "Trades Won",
-            value: wins,
-            className: "text-green-400",
-          },
-          {
-            icon: <XCircle size={24} className="text-red-400" />,
-            label: "Trades Lost",
-            value: losses,
-            className: "text-red-400",
-          },
-          {
-            icon: <Percent size={24} className="text-indigo-400" />,
-            label: "Win Rate",
-            value: `${winRate}%`,
-            className: "text-white",
-          },
-          {
-            icon: <DollarSign size={24} className={pnlClass} />,
-            label: "PNL ($)",
-            value: `$${totalPnl.toFixed(2)}`,
-            className: pnlClass,
-          },
-          {
-            icon: <Activity size={24} className="text-yellow-400" />,
-            label: "Profit Factor",
-            value: profitFactor,
-            className: "text-white",
-          },
-          // RR metrics
-          {
-            icon: <ArrowUp size={24} className="text-green-400" />,
-            label: "Total TP (RR)",
-            value: `${totalTP.toFixed(2)}R`,
-            className: "text-green-400",
-          },
-          {
-            icon: <ArrowDown size={24} className="text-red-400" />,
-            label: "Total SL (RR)",
-            value: totalSLCount,
-            className: "text-red-400",
-          },
-          {
-            icon: (
-              <Activity
-                size={24}
-                className={profitRR > 0 ? "text-green-400" : profitRR < 0 ? "text-red-400" : "text-white"}
-              />
-            ),
-            label: "Profit (RR)",
-            value: `${profitRR >= 0 ? "+" : ""}${profitRR.toFixed(2)}R`,
-            className: profitRR > 0 ? "text-green-400" : profitRR < 0 ? "text-red-400" : "text-white",
-          },
-          // Best / Worst
-          {
-            icon: <Star size={24} className="text-yellow-300" />,
-            label: "Best Trade",
-            value: `$${(bestTrade ? nPnL(bestTrade.pnl) : 0).toFixed(2)}`,
-            className: bestTrade && nPnL(bestTrade.pnl) > 0 ? "text-green-400" : "text-white",
-          },
-          {
-            icon: <ThumbsDown size={24} className="text-red-500" />,
-            label: "Worst Trade",
-            value: `$${(worstTrade ? nPnL(worstTrade.pnl) : 0).toFixed(2)}`,
-            className: worstTrade && nPnL(worstTrade.pnl) < 0 ? "text-red-400" : "text-white",
-          },
-          {
-            icon: <Calendar size={24} className="text-blue-300" />,
-            label: "Trades / Day",
-            value: perDay,
-            className: "text-white",
-          },
-          {
-            icon: <PieChart size={24} className="text-pink-400" />,
-            label: "Most Traded Pair",
-            value: mostTraded,
-            className: "text-white",
-          },
-        ].map(({ icon, label, value, className }) => (
-          <div key={label} className="bg-[#161B22] rounded-xl p-5 flex items-center gap-4 shadow-lg">
-            <div>{icon}</div>
+  // render guard
+  if (!mounted) return null;
+
+  // styling helpers
+  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg";
+  const positiveClass = "text-green-400";
+  const negativeClass = "text-red-400";
+  const neutralClass = "text-white";
+
+  const greeting = getGreeting("Abdulmuiz");
+  const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
+
+  // explanation modal
+  const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
+    if (!k) return null;
+    const def = METRIC_EXPLANATIONS[k] ?? { title: k, body: "No explanation available." };
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/30" onClick={onClose} />
+        <div className="relative z-10 bg-slate-900 p-4 rounded-md w-full max-w-md shadow-lg">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-400">{label}</p>
-              <p className={`text-2xl font-semibold ${className}`}>{value}</p>
+              <h3 className="text-lg font-semibold">{def.title}</h3>
+              <p className="text-sm text-zinc-300 mt-2">{def.body}</p>
+            </div>
+            <button onClick={onClose} className="p-1 rounded bg-zinc-800">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // metric card renderer with colored numeric detection
+  const renderMetricCard = (opts: {
+    keyId: string;
+    icon: React.ReactNode;
+    title: string;
+    value: React.ReactNode;
+    small?: React.ReactNode;
+    color?: string;
+  }) => {
+    const leftColor = opts.color ?? "#0ea5a4";
+    return (
+      <div key={opts.keyId} className={`${cardBase} flex items-start gap-3`} role="article" aria-label={opts.title}>
+        <div style={{ width: 6, background: leftColor }} className="rounded-l-md" />
+        <div className="flex-1 flex items-start gap-3 pl-3">
+          <div className="p-2 rounded bg-white/6">{opts.icon}</div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <div className="text-xs text-zinc-400">{opts.title}</div>
+                <div className="text-lg font-semibold"><ColoredValue value={opts.value} /></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-zinc-400 hidden sm:block">{opts.small}</div>
+                <button onClick={() => setExplainKey(opts.keyId)} className="p-1 rounded bg-zinc-800">
+                  <Info size={14} />
+                </button>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-zinc-400 sm:hidden">{typeof opts.small === "string" ? opts.small : null}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- PROGRESS TRACKER helper (non-hook) ---
+  function ProgressCalendarCard() {
+    // build map day->value
+    const dailyMap = new Map<string, number>();
+    (metrics.dailyLabels || []).forEach((k, i) => {
+      dailyMap.set(k, metrics.dailyNet?.[i] ?? 0);
+    });
+
+    if (!metrics.dailyLabels || metrics.dailyLabels.length === 0) {
+      return (
+        <div className={`${cardBase}`}>
+          <div className="text-sm font-semibold mb-2">Progress Tracker</div>
+          <div className="text-xs text-zinc-400">No daily data available for the selected range.</div>
+        </div>
+      );
+    }
+
+    // date range
+    const start = new Date(metrics.dailyLabels[0]);
+    const end = new Date(metrics.dailyLabels[metrics.dailyLabels.length - 1]);
+    // generate list of days inclusive
+    const totalDays = differenceInCalendarDays(end, start) + 1;
+    const days: Date[] = [];
+    for (let i = 0; i < totalDays; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      days.push(d);
+    }
+
+    // compute max abs for color intensity (avoid zero)
+    const absVals = (metrics.dailyNet || []).map((v) => Math.abs(v));
+    const maxAbs = Math.max(...absVals, Math.abs(metrics.totalPnl || 0) / 6, 1);
+
+    // week grid: show with 7 columns (Sunday->Saturday)
+    const cells: (Date | null)[] = [];
+    const startOffset = start.getDay(); // 0..6 sunday..sat
+    for (let i = 0; i < startOffset; i++) cells.push(null);
+    for (const d of days) cells.push(d);
+    // pad to full weeks
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    // helper color
+    const cellStyle = (val: number | null) => {
+      if (val === null) return "bg-transparent border border-transparent";
+      if (val > 0) {
+        const intensity = Math.min(1, val / maxAbs);
+        const alpha = 0.15 + intensity * 0.6;
+        return `bg-[rgba(16,185,129,${alpha})]`;
+      }
+      if (val < 0) {
+        const intensity = Math.min(1, Math.abs(val) / maxAbs);
+        const alpha = 0.15 + intensity * 0.6;
+        return `bg-[rgba(239,68,68,${alpha})]`;
+      }
+      // zero
+      return "bg-zinc-800/40";
+    };
+
+    // summary: percent of monthly target already shown above; also show days profitable count
+    const profitableDays = (metrics.dailyNet || []).filter((v) => v > 0).length;
+    const losingDays = (metrics.dailyNet || []).filter((v) => v < 0).length;
+    const breakevenDays = (metrics.dailyNet || []).filter((v) => v === 0).length;
+
+    return (
+      <div className={`${cardBase}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <div className="text-sm font-semibold">Progress Tracker</div>
+            <div className="text-xs text-zinc-400">Daily net heatmap — hover for values</div>
+          </div>
+          <div className="text-xs text-zinc-400">Target: ${monthlyTarget}</div>
+        </div>
+
+        {/* mini calendar grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* optional: show weekday headers */}
+          {["S", "M", "T", "W", "T", "F", "S"].map((wd, idx) => (
+            <div key={`${wd}-${idx}`} className="text-xs text-zinc-500 text-center">{wd}</div>
+          ))}
+
+          {cells.map((d, i) => {
+            if (!d) {
+              return <div key={`pad-${i}`} className="h-8 w-8 rounded" />;
+            }
+            const key = d.toISOString().slice(0, 10);
+            const val = dailyMap.has(key) ? dailyMap.get(key)! : 0;
+            const cls = cellStyle(val === 0 ? null : val);
+            const title = `${format(d, "MMM d, yyyy")}: ${val >= 0 ? "+" : ""}${val.toFixed(2)}`;
+            return (
+              <div
+                key={`day-${key}`}
+                title={title}
+                className={`h-8 w-8 rounded flex items-center justify-center text-xs font-medium ${cls} border border-zinc-800`}
+              >
+                <span className="select-none">{d.getDate()}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* legend and summary */}
+        <div className="mt-3 text-xs text-zinc-400 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 bg-[rgba(16,185,129,0.45)] rounded" /> <span>Profit</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 bg-[rgba(239,68,68,0.45)] rounded" /> <span>Loss</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 bg-zinc-800/40 rounded border border-zinc-700" /> <span>Zero</span>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Charts */}
-      <div className="space-y-6">
-        <div className="bg-[#161B22] rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-200 mb-4">Win / Loss Trend</h3>
-          {mounted ? <Line data={winLossData} /> : <div className="h-48" />}
-        </div>
-
-        <div className="bg-[#161B22] rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-200 mb-4">Streak Tracker</h3>
-          {mounted ? <Line data={streakData} /> : <div className="h-48" />}
-        </div>
-
-        <div className="bg-[#161B22] rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-200 mb-4">PNL Over Time</h3>
-          {mounted ? <Line data={pnlOverTime} /> : <div className="h-48" />}
+          <div className="text-right">
+            <div>Profitable days: <span className="font-medium text-green-400">{profitableDays}</span></div>
+            <div>Loss days: <span className="font-medium text-red-400">{losingDays}</span></div>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5 px-2 sm:px-0">
+      {/* header: greeting + monthly target below greeting (mobile) + tradia score right */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex-1">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-slate-800 p-3">
+              <Award size={20} className="text-yellow-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold">{greeting}</h2>
+              <div className="text-xs text-zinc-400">Overview for the selected date range</div>
+            </div>
+          </div>
+
+          {/* monthly target below greeting (visible on all sizes; compact on desktop) */}
+          <div className="mt-3 w-full sm:w-2/3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <div className="text-xs text-zinc-400">Monthly PnL target</div>
+                <div className="mt-2 flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={monthlyTarget}
+                    onChange={(e) => setMonthlyTarget(Number(e.target.value))}
+                    className="w-32 bg-transparent p-2 rounded border border-zinc-800 text-sm"
+                    aria-label="monthly target"
+                  />
+                  <div className="flex-1">
+                    <ProgressBar
+                      value={progressPct}
+                      color={progressPct > 75 ? "bg-green-500" : progressPct > 40 ? "bg-yellow-500" : "bg-red-500"}
+                    />
+                    <div className="text-xs text-zinc-400 mt-1">{progressPct}% of ${monthlyTarget}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* right: tradia score */}
+        <div className="flex items-center gap-3">
+          <div className="bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm flex items-center gap-3">
+            <div className="p-2 rounded bg-white/6">
+              <TrendingUp size={18} className="text-sky-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-zinc-400">Tradia Score</div>
+                <button onClick={() => setExplainKey("tradiaScore")} className="p-1 rounded bg-zinc-800">
+                  <Info size={14} />
+                </button>
+              </div>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="text-lg font-semibold">{metrics.tradiaScore}</div>
+                <div className="w-28">
+                  <ProgressBar value={metrics.tradiaScore} color={metrics.tradiaScore > 70 ? "bg-green-500" : metrics.tradiaScore > 40 ? "bg-yellow-500" : "bg-red-500"} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI cards: include Most traded + Trades/day among them */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {renderMetricCard({
+          keyId: "totalTrades",
+          icon: <BarChart2 size={18} className="text-sky-400" />,
+          title: "Total Trades",
+          value: metrics.total,
+          small: `${metrics.filtered.length} filtered`,
+          color: "#0ea5ff",
+        })}
+        {renderMetricCard({
+          keyId: "wins",
+          icon: <CheckCircle size={18} className="text-green-400" />,
+          title: "Wins",
+          value: metrics.wins,
+          small: `${metrics.winRate.toFixed(1)}% win rate`,
+          color: "#059669",
+        })}
+        {renderMetricCard({
+          keyId: "losses",
+          icon: <XCircle size={18} className="text-red-400" />,
+          title: "Losses",
+          value: metrics.losses,
+          small: `SLs ${metrics.totalSLCount}`,
+          color: "#ef4444",
+        })}
+        {renderMetricCard({
+          keyId: "pnl",
+          icon: <DollarSign size={18} />,
+          title: "PNL ($)",
+          value: <span>{`$${metrics.totalPnl.toFixed(2)}`}</span>,
+          small: `PF ${metrics.profitFactor === Infinity ? "∞" : Number(metrics.profitFactor).toFixed(2)}`,
+          color: metrics.totalPnl > 0 ? "#10b981" : metrics.totalPnl < 0 ? "#ef4444" : "#64748b",
+        })}
+        {renderMetricCard({
+          keyId: "rrTP",
+          icon: <ArrowUp size={18} className="text-green-400" />,
+          title: "Total TP (RR)",
+          value: `${metrics.totalTP.toFixed(2)}R`,
+          small: `Avg ${metrics.avgRR.toFixed(2)}R`,
+          color: "#16a34a",
+        })}
+        {renderMetricCard({
+          keyId: "rrSL",
+          icon: <ArrowDown size={18} className="text-red-400" />,
+          title: "Total SL (RR)",
+          value: metrics.totalSLCount,
+          small: `Net ${metrics.profitRR >= 0 ? "+" : ""}${metrics.profitRR.toFixed(2)}R`,
+          color: "#ef4444",
+        })}
+        {renderMetricCard({
+          keyId: "best",
+          icon: <Star size={18} className="text-yellow-300" />,
+          title: "Best Trade",
+          value: metrics.best ? `$${toNumber(getField(metrics.best, "pnl")).toFixed(2)}` : "$0.00",
+          small: metrics.best ? toStringSafe(getField(metrics.best, "symbol")) : "",
+          color: "#f59e0b",
+        })}
+        {renderMetricCard({
+          keyId: "worst",
+          icon: <ThumbsDown size={18} className="text-red-500" />,
+          title: "Worst Trade",
+          value: metrics.worst ? `$${toNumber(getField(metrics.worst, "pnl")).toFixed(2)}` : "$0.00",
+          small: metrics.worst ? toStringSafe(getField(metrics.worst, "symbol")) : "",
+          color: "#ef4444",
+        })}
+        {renderMetricCard({
+          keyId: "mostTraded",
+          icon: <PieChart size={18} className="text-pink-400" />,
+          title: "Most Traded",
+          value: metrics.mostTraded,
+          small: "Symbol with most trades",
+          color: "#ec4899",
+        })}
+        {renderMetricCard({
+          keyId: "tradesPerDay",
+          icon: <Calendar size={18} className="text-blue-300" />,
+          title: "Trades / Day",
+          value: metrics.tradesPerDay,
+          small: `${metrics.dailyLabels.length} active days`,
+          color: "#60a5fa",
+        })}
+      </div>
+
+      {/* Chart area: left column contains Performance + Equity stacked; right column contains Daily Net + Win/Loss */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {/* Left: Performance (top) + Equity (below) */}
+        <div className="lg:col-span-2 space-y-3">
+          <div className={`${cardBase}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-sm font-semibold">Performance</div>
+                <div className="text-xs text-zinc-400">{metrics.filtered.length} trades</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPnlMode("cumulative")}
+                  className={`px-2 py-1 rounded ${pnlMode === "cumulative" ? "bg-slate-700 text-white" : "text-zinc-300"}`}
+                >
+                  Cumulative
+                </button>
+                <button
+                  onClick={() => setPnlMode("perTrade")}
+                  className={`px-2 py-1 rounded ${pnlMode === "perTrade" ? "bg-slate-700 text-white" : "text-zinc-300"}`}
+                >
+                  Per-trade
+                </button>
+              </div>
+            </div>
+            <div className="h-56">
+              <Line data={metrics.pnlLineData} options={{ plugins: { legend: { display: false } }, maintainAspectRatio: false }} />
+            </div>
+          </div>
+
+          {/* Equity immediately under Performance */}
+          <div className={`${cardBase}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-sm font-semibold">Equity Curve</div>
+                <div className="text-xs text-zinc-400">{metrics.filtered.length} trades · {metrics.winRate.toFixed(1)}% win rate</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-zinc-400">PNL</div>
+                <div className={`font-semibold ${metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass}`}>${metrics.totalPnl.toFixed(2)}</div>
+                <button onClick={() => setExplainKey("pnl")} className="p-1 rounded bg-zinc-800">
+                  <Info size={14} />
+                </button>
+              </div>
+            </div>
+            <div className="h-44">
+              <Line data={equityData} options={{ plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } }, maintainAspectRatio: false }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right column: Daily Net and Win/Loss */}
+        <div className="space-y-3">
+          <div className={`${cardBase}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-sm font-semibold">Daily Net</div>
+                <div className="text-xs text-zinc-400">{metrics.dailyLabels.length} days</div>
+              </div>
+            </div>
+            <div className="h-36">
+              <Line data={metrics.dailyAreaData} options={{ plugins: { legend: { display: false } }, maintainAspectRatio: false }} />
+            </div>
+          </div>
+
+          <div className={`${cardBase}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-sm font-semibold">Win / Loss / BE</div>
+                <div className="text-xs text-zinc-400">{metrics.wins}W • {metrics.losses}L • {metrics.breakevens}BE</div>
+              </div>
+            </div>
+            <div className="h-36">
+              <Doughnut data={metrics.doughnutData} options={{ plugins: { legend: { position: "bottom" } }, maintainAspectRatio: false }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Streak + RR-over-time + Progress Tracker (replaced Activity Snapshot) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {showStreak && (
+          <div className={`${cardBase}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold">Streak Tracker</div>
+              <div className="text-xs text-zinc-400">Longest {metrics.longestWinStreak}</div>
+            </div>
+            <div className="h-36">
+              <Line data={metrics.streakData} options={{ plugins: { legend: { display: false } }, maintainAspectRatio: false, scales: { x: { display: false } } }} />
+            </div>
+          </div>
+        )}
+
+        {showRR && (
+          <div className={`${cardBase}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold">RR Performance Over Time</div>
+              <div className="text-xs text-zinc-400">Avg RR per day</div>
+            </div>
+            <div className="h-36">
+              <Line data={metrics.rrOverTimeData} options={{ plugins: { legend: { display: false } }, maintainAspectRatio: false }} />
+            </div>
+          </div>
+        )}
+
+        {/* Progress Tracker replaces Activity Snapshot */}
+        <div>
+          <ProgressCalendarCard />
+        </div>
+      </div>
+
+      {/* explanation modal */}
+      {explainKey && <ExplanationModal k={explainKey} onClose={() => setExplainKey(null)} />}
     </div>
   );
 }
