@@ -1,0 +1,4 @@
+// components/ui/spinner.tsx
+
+import React from 'react'
+export default Spinner

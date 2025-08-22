@@ -1,0 +1,5 @@
+// src/components/ui/input.tsx
+import React from "react";
+
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
+export default Input;

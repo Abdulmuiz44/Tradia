@@ -1,0 +1,5 @@
+// src/components/ui/textarea.tsx
+import React from "react";
+
+type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+export default Textarea;
