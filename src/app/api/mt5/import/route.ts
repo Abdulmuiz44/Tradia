@@ -1,7 +1,7 @@
 // src/app/api/mt5/import/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { pool } from "@/lib/db";
 
 type AccountInfo = { login?: number | string; server?: string; info?: Record<string, unknown> | null };

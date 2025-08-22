@@ -19,7 +19,6 @@ import {
   Info,
   X,
   TrendingUp,
-  Zap,
   PieChart,
   Calendar,
 } from "lucide-react";
@@ -50,8 +49,10 @@ ChartJS.register(
 );
 
 interface OverviewCardsProps {
-  fromDate: string;
-  toDate: string;
+  /** Optional trades array — if provided it overrides TradeContext trades */
+  trades?: TradeType[];
+  fromDate?: string;
+  toDate?: string;
 }
 
 /** ---------- Helpers (robust parsing & safety) ---------- */
@@ -213,13 +214,8 @@ const getGreeting = (name = "Abdulmuiz") => {
   return `Good evening, ${name}`;
 };
 
-/** Format value and color numeric results automatically
- * - If numeric (>0) => green
- * - If numeric (<0) => red
- * - Else default white
- */
+/** Format value and color numeric results automatically */
 function ColoredValue({ value }: { value: React.ReactNode }) {
-  // try to extract numeric
   let num: number | null = null;
   if (typeof value === "number") num = value;
   else if (typeof value === "string") {
@@ -230,9 +226,11 @@ function ColoredValue({ value }: { value: React.ReactNode }) {
   return <span className={cls}>{value}</span>;
 }
 
-export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps): JSX.Element | null {
-  // hooks (stable order)
-  const { trades } = useContext(TradeContext);
+export default function OverviewCards({ trades: propTrades, fromDate, toDate }: OverviewCardsProps) {
+  // obtain context trades (fallback)
+  const ctx = useContext(TradeContext) as any;
+  const contextTrades = Array.isArray(ctx?.trades) ? (ctx.trades as TradeType[]) : [];
+
   const [mounted, setMounted] = useState(false);
 
   // UI state
@@ -246,7 +244,8 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
     setMounted(true);
   }, []);
 
-  const allTrades = Array.isArray(trades) ? trades : [];
+  // prefer prop trades, otherwise fallback to context
+  const allTrades: TradeType[] = Array.isArray(propTrades) ? propTrades : Array.isArray(contextTrades) ? contextTrades : [];
 
   // metrics memo
   const metrics = useMemo(() => {
@@ -763,7 +762,7 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
         </div>
       </div>
 
-      {/* KPI cards: include Most traded + Trades/day among them */}
+      {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {renderMetricCard({
           keyId: "totalTrades",
@@ -847,9 +846,8 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
         })}
       </div>
 
-      {/* Chart area: left column contains Performance + Equity stacked; right column contains Daily Net + Win/Loss */}
+      {/* Chart area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* Left: Performance (top) + Equity (below) */}
         <div className="lg:col-span-2 space-y-3">
           <div className={`${cardBase}`}>
             <div className="flex items-center justify-between mb-2">
@@ -877,7 +875,6 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
             </div>
           </div>
 
-          {/* Equity immediately under Performance */}
           <div className={`${cardBase}`}>
             <div className="flex items-center justify-between mb-2">
               <div>
@@ -898,7 +895,6 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
           </div>
         </div>
 
-        {/* Right column: Daily Net and Win/Loss */}
         <div className="space-y-3">
           <div className={`${cardBase}`}>
             <div className="flex items-center justify-between mb-2">
@@ -926,7 +922,7 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
         </div>
       </div>
 
-      {/* Streak + RR-over-time + Progress Tracker (replaced Activity Snapshot) */}
+      {/* Streak + RR-over-time + Progress Tracker */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {showStreak && (
           <div className={`${cardBase}`}>
@@ -952,7 +948,6 @@ export default function OverviewCards({ fromDate, toDate }: OverviewCardsProps):
           </div>
         )}
 
-        {/* Progress Tracker replaces Activity Snapshot */}
         <div>
           <ProgressCalendarCard />
         </div>

@@ -3,7 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
+
+// Extend default NextAuth session typing
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
 
 type UploadBody = {
   fileName?: unknown;
@@ -13,6 +21,7 @@ type UploadBody = {
 function sanitizeFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
+
 function asString(u: unknown): string {
   return typeof u === "string" ? u : u === undefined || u === null ? "" : String(u);
 }
@@ -20,7 +29,10 @@ function asString(u: unknown): string {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = typeof session?.user?.id === "string" ? session.user.id : undefined;
+
+    const userId =
+      (session?.user as SessionUser | undefined)?.id ?? undefined;
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -37,6 +49,7 @@ export async function POST(req: NextRequest) {
     if (!match) {
       return NextResponse.json({ error: "Invalid data URL" }, { status: 400 });
     }
+
     const mime = match[1];
     const b64 = match[2];
     const ext = mime.split("/")[1] || "png";
@@ -48,7 +61,9 @@ export async function POST(req: NextRequest) {
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(uploadDir, { recursive: true });
 
-    const finalName = filenameBase.toLowerCase().endsWith(`.${ext.toLowerCase()}`) ? filenameBase : `${filenameBase}.${ext}`;
+    const finalName = filenameBase.toLowerCase().endsWith(`.${ext.toLowerCase()}`)
+      ? filenameBase
+      : `${filenameBase}.${ext}`;
     const outPath = path.join(uploadDir, finalName);
 
     const buffer = Buffer.from(b64, "base64");

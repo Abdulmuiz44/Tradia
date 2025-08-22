@@ -1,14 +1,10 @@
-// src/app/dashboard/profile/page.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UploadCloud } from "lucide-react";
 
-/**
- * Small list of countries — expand as needed. Each option value is "CCA2|+CODE"
- */
 const COUNTRIES: { label: string; value: string }[] = [
   { label: "United States (+1)", value: "US|+1" },
   { label: "United Kingdom (+44)", value: "GB|+44" },
@@ -47,7 +43,7 @@ type UpdatePayload = {
   newPassword?: string;
 };
 
-export default function ProfilePage(): JSX.Element {
+export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -84,7 +80,6 @@ export default function ProfilePage(): JSX.Element {
     setImageUrl(initialImage || null);
   }, [initialName, initialImage]);
 
-  // Try to load an extended profile if present on backend: /api/user/profile
   useEffect(() => {
     let mounted = true;
     async function loadProfile(): Promise<void> {
@@ -174,7 +169,7 @@ export default function ProfilePage(): JSX.Element {
     }
   };
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+  const onFileChange = async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.[0];
     if (!file) return;
     await uploadAvatar(file);
@@ -238,9 +233,7 @@ export default function ProfilePage(): JSX.Element {
       });
 
       const text = await res.text();
-      // If server returned non-JSON or error, handle it
       if (!res.ok) {
-        // try parse as json message if possible
         let parsed: unknown = null;
         try {
           parsed = JSON.parse(text);
@@ -354,7 +347,6 @@ export default function ProfilePage(): JSX.Element {
           <input type="email" value={email} disabled className="w-full bg-zinc-900 border border-zinc-700 p-2 rounded text-zinc-400" />
         </div>
 
-        {/* Country & phone */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label className="block mb-2 text-sm text-zinc-300">Country</label>
@@ -381,7 +373,6 @@ export default function ProfilePage(): JSX.Element {
           </div>
         </div>
 
-        {/* Trading style & experience */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block mb-2 text-sm text-zinc-300">Trading Style</label>

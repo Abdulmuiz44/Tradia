@@ -1,7 +1,6 @@
-// src/app/dashboard/mt5/connect/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 
 type ConnectForm = {
   server: string;
@@ -10,7 +9,7 @@ type ConnectForm = {
   name: string;
 };
 
-export default function MT5ConnectPage(): JSX.Element {
+export default function MT5ConnectPage() {
   const [form, setForm] = useState<ConnectForm>({
     server: "",
     login: "",
@@ -18,16 +17,16 @@ export default function MT5ConnectPage(): JSX.Element {
     name: "",
   });
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value } as ConnectForm));
+    setForm((s) => ({ ...s, [name]: value }));
   };
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErr(null);
     setMsg(null);
@@ -39,16 +38,20 @@ export default function MT5ConnectPage(): JSX.Element {
         body: JSON.stringify(form),
       });
 
-      // parse safely
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+
       if (!res.ok) {
-        const serverError = typeof data?.error === "string" ? data.error : `Failed to connect (${res.status})`;
+        const serverError =
+          typeof data?.error === "string"
+            ? data.error
+            : `Failed to connect (${res.status})`;
         throw new Error(serverError);
       }
 
       setMsg("MT5 account connected. You can sync history now.");
     } catch (unknownErr) {
-      const message = unknownErr instanceof Error ? unknownErr.message : String(unknownErr);
+      const message =
+        unknownErr instanceof Error ? unknownErr.message : String(unknownErr);
       setErr(message);
     } finally {
       setLoading(false);
@@ -57,7 +60,10 @@ export default function MT5ConnectPage(): JSX.Element {
 
   return (
     <div className="min-h-screen px-4 py-12 flex items-start justify-center bg-gray-50">
-      <form onSubmit={submit} className="w-full max-w-lg bg-white p-6 rounded-2xl shadow space-y-4">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-lg bg-white p-6 rounded-2xl shadow space-y-4"
+      >
         <h1 className="text-2xl font-bold">Connect MT5 Account</h1>
 
         <input
@@ -96,14 +102,20 @@ export default function MT5ConnectPage(): JSX.Element {
           className="w-full p-3 border rounded"
         />
 
-        {err && <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded">{err}</div>}
+        {err && (
+          <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded">
+            {err}
+          </div>
+        )}
 
         {loading ? (
           <button disabled className="w-full py-3 bg-gray-300 rounded">
             Connecting…
           </button>
         ) : (
-          <button className="w-full py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700">Connect</button>
+          <button className="w-full py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            Connect
+          </button>
         )}
 
         {msg && <p className="text-sm text-green-700">{msg}</p>}

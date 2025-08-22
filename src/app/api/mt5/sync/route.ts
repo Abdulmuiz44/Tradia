@@ -1,7 +1,7 @@
 // src/app/api/mt5/sync/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { pool } from "@/lib/db";
 import { getMetaApi } from "@/lib/metaapi";
 import { mapMt5Deals } from "@/lib/mt5-map";
@@ -25,8 +25,13 @@ function toDateOrNull(u: unknown): Date | null {
 
 export async function POST(req: Request) {
   try {
+    // getServerSession returns Session | null. Session.user typically has only name/email/image.
+    // Cast to flexible record to safely read custom id put there by our session callback.
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id as string | undefined;
+    const sessionUser = session?.user as Record<string, unknown> | undefined;
+    const userId =
+      sessionUser && sessionUser["id"] != null ? String(sessionUser["id"]) : undefined;
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -43,11 +48,17 @@ export async function POST(req: Request) {
       `SELECT * FROM mt5_accounts WHERE id=$1 AND user_id=$2 LIMIT 1`,
       [mt5AccountId, userId]
     );
-    const acc = accRes.rows[0];
+    const acc = accRes.rows[0] as Record<string, unknown> | undefined;
     if (!acc) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
-    const metaapiAccountId = (acc as Record<string, unknown>)["metaapi_account_id"] as string | undefined;
-    if (!metaapiAccountId) return NextResponse.json({ error: "Account not connected to MetaApi" }, { status: 400 });
+    // normalize account id and metaapi account id as strings
+    const accId = acc["id"] != null ? String(acc["id"]) : undefined;
+    const metaapiAccountId =
+      acc["metaapi_account_id"] != null ? String(acc["metaapi_account_id"]) : undefined;
+
+    if (!accId) return NextResponse.json({ error: "Invalid account id" }, { status: 500 });
+    if (!metaapiAccountId)
+      return NextResponse.json({ error: "Account not connected to MetaApi" }, { status: 400 });
 
     // initialize MetaApi client
     const metaApi = getMetaApi();
@@ -68,7 +79,20 @@ export async function POST(req: Request) {
     try {
       await client.query("BEGIN");
       for (const t of normalized) {
-        // t is Partial<Trade> shape coming from mapMt5Deals
+        // ensure deal identifiers are normalized strings or null
+        const dealId =
+          (t as Record<string, unknown>)["id"] ??
+          (t as Record<string, unknown>)["deal_id"] ??
+          null;
+        const orderId =
+          (t as Record<string, unknown>)["orderId"] ??
+          (t as Record<string, unknown>)["order_id"] ??
+          null;
+        const positionId =
+          (t as Record<string, unknown>)["positionId"] ??
+          (t as Record<string, unknown>)["position_id"] ??
+          null;
+
         await client.query(
           `
           INSERT INTO mt5_trades
@@ -88,10 +112,10 @@ export async function POST(req: Request) {
           `,
           [
             userId,
-            acc.id,
-            (t as Record<string, unknown>)["id"] ?? (t as Record<string, unknown>)["deal_id"] ?? null,
-            (t as Record<string, unknown>)["orderId"] ?? (t as Record<string, unknown>)["order_id"] ?? null,
-            (t as Record<string, unknown>)["positionId"] ?? (t as Record<string, unknown>)["position_id"] ?? null,
+            accId,
+            dealId,
+            orderId,
+            positionId,
             (t as Record<string, unknown>)["symbol"] ?? null,
             (t as Record<string, unknown>)["side"] ?? (t as Record<string, unknown>)["type"] ?? null,
             (t as Record<string, unknown>)["lotSize"] ?? (t as Record<string, unknown>)["volume"] ?? null,

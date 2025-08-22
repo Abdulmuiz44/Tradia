@@ -4,11 +4,12 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage(): JSX.Element {
+export default function ResetPasswordPage() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const token = params.get("token") ?? ""; // adjust if your query uses a different key
+  // params may be null — use optional chaining to avoid "possibly null" errors
+  const token = params?.get("token") ?? ""; // adjust if your query uses a different key
 
   const [password, setPassword] = useState<string>("");
   const [confirm, setConfirm] = useState<string>("");

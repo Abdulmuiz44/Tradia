@@ -1,9 +1,17 @@
 // src/app/api/user/update/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { pool } from "@/lib/db";
 import bcrypt from "bcrypt";
+
+// Extend default NextAuth session typing
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
 
 type UpdateBody = {
   name?: unknown;
@@ -23,7 +31,10 @@ function asStringOrUndefined(u: unknown): string | undefined {
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = typeof session?.user?.id === "string" ? session.user.id : undefined;
+
+    const userId =
+      (session?.user as SessionUser | undefined)?.id ?? undefined;
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -31,8 +42,10 @@ export async function PATCH(req: NextRequest) {
     const body = (await req.json()) as UpdateBody;
     const name = asStringOrUndefined(body?.name);
     const image = asStringOrUndefined(body?.image);
-    const oldPassword = typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
-    const newPassword = typeof body?.newPassword === "string" ? body.newPassword : undefined;
+    const oldPassword =
+      typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
+    const newPassword =
+      typeof body?.newPassword === "string" ? body.newPassword : undefined;
 
     if (!name && !image && !newPassword) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
@@ -41,20 +54,31 @@ export async function PATCH(req: NextRequest) {
     // If changing password — verify old password first
     if (newPassword) {
       if (!oldPassword) {
-        return NextResponse.json({ error: "Old password is required to change password" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Old password is required to change password" },
+          { status: 400 }
+        );
       }
 
       const r = await pool.query<{ password: string }>(
         `SELECT password FROM users WHERE id=$1 LIMIT 1`,
-        [userId] as unknown[]
+        [userId]
       );
+
       const hashed = r.rows[0]?.password;
       if (!hashed) {
-        return NextResponse.json({ error: "No existing password set; cannot change" }, { status: 400 });
+        return NextResponse.json(
+          { error: "No existing password set; cannot change" },
+          { status: 400 }
+        );
       }
+
       const ok = await bcrypt.compare(oldPassword, hashed);
       if (!ok) {
-        return NextResponse.json({ error: "Old password is incorrect" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Old password is incorrect" },
+          { status: 400 }
+        );
       }
 
       const newHashed = await bcrypt.hash(newPassword, 10);
@@ -76,15 +100,16 @@ export async function PATCH(req: NextRequest) {
 
       params.push(userId);
       const query = `UPDATE users SET ${parts.join(", ")}, updated_at=NOW() WHERE id=$${idx}`;
-      await pool.query(query, params as unknown[]);
+      await pool.query(query, params);
 
       return NextResponse.json({ success: true });
     }
 
-    // update name/image only
+    // Update name/image only
     const fields: string[] = [];
     const values: unknown[] = [];
     let i = 1;
+
     if (name) {
       fields.push(`name=$${i++}`);
       values.push(name);
@@ -100,7 +125,7 @@ export async function PATCH(req: NextRequest) {
 
     values.push(userId);
     const q = `UPDATE users SET ${fields.join(", ")}, updated_at=NOW() WHERE id=$${i}`;
-    await pool.query(q, values as unknown[]);
+    await pool.query(q, values);
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

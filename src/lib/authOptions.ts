@@ -1,13 +1,11 @@
-// src/app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
+// src/lib/authOptions.ts
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { pool } from "@/lib/db";
-import type { NextAuthOptions, Account, Profile, User, Session } from "next-auth";
-import type { AdapterUser } from "next-auth/adapters";
-import type { JWT } from "next-auth/jwt";
+import type { NextAuthOptions } from "next-auth";
 
+/** Environment warnings (kept from original file) */
 if (!process.env.NEXTAUTH_URL) {
   console.warn(
     "WARNING: NEXTAUTH_URL not set. Set NEXTAUTH_URL=http://localhost:3000 (or http://127.0.0.1:3000) in .env.local"
@@ -39,13 +37,8 @@ function getNumber(obj: unknown, key: string): number | undefined {
   return undefined;
 }
 
-/**
- * Minimal shape that pg's query returns that we depend on:
- * { rows: T[] }
- */
-type QueryResultLike<T> = {
-  rows: T[];
-};
+/** Minimal shape used for DB query results */
+type QueryResultLike<T> = { rows: T[] };
 
 function getFirstRow<T>(res: unknown): T | undefined {
   if (!res || typeof res !== "object") return undefined;
@@ -63,18 +56,18 @@ async function safeQuery<T = Record<string, unknown>>(
   if (!pool || typeof pool.query !== "function") {
     throw new Error("DB pool not available");
   }
-
   const qPromise = pool.query<T>(text, params);
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("DB_QUERY_TIMEOUT")), timeoutMs)
   );
-
   const result = await Promise.race([qPromise, timeout]);
   return result as unknown as QueryResultLike<T>;
 }
 
-/** NOTE: keep authOptions local (non-exported) to satisfy Next route export shape checks */
-const authOptions: NextAuthOptions = {
+/**
+ * Exported authOptions used by NextAuth and other modules
+ */
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -94,10 +87,11 @@ const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
 
-      // include the second `req` parameter and ensure id is string before returning
+      // <-- FIX: include the second `req` parameter and ensure returned user has id:string
       async authorize(credentials, req) {
         try {
           if (!credentials?.email || !credentials?.password) return null;
+
           const email = String(credentials.email).toLowerCase().trim();
 
           const res = await safeQuery<{ id?: string; name?: string | null; email?: string; password?: string | null }>(
@@ -107,13 +101,14 @@ const authOptions: NextAuthOptions = {
 
           const u = getFirstRow<{ id?: string; name?: string | null; email?: string; password?: string | null }>(res);
 
-          // require user, password hash and id to exist
-          if (!u || !u.password || u.id == null) return null;
+          // If user record or password or id missing => cannot authorize
+          if (!u || !u.password || !u.id) return null;
 
           const ok = await bcrypt.compare(String(credentials.password), u.password);
+
           if (!ok) return null;
 
-          // guarantee id is string (NextAuth expects User.id: string)
+          // Guarantee id is a string (NextAuth expects id: string)
           const user = {
             id: String(u.id),
             name: u.name ?? undefined,
@@ -130,20 +125,19 @@ const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    // exact signature to match NextAuth's expected types
-    async signIn(params: {
-      user: AdapterUser | User;
-      account: Account | null;
-      profile?: Profile | null;
-      email?: { verificationRequest?: boolean };
-      credentials?: Record<string, unknown>;
-    }): Promise<boolean> {
-      const { user, account, profile } = params;
+    async signIn({
+      user,
+      account,
+      profile,
+    }: {
+      user?: Record<string, unknown>;
+      account?: Record<string, unknown> | null;
+      profile?: Record<string, unknown> | null;
+    }) {
       try {
         if (account?.provider === "google") {
           const provider = getString(account, "provider") ?? "google";
-          const providerAccountId =
-            getString(account, "providerAccountId") ?? getString(account, "provider_account_id");
+          const providerAccountId = getString(account, "providerAccountId") ?? getString(account, "provider_account_id");
           const email = (getString(user, "email") ?? getString(profile, "email") ?? "").toLowerCase();
 
           if (!providerAccountId || !email) {
@@ -172,11 +166,8 @@ const authOptions: NextAuthOptions = {
 
             if (!userId) {
               console.error("Failed to get or create user for google sign-in", { email });
-              return true; // allow OAuth flow to continue even if DB ops failed
+              return true;
             }
-
-            const expiresAt = getNumber(account, "expires_at");
-            const expiresAtInt = typeof expiresAt === "number" ? Math.floor(expiresAt) : null;
 
             await safeQuery(
               `INSERT INTO accounts (
@@ -199,7 +190,7 @@ const authOptions: NextAuthOptions = {
                 providerAccountId,
                 getString(account, "refresh_token") ?? null,
                 getString(account, "access_token") ?? null,
-                expiresAtInt,
+                getNumber(account, "expires_at") ? Math.floor(getNumber(account, "expires_at") as number) : null,
                 getString(account, "token_type") ?? null,
                 getString(account, "scope") ?? null,
                 getString(account, "id_token") ?? null,
@@ -221,68 +212,56 @@ const authOptions: NextAuthOptions = {
       }
     },
 
-    async jwt(params: {
-      token: JWT;
-      user?: AdapterUser | User;
-      account?: Account | null;
-      profile?: Profile | null;
-      isNewUser?: boolean;
-    }): Promise<JWT> {
-      const { token, user } = params;
+    async jwt({ token, user }: { token: Record<string, unknown>; user?: Record<string, unknown> }) {
       try {
-        const tok = token as Record<string, unknown>;
         const incomingUserId = getString(user, "id");
         if (incomingUserId) {
-          tok.userId = incomingUserId;
-          if (getString(user, "email")) tok.email = getString(user, "email");
-          if (getString(user, "name")) tok.name = getString(user, "name");
-        } else if (!("userId" in tok) && typeof tok.email === "string") {
+          token.userId = incomingUserId;
+          if (getString(user, "email")) token.email = getString(user, "email");
+          if (getString(user, "name")) token.name = getString(user, "name");
+        } else if (!("userId" in token) && typeof token.email === "string") {
           try {
-            const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(tok.email)], 2000);
+            const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(token.email)], 2000);
             const row = getFirstRow<{ id: string }>(r);
-            if (row?.id) tok.userId = row.id;
+            if (row?.id) token.userId = row.id;
           } catch (err) {
             console.error("jwt callback DB lookup failed:", err instanceof Error ? err.message : String(err));
           }
         }
 
-        if (typeof tok.userId === "string") {
+        if (typeof token.userId === "string") {
           try {
             const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(
               `SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`,
-              [String(tok.userId)],
+              [String(token.userId)],
               2000
             );
             const u = getFirstRow<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(r2);
             if (u) {
-              tok.name = u.name ?? tok.name;
-              tok.email = u.email ?? tok.email;
-              tok.image = u.image ?? tok.image;
-              tok.role = u.role ?? tok.role ?? "trader";
+              token.name = u.name ?? token.name;
+              token.email = u.email ?? token.email;
+              token.image = u.image ?? token.image;
+              token.role = u.role ?? token.role ?? "trader";
             }
           } catch (err) {
             console.error("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
           }
         }
-        return tok as JWT;
       } catch (err: unknown) {
         console.error("jwt callback error:", err instanceof Error ? err.message : String(err));
-        return token;
       }
+      return token;
     },
 
-    async session(params: { session: Session; token: JWT; user?: AdapterUser | User }): Promise<Session> {
-      const { session, token } = params;
+    async session({ session, token }: { session: Record<string, unknown>; token: Record<string, unknown> }) {
       try {
-        const sess = session as Session & { user?: Record<string, unknown> };
-        const tok = token as Record<string, unknown>;
-        if (!sess.user || typeof sess.user !== "object") sess.user = {};
-        const su = sess.user as Record<string, unknown>;
-        if (typeof tok.userId === "string") su.id = tok.userId;
-        if (typeof tok.name === "string") su.name = tok.name;
-        if (typeof tok.email === "string") su.email = tok.email;
-        if (typeof tok.image === "string") su.image = tok.image;
-        su.role = typeof tok.role === "string" ? tok.role : "trader";
+        if (!session.user || typeof session.user !== "object") session.user = {};
+        const su = session.user as Record<string, unknown>;
+        if (typeof token.userId === "string") su.id = token.userId;
+        if (typeof token.name === "string") su.name = token.name;
+        if (typeof token.email === "string") su.email = token.email;
+        if (typeof token.image === "string") su.image = token.image;
+        su.role = typeof token.role === "string" ? token.role : "trader";
       } catch (err: unknown) {
         console.error("session callback error:", err instanceof Error ? err.message : String(err));
       }
@@ -296,6 +275,3 @@ const authOptions: NextAuthOptions = {
     // signIn: "/login"
   },
 };
-
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
