@@ -9,16 +9,20 @@ type TradeForPattern = {
 };
 
 interface TradePatternChartProps {
-  trades: ReadonlyArray<TradeForPattern>;
+  trades?: ReadonlyArray<TradeForPattern>;
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#845EC2", "#D65DB1"];
 
 export default function TradePatternChart({
   trades = [],
-}: TradePatternChartProps): JSX.Element {
+}: TradePatternChartProps): React.ReactElement {
   if (!Array.isArray(trades) || trades.length === 0) {
-    return <div className="text-sm text-gray-500">No trade data to analyze patterns.</div>;
+    return (
+      <div className="text-sm text-gray-500">
+        No trade data to analyze patterns.
+      </div>
+    );
   }
 
   const toNumber = (v: number | string | undefined): number =>
@@ -40,13 +44,18 @@ export default function TradePatternChart({
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, percent }): string => `${name}: ${(percent * 100).toFixed(0)}%`}
+            label={({ name, percent }): string =>
+              `${name}: ${percent !== undefined ? (percent * 100).toFixed(0) : "0"}%`
+            }
             outerRadius={120}
             fill="#8884d8"
             dataKey="value"
           >
             {winLossData.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip />

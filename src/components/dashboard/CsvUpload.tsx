@@ -2,6 +2,8 @@
 "use client";
 
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+// papaparse often has no types in some setups; tolerate that here:
+// @ts-ignore - allow use even if no @types/papaparse installed
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { TradeContext } from "@/context/TradeContext";
@@ -69,8 +71,16 @@ function coerceValue(v: unknown): string | number {
 type ParsedRow = Record<string, string | number | null | undefined>;
 const PREVIEW_LIMIT = 20;
 
-export default function CsvUpload(): JSX.Element {
-  const { setTradesFromCsv } = useContext(TradeContext);
+/**
+ * papaparse can export either a default or a cjs object depending on build.
+ * Make a safe runtime alias so we always call parse on the correct object.
+ *
+ * Note: typed as `any` to avoid TS issues when no @types/papaparse installed.
+ */
+const PapaLib: any = ((Papa as unknown) && (Papa as any).parse ? (Papa as any) : (Papa as any).default ?? Papa) as any;
+
+export default function CsvUpload(): React.ReactElement {
+  const { setTradesFromCsv } = useContext(TradeContext) as { setTradesFromCsv: (arr: unknown[]) => void };
 
   const [open, setOpen] = useState(false);
   const [parsing, setParsing] = useState(false);
@@ -170,17 +180,22 @@ export default function CsvUpload(): JSX.Element {
 
         try {
           setProgress(25);
-          const results = Papa.parse<ParsedRow>(txt, {
+          // removed generic call on untyped function; assert shape afterward
+          const rawResults = PapaLib.parse(txt, {
             header: true,
             skipEmptyLines: true,
             dynamicTyping: false,
           });
 
-          // safety: results may be undefined in malformed cases
-          const parsedRows = results && Array.isArray(results.data) ? results.data : [];
+          // ensure shape and types
+          const results = (rawResults as { data?: unknown; meta?: { fields?: unknown[] } }) ?? {};
+          const parsedRows = Array.isArray(results.data) ? (results.data as ParsedRow[]) : [];
+
           const headers =
-            results && Array.isArray(results.meta?.fields) && results.meta.fields.length > 0
-              ? (results.meta.fields as string[])
+            results &&
+            Array.isArray(results.meta?.fields) &&
+            (results.meta!.fields as unknown[]).length > 0
+              ? (results.meta!.fields as unknown[]).map((f) => String(f))
               : parsedRows.length > 0
               ? Object.keys(parsedRows[0])
               : [];

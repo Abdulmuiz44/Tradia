@@ -1,20 +1,20 @@
-/** @type {import('next').NextConfig} */
+// filepath: next.config.mjs
 const nextConfig = {
   reactStrictMode: true,
-
-  // Prevent eslint warnings from blocking the Next.js production build
-  eslint: {
-    ignoreDuringBuilds: true
-  },
-
-  images: {
-    remotePatterns: [
+  swcMinify: true,
+  // Add this to handle any potential CORS issues
+  async headers() {
+    return [
       {
-        protocol: "https",
-        hostname: "**", // allow all hosts for now
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+        ],
       },
-    ],
-  },
+    ];
+  }
 };
 
 export default nextConfig;

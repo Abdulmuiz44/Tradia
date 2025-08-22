@@ -38,6 +38,10 @@ interface TradeContextProps {
     backendUrl?: string
   ) => Promise<SyncResult>;
   clearTrades: () => void;
+
+  /* Bulk helpers (added to satisfy BulkActionBar and similar components) */
+  bulkToggleReviewed: (ids: string[], reviewed: boolean) => void;
+  bulkDelete: (ids: string[]) => void;
 }
 
 /**
@@ -165,6 +169,10 @@ function normalizeBrokerTrade(t: unknown): Trade {
     reasonForTrade: toStringSafe(rec["reasonForTrade"] ?? rec["reason"] ?? rec["strategy"] ?? ""),
     emotion: toStringSafe(rec["emotion"] ?? ""),
     journalNotes: toStringSafe(rec["notes"] ?? rec["note"] ?? rec["comment"] ?? ""),
+    // Note: we intentionally do not enforce a strict `reviewed` type here.
+    // If your Trade type defines a `reviewed` boolean, it will be set; otherwise
+    // it will exist at runtime but we cast the object back to Trade below.
+    reviewed: false as unknown as boolean,
   };
 
   return normalized as Trade;
@@ -185,6 +193,8 @@ export const TradeContext = createContext<TradeContextProps>({
   refreshTrades: async () => undefined,
   syncFromMT5: async () => ({ success: false }),
   clearTrades: () => undefined,
+  bulkToggleReviewed: () => undefined,
+  bulkDelete: () => undefined,
 });
 
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
@@ -196,16 +206,53 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     setTrades((prev) => {
       const prevIds = new Set(prev.map((p) => p.id));
       const id = newTrade.id && !prevIds.has(newTrade.id) ? newTrade.id : generateUniqueId(prevIds);
-      return [...prev, { ...newTrade, id }];
+      return [...prev, { ...newTrade, id } as Trade];
     });
   };
 
   const updateTrade = (updatedTrade: Trade) => {
-    setTrades((prevTrades) => prevTrades.map((trade) => (trade.id === updatedTrade.id ? { ...trade, ...updatedTrade } : trade)));
+    setTrades((prevTrades) =>
+      prevTrades.map((trade) => (trade.id === updatedTrade.id ? ({ ...trade, ...updatedTrade } as Trade) : trade))
+    );
   };
 
   const deleteTrade = (id: string) => {
     setTrades((prevTrades) => prevTrades.filter((trade) => trade.id !== id));
+    setFilteredTrades((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // --- Bulk helpers ---
+  const bulkToggleReviewed = (ids: string[], reviewed: boolean) => {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    setTrades((prev) =>
+      prev.map((t) => (t.id && ids.includes(t.id) ? ({ ...t, reviewed } as Trade) : t))
+    );
+    setFilteredTrades((prev) =>
+      prev.map((t) => (t.id && ids.includes(t.id) ? ({ ...t, reviewed } as Trade) : t))
+    );
+    // persist
+    try {
+      if (typeof window !== "undefined") {
+        const next = trades.map((t) => (t.id && ids.includes(t.id) ? ({ ...t, reviewed } as Trade) : t));
+        localStorage.setItem("trade-history", JSON.stringify(next));
+      }
+    } catch {
+      // ignore localStorage errors
+    }
+  };
+
+  const bulkDelete = (ids: string[]) => {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    setTrades((prev) => prev.filter((t) => !(t.id && ids.includes(t.id))));
+    setFilteredTrades((prev) => prev.filter((t) => !(t.id && ids.includes(t.id))));
+    try {
+      if (typeof window !== "undefined") {
+        const next = trades.filter((t) => !(t.id && ids.includes(t.id)));
+        localStorage.setItem("trade-history", JSON.stringify(next));
+      }
+    } catch {
+      // ignore
+    }
   };
 
   // --- CSV import/upsert ---
@@ -222,7 +269,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         } else {
           const newId = generateUniqueId(prevIds);
           prevIds.add(newId);
-          byId.set(newId, { ...p, id: newId });
+          byId.set(newId, { ...p, id: newId } as Trade);
         }
       });
 
@@ -232,11 +279,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         const ntId = nt.id ? String(nt.id) : undefined;
         if (ntId && byId.has(ntId)) {
           const existing = byId.get(ntId)!;
-          byId.set(ntId, { ...existing, ...nt, id: ntId });
+          byId.set(ntId, { ...existing, ...nt, id: ntId } as Trade);
         } else {
           const newId = ntId && !prevIds.has(ntId) ? ntId : generateUniqueId(prevIds);
           prevIds.add(newId);
-          byId.set(newId, { ...nt, id: newId });
+          byId.set(newId, { ...nt, id: newId } as Trade);
         }
       });
 
@@ -438,6 +485,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         refreshTrades,
         syncFromMT5,
         clearTrades,
+        bulkToggleReviewed,
+        bulkDelete,
       }}
     >
       {children}
