@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 
 type AccountInfo = { login?: number | string; server?: string; info?: Record<string, unknown> | null };
 type ReqBody = { account?: AccountInfo; trades?: unknown[] };
@@ -27,10 +27,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const ures = await pool.query<{ id: string }>("SELECT id FROM users WHERE email=$1 LIMIT 1", [userEmail]);
-    const user = ures.rows[0];
+    const supabase = createClient();
+    const { data: user, error: userErr } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", userEmail)
+      .maybeSingle();
+    if (userErr) throw userErr;
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-    const userId = user.id;
+    const userId = (user as any).id as string;
 
     const body = (await req.json()) as ReqBody;
     const account = body?.account;
@@ -43,26 +48,20 @@ export async function POST(req: Request) {
     const server = asString(account.server ?? "unknown");
     const info = account.info ?? null;
 
-    // Upsert mt5_accounts
-    await pool.query(
-      `INSERT INTO mt5_accounts (user_id, login, server, name, currency, balance, state, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
-       ON CONFLICT (user_id, login, server) DO UPDATE
-         SET name = EXCLUDED.name,
-             currency = COALESCE(EXCLUDED.currency, mt5_accounts.currency),
-             balance = EXCLUDED.balance,
-             state = EXCLUDED.state,
-             updated_at = NOW()`,
-      [
-        userId,
+    // Upsert mt5_accounts via Supabase
+    const { error: accErr } = await supabase.from("mt5_accounts").upsert(
+      {
+        user_id: userId,
         login,
         server,
-        (info && (asString(info.name) || `MT5 ${login}`)) ?? `MT5 ${login}`,
-        info?.currency ? asString(info.currency) : null,
-        info?.balance ? asNumberOrNull(info.balance) : null,
-        "connected",
-      ] as (string | number | null)[]
+        name: (info && (asString(info.name) || `MT5 ${login}`)) ?? `MT5 ${login}`,
+        currency: info?.currency ? asString(info.currency) : null,
+        balance: info?.balance ? asNumberOrNull(info.balance) : null,
+        state: "connected",
+      },
+      { onConflict: ["user_id", "login", "server"] }
     );
+    if (accErr) console.error("Failed to upsert mt5 account:", accErr);
 
     // Insert / upsert trades
     let imported = 0;
@@ -83,26 +82,12 @@ export async function POST(req: Request) {
       const closeTime = time ? new Date(asString(time)) : null;
 
       try {
-        await pool.query(
-          `INSERT INTO trades (
-              user_id, metaapi_account_id, deal_id, order_id, symbol, type, volume,
-              close_price, profit, commission, swap, comment, close_time, created_at, updated_at
-           ) VALUES (
-              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW()
-           )
-           ON CONFLICT (deal_id) DO UPDATE
-             SET profit = EXCLUDED.profit,
-                 commission = EXCLUDED.commission,
-                 swap = EXCLUDED.swap,
-                 close_price = EXCLUDED.close_price,
-                 comment = EXCLUDED.comment,
-                 close_time = EXCLUDED.close_time,
-                 updated_at = NOW()`,
-          [
-            userId,
-            null,
-            asString(deal_id),
-            asString(order_id ?? null),
+        const { error: upErr } = await supabase.from("trades").upsert(
+          {
+            user_id: userId,
+            metaapi_account_id: null,
+            deal_id: asString(deal_id),
+            order_id: asString(order_id ?? null),
             symbol,
             type,
             volume,
@@ -111,9 +96,11 @@ export async function POST(req: Request) {
             commission,
             swap,
             comment,
-            closeTime,
-          ] as (string | number | null | Date)[]
+            close_time: closeTime,
+          },
+          { onConflict: ["deal_id"] }
         );
+        if (upErr) console.error("Failed to insert trade:", upErr, d);
         imported++;
       } catch (err: unknown) {
         console.error("Failed to insert trade:", err, d);

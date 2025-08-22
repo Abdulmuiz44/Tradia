@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 import { getMetaApi } from "@/lib/metaapi";
 import { mapMt5Deals } from "@/lib/mt5-map";
 import { z } from "zod";
@@ -43,12 +43,15 @@ export async function POST(req: Request) {
     }
     const { mt5AccountId, from, to } = parsed.data;
 
-    // fetch account and check ownership
-    const accRes = await pool.query<Record<string, unknown>>(
-      `SELECT * FROM mt5_accounts WHERE id=$1 AND user_id=$2 LIMIT 1`,
-      [mt5AccountId, userId]
-    );
-    const acc = accRes.rows[0] as Record<string, unknown> | undefined;
+    // fetch account and check ownership via Supabase
+    const supabase = createClient();
+    const { data: acc, error: accErr } = await supabase
+      .from("mt5_accounts")
+      .select("*")
+      .eq("id", mt5AccountId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (accErr) throw accErr;
     if (!acc) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
     // normalize account id and metaapi account id as strings
@@ -74,70 +77,61 @@ export async function POST(req: Request) {
     const dealsRaw = await rpc.getDealsByTimeRange(fromTs, toTs);
     const normalized = mapMt5Deals(Array.isArray(dealsRaw) ? dealsRaw : []);
 
-    // upsert into mt5_trades in a transaction
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
-      for (const t of normalized) {
-        // ensure deal identifiers are normalized strings or null
-        const dealId =
-          (t as Record<string, unknown>)["id"] ??
-          (t as Record<string, unknown>)["deal_id"] ??
-          null;
-        const orderId =
-          (t as Record<string, unknown>)["orderId"] ??
-          (t as Record<string, unknown>)["order_id"] ??
-          null;
-        const positionId =
-          (t as Record<string, unknown>)["positionId"] ??
-          (t as Record<string, unknown>)["position_id"] ??
-          null;
 
-        await client.query(
-          `
-          INSERT INTO mt5_trades
-            (user_id, mt5_account_id, deal_id, order_id, position_id, symbol, side,
-             volume, price, profit, commission, swap, taxes, reason, comment, opened_at, closed_at, updated_at)
-          VALUES
-            ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,NOW())
-          ON CONFLICT (mt5_account_id, deal_id)
-          DO UPDATE SET
-            price=EXCLUDED.price,
-            profit=EXCLUDED.profit,
-            commission=EXCLUDED.commission,
-            swap=EXCLUDED.swap,
-            taxes=EXCLUDED.taxes,
-            comment=EXCLUDED.comment,
-            updated_at=NOW()
-          `,
-          [
-            userId,
-            accId,
-            dealId,
-            orderId,
-            positionId,
-            (t as Record<string, unknown>)["symbol"] ?? null,
-            (t as Record<string, unknown>)["side"] ?? (t as Record<string, unknown>)["type"] ?? null,
-            (t as Record<string, unknown>)["lotSize"] ?? (t as Record<string, unknown>)["volume"] ?? null,
-            (t as Record<string, unknown>)["price"] ?? null,
-            (t as Record<string, unknown>)["pnl"] ?? (t as Record<string, unknown>)["profit"] ?? null,
-            (t as Record<string, unknown>)["commission"] ?? null,
-            (t as Record<string, unknown>)["swap"] ?? null,
-            (t as Record<string, unknown>)["taxes"] ?? null,
-            (t as Record<string, unknown>)["reason"] ?? null,
-            (t as Record<string, unknown>)["notes"] ?? (t as Record<string, unknown>)["comment"] ?? null,
-            toDateOrNull((t as Record<string, unknown>)["openTime"]) ?? null,
-            toDateOrNull((t as Record<string, unknown>)["closeTime"]) ?? null,
-          ] as (string | number | null | Date)[]
-        );
+    // upsert each trade via Supabase (no explicit transaction)
+    for (const t of normalized) {
+      const dealId =
+        (t as Record<string, unknown>)["id"] ??
+        (t as Record<string, unknown>)["deal_id"] ??
+        null;
+      const orderId =
+        (t as Record<string, unknown>)["orderId"] ??
+        (t as Record<string, unknown>)["order_id"] ??
+        null;
+      const positionId =
+        (t as Record<string, unknown>)["positionId"] ??
+        (t as Record<string, unknown>)["position_id"] ??
+        null;
+
+      const row: Record<string, unknown> = {
+        user_id: userId,
+        mt5_account_id: accId,
+        deal_id: dealId,
+        order_id: orderId,
+        position_id: positionId,
+        symbol: (t as Record<string, unknown>)["symbol"] ?? null,
+        side:
+          (t as Record<string, unknown>)["side"] ??
+          (t as Record<string, unknown>)["type"] ??
+          null,
+        volume:
+          (t as Record<string, unknown>)["lotSize"] ??
+          (t as Record<string, unknown>)["volume"] ??
+          null,
+        price: (t as Record<string, unknown>)["price"] ?? null,
+        profit:
+          (t as Record<string, unknown>)["pnl"] ??
+          (t as Record<string, unknown>)["profit"] ??
+          null,
+        commission: (t as Record<string, unknown>)["commission"] ?? null,
+        swap: (t as Record<string, unknown>)["swap"] ?? null,
+        taxes: (t as Record<string, unknown>)["taxes"] ?? null,
+        reason: (t as Record<string, unknown>)["reason"] ?? null,
+        comment:
+          (t as Record<string, unknown>)["notes"] ??
+          (t as Record<string, unknown>)["comment"] ??
+          null,
+        opened_at: toDateOrNull((t as Record<string, unknown>)["openTime"]) ?? null,
+        closed_at: toDateOrNull((t as Record<string, unknown>)["closeTime"]) ?? null,
+        updated_at: new Date(),
+      };
+
+      const { error: upErr } = await supabase
+        .from("mt5_trades")
+        .upsert(row, { onConflict: ["mt5_account_id", "deal_id"] });
+      if (upErr) {
+        console.error("Failed to upsert mt5 trade:", upErr, row);
       }
-      await client.query("COMMIT");
-    } catch (e) {
-      await client.query("ROLLBACK");
-      console.error("mt5 sync transaction error:", e);
-      throw e;
-    } finally {
-      client.release();
     }
 
     return NextResponse.json({ imported: normalized.length });

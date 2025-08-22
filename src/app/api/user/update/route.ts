@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 import bcrypt from "bcrypt";
 
 // Extend default NextAuth session typing
@@ -60,12 +60,15 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      const r = await pool.query<{ password: string }>(
-        `SELECT password FROM users WHERE id=$1 LIMIT 1`,
-        [userId]
-      );
+      const supabase = createClient();
+      const { data: pwRow, error: pwErr } = await supabase
+        .from("users")
+        .select("password")
+        .eq("id", userId)
+        .maybeSingle();
+      if (pwErr) throw pwErr;
 
-      const hashed = r.rows[0]?.password;
+      const hashed = (pwRow as any)?.password;
       if (!hashed) {
         return NextResponse.json(
           { error: "No existing password set; cannot change" },
@@ -98,9 +101,14 @@ export async function PATCH(req: NextRequest) {
       parts.push(`password=$${idx++}`);
       params.push(newHashed);
 
-      params.push(userId);
-      const query = `UPDATE users SET ${parts.join(", ")}, updated_at=NOW() WHERE id=$${idx}`;
-      await pool.query(query, params);
+  params.push(userId);
+  const updateRow: Record<string, unknown> = {};
+  let pIdx = 0;
+  if (name) updateRow["name"] = name;
+  if (image) updateRow["image"] = image;
+  updateRow["password"] = newHashed;
+  updateRow["updated_at"] = new Date().toISOString();
+  await supabase.from("users").update(updateRow).eq("id", userId);
 
       return NextResponse.json({ success: true });
     }
@@ -123,9 +131,12 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    values.push(userId);
-    const q = `UPDATE users SET ${fields.join(", ")}, updated_at=NOW() WHERE id=$${i}`;
-    await pool.query(q, values);
+  values.push(userId);
+  const updateRow: Record<string, unknown> = {};
+  if (name) updateRow["name"] = name;
+  if (image) updateRow["image"] = image;
+  updateRow["updated_at"] = new Date().toISOString();
+  await createClient().from("users").update(updateRow).eq("id", userId);
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

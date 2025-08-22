@@ -1,6 +1,6 @@
 // app/api/auth/verify-email/route.ts
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET(req: Request) {
   try {
@@ -13,11 +13,13 @@ export async function GET(req: Request) {
       );
     }
 
-    const result = await pool.query(
-      `SELECT * FROM users WHERE verification_token = $1`,
-      [token]
-    );
-    const user = result.rows[0];
+    const supabase = createClient();
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("verification_token", token)
+      .maybeSingle();
+    if (error) throw error;
 
     if (!user) {
       return NextResponse.redirect(
@@ -26,14 +28,10 @@ export async function GET(req: Request) {
     }
 
     // Update user: set email_verified and remove token
-    await pool.query(
-      `UPDATE users
-       SET email_verified = NOW(),
-           verification_token = NULL,
-           updated_at = NOW()
-       WHERE id = $1`,
-      [user.id]
-    );
+    await supabase
+      .from("users")
+      .update({ email_verified: new Date().toISOString(), verification_token: null, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
 
     // ✅ Redirect instead of JSON
     return NextResponse.redirect(

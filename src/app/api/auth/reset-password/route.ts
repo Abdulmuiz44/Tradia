@@ -1,7 +1,7 @@
 // app/api/auth/reset-password/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 
 type ResetRequestBody = { token?: unknown; password?: unknown };
 
@@ -20,11 +20,13 @@ export async function POST(req: Request) {
     }
 
     // lookup token
-    const res = await pool.query<{ token: string; user_id: string; expires_at: Date | string }>(
-      `SELECT token, user_id, expires_at FROM password_reset_tokens WHERE token=$1 LIMIT 1`,
-      [token]
-    );
-    const row = res.rows[0];
+    const supabase = createClient();
+    const { data: row, error: terr } = await supabase
+      .from("password_reset_tokens")
+      .select("token, user_id, expires_at")
+      .eq("token", token)
+      .maybeSingle();
+    if (terr) throw terr;
     if (!row) {
       return NextResponse.json({ error: "Invalid or expired token." }, { status: 400 });
     }
@@ -32,16 +34,16 @@ export async function POST(req: Request) {
     const expiresAt = new Date(row.expires_at);
     if (isNaN(expiresAt.getTime()) || expiresAt < new Date()) {
       // cleanup expired token
-      await pool.query(`DELETE FROM password_reset_tokens WHERE token=$1`, [token]);
+  await supabase.from("password_reset_tokens").delete().eq("token", token);
       return NextResponse.json({ error: "Invalid or expired token." }, { status: 400 });
     }
 
     // hash and update password
     const hashed = await bcrypt.hash(password, 12);
-    await pool.query(`UPDATE users SET password=$1, updated_at=NOW() WHERE id=$2`, [hashed, row.user_id]);
+  await supabase.from("users").update({ password: hashed, updated_at: new Date().toISOString() }).eq("id", row.user_id);
 
-    // delete token
-    await pool.query(`DELETE FROM password_reset_tokens WHERE token=$1`, [token]);
+  // delete token
+  await supabase.from("password_reset_tokens").delete().eq("token", token);
 
     return NextResponse.json({ message: "Password reset successful. You may now sign in." });
   } catch (err: unknown) {

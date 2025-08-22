@@ -1,7 +1,7 @@
 // app/api/auth/resend-verification/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { pool } from "@/lib/db"; // our Postgres pool
+import { createClient } from "@/utils/supabase/server";
 import { sendVerificationEmail } from "@/lib/mailer";
 
 export async function POST(req: Request) {
@@ -9,12 +9,13 @@ export async function POST(req: Request) {
     const { email } = await req.json();
 
     // Find user
-    const { rows } = await pool.query(
-      "SELECT id, email, email_verified FROM users WHERE email = $1 LIMIT 1",
-      [email]
-    );
-
-    const user = rows[0];
+    const supabase = createClient();
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, email, email_verified")
+      .eq("email", email)
+      .maybeSingle();
+    if (error) throw error;
     if (!user) {
       return NextResponse.json(
         { error: "No account found with that email" },
@@ -33,10 +34,7 @@ export async function POST(req: Request) {
     const newToken = crypto.randomBytes(32).toString("hex");
 
     // Save new token in DB
-    await pool.query(
-      "UPDATE users SET verification_token = $1 WHERE id = $2",
-      [newToken, user.id]
-    );
+  await supabase.from("users").update({ verification_token: newToken }).eq("id", user.id);
 
     // Resend email
     await sendVerificationEmail(email, newToken);

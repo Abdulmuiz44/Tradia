@@ -1,7 +1,7 @@
 // app/api/auth/forgot-password/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 import { sendPasswordResetEmail } from "@/lib/mailer";
 
 type ForgotRequestBody = { email?: unknown };
@@ -20,11 +20,13 @@ export async function POST(req: Request) {
     }
 
     // find user by email
-    const userRes = await pool.query<{ id: string; email_verified?: string | null }>(
-      `SELECT id, email_verified FROM users WHERE email=$1 LIMIT 1`,
-      [rawEmail]
-    );
-    const user = userRes.rows[0];
+    const supabase = createClient();
+    const { data: user, error: uerr } = await supabase
+      .from("users")
+      .select("id, email_verified")
+      .eq("email", rawEmail)
+      .maybeSingle();
+    if (uerr) throw uerr;
 
     // Always respond with the same generic message (prevent enumeration).
     const genericResponse = {
@@ -40,12 +42,8 @@ export async function POST(req: Request) {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // store token
-    await pool.query(
-      `INSERT INTO password_reset_tokens (token, user_id, expires_at, created_at)
-       VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (token) DO UPDATE SET user_id = EXCLUDED.user_id, expires_at = EXCLUDED.expires_at, created_at = NOW()`,
-      [token, user.id, expiresAt]
-    );
+  // Supabase: upsert into password_reset_tokens
+  await supabase.from("password_reset_tokens").upsert({ token, user_id: user.id, expires_at: expiresAt.toISOString(), created_at: new Date().toISOString() });
 
     // try sending email, but don't leak errors to client
     try {

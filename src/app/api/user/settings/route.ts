@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { pool } from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
 
 // Extend default NextAuth session typing
 interface SessionUser {
@@ -28,19 +28,15 @@ export async function GET() {
       );
     }
 
-    const r = await pool.query<{ settings: unknown }>(
-      `SELECT settings FROM user_settings WHERE user_id=$1 LIMIT 1`,
-      [userId]
-    );
-
-    if (!r.rows[0]) {
-      return NextResponse.json({ success: true, settings: {} });
-    }
-
-    return NextResponse.json({
-      success: true,
-      settings: r.rows[0].settings ?? {},
-    });
+    const supabase = createClient();
+    const { data: row, error: rowErr } = await supabase
+      .from("user_settings")
+      .select("settings")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (rowErr) throw rowErr;
+    if (!row) return NextResponse.json({ success: true, settings: {} });
+    return NextResponse.json({ success: true, settings: row.settings ?? {} });
   } catch (err: unknown) {
     console.error("GET /api/user/settings error:", err);
     const msg = err instanceof Error ? err.message : String(err);
@@ -75,31 +71,31 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Ensure row exists
-    await pool.query(
-      `INSERT INTO user_settings (user_id, settings, updated_at)
-       VALUES ($1, $2::jsonb, NOW())
-       ON CONFLICT (user_id) DO NOTHING`,
-      [userId, body.settings]
+    const supabase = createClient();
+    // Ensure row exists (insert if not)
+    const { error: insErr } = await supabase.from("user_settings").upsert(
+      { user_id: userId, settings: body.settings, updated_at: new Date().toISOString() },
+      { onConflict: ["user_id"] }
     );
+    if (insErr) throw insErr;
 
-    // Merge provided settings into existing JSONB
-    await pool.query(
-      `UPDATE user_settings
-       SET settings = COALESCE(settings, '{}'::jsonb) || $2::jsonb,
-           updated_at = NOW()
-       WHERE user_id = $1`,
-      [userId, body.settings]
-    );
+    // Merge via a select + update (Supabase doesn't support jsonb concat in client API)
+    const { data: existing, error: exErr } = await supabase
+      .from("user_settings")
+      .select("settings")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (exErr) throw exErr;
+    const merged = Object.assign({}, existing?.settings ?? {}, body.settings);
+    await supabase.from("user_settings").update({ settings: merged, updated_at: new Date().toISOString() }).eq("user_id", userId);
 
-    const rr = await pool.query<{ settings: unknown }>(
-      `SELECT settings FROM user_settings WHERE user_id=$1 LIMIT 1`,
-      [userId]
-    );
-
-    return NextResponse.json({
-      success: true,
-      settings: rr.rows[0]?.settings ?? {},
-    });
+    const { data: final, error: finalErr } = await supabase
+      .from("user_settings")
+      .select("settings")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (finalErr) throw finalErr;
+    return NextResponse.json({ success: true, settings: final?.settings ?? {} });
   } catch (err: unknown) {
     console.error("PATCH /api/user/settings error:", err);
     const msg = err instanceof Error ? err.message : String(err);
