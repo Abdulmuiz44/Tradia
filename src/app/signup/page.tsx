@@ -5,10 +5,11 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
-import { signIn } from "next-auth/react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function SignupPage() {
   const router = useRouter();
+  const supabase = createClient();
   const formRef = useRef<HTMLFormElement | null>(null);
 
   // Keep checkbox controlled only
@@ -49,33 +50,27 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      // Create account + send verification email
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
+      // Supabase signup with email + password
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name }, // store name in user_metadata
+          emailRedirectTo: `${window.location.origin}/auth/callback`, // where Supabase sends user after email verification
+        },
       });
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const msg = data?.error || data?.message || "Signup failed";
-        setError(msg);
+      if (error) {
+        setError(error.message);
         return;
       }
 
-      // Do NOT auto-login. Force email verification first.
       setNotice("Account created! We’ve sent a verification link to your email. Please verify to continue.");
 
-      // Automatically redirect user to check-email page
+      // redirect user to check-email page
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
-      return;
     } catch (err) {
-      console.error("Signup request failed:", err);
+      console.error("Signup failed:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -83,7 +78,15 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignup = async () => {
-    await signIn("google", { callbackUrl: "/dashboard" });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`, // Supabase will handle the redirect back
+      },
+    });
+    if (error) {
+      setError(error.message);
+    }
   };
 
   return (
@@ -112,51 +115,47 @@ export default function SignupPage() {
         )}
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
-          {/* Full Name (uncontrolled) */}
+          {/* Full Name */}
           <input
             name="name"
             type="text"
             placeholder="Full Name"
             className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label="Full Name"
             required
             autoComplete="name"
           />
 
-          {/* Email (uncontrolled) */}
+          {/* Email */}
           <input
             name="email"
             type="email"
             placeholder="Email Address"
             className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label="Email Address"
             required
             autoComplete="email"
           />
 
-          {/* Password (uncontrolled) */}
+          {/* Password */}
           <input
             name="password"
             type="password"
             placeholder="Password"
             className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label="Password"
             required
             autoComplete="new-password"
           />
 
-          {/* Confirm Password (uncontrolled) */}
+          {/* Confirm Password */}
           <input
             name="confirmPassword"
             type="password"
             placeholder="Confirm Password"
             className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label="Confirm Password"
             required
             autoComplete="new-password"
           />
 
-          {/* Terms & Privacy (controlled checkbox) */}
+          {/* Terms */}
           <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
             <input
               id="agree"

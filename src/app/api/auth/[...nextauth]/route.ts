@@ -1,290 +1,99 @@
 // src/app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { pool } from "@/lib/db";
-import type { NextAuthOptions, Account, Profile, User, Session } from "next-auth";
+import { createClient } from "@/utils/supabase/server"; // 🔑 use supabase server client
 import type { AdapterUser } from "next-auth/adapters";
+import type { Account, Profile, User, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
 if (!process.env.NEXTAUTH_URL) {
-  console.warn(
-    "WARNING: NEXTAUTH_URL not set. Set NEXTAUTH_URL=http://localhost:3000 (or http://127.0.0.1:3000) in .env.local"
-  );
+  console.warn("⚠️ NEXTAUTH_URL not set");
 }
 if (!process.env.NEXTAUTH_SECRET) {
-  console.warn("WARNING: NEXTAUTH_SECRET not set. Set a long random string in .env.local");
-}
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.warn("WARNING: GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET missing");
+  console.warn("⚠️ NEXTAUTH_SECRET not set");
 }
 
-/** Safe helpers to extract strings/numbers from unknown objects */
-function getString(obj: unknown, key: string): string | undefined {
-  if (!obj || typeof obj !== "object") return undefined;
-  const v = (obj as Record<string, unknown>)[key];
-  if (typeof v === "string") return v;
-  if (typeof v === "number") return String(v);
-  return undefined;
-}
-function getNumber(obj: unknown, key: string): number | undefined {
-  if (!obj || typeof obj !== "object") return undefined;
-  const v = (obj as Record<string, unknown>)[key];
-  if (typeof v === "number") return v;
-  if (typeof v === "string") {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : undefined;
-  }
-  return undefined;
-}
-
-/**
- * Minimal shape that pg's query returns that we depend on:
- * { rows: T[] }
- */
-type QueryResultLike<T> = {
-  rows: T[];
-};
-
-function getFirstRow<T>(res: unknown): T | undefined {
-  if (!res || typeof res !== "object") return undefined;
-  const maybe = res as Record<string, unknown>;
-  const rows = maybe.rows;
-  if (!Array.isArray(rows) || rows.length === 0) return undefined;
-  return rows[0] as T;
-}
-
-async function safeQuery<T = Record<string, unknown>>(
-  text: string,
-  params: unknown[] = [],
-  timeoutMs = 3000
-): Promise<QueryResultLike<T>> {
-  if (!pool || typeof pool.query !== "function") {
-    throw new Error("DB pool not available");
-  }
-
-  const qPromise = (pool.query as any)(text, params);
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("DB_QUERY_TIMEOUT")), timeoutMs)
-  );
-
-  const result = await Promise.race([qPromise, timeout]);
-  return result as unknown as QueryResultLike<T>;
-}
-
-/** NOTE: keep authOptions local (non-exported) to satisfy Next route export shape checks */
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
     }),
+
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
+        email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
+      async authorize(credentials) {
+        const supabase = createClient();
 
-      // include the second `req` parameter and ensure id is string before returning
-      async authorize(credentials, req) {
-        try {
-          if (!credentials?.email || !credentials?.password) return null;
-          const email = String(credentials.email).toLowerCase().trim();
+        if (!credentials?.email || !credentials?.password) return null;
 
-          const res = await safeQuery<{ id?: string; name?: string | null; email?: string; password?: string | null }>(
-            `SELECT * FROM users WHERE email=$1 LIMIT 1`,
-            [email]
-          );
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("email", credentials.email.toLowerCase().trim())
+          .single();
 
-          const u = getFirstRow<{ id?: string; name?: string | null; email?: string; password?: string | null }>(res);
+        if (error || !data) return null;
 
-          // require user, password hash and id to exist
-          if (!u || !u.password || u.id == null) return null;
+        const valid = await bcrypt.compare(credentials.password, data.password);
+        if (!valid) return null;
 
-          const ok = await bcrypt.compare(String(credentials.password), u.password);
-          if (!ok) return null;
-
-          // guarantee id is string (NextAuth expects User.id: string)
-          const user = {
-            id: String(u.id),
-            name: u.name ?? undefined,
-            email: u.email ?? undefined,
-          };
-
-          return user;
-        } catch (err: unknown) {
-          console.error("Credentials authorize error:", err instanceof Error ? err.message : String(err));
-          return null;
-        }
+        return {
+          id: String(data.id),
+          name: data.name,
+          email: data.email,
+        };
       },
     }),
   ],
 
   callbacks: {
-    // exact signature to match NextAuth's expected types
-    async signIn(params: {
-      user: AdapterUser | User;
-      account: Account | null;
-      profile?: Profile | null;
-      email?: { verificationRequest?: boolean };
-      credentials?: Record<string, unknown>;
-    }): Promise<boolean> {
-      const { user, account, profile } = params;
-      try {
-        if (account?.provider === "google") {
-          const provider = getString(account, "provider") ?? "google";
-          const providerAccountId =
-            getString(account, "providerAccountId") ?? getString(account, "provider_account_id");
-          const email = (getString(user, "email") ?? getString(profile, "email") ?? "").toLowerCase();
+    async signIn({ user, account, profile }) {
+      const supabase = createClient();
 
-          if (!providerAccountId || !email) {
-            console.error("Google signIn missing providerAccountId or email", { providerAccountId, email });
-            return false;
-          }
+      if (account?.provider === "google") {
+        const email = user.email?.toLowerCase();
+        if (!email) return false;
 
-          try {
-            const acc = await safeQuery<{ user_id?: string }>(
-              `SELECT user_id FROM accounts WHERE provider=$1 AND provider_account_id=$2 LIMIT 1`,
-              [provider, providerAccountId]
-            );
-            if (getFirstRow<{ user_id?: string }>(acc)) return true;
+        const { data: existingUser } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", email)
+          .single();
 
-            const ures = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [email]);
-            let userId: string | null = getFirstRow<{ id: string }>(ures)?.id ?? null;
-
-            if (!userId) {
-              const ins = await safeQuery<{ id: string }>(
-                `INSERT INTO users (name, email, email_verified, created_at, updated_at)
-                 VALUES ($1,$2,NOW(), NOW(), NOW()) RETURNING id`,
-                [getString(user, "name") ?? getString(profile, "name") ?? null, email]
-              );
-              userId = getFirstRow<{ id: string }>(ins)?.id ?? null;
-            }
-
-            if (!userId) {
-              console.error("Failed to get or create user for google sign-in", { email });
-              return true; // allow OAuth flow to continue even if DB ops failed
-            }
-
-            const expiresAt = getNumber(account, "expires_at");
-            const expiresAtInt = typeof expiresAt === "number" ? Math.floor(expiresAt) : null;
-
-            await safeQuery(
-              `INSERT INTO accounts (
-                 user_id, type, provider, provider_account_id,
-                 refresh_token, access_token, expires_at, token_type, scope, id_token, session_state
-               )
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-               ON CONFLICT (provider, provider_account_id) DO UPDATE
-                 SET user_id = EXCLUDED.user_id,
-                     access_token = EXCLUDED.access_token,
-                     refresh_token = EXCLUDED.refresh_token,
-                     id_token = EXCLUDED.id_token,
-                     expires_at = EXCLUDED.expires_at,
-                     token_type = EXCLUDED.token_type,
-                     scope = EXCLUDED.scope`,
-              [
-                userId,
-                getString(account, "type") ?? null,
-                provider,
-                providerAccountId,
-                getString(account, "refresh_token") ?? null,
-                getString(account, "access_token") ?? null,
-                expiresAtInt,
-                getString(account, "token_type") ?? null,
-                getString(account, "scope") ?? null,
-                getString(account, "id_token") ?? null,
-                getString(account, "session_state") ?? null,
-              ]
-            );
-
-            return true;
-          } catch (dbErr: unknown) {
-            console.error("Google signIn DB error (continuing OAuth):", dbErr instanceof Error ? dbErr.message : String(dbErr));
-            return true;
-          }
+        if (!existingUser) {
+          await supabase.from("users").insert({
+            name: user.name,
+            email,
+            image: user.image,
+            created_at: new Date().toISOString(),
+          });
         }
-
-        return true;
-      } catch (err: unknown) {
-        console.error("signIn callback error:", err instanceof Error ? err.message : String(err));
-        return false;
       }
+
+      return true;
     },
 
-    async jwt(params: {
-      token: JWT;
-      user?: AdapterUser | User;
-      account?: Account | null;
-      profile?: Profile | null;
-      isNewUser?: boolean;
-    }): Promise<JWT> {
-      const { token, user } = params;
-      try {
-        const tok = token as Record<string, unknown>;
-        const incomingUserId = getString(user, "id");
-        if (incomingUserId) {
-          tok.userId = incomingUserId;
-          if (getString(user, "email")) tok.email = getString(user, "email");
-          if (getString(user, "name")) tok.name = getString(user, "name");
-        } else if (!("userId" in tok) && typeof tok.email === "string") {
-          try {
-            const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(tok.email)], 2000);
-            const row = getFirstRow<{ id: string }>(r);
-            if (row?.id) tok.userId = row.id;
-          } catch (err) {
-            console.error("jwt callback DB lookup failed:", err instanceof Error ? err.message : String(err));
-          }
-        }
-
-        if (typeof tok.userId === "string") {
-          try {
-            const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(
-              `SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`,
-              [String(tok.userId)],
-              2000
-            );
-            const u = getFirstRow<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(r2);
-            if (u) {
-              tok.name = u.name ?? tok.name;
-              tok.email = u.email ?? tok.email;
-              tok.image = u.image ?? tok.image;
-              tok.role = u.role ?? tok.role ?? "trader";
-            }
-          } catch (err) {
-            console.error("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
-          }
-        }
-        return tok as JWT;
-      } catch (err: unknown) {
-        console.error("jwt callback error:", err instanceof Error ? err.message : String(err));
-        return token;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
       }
+      return token;
     },
 
-    async session(params: { session: Session; token: JWT; user?: AdapterUser | User }): Promise<Session> {
-      const { session, token } = params;
-      try {
-        const sess = session as Session & { user?: Record<string, unknown> };
-        const tok = token as Record<string, unknown>;
-        if (!sess.user || typeof sess.user !== "object") sess.user = {};
-        const su = sess.user as Record<string, unknown>;
-        if (typeof tok.userId === "string") su.id = tok.userId;
-        if (typeof tok.name === "string") su.name = tok.name;
-        if (typeof tok.email === "string") su.email = tok.email;
-        if (typeof tok.image === "string") su.image = tok.image;
-        su.role = typeof tok.role === "string" ? tok.role : "trader";
-      } catch (err: unknown) {
-        console.error("session callback error:", err instanceof Error ? err.message : String(err));
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
       }
       return session;
     },
@@ -292,9 +101,6 @@ const authOptions: NextAuthOptions = {
 
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    // signIn: "/login"
-  },
 };
 
 const handler = NextAuth(authOptions);

@@ -1,17 +1,9 @@
-// src/app/login/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
-import { signIn } from "next-auth/react";
-
-type SignInResult = {
-  error?: string;
-  ok?: boolean;
-  status?: number;
-};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,6 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load remembered email
   useEffect(() => {
     try {
       const saved =
@@ -53,7 +46,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     try {
-      if (remember && form.email) localStorage.setItem("tradia_remember_email", form.email);
+      if (remember && form.email)
+        localStorage.setItem("tradia_remember_email", form.email);
     } catch {}
   }, [form.email, remember]);
 
@@ -68,36 +62,37 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const result = (await signIn("credentials", {
-        redirect: false,
-        email: form.email,
-        password: form.password,
-      })) as SignInResult | undefined;
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-      if (result?.error) {
-        setError(result.error);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Login failed.");
         return;
       }
 
-      if (result?.ok) {
-        try {
-          if (remember) localStorage.setItem("tradia_remember_email", form.email);
-          else localStorage.removeItem("tradia_remember_email");
-        } catch {}
-        router.push("/dashboard");
-      } else {
-        setError("Invalid credentials or sign-in failed.");
-      }
+      // Remember email if chosen
+      try {
+        if (remember) localStorage.setItem("tradia_remember_email", form.email);
+        else localStorage.removeItem("tradia_remember_email");
+      } catch {}
+
+      router.push("/dashboard");
     } catch (err) {
-      console.error("Sign-in error:", err);
-      setError((err as Error)?.message || "Sign-in request failed.");
+      console.error("Login error:", err);
+      setError((err as Error)?.message || "Login request failed.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogle = async () => {
-    await signIn("google", { callbackUrl: "/dashboard" });
+    // 🔑 Since we dropped Supabase Auth, Google OAuth needs a custom backend route later.
+    setError("Google login is not yet implemented with custom auth.");
   };
 
   return (
