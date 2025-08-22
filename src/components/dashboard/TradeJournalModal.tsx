@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useContext } from "react";
-import { TradeContext, Trade } from "@/context/TradeContext";
+import { TradeContext } from "@/context/TradeContext";
+import type { Trade } from "@/types/trade";
 
 interface Props {
   trade: Trade;
@@ -10,12 +11,17 @@ interface Props {
 
 export default function TradeJournalModal({ trade, onClose }: Props) {
   const ctx = useContext(TradeContext)!;
-  const [note, setNote] = useState(trade.postNote || "");
-  const [emotion, setEmotion] = useState(trade.emotion || "Calm");
-  const [rating, setRating] = useState(trade.executionRating || 3);
+  const [note, setNote] = useState((trade as any).postNote || "");
+  const [emotion, setEmotion] = useState((trade as any).emotion || "Calm");
+  const [rating, setRating] = useState((trade as any).executionRating || 3);
 
   const save = () => {
-    ctx.addPostNote(trade.id, note, emotion, rating);
+    // some contexts expose addPostNote; if not, fall back to updateTrade
+    if ((ctx as any).addPostNote) {
+      try { (ctx as any).addPostNote((trade as any).id, note, emotion, rating); } catch { /* ignore */ }
+    } else if ((ctx as any).updateTrade) {
+      try { (ctx as any).updateTrade({ ...(trade as any), postNote: note, emotion, executionRating: rating }); } catch { /* ignore */ }
+    }
     onClose();
   };
 

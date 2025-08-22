@@ -47,9 +47,9 @@ export default function RiskMetrics() {
   const equitySeries = useMemo(() => {
     let balance = 0;
     return trades.map((t) => {
-      balance += parseFloat(t.pnl as string);
+      balance += t.pnl;
       return {
-        date: format(new Date(t.closeTime), "dd/MM/yyyy"),
+        date: format(new Date(t.closeTime || t.openTime), "dd/MM/yyyy"),
         equity: Number(balance.toFixed(2)),
       };
     });
@@ -66,14 +66,19 @@ export default function RiskMetrics() {
 
   // NEW: VaR Calculations
   const varEstimates = useMemo(() => {
-    const pnls = trades.map((t) => parseFloat(t.pnl as string)).sort((a, b) => a - b);
+    const pnls = trades
+      .map((t) => {
+        const n = typeof t.pnl === "number" ? t.pnl : Number(t.pnl);
+        return Number.isFinite(n) ? n : 0;
+      })
+      .sort((a, b) => a - b);
     const percentile = 0.05;
     const index = Math.floor(percentile * pnls.length);
-    const historicalVaR = pnls[index] ? -pnls[index].toFixed(2) : "—";
+    const historicalVaR = pnls.length > 0 && pnls[index] !== undefined ? (-pnls[index]).toFixed(2) : "—";
 
-    const mean = pnls.reduce((a, b) => a + b, 0) / pnls.length;
-    const stdDev = Math.sqrt(pnls.reduce((s, r) => s + (r - mean) ** 2, 0) / pnls.length);
-    const monteCarloVaR = (-1 * (mean - 1.65 * stdDev)).toFixed(2); // 95% confidence
+    const mean = pnls.length > 0 ? pnls.reduce((a, b) => a + b, 0) / pnls.length : 0;
+    const stdDev = pnls.length > 0 ? Math.sqrt(pnls.reduce((s, r) => s + (r - mean) ** 2, 0) / pnls.length) : 0;
+    const monteCarloVaR = pnls.length > 0 ? (-1 * (mean - 1.65 * stdDev)).toFixed(2) : "—"; // 95% confidence
 
     return { historicalVaR, monteCarloVaR };
   }, [trades]);
@@ -90,9 +95,12 @@ export default function RiskMetrics() {
   }, [drawdownSeries]);
 
   const stats = useMemo(() => {
-    const pnls = trades.map((t) => parseFloat(t.pnl as string));
-    const avg = pnls.reduce((a, b) => a + b, 0) / pnls.length || 0;
-    const variance = pnls.reduce((sum, r) => sum + (r - avg) ** 2, 0) / pnls.length || 0;
+    const pnls = trades.map((t) => {
+      const n = typeof t.pnl === "number" ? t.pnl : Number(t.pnl);
+      return Number.isFinite(n) ? n : 0;
+    });
+    const avg = pnls.length > 0 ? pnls.reduce((a, b) => a + b, 0) / pnls.length : 0;
+    const variance = pnls.length > 0 ? pnls.reduce((sum, r) => sum + (r - avg) ** 2, 0) / pnls.length : 0;
     const stdDev = Math.sqrt(variance) || 1;
     const sharpe = (avg / stdDev).toFixed(2);
 
@@ -106,14 +114,18 @@ export default function RiskMetrics() {
     let maxDD = 0;
     drawdownSeries.forEach((d) => (maxDD = Math.max(maxDD, d.drawdown)));
 
-    const rrs = trades.map((t) => parseFloat(t.rr as string) || 0);
+    const rrs = trades.map((t) => {
+      const n = typeof t.rr === "number" ? t.rr : Number(t.rr);
+      return Number.isFinite(n) ? n : 0;
+    });
     const avgRR = (rrs.reduce((a, b) => a + b, 0) / rrs.length || 0).toFixed(2);
 
     let streak = 0,
       maxWinStreak = 0,
       maxLossStreak = 0;
     trades.forEach((t) => {
-      const isWin = parseFloat(t.pnl as string) > 0;
+      const p = typeof t.pnl === "number" ? t.pnl : Number(t.pnl);
+      const isWin = Number.isFinite(p) ? p > 0 : false;
       if (isWin) {
         streak = streak > 0 ? streak + 1 : 1;
         maxWinStreak = Math.max(maxWinStreak, streak);
@@ -131,9 +143,12 @@ export default function RiskMetrics() {
       ? "Moderate Risk"
       : "Low Risk";
 
-    const performanceGrade = sharpe > 1.5 && profitFactor > 1.5
+    const sharpeNum = Number(sharpe);
+    const profitFactorNum = typeof profitFactor === "string" ? (isNaN(Number(profitFactor)) ? 0 : Number(profitFactor)) : Number(profitFactor);
+
+    const performanceGrade = sharpeNum > 1.5 && profitFactorNum > 1.5
       ? "Excellent"
-      : sharpe > 1 && profitFactor > 1.2
+      : sharpeNum > 1 && profitFactorNum > 1.2
       ? "Good"
       : "Needs Improvement";
 
@@ -150,10 +165,10 @@ export default function RiskMetrics() {
     };
   }, [trades, drawdownSeries]);
 
-  const pnlData = trades.map((t, i) => ({
-    idx: i + 1,
-    pnl: parseFloat(t.pnl as string),
-  }));
+  const pnlData = trades.map((t, i) => {
+    const p = typeof t.pnl === "number" ? t.pnl : Number(t.pnl);
+    return { idx: i + 1, pnl: Number.isFinite(p) ? p : 0 };
+  });
 
   const pieData = [
     { name: "Winning Trades", value: pnlData.filter((t) => t.pnl > 0).length },

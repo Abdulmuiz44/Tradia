@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type PlanType = "free" | "plus" | "premium" | "pro";
+export type PlanType = "free" | "plus" | "pro" | "elite";
 
 interface UserContextType {
   plan: PlanType;

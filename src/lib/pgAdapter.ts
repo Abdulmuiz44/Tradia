@@ -5,7 +5,7 @@ import { pool } from "./db";
 export const PostgresAdapter = (): Adapter => {
   return {
     // Users
-    async createUser(user) {
+  async createUser(user: any) {
       const result = await pool.query(
         `INSERT INTO users (name, email, password, created_at, updated_at)
          VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *`,
@@ -14,17 +14,17 @@ export const PostgresAdapter = (): Adapter => {
       return result.rows[0];
     },
 
-    async getUser(id) {
+  async getUser(id: string) {
       const result = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
       return result.rows[0];
     },
 
-    async getUserByEmail(email) {
+  async getUserByEmail(email: string) {
       const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [email]);
       return result.rows[0];
     },
 
-    async getUserByAccount({ provider, providerAccountId }) {
+  async getUserByAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {
       const result = await pool.query(
         `SELECT u.* FROM users u
          JOIN accounts a ON u.id = a.user_id
@@ -34,7 +34,7 @@ export const PostgresAdapter = (): Adapter => {
       return result.rows[0];
     },
 
-    async updateUser(user) {
+  async updateUser(user: any) {
       const result = await pool.query(
         `UPDATE users
          SET name=$1, email=$2, password=$3, updated_at=NOW()
@@ -44,12 +44,12 @@ export const PostgresAdapter = (): Adapter => {
       return result.rows[0];
     },
 
-    async deleteUser(id) {
+  async deleteUser(id: string) {
       await pool.query(`DELETE FROM users WHERE id=$1`, [id]);
     },
 
     // Accounts
-    async linkAccount(account) {
+  async linkAccount(account: any) {
       await pool.query(
         `INSERT INTO accounts
          (user_id, type, provider, provider_account_id, access_token, token_type, scope, id_token, session_state, expires_at, created_at, updated_at)
@@ -69,7 +69,7 @@ export const PostgresAdapter = (): Adapter => {
       );
     },
 
-    async unlinkAccount({ provider, providerAccountId }) {
+  async unlinkAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {
       await pool.query(
         `DELETE FROM accounts WHERE provider=$1 AND provider_account_id=$2`,
         [provider, providerAccountId]
@@ -77,7 +77,7 @@ export const PostgresAdapter = (): Adapter => {
     },
 
     // Sessions
-    async createSession(session) {
+  async createSession(session: any) {
       const result = await pool.query(
         `INSERT INTO sessions
          (session_token, user_id, expires, created_at, updated_at)
@@ -87,7 +87,7 @@ export const PostgresAdapter = (): Adapter => {
       return result.rows[0];
     },
 
-    async getSessionAndUser(sessionToken) {
+  async getSessionAndUser(sessionToken: string) {
       const result = await pool.query(
         `SELECT s.*, u.* FROM sessions s
          JOIN users u ON s.user_id = u.id
@@ -104,7 +104,7 @@ export const PostgresAdapter = (): Adapter => {
       };
     },
 
-    async updateSession(session) {
+  async updateSession(session: any) {
       const result = await pool.query(
         `UPDATE sessions SET expires=$1, updated_at=NOW() WHERE session_token=$2 RETURNING *`,
         [session.expires, session.sessionToken]
@@ -112,12 +112,12 @@ export const PostgresAdapter = (): Adapter => {
       return result.rows[0];
     },
 
-    async deleteSession(sessionToken) {
+  async deleteSession(sessionToken: string) {
       await pool.query(`DELETE FROM sessions WHERE session_token=$1`, [sessionToken]);
     },
 
     // Verification Tokens
-    async createVerificationToken(token) {
+  async createVerificationToken(token: any) {
       const result = await pool.query(
         `INSERT INTO verification_tokens
          (identifier, token, expires, created_at)
@@ -127,7 +127,7 @@ export const PostgresAdapter = (): Adapter => {
       return result.rows[0];
     },
 
-    async useVerificationToken({ identifier, token }) {
+  async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
       const result = await pool.query(
         `DELETE FROM verification_tokens
          WHERE identifier=$1 AND token=$2 RETURNING *`,

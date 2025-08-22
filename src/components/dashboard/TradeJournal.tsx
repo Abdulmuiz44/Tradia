@@ -148,18 +148,21 @@ const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
    Main component
 ------------------------------------------------------------------------- */
 
-export default function TradeJournal(): JSX.Element {
+export default function TradeJournal(): React.ReactElement {
   const { data: session } = useSession();
   const tier = ((session?.user as { subscription?: Tier } | undefined)?.subscription as Tier) || "free";
 
   const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
+  // strongly-typed alias so array callbacks infer Trade instead of implicit any
+  const tradesTyped = trades as Trade[];
 
   // UI
   const [filter, setFilter] = useState<"all" | "win" | "loss" | "breakeven">("all");
   const [search, setSearch] = useState("");
   const [subTab, setSubTab] = useState<SubTab>("journal");
   const [editMode, setEditMode] = useState(false);
-  const [rowEdits, setRowEdits] = useState<Record<string, Partial<Trade>>>({});
+  // allow loose shape for edits (strings from inputs) without changing trade logic
+  const [rowEdits, setRowEdits] = useState<Record<string, Partial<Trade> & Record<string, any>>>({});
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
   const [attachments, setAttachments] = useState<Record<string, File[]>>({});
   const [pinnedOnly, setPinnedOnly] = useState(false);
@@ -205,7 +208,7 @@ export default function TradeJournal(): JSX.Element {
      Derived / filtered trades
      --------------------------- */
   const filtered = useMemo(() => {
-    let list = trades;
+    let list = tradesTyped;
     if (filter !== "all") list = list.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === filter);
     if (pinnedOnly) list = list.filter((t: Trade) => pinnedMap[getTradeId(t)] || (t as any).pinned);
     if (tagFilter) list = list.filter((t: Trade) => Array.isArray(t.tags) && t.tags.includes(tagFilter));
@@ -247,29 +250,29 @@ export default function TradeJournal(): JSX.Element {
      --------------------------- */
 
   const summary = useMemo(() => {
-    const plValues = trades.map((t) => parsePL(t.pnl));
+  const plValues = tradesTyped.map((t: Trade) => parsePL(t.pnl));
     const total = plValues.length;
-    const win = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "win").length;
-    const loss = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "loss").length;
-    const breakeven = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "breakeven").length;
-    const netPL = plValues.reduce((s, v) => s + v, 0);
-    const avgPL = total ? netPL / total : 0;
-    const winRate = total ? (win / total) * 100 : 0;
-    const winsArr = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "win").map((t) => parsePL(t.pnl));
-    const lossesArr = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "loss").map((t) => parsePL(t.pnl));
-    const avgWin = winsArr.length ? winsArr.reduce((s, v) => s + v, 0) / winsArr.length : 0;
-    const avgLoss = lossesArr.length ? lossesArr.reduce((s, v) => s + v, 0) / lossesArr.length : 0;
-    const expectancy = (winRate / 100) * avgWin - ((lossesArr.length / (total || 1)) * Math.abs(avgLoss));
-    const variance = total ? plValues.reduce((sum, v) => sum + Math.pow(v - avgPL, 2), 0) / total : 0;
+  const win = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").length;
+  const loss = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
+  const breakeven = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "breakeven").length;
+  const netPL = plValues.reduce((s: number, v: number) => s + v, 0);
+  const avgPL = total ? netPL / total : 0;
+  const winRate = total ? (win / total) * 100 : 0;
+  const winsArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").map((t: Trade) => parsePL(t.pnl));
+  const lossesArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").map((t: Trade) => parsePL(t.pnl));
+  const avgWin = winsArr.length ? winsArr.reduce((s: number, v: number) => s + v, 0) / winsArr.length : 0;
+  const avgLoss = lossesArr.length ? lossesArr.reduce((s: number, v: number) => s + v, 0) / lossesArr.length : 0;
+  const expectancy = (winRate / 100) * avgWin - ((lossesArr.length / (total || 1)) * Math.abs(avgLoss));
+  const variance = total ? plValues.reduce((sum: number, v: number) => sum + Math.pow(v - avgPL, 2), 0) / total : 0;
     const stdev = Math.sqrt(variance);
-    const consistentCount = plValues.filter((v) => Math.abs(v - avgPL) <= stdev).length;
+  const consistentCount = plValues.filter((v: number) => Math.abs(v - avgPL) <= stdev).length;
     const consistency = total ? (consistentCount / total) * 100 : 0;
 
     // sharpe-like ratio (no risk-free)
     const sharpe = stdev ? (avgPL / stdev) : 0;
 
     // average trade length
-    const lengths = trades.map((t) => {
+  const lengths = tradesTyped.map((t: Trade) => {
       try {
         const o = new Date(t.openTime as any).getTime();
         const c = new Date(t.closeTime as any).getTime();
@@ -277,7 +280,7 @@ export default function TradeJournal(): JSX.Element {
         return Math.max(0, (c - o) / (1000 * 60)); // minutes
       } catch { return 0; }
     });
-    const avgLengthMin = lengths.length ? lengths.reduce((s, v) => s + v, 0) / lengths.length : 0;
+  const avgLengthMin = lengths.length ? lengths.reduce((s: number, v: number) => s + v, 0) / lengths.length : 0;
 
     return { total, win, loss, breakeven, netPL, avgPL, winRate, consistency, expectancy, avgWin, avgLoss, stdev, sharpe, avgLengthMin };
   }, [trades]);
@@ -287,17 +290,17 @@ export default function TradeJournal(): JSX.Element {
      --------------------------- */
   const computedInsights = useMemo<Insight[]>(() => {
     try {
-      const base = generateInsights((trades as Trade[]) || []);
+      const base = generateInsights((tradesTyped || []) as Trade[] || []);
       // add more heuristics and rank
       const extra: Insight[] = [];
 
       // streak-based advice
-      const wins = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "win").length;
-      const losses = trades.filter((t) => (t.outcome ?? "").toLowerCase() === "loss").length;
+  const wins = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").length;
+  const losses = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
       if (trades.length >= 10) {
         // detect recent tilt (e.g., many losses in a short window)
-        const recent = trades.slice(-8);
-        const recentLosses = recent.filter((t) => (t.outcome ?? "").toLowerCase() === "loss").length;
+    const recent = tradesTyped.slice(-8);
+    const recentLosses = recent.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
         if (recentLosses >= 4) {
           extra.push({
             id: "tilt-warning",
@@ -309,7 +312,7 @@ export default function TradeJournal(): JSX.Element {
       }
 
       // big loss detector
-      const bigLoss = trades.map(t => parsePL(t.pnl)).filter(v => v < 0).sort((a,b)=>a-b)[0];
+  const bigLoss = tradesTyped.map((t: Trade) => parsePL(t.pnl)).filter((v: number) => v < 0).sort((a,b)=>a-b)[0];
       if (bigLoss && Math.abs(bigLoss) > Math.abs(summary.avgWin) * 3) {
         extra.push({
           id: "big-loss",
@@ -360,7 +363,7 @@ export default function TradeJournal(): JSX.Element {
     const calMap: Record<string, { trades: number; net: number }> = {};
     const stratMap: Record<string, { trades: number; wins: number; losses: number; netPL: number }> = {};
 
-    for (const t of trades as Trade[]) {
+  for (const t of tradesTyped) {
       const sym = t.symbol ?? "N/A";
       bySymbol[sym] ??= { count: 0, win: 0, loss: 0, pl: 0 };
       bySymbol[sym].count += 1;
@@ -369,7 +372,7 @@ export default function TradeJournal(): JSX.Element {
       if (outcome === "loss") bySymbol[sym].loss += 1;
       bySymbol[sym].pl += parsePL(t.pnl);
 
-      const dt = new Date(t.openTime as any);
+  const dt = new Date(t.openTime as any);
       const valid = !isNaN(dt.getTime());
       const dow = valid ? format(dt, "EEE") : "—";
       byDOW[dow] ??= { count: 0, pl: 0 };
@@ -380,9 +383,9 @@ export default function TradeJournal(): JSX.Element {
         const h = dt.getUTCHours();
         hours[h].trades += 1;
         hours[h].pl += parsePL(t.pnl);
-        const bucket = h >=0 && h < 7 ? "asia" : h >=7 && h <12 ? "london" : h >=12 && h <20 ? "newyork" : "other";
-        sessions[bucket as any].count += 1;
-        sessions[bucket as any].pl += parsePL(t.pnl);
+  const bucket: "asia" | "london" | "newyork" | "other" = h >=0 && h < 7 ? "asia" : h >=7 && h <12 ? "london" : h >=12 && h <20 ? "newyork" : "other";
+  sessions[bucket].count += 1;
+  sessions[bucket].pl += parsePL(t.pnl);
         const dayKey = format(dt, "yyyy-MM-dd");
         calMap[dayKey] ??= { trades: 0, net: 0 };
         calMap[dayKey].trades += 1;
@@ -397,7 +400,7 @@ export default function TradeJournal(): JSX.Element {
       stratMap[strat].netPL += parsePL(t.pnl);
     }
 
-    const topSymbols = Object.entries(bySymbol).sort((a,b)=> b[1].count - a[1].count).slice(0,8).map(([sym,s])=>({
+  const topSymbols = Object.entries(bySymbol).sort((a,b)=> b[1].count - a[1].count).slice(0,8).map(([sym,s])=>({
       symbol: sym,
       trades: s.count,
       winRate: s.count ? (s.win/s.count)*100 : 0,
@@ -413,7 +416,7 @@ export default function TradeJournal(): JSX.Element {
 
   const charts = useMemo(() => {
     // order trades chronologically ascending
-    const ordered = [...trades].sort((a,b)=> new Date(a.openTime as any).getTime() - new Date(b.openTime as any).getTime());
+    const ordered = [...tradesTyped].sort((a,b)=> new Date(a.openTime as any).getTime() - new Date(b.openTime as any).getTime());
     const labels = ordered.map(t => format(new Date(t.openTime as any), "MMM d"));
     const cumPnlArr: number[] = [];
     let cum = 0;
@@ -423,12 +426,12 @@ export default function TradeJournal(): JSX.Element {
     }
 
     // rolling win rate (window 20)
-    const winArr = ordered.map(t => (String(t.outcome).toLowerCase() === "win" ? 1 : 0));
+  const winArr: number[] = ordered.map((t: Trade) => (String(t.outcome).toLowerCase() === "win" ? 1 : 0));
     const rollingWindow = 20;
     const rolling = winArr.map((_, idx) => {
       const start = Math.max(0, idx - rollingWindow + 1);
       const slice = winArr.slice(start, idx + 1);
-      const avg = slice.reduce((s,v)=>s+v,0) / (slice.length || 1);
+  const avg = slice.reduce((s:number,v:number)=>s+v,0) / (slice.length || 1);
       return +(avg*100).toFixed(2);
     });
 
@@ -461,7 +464,7 @@ export default function TradeJournal(): JSX.Element {
     };
 
     // histogram of PnL buckets
-    const pnls = ordered.map(t => parsePL(t.pnl));
+  const pnls = ordered.map((t: Trade) => parsePL(t.pnl));
     const bucketCount = 12;
     const min = Math.min(...(pnls.length ? pnls : [0]));
     const max = Math.max(...(pnls.length ? pnls : [0]));
@@ -530,8 +533,8 @@ export default function TradeJournal(): JSX.Element {
      --------------------------- */
   const [sltpSuggestion, setSltpSuggestion] = useState<{ recommendedRR: number; note: string } | null>(null);
   useEffect(() => {
-    const wins = trades.filter(t => (t.outcome ?? "").toLowerCase() === "win").map(t => parsePL(t.pnl));
-    const losses = trades.filter(t => (t.outcome ?? "").toLowerCase() === "loss").map(t => parsePL(t.pnl));
+    const wins = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").map((t: Trade) => parsePL(t.pnl));
+    const losses = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").map((t: Trade) => parsePL(t.pnl));
     const avgWin = wins.length ? wins.reduce((s,v)=>s+v,0)/wins.length : 0;
     const avgLoss = losses.length ? losses.reduce((s,v)=>s+v,0)/losses.length : 0;
     let recommendedRR = 1;
@@ -547,7 +550,7 @@ export default function TradeJournal(): JSX.Element {
     const ids = Object.entries(selected).filter(([_,v])=>v).map(([id])=>id);
     if (!ids.length) { alert("No selected trades"); return; }
     ids.forEach(id => {
-      const t = trades.find(x => getTradeId(x) === id);
+      const t = tradesTyped.find((x: Trade) => getTradeId(x) === id);
       if (!t) return;
       setRowEdits(prev => ({...prev, [id]: { ...(prev[id]||{}), rr: String(rr) }}));
       try { (updateTrade as any)?.(id, { ...(t as any), rr: String(rr) }); } catch {}
@@ -573,10 +576,10 @@ export default function TradeJournal(): JSX.Element {
 
   // detect revenge trading: consecutive increasing size after losses (heuristic: look for increasing absolute PnL losses followed by larger trades)
   const revengeDetector = useMemo(() => {
-    if (trades.length < 5) return { flagged: false, reason: "" };
+    if (tradesTyped.length < 5) return { flagged: false, reason: "" };
     // check last 5 trades: if a loss streak >2 followed by a larger risk trade (by |pnl|) flagged
-    const last = trades.slice(-6);
-    const losses = last.filter(t => parsePL(t.pnl) < 0);
+    const last: Trade[] = tradesTyped.slice(-6);
+    const losses = last.filter((t: Trade) => parsePL(t.pnl) < 0);
     const lossConsec = (() => {
       let c = 0, max = 0;
       for (const t of last) {
@@ -584,7 +587,7 @@ export default function TradeJournal(): JSX.Element {
       }
       return max;
     })();
-    const increasedRisk = last.some(t => Math.abs(parsePL(t.pnl)) > Math.abs(summary.avgLoss) * 1.5);
+  const increasedRisk = last.some((t: Trade) => Math.abs(parsePL(t.pnl)) > Math.abs(summary.avgLoss) * 1.5);
     if (lossConsec >= 3 && increasedRisk) {
       return { flagged: true, reason: `Detected ${lossConsec} consecutive losses and one or more larger-than-average trades — possible revenge trading.` };
     }
@@ -795,7 +798,7 @@ export default function TradeJournal(): JSX.Element {
           {editMode ? (
             <input type="number" step="0.01" className="w-full rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
               defaultValue={String(patch.pnl ?? t.pnl ?? 0)}
-              onChange={(e)=> setRowEdits(prev=> ({...prev, [id]: {...(prev[id]||{}), pnl: e.target.value}}))}
+              onChange={(e)=> setRowEdits(prev=> ({...prev, [id]: {...(prev[id]||{}), pnl: e.target.value as any}}))}
             />
           ) : (
             <span className={`${parsePL(t.pnl) >= 0 ? "text-green-400" : "text-red-400"} font-semibold`}>${parsePL(t.pnl).toFixed(2)}</span>

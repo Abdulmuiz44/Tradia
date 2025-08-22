@@ -64,7 +64,7 @@ async function safeQuery<T = Record<string, unknown>>(
     throw new Error("DB pool not available");
   }
 
-  const qPromise = pool.query<T>(text, params);
+  const qPromise = (pool.query as any)(text, params);
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("DB_QUERY_TIMEOUT")), timeoutMs)
   );

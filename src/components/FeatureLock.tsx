@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   children: React.ReactNode;
-  requiredPlan?: "plus" | "premium" | "pro";
+  requiredPlan?: "plus" | "premium" | "pro" | "elite";
   blurMode?: boolean; // If true, blur the feature instead of hiding it
 };
 
@@ -17,17 +17,18 @@ export default function FeatureLock({
   requiredPlan = "plus",
   blurMode = true,
 }: Props) {
-  const { user } = useUser();
+  const { plan } = useUser();
   const [open, setOpen] = useState(false);
 
   const planLevels = {
     free: 0,
     plus: 1,
-    premium: 2,
-    pro: 3,
+  premium: 2,
+  pro: 3,
+  elite: 4,
   };
 
-  const userLevel = planLevels[user?.plan || "free"];
+  const userLevel = planLevels[plan];
   const requiredLevel = planLevels[requiredPlan];
 
   const isLocked = userLevel < requiredLevel;

@@ -79,7 +79,13 @@ const PREVIEW_LIMIT = 20;
  */
 const PapaLib: any = ((Papa as unknown) && (Papa as any).parse ? (Papa as any) : (Papa as any).default ?? Papa) as any;
 
-export default function CsvUpload(): React.ReactElement {
+type CsvUploadProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+  onImport?: (imported: Partial<Trade>[]) => void;
+};
+
+export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledOnClose, onImport: controlledOnImport }: CsvUploadProps): React.ReactElement {
   const { setTradesFromCsv } = useContext(TradeContext) as { setTradesFromCsv: (arr: unknown[]) => void };
 
   const [open, setOpen] = useState(false);
@@ -91,6 +97,13 @@ export default function CsvUpload(): React.ReactElement {
   const [mappedHeaders, setMappedHeaders] = useState<Record<string, string>>({});
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
+
+  // sync controlled open prop if provided
+  useEffect(() => {
+    if (typeof controlledOpen === "boolean") {
+      setOpen(controlledOpen);
+    }
+  }, [controlledOpen]);
 
   useEffect(() => {
     if (!open) {
@@ -287,6 +300,21 @@ export default function CsvUpload(): React.ReactElement {
       setTimeout(() => {
         setOpen(false);
         setParsing(false);
+        // notify parent if controlled
+        if (typeof controlledOnImport === "function") {
+          try {
+            controlledOnImport(mappedForImport as Partial<Trade>[]);
+          } catch (e) {
+            console.warn("onImport handler threw", e);
+          }
+        }
+        if (typeof controlledOnClose === "function") {
+          try {
+            controlledOnClose();
+          } catch (e) {
+            console.warn("onClose handler threw", e);
+          }
+        }
       }, 220);
     } catch (err) {
       console.error("Import error", err);
@@ -345,13 +373,19 @@ export default function CsvUpload(): React.ReactElement {
 
   return (
     <div>
-      <Button onClick={() => setOpen(true)} className="mt-4">
-        Upload CSV
-      </Button>
+      {/* If parent controls open state, don't render the trigger button here */}
+      {typeof controlledOpen !== "boolean" && (
+        <Button onClick={() => setOpen(true)} className="mt-4">
+          Upload CSV
+        </Button>
+      )}
 
       <Modal
         isOpen={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          if (typeof controlledOnClose === "function") controlledOnClose();
+        }}
         title="Upload trade CSV / XLSX"
         description="We will attempt to auto-map file columns to trade fields. Preview then import."
       >

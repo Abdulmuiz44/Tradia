@@ -204,7 +204,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   // --- Add / update / delete ---
   const addTrade = (newTrade: Trade) => {
     setTrades((prev) => {
-      const prevIds = new Set(prev.map((p) => p.id));
+  const prevIds = new Set(prev.map((p) => String(p.id)).filter(Boolean));
       const id = newTrade.id && !prevIds.has(newTrade.id) ? newTrade.id : generateUniqueId(prevIds);
       return [...prev, { ...newTrade, id } as Trade];
     });
@@ -261,11 +261,10 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
     setTrades((prev) => {
       const byId = new Map<string, Trade>();
-      const prevIds = new Set<string>();
+      const prevIds = new Set<string>(prev.map(p => String(p.id)).filter(Boolean));
       prev.forEach((p) => {
         if (p.id) {
-          byId.set(p.id, p);
-          prevIds.add(p.id);
+          byId.set(String(p.id), p as Trade);
         } else {
           const newId = generateUniqueId(prevIds);
           prevIds.add(newId);

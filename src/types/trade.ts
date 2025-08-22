@@ -23,4 +23,16 @@ export interface Trade {
   journalNotes?: string;
   notes?: string;
   raw?: unknown;
+  // common optional fields used across components / imports
+  tags?: string[];
+  reviewed?: boolean;
+  pinned?: boolean;
+  postNote?: string;
+  executionRating?: number;
+  updated_at?: string;
+  // common shorthand fields (SL/TP/rr used in UI/imports)
+  SL?: string | number;
+  TP?: string | number;
+  exitPrice?: string | number;
+  note?: string;
 }

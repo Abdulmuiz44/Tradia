@@ -103,7 +103,7 @@ const testimonials: { name: string; quote: string }[] = [
   },
 ];
 
-export default function PricingPlans(): JSX.Element {
+export default function PricingPlans(): React.ReactElement {
   const { plan, setPlan } = useUser();
   const [billingType, setBillingType] = useState<BillingType>("monthly");
   const router = useRouter();
@@ -131,8 +131,8 @@ export default function PricingPlans(): JSX.Element {
   };
 
   const handleUpgrade = (selectedPlan: PlanName) => {
-    // setPlan expects string in your UserContext — cast safely
-    setPlan(selectedPlan as unknown as string);
+  // setPlan expects PlanType from UserContext — cast to PlanType (no runtime change)
+  setPlan(selectedPlan as unknown as import("@/context/UserContext").PlanType);
     const trialDays = selectedPlan === "free" ? 0 : 7; // keep 7-day trial consistent with app/page.tsx
     router.push(`/checkout?plan=${selectedPlan}&billing=${billingType}&trial=${trialDays}`);
   };

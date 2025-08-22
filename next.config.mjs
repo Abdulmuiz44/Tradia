@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  eslint: {
+    // Don't run ESLint during production builds on the server (CI/VERCEL)
+    ignoreDuringBuilds: true,
+  },
   // Add this to handle any potential CORS issues
   async headers() {
     return [

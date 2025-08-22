@@ -56,7 +56,8 @@ async function safeQuery<T = Record<string, unknown>>(
   if (!pool || typeof pool.query !== "function") {
     throw new Error("DB pool not available");
   }
-  const qPromise = pool.query<T>(text, params);
+  // cast to any to avoid depending on pg's generic QueryResult type here
+  const qPromise = (pool.query as any)(text, params) as Promise<any>;
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("DB_QUERY_TIMEOUT")), timeoutMs)
   );
@@ -125,15 +126,10 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async signIn({
-      user,
-      account,
-      profile,
-    }: {
-      user?: Record<string, unknown>;
-      account?: Record<string, unknown> | null;
-      profile?: Record<string, unknown> | null;
-    }) {
+  // use permissive `any` parameter types for callbacks to avoid strict NextAuth
+  // type incompatibilities with the project's DB/user shapes
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async signIn({ user, account, profile }: any) {
       try {
         if (account?.provider === "google") {
           const provider = getString(account, "provider") ?? "google";
@@ -212,7 +208,8 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-    async jwt({ token, user }: { token: Record<string, unknown>; user?: Record<string, unknown> }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async jwt({ token, user }: any) {
       try {
         const incomingUserId = getString(user, "id");
         if (incomingUserId) {
@@ -253,7 +250,8 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-    async session({ session, token }: { session: Record<string, unknown>; token: Record<string, unknown> }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async session({ session, token }: any) {
       try {
         if (!session.user || typeof session.user !== "object") session.user = {};
         const su = session.user as Record<string, unknown>;

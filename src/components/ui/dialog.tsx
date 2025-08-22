@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = ({ className, ...props }: DialogPrimitive.DialogPortalProps) => (
-  <DialogPrimitive.Portal {...props} />
+type PortalPropsWithClass = DialogPrimitive.DialogPortalProps & { className?: string };
+
+const DialogPortal = ({ className, ...props }: PortalPropsWithClass) => (
+  <DialogPrimitive.Portal {...(props as any)} className={className} />
 );
 
 const DialogOverlay = React.forwardRef<

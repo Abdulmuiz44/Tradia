@@ -26,7 +26,13 @@ export default function Navbar() {
     { label: "About", href: "/about" },
   ];
 
-  const authLinks = session
+  interface AuthLink {
+    label: string;
+    href: string;
+    onClick?: () => Promise<undefined>;
+  }
+
+  const authLinks: AuthLink[] = session
     ? [
         { label: "Log Out", href: "#", onClick: () => signOut() },
       ]
@@ -68,7 +74,12 @@ export default function Navbar() {
           <Link
             key={label}
             href={href}
-            onClick={onClick}
+            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              if (onClick) {
+                e.preventDefault();
+                onClick();
+              }
+            }}
             className="text-sm text-gray-700 dark:text-gray-300 hover:underline"
           >
             {label}
@@ -124,9 +135,12 @@ export default function Navbar() {
             <Link
               key={label}
               href={href}
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                 setMenuOpen(false);
-                onClick?.();
+                if (onClick) {
+                  e.preventDefault();
+                  onClick();
+                }
               }}
               className="text-sm text-gray-700 dark:text-gray-300 hover:underline"
             >

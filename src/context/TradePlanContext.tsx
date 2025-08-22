@@ -2,16 +2,7 @@
 
 import { createContext, useState, useEffect, useContext, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-
-export interface TradePlan {
-  id: string;
-  pair: string;
-  direction: "buy" | "sell";
-  risk: number;
-  notes: string;
-  status: "planned" | "executed";
-  createdAt: string;
-}
+import type { TradePlan } from "@/types/tradePlan";
 
 interface TradePlanContextType {
   plans: TradePlan[];

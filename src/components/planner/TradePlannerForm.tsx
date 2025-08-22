@@ -1,8 +1,8 @@
 // src/components/planner/TradePlannerForm.tsx
 "use client";
 
-import { useContext, useState } from "react";
-import { TradePlanContext } from "@/context/TradePlanContext";
+import { useState } from "react";
+import { useTradePlan } from "@/context/TradePlanContext";
 import { TradePlan } from "@/types/tradePlan";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ const defaultFormState = (): TradePlanFormState => ({
 });
 
 const TradePlannerForm = () => {
-  const { addPlan } = useContext(TradePlanContext);
+  const { addPlan } = useTradePlan();
 
   const [form, setForm] = useState<TradePlanFormState>(defaultFormState());
 
@@ -59,7 +59,7 @@ const TradePlannerForm = () => {
       id: typeof crypto !== "undefined" && typeof (crypto as unknown as { randomUUID?: () => string }).randomUUID === "function"
         ? (crypto as unknown as { randomUUID: () => string }).randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-      status: "Planned",
+      status: "planned",
     };
 
     addPlan(newPlan);
@@ -157,7 +157,7 @@ const TradePlannerForm = () => {
       <div className="space-y-2">
         <Label>Confidence Level: {form.confidence}%</Label>
         <Slider
-          defaultValue={[form.confidence]}
+          defaultValue={[form.confidence ?? 50]}
           max={100}
           step={1}
           onValueChange={(val: number[]) => handleChange("confidence", val[0])}

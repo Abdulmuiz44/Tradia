@@ -12,7 +12,7 @@ interface ExportButtonsProps {
   data: ReadonlyArray<Row>;
 }
 
-export default function ExportButtons({ data }: ExportButtonsProps): JSX.Element {
+export default function ExportButtons({ data }: ExportButtonsProps): React.ReactElement {
   const exportExcel = (): void => {
     const ws = utils.json_to_sheet<Row>([...data]);
     const wb = utils.book_new();

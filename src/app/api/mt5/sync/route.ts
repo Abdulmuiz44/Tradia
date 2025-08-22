@@ -60,10 +60,10 @@ export async function POST(req: Request) {
     if (!metaapiAccountId)
       return NextResponse.json({ error: "Account not connected to MetaApi" }, { status: 400 });
 
-    // initialize MetaApi client
-    const metaApi = getMetaApi();
-    const mtAccountApi = metaApi.metatraderAccountApi;
-    const account = await mtAccountApi.getAccount(metaapiAccountId);
+  // initialize MetaApi client (lazy import to avoid browser/global eval at module load)
+  const metaApi = await getMetaApi();
+  const mtAccountApi = metaApi.metatraderAccountApi;
+  const account = await mtAccountApi.getAccount(metaapiAccountId);
     const rpc = await account.getRPCConnection();
     if (!rpc.isConnected()) await rpc.connect();
 

@@ -11,7 +11,8 @@ import { Pencil, Trash2, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function TradePlannerTable() {
-  const { plans, deletePlan, updatePlan } = useContext(TradePlanContext);
+  const ctx = useContext(TradePlanContext)!;
+  const { plans, deletePlan, updatePlan, markExecuted } = ctx;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editableData, setEditableData] = useState<Partial<TradePlan>>({});
@@ -23,14 +24,15 @@ export default function TradePlannerTable() {
 
   const handleSave = () => {
     if (editingId && editableData) {
-      updatePlan({ ...editableData, id: editingId } as TradePlan);
+  updatePlan(editingId, editableData as any);
       setEditingId(null);
       setEditableData({});
     }
   };
 
   const handleMarkExecuted = (plan: TradePlan) => {
-    updatePlan({ ...plan, status: "Executed" });
+    // use markExecuted to update status consistently
+    markExecuted(plan.id);
   };
 
   return (
@@ -44,12 +46,13 @@ export default function TradePlannerTable() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={cn(
+                className={cn(
                 "p-4 rounded-2xl border border-muted bg-background shadow-sm space-y-3 transition-colors",
-                {
+                // status uses lowercase values; cast dynamic map to any for cn()
+                ({
                   "bg-green-50 dark:bg-green-900/10 border-green-300 dark:border-green-800":
-                    plan.status === "Executed",
-                }
+                    plan.status === "executed",
+                } as any)
               )}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -109,9 +112,9 @@ export default function TradePlannerTable() {
                       className={cn(
                         "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
                         {
-                          "bg-yellow-100 text-yellow-700": plan.status === "Planned",
-                          "bg-green-100 text-green-700": plan.status === "Executed",
-                        }
+                          "bg-yellow-100 text-yellow-700": plan.status === "planned",
+                          "bg-green-100 text-green-700": plan.status === "executed",
+                        } as any
                       )}
                     >
                       {plan.status}
@@ -140,7 +143,7 @@ export default function TradePlannerTable() {
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
-                      {plan.status !== "Executed" && (
+                      {plan.status !== "executed" && (
                         <Button
                           size="icon"
                           variant="ghost"
