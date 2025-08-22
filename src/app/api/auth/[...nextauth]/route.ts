@@ -91,9 +91,11 @@ const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
+        // cast to any to attach custom fields set in jwt callback
+        const su: any = session.user as any;
+        su.id = token.id as string;
+        su.email = token.email as string;
+        su.name = token.name as string;
       }
       return session;
     },
