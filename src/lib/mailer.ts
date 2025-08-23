@@ -12,7 +12,7 @@ function getAppOrigin() {
 export async function sendVerificationEmail(to: string, token: string) {
   // Build verification URL using token provided by caller
   const origin = getAppOrigin();
-  const verifyUrl = `${origin}/api/verify-email?token=${encodeURIComponent(
+  const verifyUrl = `${origin}/api/auth/verify-email?token=${encodeURIComponent(
     token
   )}`;
 
