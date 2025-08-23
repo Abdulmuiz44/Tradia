@@ -149,24 +149,21 @@ function DashboardContent() {
       return;
     }
 
-    // Check server JWT cookie (name: session)
+    // Simpler cookie-based JWT check: only look for session or app_token JWTs
     try {
-      const token = getCookie('session') || getCookie('app_token') || getCookie('refresh_token');
+      const token = getCookie('session') || getCookie('app_token');
       if (token) {
         const payload = parseJwtPayload(token);
-        if (payload && payload.email_verified) {
-          setIsAuthed(true);
-        } else {
-          setIsAuthed(false);
-        }
+        setIsAuthed(Boolean(payload?.email_verified));
       } else {
         setIsAuthed(false);
       }
     } catch (err) {
       console.error('Auth cookie parse error:', err);
       setIsAuthed(false);
+    } finally {
+      setAuthChecked(true);
     }
-    setAuthChecked(true);
   }, [session]);
 
   // Wait until we've evaluated auth info client-side
