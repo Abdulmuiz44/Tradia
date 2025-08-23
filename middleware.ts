@@ -2,52 +2,61 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import jwt from "jsonwebtoken"; // <--- make sure installed
+import jwt from "jsonwebtoken";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // same secret you used to sign tokens
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // MUST match server-side JWT signing secret
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const pathname = req.nextUrl.pathname;
 
-  // Supabase client (if you still want to support Supabase auth)
+  // Supabase client (optional if you still support Supabase sessions)
   const supabase = createMiddlewareClient({ req, res });
 
+  // 1) Try Supabase session/user
   let supabaseUser = null;
   try {
     const { data } = await supabase.auth.getUser();
     supabaseUser = data?.user ?? null;
-  } catch (err) {
+  } catch {
     supabaseUser = null;
   }
 
-  // Try NextAuth token
+  // 2) Try NextAuth token (optional)
   let nextAuthToken = null;
   try {
-    nextAuthToken = await getToken({ req }) ?? null;
-  } catch (err) {
+    nextAuthToken = (await getToken({ req })) ?? null;
+  } catch {
     nextAuthToken = null;
   }
 
-  // Try custom JWT from Authorization header or cookie
+  // 3) Try custom JWT token from common places (Authorization header or cookies)
   let customJwtPayload: any = null;
   const authHeader = req.headers.get("authorization");
-  const cookieToken = req.cookies.get("app_token")?.value; // adjust name if you use a cookie
-  const rawToken = authHeader?.replace("Bearer ", "") || cookieToken;
+  // Check several cookie names that might be used by your app (robust)
+  const cookieCandidates = [
+    req.cookies.get("session")?.value,
+    req.cookies.get("app_token")?.value,
+    req.cookies.get("access_token")?.value,
+  ].filter(Boolean);
+
+  const rawToken = authHeader?.replace("Bearer ", "") || cookieCandidates[0] || null;
 
   if (rawToken) {
     try {
       customJwtPayload = jwt.verify(rawToken, JWT_SECRET);
     } catch (err) {
-      console.error("Invalid custom JWT:", err);
+      // invalid/expired token — silently ignore (treated as unauthenticated)
+      console.error("middleware: invalid custom JWT:", (err as any)?.message ?? err);
+      customJwtPayload = null;
     }
   }
 
-  // Auth detection
+  // Determine "is authenticated"
   const isAuth = Boolean(supabaseUser || nextAuthToken || customJwtPayload);
 
-  // Email verification detection
+  // Determine "is email verified"
   const supabaseEmailVerified =
     Boolean(
       supabaseUser &&
@@ -62,11 +71,9 @@ export async function middleware(req: NextRequest) {
         ((nextAuthToken as any).emailVerified || (nextAuthToken as any).email_verified)
     ) ?? false;
 
-  const customEmailVerified =
-    Boolean(customJwtPayload?.email_verified) ?? false;
+  const customEmailVerified = Boolean(customJwtPayload?.email_verified) ?? false;
 
-  const isEmailVerified =
-    supabaseEmailVerified || nextAuthEmailVerified || customEmailVerified;
+  const isEmailVerified = supabaseEmailVerified || nextAuthEmailVerified || customEmailVerified;
 
   // Path checks
   const isDashboard = pathname.startsWith("/dashboard");
