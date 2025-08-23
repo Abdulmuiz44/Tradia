@@ -1,6 +1,6 @@
 // app/api/verify-email/route.ts
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
+import { createAdminSupabase } from "@/utils/supabase/admin";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const supabase = createAdminClient();
+  const supabase = createAdminSupabase();
 
     // Lookup user by token in your "email_verification_tokens" table
     const { data: tokenRow, error: tokenError } = await supabase
