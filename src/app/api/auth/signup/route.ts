@@ -28,7 +28,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "All fields required." }, { status: 400 });
     }
 
-    const supabase = createAdminSupabase();
+    let supabase;
+    try {
+      supabase = createAdminSupabase();
+    } catch (e: unknown) {
+      console.error("Supabase admin client creation failed:", e);
+      return NextResponse.json({ error: "Server misconfiguration: missing Supabase admin key." }, { status: 500 });
+    }
 
     // check existing
     const { data: existing, error: selErr } = await supabase
