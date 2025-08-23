@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET ?? "";
 
 // Extend default NextAuth session typing
 interface SessionUser {
@@ -16,16 +19,31 @@ type SettingsBody = { settings?: unknown };
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
-    const userId =
-      (session?.user as SessionUser | undefined)?.id ?? "";
+    // Resolve user id via NextAuth or fallback to the server-side cookie-aware supabase client
+    let userId: string | undefined;
+    try {
+      const session = await getServerSession(authOptions);
+      userId = (session?.user as SessionUser | undefined)?.id ?? undefined;
+    } catch (e) {
+      // ignore
+    }
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      // Use the cookie-aware server client to ask Supabase who the current user is
+      try {
+        const supabase = createClient();
+        // supabase.auth.getUser reads the session from cookies set by the client
+        const { data: authData, error: authErr } = await (supabase.auth as any).getUser();
+        if (!authErr && authData?.user?.id) {
+          userId = String(authData.user.id);
+        }
+      } catch (e) {
+        console.error("Failed to resolve user from supabase cookie client:", e);
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createClient();
@@ -49,16 +67,31 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    const userId =
-      (session?.user as SessionUser | undefined)?.id ?? "";
+    // Resolve user id via NextAuth or fallback to JWT cookie in request
+    let userId: string | undefined;
+    try {
+      const session = await getServerSession(authOptions);
+      userId = (session?.user as SessionUser | undefined)?.id ?? undefined;
+    } catch (e) {
+      // ignore
+    }
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      const cookieHeader = req.headers.get("cookie") || "";
+      const m = cookieHeader.match(/(?:^|; *)?(?:session|app_token)=([^;]+)/);
+      const token = m ? decodeURIComponent(m[1]) : null;
+      if (token && JWT_SECRET) {
+        try {
+          const payload = jwt.verify(token, JWT_SECRET) as any;
+          if (payload && payload.sub) userId = String(payload.sub);
+        } catch (e) {
+          console.error("JWT verify failed:", e);
+        }
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json()) as SettingsBody;

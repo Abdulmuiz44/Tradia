@@ -5,6 +5,9 @@ import path from "path";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET ?? "";
 
 // Extend default NextAuth session typing
 interface SessionUser {
@@ -29,10 +32,29 @@ function asString(u: unknown): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Resolve user id from NextAuth session or fallback to our JWT cookie (session/app_token)
+    let userId: string | undefined;
+    try {
+      const session = await getServerSession(authOptions);
+      userId = (session?.user as SessionUser | undefined)?.id ?? undefined;
+    } catch (e) {
+      // ignore
+    }
 
-    const userId =
-      (session?.user as SessionUser | undefined)?.id ?? undefined;
+    // Fallback: parse cookie header and verify JWT token
+    if (!userId) {
+      const cookieHeader = req.headers.get("cookie") || "";
+      const m = cookieHeader.match(/(?:^|; *)?(?:session|app_token)=([^;]+)/);
+      const token = m ? decodeURIComponent(m[1]) : null;
+      if (token && JWT_SECRET) {
+        try {
+          const payload = jwt.verify(token, JWT_SECRET) as any;
+          if (payload && payload.sub) userId = String(payload.sub);
+        } catch (e) {
+          console.error("JWT verify failed:", e);
+        }
+      }
+    }
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
