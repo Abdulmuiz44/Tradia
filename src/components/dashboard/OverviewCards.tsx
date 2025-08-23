@@ -9,20 +9,19 @@ import {
   BarChart2,
   CheckCircle,
   XCircle,
-  Percent,
   DollarSign,
   ArrowUp,
   ArrowDown,
   Star,
   ThumbsDown,
-  Award,
+  PieChart,
+  Calendar,
   Info,
   X,
   TrendingUp,
-  PieChart,
-  Calendar,
+  Award,
 } from "lucide-react";
-import { Line, Doughnut, Bar } from "react-chartjs-2";
+import { Line, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   LineElement,
@@ -49,13 +48,12 @@ ChartJS.register(
 );
 
 interface OverviewCardsProps {
-  /** Optional trades array — if provided it overrides TradeContext trades */
   trades?: TradeType[];
   fromDate?: string;
   toDate?: string;
 }
 
-/** ---------- Helpers (robust parsing & safety) ---------- */
+/* ---------- Helpers (robust parsing & safety) ---------- */
 const toNumber = (v: unknown): number => {
   if (v === undefined || v === null || v === "") return 0;
   if (typeof v === "number") return Number.isFinite(v) ? v : 0;
@@ -117,7 +115,7 @@ function bucketCounts(values: number[], buckets: number[]): number[] {
   return counts;
 }
 
-/** RR parsing (robust) */
+/* RR parsing (robust) */
 const rrFromTrade = (t: TradeType): number => {
   const outcome = toStringSafe(getField(t, "outcome"));
   const candidates: unknown[] = [
@@ -179,7 +177,7 @@ const rrFromTrade = (t: TradeType): number => {
   return parsed !== null && Number.isFinite(parsed) ? parsed : Number.NaN;
 };
 
-/** Presentational progress bar */
+/* Presentational progress bar */
 function ProgressBar({ value, color = "bg-green-500" }: { value: number; color?: string }) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
   return (
@@ -189,7 +187,27 @@ function ProgressBar({ value, color = "bg-green-500" }: { value: number; color?:
   );
 }
 
-/** small metric explanation map */
+/* ColoredValue now accepts an optional override class so specific cards can force color */
+function ColoredValue({ value, forceClass }: { value: React.ReactNode; forceClass?: string }) {
+  let num: number | null = null;
+  if (typeof value === "number") num = value;
+  else if (typeof value === "string") {
+    const m = value.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+    if (m) num = Number(m[0]);
+  }
+  const cls = forceClass
+    ? forceClass
+    : num !== null
+    ? num > 0
+      ? "text-green-400"
+      : num < 0
+      ? "text-red-400"
+      : "text-white"
+    : "text-white";
+  return <span className={cls}>{value}</span>;
+}
+
+/* Metric explanations */
 const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
   totalTrades: { title: "Total trades", body: "Total number of trades in the selected range." },
   wins: { title: "Wins", body: "Number of trades marked as Win." },
@@ -206,34 +224,19 @@ const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
   tradiaScore: { title: "Tradia Score", body: "Composite score combining win rate, profit factor, avg RR and consistency." },
 };
 
-/** Greeting */
-const getGreeting = (name = "Abdulmuiz") => {
+const getGreeting = (name = "Trader") => {
   const hr = new Date().getHours();
   if (hr < 12) return `Good morning, ${name}`;
   if (hr < 18) return `Good afternoon, ${name}`;
   return `Good evening, ${name}`;
 };
 
-/** Format value and color numeric results automatically */
-function ColoredValue({ value }: { value: React.ReactNode }) {
-  let num: number | null = null;
-  if (typeof value === "number") num = value;
-  else if (typeof value === "string") {
-    const m = value.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
-    if (m) num = Number(m[0]);
-  }
-  const cls = num !== null ? (num > 0 ? "text-green-400" : num < 0 ? "text-red-400" : "text-white") : "text-white";
-  return <span className={cls}>{value}</span>;
-}
-
 export default function OverviewCards({ trades: propTrades, fromDate, toDate }: OverviewCardsProps) {
-  // obtain context trades (fallback)
   const ctx = useContext(TradeContext) as any;
   const contextTrades = Array.isArray(ctx?.trades) ? (ctx.trades as TradeType[]) : [];
 
   const [mounted, setMounted] = useState(false);
 
-  // UI state
   const [pnlMode, setPnlMode] = useState<"cumulative" | "perTrade">("cumulative");
   const [showRR, setShowRR] = useState(true);
   const [showStreak, setShowStreak] = useState(true);
@@ -244,10 +247,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     setMounted(true);
   }, []);
 
-  // prefer prop trades, otherwise fallback to context
   const allTrades: TradeType[] = Array.isArray(propTrades) ? propTrades : Array.isArray(contextTrades) ? contextTrades : [];
 
-  // metrics memo
   const metrics = useMemo(() => {
     const from = fromDate && !Number.isNaN(new Date(fromDate).getTime()) ? new Date(fromDate) : new Date(-8640000000000000);
     const to = toDate && !Number.isNaN(new Date(toDate).getTime()) ? endOfDay(new Date(toDate)) : new Date(8640000000000000);
@@ -272,7 +273,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const loss = Math.abs(filtered.filter((t) => pnlOf(t) < 0).reduce((s, t) => s + pnlOf(t), 0));
     const profitFactor = loss > 0 ? profit / loss : Infinity;
 
-    // best/worst
     let best: TradeType | null = null;
     let worst: TradeType | null = null;
     for (const t of filtered) {
@@ -280,13 +280,11 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       if (!worst || pnlOf(t) < pnlOf(worst)) worst = t;
     }
 
-    // trades/day
     const times = filtered.map((t) => tradeTime(t)).filter(Boolean) as Date[];
     times.sort((a, b) => a.getTime() - b.getTime());
     const days = times.length > 1 ? differenceInCalendarDays(times[times.length - 1]!, times[0]!) + 1 : times.length === 1 ? 1 : 0;
     const tradesPerDay = days ? (total / days).toFixed(2) : "0.00";
 
-    // most traded
     const symCounts = filtered.reduce<Record<string, number>>((acc, t) => {
       const s = toStringSafe(getField(t, "symbol")) || "N/A";
       acc[s] = (acc[s] || 0) + 1;
@@ -294,7 +292,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     }, {});
     const mostTraded = Object.entries(symCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A";
 
-    // RR values
     const rrVals = filtered.map(rrFromTrade).filter((v) => Number.isFinite(v));
     const avgRR = rrVals.length ? rrVals.reduce((s, v) => s + v, 0) / rrVals.length : 0;
     const rrBucketsEdges = [-5, -1, 0, 0.5, 1, 1.5, 2, 3, 5];
@@ -304,13 +301,11 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const totalSLCount = rrVals.filter((r) => r === -1).length;
     const profitRR = totalTP - totalSLCount;
 
-    // chronological & pnl
     const chrono = [...filtered].sort((a, b) => (tradeTime(a)?.getTime() ?? 0) - (tradeTime(b)?.getTime() ?? 0));
     const labelsChrono = chrono.map((t) => (tradeTime(t) ? format(tradeTime(t)!, "MMM d") : ""));
     const perTradePnls = chrono.map((t) => pnlOf(t));
     const cumPnls = perTradePnls.map((_, i) => perTradePnls.slice(0, i + 1).reduce((s, v) => s + v, 0));
 
-    // streaks
     const streaks: number[] = [];
     let curr = 0;
     let last: "Win" | "Loss" | null = null;
@@ -356,23 +351,20 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       acc.push(prev + v);
       return acc;
     }, []);
-    // RR over time (avg RR per day)
     const rrOverTime = dayKeys.map((k) => {
       const arr = dayMapRR.get(k) ?? [];
       if (!arr.length) return 0;
       return arr.reduce((s, v) => s + v, 0) / arr.length;
     });
 
-    // recent sparkline
     const recent = chrono.slice(-8);
     const recentLabels = recent.map((t) => (tradeTime(t) ? format(tradeTime(t)!, "d") : ""));
     const recentPnls = recent.map((t) => pnlOf(t));
 
-    // tradia score (simple heuristic)
     const consistency = days > 0 ? Math.min(1, dayKeys.length / Math.max(1, days)) : 0;
     const pfVal = Number.isFinite(profitFactor) ? profitFactor : 3;
     const tradiaScore = (() => {
-      const winScore = winRate; // 0..100
+      const winScore = winRate;
       const pfScore = Math.min(3, pfVal) / 3 * 100;
       const ar = Math.max(-1, Math.min(3, avgRR));
       const rrScore = ((ar + 1) / 4) * 100;
@@ -380,7 +372,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       return Math.round(Math.max(0, Math.min(100, score)));
     })();
 
-    // charts
     const doughnutData = {
       labels: ["Wins", "Losses", "Breakeven"],
       datasets: [{ data: [wins, losses, breakevens], backgroundColor: ["#16a34a", "#ef4444", "#94a3b8"] }],
@@ -406,7 +397,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       ],
     };
     const rrOverTimeData = {
-      labels: dailyLabels,
+      labels: dayKeys,
       datasets: [
         {
           label: "Avg RR / day",
@@ -485,7 +476,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     };
   }, [allTrades, fromDate, toDate, pnlMode]);
 
-  // equity data (unconditional hook)
   const equityData = useMemo(() => {
     const d = metrics.pnlLineData;
     const dataset = Array.isArray(d.datasets) ? d.datasets[0] : undefined;
@@ -505,11 +495,13 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     };
   }, [metrics.pnlLineData]);
 
-  // render guard
   if (!mounted) return null;
 
-  // styling helpers
-  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg";
+  // center container
+  const containerClass = "space-y-5 px-2 sm:px-0 max-w-7xl mx-auto";
+
+  // card base with border + subtle left accent space reserved
+  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg border border-zinc-700";
   const positiveClass = "text-green-400";
   const negativeClass = "text-red-400";
   const neutralClass = "text-white";
@@ -517,7 +509,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const greeting = getGreeting("Abdulmuiz");
   const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 
-  // explanation modal
   const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
     if (!k) return null;
     const def = METRIC_EXPLANATIONS[k] ?? { title: k, body: "No explanation available." };
@@ -539,7 +530,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     );
   };
 
-  // metric card renderer with colored numeric detection
+  // render metric card accepts optional valueClass to force coloring for non-numeric metrics like loss counts
   const renderMetricCard = (opts: {
     keyId: string;
     icon: React.ReactNode;
@@ -547,6 +538,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     value: React.ReactNode;
     small?: React.ReactNode;
     color?: string;
+    valueClass?: string;
   }) => {
     const leftColor = opts.color ?? "#0ea5a4";
     return (
@@ -558,7 +550,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
             <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="text-xs text-zinc-400">{opts.title}</div>
-                <div className="text-lg font-semibold"><ColoredValue value={opts.value} /></div>
+                <div className="text-lg font-semibold">
+                  <ColoredValue value={opts.value} forceClass={opts.valueClass} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="text-xs text-zinc-400 hidden sm:block">{opts.small}</div>
@@ -574,123 +568,129 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     );
   };
 
-  // --- PROGRESS TRACKER helper (non-hook) ---
+  /* ---------- PROGRESS CALENDAR (GitHub-like, last 52 weeks / 1 year) ---------- */
   function ProgressCalendarCard() {
-    // build map day->value
+    // build a date->value map using metrics.dailyLabels and metrics.dailyNet
     const dailyMap = new Map<string, number>();
     (metrics.dailyLabels || []).forEach((k, i) => {
       dailyMap.set(k, metrics.dailyNet?.[i] ?? 0);
     });
 
-    if (!metrics.dailyLabels || metrics.dailyLabels.length === 0) {
-      return (
-        <div className={`${cardBase}`}>
-          <div className="text-sm font-semibold mb-2">Progress Tracker</div>
-          <div className="text-xs text-zinc-400">No daily data available for the selected range.</div>
-        </div>
-      );
+    // compute last Sunday as start of first column
+    const today = new Date();
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365 + 1);
+
+    // find Sunday on or before oneYearAgo
+    const start = new Date(oneYearAgo);
+    const dayOfWeek = start.getDay(); // 0..6
+    start.setDate(start.getDate() - dayOfWeek);
+
+    // generate 53 weeks, 7 rows (Sunday->Saturday)
+    const weeks = 53;
+    const cells: { date: Date; value: number }[] = [];
+    for (let w = 0; w < weeks; w++) {
+      for (let d = 0; d < 7; d++) {
+        const dt = new Date(start);
+        dt.setDate(start.getDate() + w * 7 + d);
+        const key = dt.toISOString().slice(0, 10);
+        const val = dailyMap.get(key) ?? 0;
+        cells.push({ date: dt, value: val });
+      }
     }
 
-    // date range
-    const start = new Date(metrics.dailyLabels[0]);
-    const end = new Date(metrics.dailyLabels[metrics.dailyLabels.length - 1]);
-    // generate list of days inclusive
-    const totalDays = differenceInCalendarDays(end, start) + 1;
-    const days: Date[] = [];
-    for (let i = 0; i < totalDays; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      days.push(d);
-    }
+    // compute absolute max for intensity
+    const absVals = Array.from(dailyMap.values()).map((v) => Math.abs(v));
+    const maxAbs = Math.max(...absVals, 1);
 
-    // compute max abs for color intensity (avoid zero)
-    const absVals = (metrics.dailyNet || []).map((v) => Math.abs(v));
-    const maxAbs = Math.max(...absVals, Math.abs(metrics.totalPnl || 0) / 6, 1);
-
-    // week grid: show with 7 columns (Sunday->Saturday)
-    const cells: (Date | null)[] = [];
-    const startOffset = start.getDay(); // 0..6 sunday..sat
-    for (let i = 0; i < startOffset; i++) cells.push(null);
-    for (const d of days) cells.push(d);
-    // pad to full weeks
-    while (cells.length % 7 !== 0) cells.push(null);
-
-    // helper color
-    const cellStyle = (val: number | null) => {
-      if (val === null) return "bg-transparent border border-transparent";
+    const cellClass = (val: number) => {
+      if (val === 0) return "bg-zinc-800/40 border border-zinc-700";
+      // positive => green shades; negative => red shades
+      const intensity = Math.min(1, Math.abs(val) / maxAbs);
+      const level = Math.ceil(intensity * 4); // 1..4
       if (val > 0) {
-        const intensity = Math.min(1, val / maxAbs);
-        const alpha = 0.15 + intensity * 0.6;
-        return `bg-[rgba(16,185,129,${alpha})]`;
+        // green shades
+        switch (level) {
+          case 1:
+            return "bg-[rgba(110,231,183,0.30)] border border-[rgba(110,231,183,0.16)]";
+          case 2:
+            return "bg-[rgba(52,211,153,0.45)] border border-[rgba(52,211,153,0.16)]";
+          case 3:
+            return "bg-[rgba(16,185,129,0.6)] border border-[rgba(16,185,129,0.16)]";
+          default:
+            return "bg-[rgba(5,150,105,0.85)] border border-[rgba(5,150,105,0.16)]";
+        }
+      } else {
+        switch (level) {
+          case 1:
+            return "bg-[rgba(249,205,190,0.28)] border border-[rgba(249,205,190,0.12)]";
+          case 2:
+            return "bg-[rgba(248,113,113,0.45)] border border-[rgba(248,113,113,0.12)]";
+          case 3:
+            return "bg-[rgba(239,68,68,0.6)] border border-[rgba(239,68,68,0.12)]";
+          default:
+            return "bg-[rgba(185,28,28,0.85)] border border-[rgba(185,28,28,0.12)]";
+        }
       }
-      if (val < 0) {
-        const intensity = Math.min(1, Math.abs(val) / maxAbs);
-        const alpha = 0.15 + intensity * 0.6;
-        return `bg-[rgba(239,68,68,${alpha})]`;
-      }
-      // zero
-      return "bg-zinc-800/40";
     };
 
-    // summary: percent of monthly target already shown above; also show days profitable count
-    const profitableDays = (metrics.dailyNet || []).filter((v) => v > 0).length;
-    const losingDays = (metrics.dailyNet || []).filter((v) => v < 0).length;
-    const breakevenDays = (metrics.dailyNet || []).filter((v) => v === 0).length;
+    // legend scale
+    const legend = [
+      { label: "Less", cls: "bg-zinc-800/40 border border-zinc-700" },
+      { label: "Low", cls: "bg-[rgba(110,231,183,0.30)]" },
+      { label: "Medium", cls: "bg-[rgba(52,211,153,0.45)]" },
+      { label: "High", cls: "bg-[rgba(16,185,129,0.6)]" },
+      { label: "Very High", cls: "bg-[rgba(5,150,105,0.85)]" },
+    ];
 
     return (
-      <div className={`${cardBase}`}>
-        <div className="flex items-center justify-between mb-2">
+      <div className={cardBase}>
+        <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-sm font-semibold">Progress Tracker</div>
-            <div className="text-xs text-zinc-400">Daily net heatmap — hover for values</div>
+            <div className="text-xs text-zinc-400">Year view — daily net heatmap (green = profit, red = loss)</div>
           </div>
           <div className="text-xs text-zinc-400">Target: ${monthlyTarget}</div>
         </div>
 
-        {/* mini calendar grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {/* optional: show weekday headers */}
-          {["S", "M", "T", "W", "T", "F", "S"].map((wd, idx) => (
-            <div key={`${wd}-${idx}`} className="text-xs text-zinc-500 text-center">{wd}</div>
-          ))}
-
-          {cells.map((d, i) => {
-            if (!d) {
-              return <div key={`pad-${i}`} className="h-8 w-8 rounded" />;
-            }
-            const key = d.toISOString().slice(0, 10);
-            const val = dailyMap.has(key) ? dailyMap.get(key)! : 0;
-            const cls = cellStyle(val === 0 ? null : val);
-            const title = `${format(d, "MMM d, yyyy")}: ${val >= 0 ? "+" : ""}${val.toFixed(2)}`;
-            return (
-              <div
-                key={`day-${key}`}
-                title={title}
-                className={`h-8 w-8 rounded flex items-center justify-center text-xs font-medium ${cls} border border-zinc-800`}
-              >
-                <span className="select-none">{d.getDate()}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* legend and summary */}
-        <div className="mt-3 text-xs text-zinc-400 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span className="inline-block w-3 h-3 bg-[rgba(16,185,129,0.45)] rounded" /> <span>Profit</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="inline-block w-3 h-3 bg-[rgba(239,68,68,0.45)] rounded" /> <span>Loss</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="inline-block w-3 h-3 bg-zinc-800/40 rounded border border-zinc-700" /> <span>Zero</span>
+        <div className="flex gap-4">
+          <div className="overflow-x-auto">
+            <div className="flex gap-1">
+              {/* render columns as vertical groups of 7 */}
+              {Array.from({ length: weeks }).map((_, colIdx) => (
+                <div key={`week-${colIdx}`} className="flex flex-col gap-1">
+                  {Array.from({ length: 7 }).map((__, rowIdx) => {
+                    const idx = colIdx * 7 + rowIdx;
+                    const cell = cells[idx];
+                    const isFuture = cell.date > new Date();
+                    const title = `${format(cell.date, "MMM d, yyyy")}: ${cell.value >= 0 ? "+" : ""}${cell.value.toFixed(2)}`;
+                    return (
+                      <div
+                        key={`cell-${colIdx}-${rowIdx}`}
+                        title={title}
+                        className={`w-3 h-3 rounded-sm ${isFuture ? "opacity-30" : ""} ${cellClass(cell.value)}`}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="text-right">
-            <div>Profitable days: <span className="font-medium text-green-400">{profitableDays}</span></div>
-            <div>Loss days: <span className="font-medium text-red-400">{losingDays}</span></div>
+          <div className="flex flex-col items-start gap-2">
+            <div className="text-xs text-zinc-400">Legend</div>
+            <div className="flex items-center gap-2">
+              {legend.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-sm ${l.cls}`} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-zinc-400">
+              Profitable days: <span className="font-medium text-green-400">{(metrics.dailyNet || []).filter((v) => v > 0).length}</span>
+              <br />
+              Loss days: <span className="font-medium text-red-400">{(metrics.dailyNet || []).filter((v) => v < 0).length}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -698,8 +698,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   }
 
   return (
-    <div className="space-y-5 px-2 sm:px-0">
-      {/* header: greeting + monthly target below greeting (mobile) + tradia score right */}
+    <div className={containerClass}>
+      {/* header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-start gap-3">
@@ -712,19 +712,20 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
             </div>
           </div>
 
-          {/* monthly target below greeting (visible on all sizes; compact on desktop) */}
           <div className="mt-3 w-full sm:w-2/3">
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <div className="text-xs text-zinc-400">Monthly PnL target</div>
                 <div className="mt-2 flex items-center gap-3">
-                  <input
-                    type="number"
-                    value={monthlyTarget}
-                    onChange={(e) => setMonthlyTarget(Number(e.target.value))}
-                    className="w-32 bg-transparent p-2 rounded border border-zinc-800 text-sm"
-                    aria-label="monthly target"
-                  />
+                  <div className="w-32">
+                    <input
+                      type="number"
+                      value={monthlyTarget}
+                      onChange={(e) => setMonthlyTarget(Number(e.target.value))}
+                      className="w-full bg-transparent p-2 rounded border border-zinc-800 text-sm"
+                      aria-label="monthly target"
+                    />
+                  </div>
                   <div className="flex-1">
                     <ProgressBar
                       value={progressPct}
@@ -738,9 +739,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           </div>
         </div>
 
-        {/* right: tradia score */}
         <div className="flex items-center gap-3">
-          <div className="bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm flex items-center gap-3">
+          <div className="bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm flex items-center gap-3 border border-zinc-700">
             <div className="p-2 rounded bg-white/6">
               <TrendingUp size={18} className="text-sky-400" />
             </div>
@@ -787,14 +787,16 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           value: metrics.losses,
           small: `SLs ${metrics.totalSLCount}`,
           color: "#ef4444",
+          valueClass: negativeClass, // force red for losses count
         })}
         {renderMetricCard({
           keyId: "pnl",
           icon: <DollarSign size={18} />,
           title: "PNL ($)",
-          value: <span>{`$${metrics.totalPnl.toFixed(2)}`}</span>,
+          value: `$${metrics.totalPnl.toFixed(2)}`,
           small: `PF ${metrics.profitFactor === Infinity ? "∞" : Number(metrics.profitFactor).toFixed(2)}`,
           color: metrics.totalPnl > 0 ? "#10b981" : metrics.totalPnl < 0 ? "#ef4444" : "#64748b",
+          valueClass: metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass,
         })}
         {renderMetricCard({
           keyId: "rrTP",
@@ -803,6 +805,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           value: `${metrics.totalTP.toFixed(2)}R`,
           small: `Avg ${metrics.avgRR.toFixed(2)}R`,
           color: "#16a34a",
+          valueClass: positiveClass,
         })}
         {renderMetricCard({
           keyId: "rrSL",
@@ -811,6 +814,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           value: metrics.totalSLCount,
           small: `Net ${metrics.profitRR >= 0 ? "+" : ""}${metrics.profitRR.toFixed(2)}R`,
           color: "#ef4444",
+          valueClass: negativeClass,
         })}
         {renderMetricCard({
           keyId: "best",
@@ -827,6 +831,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           value: metrics.worst ? `$${toNumber(getField(metrics.worst, "pnl")).toFixed(2)}` : "$0.00",
           small: metrics.worst ? toStringSafe(getField(metrics.worst, "symbol")) : "",
           color: "#ef4444",
+          valueClass: negativeClass,
         })}
         {renderMetricCard({
           keyId: "mostTraded",
@@ -953,7 +958,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         </div>
       </div>
 
-      {/* explanation modal */}
       {explainKey && <ExplanationModal k={explainKey} onClose={() => setExplainKey(null)} />}
     </div>
   );
