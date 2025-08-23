@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UploadCloud } from "lucide-react";
+import Spinner from "@/components/ui/spinner";
 
 const COUNTRIES: { label: string; value: string }[] = [
   { label: "United States (+1)", value: "US|+1" },
@@ -47,6 +48,9 @@ export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
+
   const initialName = String(session?.user?.name ?? "");
   const initialEmail = String(session?.user?.email ?? "");
   const initialImage = String(session?.user?.image ?? "");
@@ -82,6 +86,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let mounted = true;
+
     async function loadProfile(): Promise<void> {
       try {
         const res = await fetch("/api/user/profile", { cache: "no-store" });
@@ -114,14 +119,70 @@ export default function ProfilePage() {
         // ignore — endpoint optional
       }
     }
+
     loadProfile();
+
     return () => {
       mounted = false;
     };
   }, []);
 
-  if (status === "loading") return <p className="text-white p-4">Loading profile…</p>;
-  if (!session) return <p className="text-white p-4">Access denied. Please sign in.</p>;
+  // --- Client auth check: prefer NextAuth session, fall back to JWT cookie used by custom login ---
+  // Helper: read cookie by name
+  function getCookie(name: string) {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+
+  // Decode JWT payload (no verification) to inspect claims client-side
+  function parseJwtPayload(token: string | null) {
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = parts[1];
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(json);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    // If NextAuth session is present and not loading, accept
+    if (session && (session as any).user) {
+      setIsAuthed(true);
+      setAuthChecked(true);
+      return;
+    }
+
+    try {
+      const token = getCookie('session') || getCookie('app_token');
+      if (token) {
+        const payload = parseJwtPayload(token);
+        setIsAuthed(Boolean(payload?.email_verified));
+      } else {
+        setIsAuthed(false);
+      }
+    } catch (err) {
+      console.error('Auth cookie parse error:', err);
+      setIsAuthed(false);
+    } finally {
+      setAuthChecked(true);
+    }
+  }, [session]);
+
+  if (status === "loading") return <Spinner />;
+  // Wait until client-side auth check completes
+  if (!authChecked) return <Spinner />;
+  if (!isAuthed) return <p className="text-white p-4">Access denied. Please sign in.</p>;
 
   const goBack = (): void => void router.push("/dashboard");
 
