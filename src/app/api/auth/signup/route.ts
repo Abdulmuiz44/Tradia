@@ -75,7 +75,8 @@ export async function POST(req: Request) {
 
       if (updErr) {
         console.error("Update error:", updErr);
-        return NextResponse.json({ error: "Failed to update user.", details: updErr.message ?? updErr }, { status: 500 });
+        const raw = JSON.stringify(updErr, Object.getOwnPropertyNames(updErr));
+        return NextResponse.json({ error: "Failed to update user.", details: updErr.message ?? updErr, raw }, { status: 500 });
       }
     } else {
       // create new
@@ -96,11 +97,13 @@ export async function POST(req: Request) {
 
       if (insErr) {
         console.error("Insert error:", insErr);
+        // expose raw supabase error for debugging (temporary)
+        const raw = JSON.stringify(insErr, Object.getOwnPropertyNames(insErr));
         const msg = (insErr as any)?.message ?? String(insErr);
         if ((insErr as any).code === "23505" || /unique/i.test(msg)) {
-          return NextResponse.json({ error: "Email already registered.", details: msg }, { status: 409 });
+          return NextResponse.json({ error: "Email already registered.", details: msg, raw }, { status: 409 });
         }
-        return NextResponse.json({ error: "Failed to create user.", details: msg }, { status: 500 });
+        return NextResponse.json({ error: "Failed to create user.", details: msg, raw }, { status: 500 });
       }
     }
 
