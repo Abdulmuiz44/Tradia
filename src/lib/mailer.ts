@@ -7,7 +7,7 @@ const SMTP_PORT = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 587)
 const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
 const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 const FROM_EMAIL =
-  process.env.FROM_EMAIL || process.env.EMAIL_FROM || "no-reply@yourdomain.com";
+  process.env.FROM_EMAIL || process.env.EMAIL_FROM || "no-reply@tradia-app.vercel.app";
 
 if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
   console.warn(
