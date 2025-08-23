@@ -1,51 +1,65 @@
+// app/api/verify-email/route.ts
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin"; // service-role client
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const token = url.searchParams.get("token")?.trim() || "";
-
-  const successUrl = new URL("/verify-email/success", url);
-  const failUrl = new URL("/verify-email/failed", url);
+  const { searchParams } = new URL(req.url);
+  const token = searchParams.get("token");
 
   if (!token) {
-    failUrl.searchParams.set("reason", "missing_token");
-    return NextResponse.redirect(failUrl);
+    return NextResponse.json(
+      { error: "Missing verification token" },
+      { status: 400 }
+    );
   }
 
-  const supabase = createAdminClient();
+  try {
+    const supabase = createAdminClient();
 
-  // 1) find user by token
-  const { data: user, error: findErr } = await supabase
-    .from("users")
-    .select("id, email_verified")
-    .eq("verification_token", token)
-    .maybeSingle();
+    // Lookup user by token in your "email_verification_tokens" table
+    const { data: tokenRow, error: tokenError } = await supabase
+      .from("email_verification_tokens")
+      .select("user_id, expires_at")
+      .eq("token", token)
+      .single();
 
-  if (findErr || !user) {
-    failUrl.searchParams.set("reason", "invalid_or_used_token");
-    return NextResponse.redirect(failUrl);
+    if (tokenError || !tokenRow) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 400 }
+      );
+    }
+
+    // Check expiration
+    if (new Date(tokenRow.expires_at) < new Date()) {
+      return NextResponse.json(
+        { error: "Token expired" },
+        { status: 400 }
+      );
+    }
+
+    // Mark user as verified
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ email_verified: true })
+      .eq("id", tokenRow.user_id);
+
+    if (updateError) throw updateError;
+
+    // Optionally delete the used token
+    await supabase
+      .from("email_verification_tokens")
+      .delete()
+      .eq("token", token);
+
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://tradia-app.vercel.app"}/verified-success`
+    );
+  } catch (err) {
+    console.error("Verify email error:", err);
+    return NextResponse.json(
+      { error: "Server error during verification" },
+      { status: 500 }
+    );
   }
-
-  // if already verified, just succeed
-  if (user.email_verified) {
-    return NextResponse.redirect(successUrl);
-  }
-
-  // 2) mark verified + clear token
-  const { error: updErr } = await supabase
-    .from("users")
-    .update({
-      email_verified: new Date().toISOString(),
-      verification_token: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
-
-  if (updErr) {
-    failUrl.searchParams.set("reason", "update_failed");
-    return NextResponse.redirect(failUrl);
-  }
-
-  return NextResponse.redirect(successUrl);
 }
