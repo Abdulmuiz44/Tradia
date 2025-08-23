@@ -12,19 +12,19 @@ if (!JWT_SECRET) console.warn("JWT_SECRET not set");
 export async function POST(req: Request) {
   try {
     const { email = "", password = "" } = await req.json();
-    const normalized = String(email).trim().toLowerCase();
+    const normalizedEmail = String(email).trim().toLowerCase();
 
-    if (!normalized || !password) {
+    if (!normalizedEmail || !password) {
       return NextResponse.json({ error: "Email and password required." }, { status: 400 });
     }
 
     const supabase = createAdminSupabase();
 
-    // fetch user
+    // --- Fetch latest user info including email_verified ---
     const { data: user, error } = await supabase
       .from("users")
       .select("id, password, email_verified, name")
-      .eq("email", normalized)
+      .eq("email", normalizedEmail)
       .maybeSingle();
 
     if (error) {
@@ -33,66 +33,61 @@ export async function POST(req: Request) {
     }
     if (!user) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
 
-    // require email_verified
+    // Check password
+    const passwordValid = await bcrypt.compare(password, user.password);
+    if (!passwordValid) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+
+    // Ensure email is verified
     if (!user.email_verified) {
       return NextResponse.json({ error: "Email not verified. Please check your email." }, { status: 403 });
     }
 
-    // password check
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
-
-    // create access JWT (include email_verified claim)
+    // --- Create short-lived access JWT ---
     const accessToken = jwt.sign(
       {
-        id: user.id,
-        email: normalized,
+        sub: user.id,
+        email: normalizedEmail,
         name: user.name,
-        email_verified: Boolean(user.email_verified),
+        email_verified: true, // always true here because we checked above
       },
       JWT_SECRET,
-      { expiresIn: "12h" } // short-lived access JWT
+      { expiresIn: "12h" }
     );
 
-    // create refresh token + session id and store only hashed refresh token in DB
+    // --- Create refresh token ---
     const refreshTokenRaw = crypto.randomBytes(48).toString("hex");
     const refreshId = uuidv4();
     const hashedRefresh = bcrypt.hashSync(refreshTokenRaw, 10);
-    const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(); // 30 days
+    const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(); // 30 days
 
-    const { error: insertErr } = await supabase.from("sessions").insert([
+    const { error: sessionErr } = await supabase.from("sessions").insert([
       {
         id: refreshId,
         user_id: user.id,
         refresh_token: hashedRefresh,
-        expires_at: expiresAt,
+        expires_at: refreshExpiresAt,
       },
     ]);
 
-    if (insertErr) {
-      console.error("Failed to create session row:", insertErr);
-      // don't fail login — but surface a server warning
-    }
+    if (sessionErr) console.error("Failed to create refresh session:", sessionErr);
 
-    // set cookies (httpOnly)
+    // --- Set cookies ---
     const res = NextResponse.json({ message: "Login successful." });
 
-    // access cookie — short lived
     res.cookies.set("session", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 12, // 12 hours
+      maxAge: 60 * 60 * 12, // 12h
     });
 
-    // refresh token (raw) + refresh_id for lookup
     res.cookies.set("refresh_token", refreshTokenRaw, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30, // 30d
     });
 
     res.cookies.set("refresh_id", refreshId, {
