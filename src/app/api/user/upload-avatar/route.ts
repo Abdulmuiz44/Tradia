@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
 
 // Extend default NextAuth session typing
 interface SessionUser {
@@ -70,6 +71,18 @@ export async function POST(req: NextRequest) {
     await fs.writeFile(outPath, buffer, "binary");
 
     const imageUrl = `/uploads/${finalName}`;
+
+    // Persist image URL to the user's row in the database
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("users")
+        .update({ image: imageUrl, updated_at: new Date().toISOString() })
+        .eq("id", userId);
+    } catch (dbErr) {
+      console.error("Failed to persist avatar URL:", dbErr);
+      // We still return success for the upload itself, but log the DB failure.
+    }
 
     return NextResponse.json({ success: true, imageUrl });
   } catch (err: unknown) {

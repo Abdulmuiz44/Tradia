@@ -18,6 +18,11 @@ type UpdateBody = {
   image?: unknown;
   oldPassword?: unknown;
   newPassword?: unknown;
+  phone?: unknown;
+  country?: unknown;
+  tradingStyle?: unknown;
+  tradingExperience?: unknown;
+  bio?: unknown;
 };
 
 function asStringOrUndefined(u: unknown): string | undefined {
@@ -39,13 +44,18 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await req.json()) as UpdateBody;
+  const body = (await req.json()) as UpdateBody;
     const name = asStringOrUndefined(body?.name);
     const image = asStringOrUndefined(body?.image);
     const oldPassword =
       typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
     const newPassword =
       typeof body?.newPassword === "string" ? body.newPassword : undefined;
+  const phone = asStringOrUndefined(body?.phone);
+  const country = asStringOrUndefined(body?.country);
+  const tradingStyle = asStringOrUndefined(body?.tradingStyle);
+  const tradingExperience = asStringOrUndefined(body?.tradingExperience);
+  const bio = asStringOrUndefined(body?.bio);
 
     if (!name && !image && !newPassword) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
@@ -86,59 +96,48 @@ export async function PATCH(req: NextRequest) {
 
       const newHashed = await bcrypt.hash(newPassword, 10);
 
-      const parts: string[] = [];
-      const params: unknown[] = [];
-      let idx = 1;
-
-      if (name) {
-        parts.push(`name=$${idx++}`);
-        params.push(name);
-      }
-      if (image) {
-        parts.push(`image=$${idx++}`);
-        params.push(image);
-      }
-      parts.push(`password=$${idx++}`);
-      params.push(newHashed);
-
-  params.push(userId);
   const updateRow: Record<string, unknown> = {};
-  let pIdx = 0;
   if (name) updateRow["name"] = name;
   if (image) updateRow["image"] = image;
+  if (phone) updateRow["phone"] = phone;
+  if (country) updateRow["country"] = country;
+  if (tradingStyle) updateRow["trading_style"] = tradingStyle;
+  if (tradingExperience) updateRow["trading_experience"] = tradingExperience;
+  if (bio) updateRow["bio"] = bio;
   updateRow["password"] = newHashed;
   updateRow["updated_at"] = new Date().toISOString();
-  await supabase.from("users").update(updateRow).eq("id", userId);
+  const { data: updatedUser } = await supabase.from("users").update(updateRow).eq("id", userId).select("id,name,email,image,phone,country,trading_style,trading_experience,bio,updated_at").maybeSingle();
 
       return NextResponse.json({ success: true });
     }
 
     // Update name/image only
-    const fields: string[] = [];
-    const values: unknown[] = [];
-    let i = 1;
+    const fieldsToUpdate: Record<string, unknown> = {};
+    if (name) fieldsToUpdate["name"] = name;
+    if (image) fieldsToUpdate["image"] = image;
+    if (phone) fieldsToUpdate["phone"] = phone;
+    if (country) fieldsToUpdate["country"] = country;
+    if (tradingStyle) fieldsToUpdate["trading_style"] = tradingStyle;
+    if (tradingExperience) fieldsToUpdate["trading_experience"] = tradingExperience;
+    if (bio) fieldsToUpdate["bio"] = bio;
 
-    if (name) {
-      fields.push(`name=$${i++}`);
-      values.push(name);
-    }
-    if (image) {
-      fields.push(`image=$${i++}`);
-      values.push(image);
-    }
-
-    if (fields.length === 0) {
+    if (Object.keys(fieldsToUpdate).length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-  values.push(userId);
-  const updateRow: Record<string, unknown> = {};
-  if (name) updateRow["name"] = name;
-  if (image) updateRow["image"] = image;
-  updateRow["updated_at"] = new Date().toISOString();
-  await createClient().from("users").update(updateRow).eq("id", userId);
+    fieldsToUpdate["updated_at"] = new Date().toISOString();
 
-    return NextResponse.json({ success: true });
+    const { data: updatedUser, error: updErr } = await createClient()
+      .from("users")
+      .update(fieldsToUpdate)
+      .eq("id", userId)
+      .select("id,name,email,image,phone,country,trading_style,trading_experience,bio,updated_at");
+
+    if (updErr) throw updErr;
+
+    // return updated user object
+    const user = Array.isArray(updatedUser) ? updatedUser[0] : updatedUser;
+    return NextResponse.json({ success: true, user });
   } catch (err: unknown) {
     console.error("user update error:", err);
     const msg = err instanceof Error ? err.message : String(err);
