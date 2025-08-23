@@ -20,6 +20,8 @@ import {
   X,
   TrendingUp,
   Award,
+  Clock,
+  Percent,
 } from "lucide-react";
 import { Line, Doughnut } from "react-chartjs-2";
 import {
@@ -306,6 +308,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const perTradePnls = chrono.map((t) => pnlOf(t));
     const cumPnls = perTradePnls.map((_, i) => perTradePnls.slice(0, i + 1).reduce((s, v) => s + v, 0));
 
+    // streaks
     const streaks: number[] = [];
     let curr = 0;
     let last: "Win" | "Loss" | null = null;
@@ -371,6 +374,18 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       const score = winScore * 0.3 + pfScore * 0.3 + rrScore * 0.25 + consistency * 100 * 0.15;
       return Math.round(Math.max(0, Math.min(100, score)));
     })();
+
+    // --- NEW: avg trade duration (hours) & avg PnL per trade
+    const durationsMs: number[] = [];
+    for (const t of filtered) {
+      const o = toDateOrNull(getField(t, "openTime"));
+      const c = toDateOrNull(getField(t, "closeTime"));
+      if (o && c && c.getTime() > o.getTime()) {
+        durationsMs.push(c.getTime() - o.getTime());
+      }
+    }
+    const avgDurationHours = durationsMs.length ? durationsMs.reduce((s, v) => s + v, 0) / durationsMs.length / (1000 * 60 * 60) : 0;
+    const avgPnlPerTrade = total ? totalPnl / total : 0;
 
     const doughnutData = {
       labels: ["Wins", "Losses", "Breakeven"],
@@ -473,6 +488,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       recentPnls,
       tradiaScore,
       consistency,
+      // new
+      avgDurationHours,
+      avgPnlPerTrade,
     };
   }, [allTrades, fromDate, toDate, pnlMode]);
 
@@ -501,7 +519,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const containerClass = "space-y-5 px-2 sm:px-0 max-w-7xl mx-auto";
 
   // card base with border + subtle left accent space reserved
-  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg border border-zinc-700";
+  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg border border-zinc-700 relative";
   const positiveClass = "text-green-400";
   const negativeClass = "text-red-400";
   const neutralClass = "text-white";
@@ -530,7 +548,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     );
   };
 
-  // render metric card accepts optional valueClass to force coloring for non-numeric metrics like loss counts
+  // render metric card: centered contents & centered icon box
   const renderMetricCard = (opts: {
     keyId: string;
     icon: React.ReactNode;
@@ -541,29 +559,30 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     valueClass?: string;
   }) => {
     const leftColor = opts.color ?? "#0ea5a4";
+
     return (
-      <div key={opts.keyId} className={`${cardBase} flex items-start gap-3`} role="article" aria-label={opts.title}>
+      <div key={opts.keyId} className={`${cardBase} flex items-center gap-3`} role="article" aria-label={opts.title}>
         <div style={{ width: 6, background: leftColor }} className="rounded-l-md" />
-        <div className="flex-1 flex items-start gap-3 pl-3">
-          <div className="p-2 rounded bg-white/6">{opts.icon}</div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <div className="text-xs text-zinc-400">{opts.title}</div>
-                <div className="text-lg font-semibold">
-                  <ColoredValue value={opts.value} forceClass={opts.valueClass} />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-xs text-zinc-400 hidden sm:block">{opts.small}</div>
-                <button onClick={() => setExplainKey(opts.keyId)} className="p-1 rounded bg-zinc-800">
-                  <Info size={14} />
-                </button>
-              </div>
-            </div>
-            <div className="mt-2 text-xs text-zinc-400 sm:hidden">{typeof opts.small === "string" ? opts.small : null}</div>
-          </div>
+        <div className="w-14 flex items-center justify-center">
+          <div className="w-11 h-11 flex items-center justify-center rounded bg-white/6">{opts.icon}</div>
         </div>
+
+        <div className="flex-1 text-center">
+          <div className="text-xs text-zinc-400">{opts.title}</div>
+          <div className="text-lg font-semibold mt-1">
+            <ColoredValue value={opts.value} forceClass={opts.valueClass} />
+          </div>
+          <div className="text-xs text-zinc-400 mt-1">{typeof opts.small === "string" ? opts.small : opts.small}</div>
+        </div>
+
+        {/* explanation button top-right */}
+        <button
+          onClick={() => setExplainKey(opts.keyId)}
+          className="absolute top-2 right-2 p-1 rounded bg-zinc-800"
+          title="Explain"
+        >
+          <Info size={14} />
+        </button>
       </div>
     );
   };
@@ -787,7 +806,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           value: metrics.losses,
           small: `SLs ${metrics.totalSLCount}`,
           color: "#ef4444",
-          valueClass: negativeClass, // force red for losses count
+          valueClass: negativeClass,
         })}
         {renderMetricCard({
           keyId: "pnl",
@@ -956,6 +975,27 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         <div>
           <ProgressCalendarCard />
         </div>
+      </div>
+
+      {/* NEW: two small visual metrics below the progress tracker (keeps the same look/feel) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        {renderMetricCard({
+          keyId: "avgPnlPerTrade",
+          icon: <Percent size={18} className="text-yellow-300" />,
+          title: "Avg PnL / Trade",
+          value: `$${(metrics.avgPnlPerTrade ?? 0).toFixed(2)}`,
+          small: `${metrics.total ?? 0} trades`,
+          color: (metrics.avgPnlPerTrade ?? 0) > 0 ? "#10b981" : (metrics.avgPnlPerTrade ?? 0) < 0 ? "#ef4444" : "#64748b",
+          valueClass: (metrics.avgPnlPerTrade ?? 0) > 0 ? positiveClass : (metrics.avgPnlPerTrade ?? 0) < 0 ? negativeClass : neutralClass,
+        })}
+        {renderMetricCard({
+          keyId: "avgTradeDuration",
+          icon: <Clock size={18} className="text-sky-400" />,
+          title: "Avg Trade Duration",
+          value: metrics.avgDurationHours ? `${metrics.avgDurationHours.toFixed(2)} h` : "N/A",
+          small: "Average across closed trades",
+          color: "#60a5fa",
+        })}
       </div>
 
       {explainKey && <ExplanationModal k={explainKey} onClose={() => setExplainKey(null)} />}
