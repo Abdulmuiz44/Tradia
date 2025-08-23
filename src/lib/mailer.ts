@@ -1,6 +1,4 @@
 // lib/mailer.ts
-import crypto from "crypto";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { sendEmail } from "@/lib/email";
 
 function getAppOrigin() {
@@ -11,23 +9,8 @@ function getAppOrigin() {
   );
 }
 
-export async function sendVerificationEmail(userId: string, to: string) {
-  const supabase = createAdminClient();
-
-  // Generate secure token
-  const token = crypto.randomBytes(32).toString("hex");
-
-  // Expire after 1 hour
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-  // Save to DB
-  await supabase.from("email_verification_tokens").insert({
-    token,
-    user_id: userId,
-    expires_at: expiresAt,
-  });
-
-  // Build verification URL
+export async function sendVerificationEmail(to: string, token: string) {
+  // Build verification URL using token provided by caller
   const origin = getAppOrigin();
   const verifyUrl = `${origin}/api/verify-email?token=${encodeURIComponent(
     token
