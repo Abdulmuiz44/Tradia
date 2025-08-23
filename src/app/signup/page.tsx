@@ -4,15 +4,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient'; // make sure this exists
+// removed client-side supabase signUp — server handles signup now
 
 const COUNTRIES = [
-  /* ... your countries array (unchanged) ... */
-  'Afghanistan',
-  'Albania',
-  'Algeria',
-  // ... (keep the full list you already have)
-  'Zimbabwe',
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan',
+  'Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi',
+  'Côte d\'Ivoire','Cabo Verde','Cambodia','Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo (Congo-Brazzaville)','Costa Rica','Croatia','Cuba','Cyprus','Czechia',
+  'Democratic Republic of the Congo','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Federated States of Micronesia','Fiji','Finland','France',
+  'Gabon','Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
+  'Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar',
+  'Namibia','Nauru','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palau','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal',
+  'Qatar','Romania','Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino','Sao Tome and Principe','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria',
+  'Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States of America','Uruguay','Uzbekistan','Vanuatu','Vatican City','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
 ];
 
 export default function SignupPage() {
@@ -67,57 +70,32 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // 1) Trigger Supabase email confirmation (client-side)
-      //    The callback page should handle exchanging the code -> session.
-      const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || ''}/auth/callback`;
-      const { error: signupError } = await supabase.auth.signUp(
-        {
+      // POST directly to our server signup API which manages users in our Postgres
+      // and sends verification emails. This avoids relying on Supabase Auth signUp
+      // (which may be disabled for the project) and simplifies the flow.
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
           email,
           password,
-          // If your supabase client supports nested options (older examples),
-          // the client may accept this shape. If not, you can pass redirect as second arg:
-          // supabase.auth.signUp({ email, password }, { emailRedirectTo: redirectTo })
-          options: {
-            emailRedirectTo: redirectTo,
-          },
-        }
-      );
+          country: selectedCountry,
+        }),
+      });
 
-      if (signupError) {
-        // If signUp fails (e.g., email already exists) stop and show message.
-        setError(signupError.message || 'Unable to send confirmation email.');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Surface server-side message (we may return `raw` for debugging)
+        console.warn('Server signup failed:', data);
+        const msg = data?.error || data?.message || 'Signup failed on server.';
+        const raw = data?.raw ? ` — details: ${JSON.stringify(data.raw)}` : '';
+        setError(`${msg}${raw}`);
         setLoading(false);
         return;
       }
 
-      // 2) Save profile metadata on your server (so your profiles table gets name/country)
-      //    NOTE: server should *not* re-create the auth user if you already used client signUp.
-      //    It should insert or upsert a profile record keyed by email (or user id if you prefer).
-      try {
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name,
-            email,
-            country: selectedCountry,
-            // do not need to send password (server should not recreate the auth user)
-          }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          // Non-blocking: the signup email was already sent. But surface server error.
-          console.warn('Profile insert failed:', data);
-          // show a friendly notice but don't hide the email instruction
-          setNotice('Verification email sent — but saving your profile failed on the server.');
-        } else {
-          setNotice('Account created. Check your email for a verification link.');
-        }
-      } catch (serverErr) {
-        console.warn('Profile POST failed', serverErr);
-        setNotice('Verification email sent — but saving your profile failed (server error).');
-      }
+      setNotice(data?.message || 'Account created. Check your email for a verification link.');
 
       // Redirect to a "check your email" page (same as original flow)
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
