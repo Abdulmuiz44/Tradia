@@ -82,6 +82,17 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 12, // 12h
     });
 
+    // ALSO set a client-readable token so client-side code can inspect `email_verified`.
+    // Keep it short-lived and mirror the server token. This is a convenience for the
+    // dashboard client; the httpOnly `session` cookie remains the primary auth cookie.
+    res.cookies.set("app_token", accessToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 12, // 12h
+    });
+
     res.cookies.set("refresh_token", refreshTokenRaw, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
