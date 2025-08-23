@@ -2,7 +2,7 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { createClient } from "@/utils/supabase/server"; // 🔑 use supabase server client
 import type { AdapterUser } from "next-auth/adapters";
 import type { Account, Profile, User, Session } from "next-auth";

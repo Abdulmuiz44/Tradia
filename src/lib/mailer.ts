@@ -1,66 +1,68 @@
 // lib/mailer.ts
 import nodemailer from "nodemailer";
 
-if (
-  !process.env.EMAIL_HOST ||
-  !process.env.EMAIL_PORT ||
-  !process.env.EMAIL_USER ||
-  !process.env.EMAIL_PASS ||
-  !process.env.EMAIL_FROM ||
-  !process.env.NEXT_PUBLIC_BASE_URL
-) {
-  throw new Error("Email environment variables not set. See EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM, NEXT_PUBLIC_BASE_URL");
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const FROM_EMAIL = process.env.FROM_EMAIL || "no-reply@yourdomain.com";
+
+if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+  console.warn("Mailer not fully configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS.");
 }
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: Number(process.env.EMAIL_PORT) === 465,
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: SMTP_USER,
+    pass: SMTP_PASS,
   },
 });
 
-// Verification email (existing)
 export async function sendVerificationEmail(to: string, token: string) {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify-email?token=${token}`;
+  const origin = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const verifyUrl = `${origin}/api/auth/verify?token=${encodeURIComponent(token)}`;
 
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
+  const html = `
+    <p>Hi —</p>
+    <p>Thanks for creating an account. Click the link below to verify your email address:</p>
+    <p><a href="${verifyUrl}">Verify my email</a></p>
+    <p>If the link doesn't work, copy and paste this into your browser:</p>
+    <pre>${verifyUrl}</pre>
+    <p>If you did not create an account, ignore this email.</p>
+  `;
+
+  const info = await transporter.sendMail({
+    from: FROM_EMAIL,
     to,
-    subject: "Verify your Tradia account",
-    html: `
-      <h2>Welcome to Tradia!</h2>
-      <p>Please verify your email by clicking the button below:</p>
-      <a href="${verifyUrl}" style="display:inline-block;padding:10px 18px;background:#22c55e;color:#fff;text-decoration:none;border-radius:6px;">Verify Email</a>
-      <p>If you did not sign up, please ignore this email.</p>
-    `,
-  };
+    subject: "Verify your email",
+    html,
+  });
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log("Verification email sent:", info.messageId);
   return info;
 }
 
-// Password reset email (new)
 export async function sendPasswordResetEmail(to: string, token: string) {
-  // Link goes to the frontend reset page (so user interacts with your UI)
-  const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${token}`;
+  const origin = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
 
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
+  const html = `
+    <p>Hi —</p>
+    <p>We received a request to reset your password. Click the link below to set a new password. This link will expire in 1 hour.</p>
+    <p><a href="${resetUrl}">Reset my password</a></p>
+    <p>If the link doesn't work, copy and paste this into your browser:</p>
+    <pre>${resetUrl}</pre>
+    <p>If you didn't request a password reset, you can safely ignore this email.</p>
+  `;
+
+  const info = await transporter.sendMail({
+    from: FROM_EMAIL,
     to,
-    subject: "Tradia — Reset your password",
-    html: `
-      <h2>Password reset requested</h2>
-      <p>We received a request to reset your Tradia password. Click the button below to set a new password. This link expires in 1 hour.</p>
-      <a href="${resetUrl}" style="display:inline-block;padding:10px 18px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;">Reset Password</a>
-      <p>If you didn't request this, you can safely ignore this email.</p>
-    `,
-  };
+    subject: "Reset your password",
+    html,
+  });
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log("Password reset email sent:", info.messageId);
   return info;
 }

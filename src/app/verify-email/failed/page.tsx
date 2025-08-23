@@ -1,19 +1,10 @@
-export default function VerificationFailedPage() {
+// app/verify-email/failed/page.tsx
+export default function VerifyFailed() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-red-50 px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 max-w-md w-full text-center">
-        <h2 className="text-3xl font-bold text-red-600 mb-4">
-          ❌ Verification Failed
-        </h2>
-        <p className="text-gray-700 mb-6">
-          The verification link is invalid or has expired. Please sign up again to get a new verification email.
-        </p>
-        <a
-          href="/signup"
-          className="inline-block bg-red-600 text-white px-6 py-2 rounded-lg shadow hover:bg-red-700 transition"
-        >
-          Go to Signup
-        </a>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="p-8 bg-white rounded">
+        <h1 className="text-2xl font-bold text-red-600">Verification Failed</h1>
+        <p className="mt-2">The verification link is invalid or expired. Try signing up again or contact support.</p>
       </div>
     </div>
   );

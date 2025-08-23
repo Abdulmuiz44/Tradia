@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // Extend default NextAuth session typing
 interface SessionUser {

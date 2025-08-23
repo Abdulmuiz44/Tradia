@@ -1,90 +1,116 @@
 // app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
-import { createClient as createServerClient } from "@/utils/supabase/server";
+import crypto from "crypto";
+import { createAdminSupabase } from "@/utils/supabase/admin";
+import { sendVerificationEmail } from "@/lib/mailer";
 
-type SignupBody = {
+type Body = {
   name?: string;
   email?: string;
   password?: string;
+  phone?: string;
+  image?: string;
+  role?: string;
+  trading_style?: string;
+  trading_experience?: string;
+  country?: string;
 };
 
 export async function POST(req: Request) {
   try {
-    const body: SignupBody = await req.json();
-    const name = (body?.name || "").trim();
-    const email = (body?.email || "").trim().toLowerCase();
-    const password = body?.password || "";
+    const body: Body = await req.json();
+    const name = (body.name || "").trim();
+    const email = (body.email || "").trim().toLowerCase();
+    const password = body.password || "";
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "All fields required." }, { status: 400 });
     }
 
-    // ensure supabase url is configured
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!SUPABASE_URL) {
-      console.error("SIGNUP ERROR: NEXT_PUBLIC_SUPABASE_URL not set");
-      return NextResponse.json({ error: "Server configuration error." }, { status: 500 });
-    }
+    const supabase = createAdminSupabase();
 
-    // Prefer creating an admin client with the service role key if available
-    const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    let supabase: ReturnType<typeof createSupabaseAdminClient> | ReturnType<typeof createServerClient>;
-
-    if (SERVICE_ROLE_KEY) {
-      supabase = createSupabaseAdminClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-        auth: { persistSession: false },
-      });
-    } else {
-      // fallback to your server client (uses anon key / cookie-aware client)
-      supabase = createServerClient();
-    }
-
-    // check if user already exists
-    const { data: existingUser, error: existingError } = await supabase
+    // check existing
+    const { data: existing, error: selErr } = await supabase
       .from("users")
-      .select("id")
+      .select("id, email_verified")
       .eq("email", email)
       .maybeSingle();
 
-    if (existingError) {
-      console.error("Supabase select error:", existingError.message);
+    if (selErr) {
+      console.error("Select error:", selErr);
       return NextResponse.json({ error: "Database error." }, { status: 500 });
     }
 
-    if (existingUser) {
+    if (existing && existing.email_verified) {
       return NextResponse.json({ error: "Email already registered." }, { status: 409 });
     }
 
-    // hash password (bcryptjs)
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashed = await bcrypt.hash(password, 12);
+    const token = crypto.randomBytes(32).toString("hex");
 
-    // insert into users table
-    const { data: inserted, error: insertError } = await supabase
-      .from("users")
-      .insert({
+    if (existing && !existing.email_verified) {
+      // update existing (overwrite password + token)
+      const { error: updErr } = await supabase
+        .from("users")
+        .update({
+          name,
+          password: hashed,
+          verification_token: token,
+          updated_at: new Date().toISOString(),
+          phone: body.phone || null,
+          image: body.image || null,
+          role: body.role || "trader",
+          trading_style: body.trading_style || null,
+          trading_experience: body.trading_experience || null,
+          country: body.country || null,
+        })
+        .eq("email", email);
+
+      if (updErr) {
+        console.error("Update error:", updErr);
+        return NextResponse.json({ error: "Failed to update user." }, { status: 500 });
+      }
+    } else {
+      // create new
+      const { error: insErr } = await supabase.from("users").insert({
         name,
         email,
-        password: hashedPassword,
+        password: hashed,
+        verification_token: token,
+        phone: body.phone || null,
+        image: body.image || null,
+        role: body.role || "trader",
+        trading_style: body.trading_style || null,
+        trading_experience: body.trading_experience || null,
+        country: body.country || null,
         created_at: new Date().toISOString(),
-      })
-      .select("id")
-      .maybeSingle();
+        updated_at: new Date().toISOString(),
+      });
 
-    if (insertError) {
-      console.error("Supabase insert error:", insertError.message);
-      // if unique constraint violated for some race condition, return 409
-      if (insertError.code === "23505" || /unique/i.test(insertError.message || "")) {
-        return NextResponse.json({ error: "Email already registered." }, { status: 409 });
+      if (insErr) {
+        console.error("Insert error:", insErr);
+        if ((insErr as any).code === "23505" || /unique/i.test(String(insErr.message || ""))) {
+          return NextResponse.json({ error: "Email already registered." }, { status: 409 });
+        }
+        return NextResponse.json({ error: "Failed to create user." }, { status: 500 });
       }
-      return NextResponse.json({ error: "Failed to create user." }, { status: 500 });
     }
 
-    // success
-    return NextResponse.json({ message: "Account created successfully.", userId: inserted?.id ?? null }, { status: 201 });
-  } catch (err: unknown) {
-    console.error("Signup error:", err instanceof Error ? err.message : String(err));
+    // send verification email (non-blocking but we will wait and report errors)
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (mailErr) {
+      console.error("Mail send failed:", mailErr);
+      return NextResponse.json(
+        { error: "Account created but failed to send verification email. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ message: "Account created. Check your email for a verification link." }, { status: 201 });
+  } catch (err) {
+    console.error("Signup error:", err);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

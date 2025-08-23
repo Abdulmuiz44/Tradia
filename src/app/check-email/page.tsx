@@ -1,17 +1,22 @@
+// app/check-email/page.tsx
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
 export default function CheckEmailPage() {
+  const params = useSearchParams();
+  const email = params?.get("email") ?? "";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-8 max-w-md text-center">
-        <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          We’ve sent a verification link to your email. Please check your inbox and click the link to activate your account.
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="max-w-xl p-8 bg-white rounded-lg">
+        <h1 className="text-2xl font-semibold">Check your email</h1>
+        <p className="mt-3">
+          We sent a verification link to <strong>{email}</strong>. Open that email and click the verification link to complete registration.
         </p>
-        <a
-          href="/resend-verification"
-          className="text-indigo-600 hover:underline"
-        >
-          Didn’t get the email? Resend
-        </a>
+        <p className="mt-4 text-sm text-gray-600">
+          Didn’t receive the email? Check your spam folder or request a resend from your account settings after logging in.
+        </p>
       </div>
     </div>
   );

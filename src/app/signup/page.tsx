@@ -1,23 +1,236 @@
 // app/signup/page.tsx
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FcGoogle } from "react-icons/fc";
-import { createClient } from "@/utils/supabase/client";
+
+const COUNTRIES = [
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Andorra",
+  "Angola",
+  "Antigua and Barbuda",
+  "Argentina",
+  "Armenia",
+  "Australia",
+  "Austria",
+  "Azerbaijan",
+  "Bahamas",
+  "Bahrain",
+  "Bangladesh",
+  "Barbados",
+  "Belarus",
+  "Belgium",
+  "Belize",
+  "Benin",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brazil",
+  "Brunei",
+  "Bulgaria",
+  "Burkina Faso",
+  "Burundi",
+  "Côte d'Ivoire",
+  "Cabo Verde",
+  "Cambodia",
+  "Cameroon",
+  "Canada",
+  "Central African Republic",
+  "Chad",
+  "Chile",
+  "China",
+  "Colombia",
+  "Comoros",
+  "Congo (Congo-Brazzaville)",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czechia (Czech Republic)",
+  "Democratic Republic of the Congo",
+  "Denmark",
+  "Djibouti",
+  "Dominica",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "El Salvador",
+  "Equatorial Guinea",
+  "Eritrea",
+  "Estonia",
+  "Eswatini (fmr. Swaziland)",
+  "Ethiopia",
+  "Federated States of Micronesia",
+  "Fiji",
+  "Finland",
+  "France",
+  "Gabon",
+  "Gambia",
+  "Georgia",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Grenada",
+  "Guatemala",
+  "Guinea",
+  "Guinea-Bissau",
+  "Guyana",
+  "Haiti",
+  "Honduras",
+  "Hungary",
+  "Iceland",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Jamaica",
+  "Japan",
+  "Jordan",
+  "Kazakhstan",
+  "Kenya",
+  "Kiribati",
+  "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Liberia",
+  "Libya",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malawi",
+  "Malaysia",
+  "Maldives",
+  "Mali",
+  "Malta",
+  "Marshall Islands",
+  "Mauritania",
+  "Mauritius",
+  "Mexico",
+  "Moldova",
+  "Monaco",
+  "Mongolia",
+  "Montenegro",
+  "Morocco",
+  "Mozambique",
+  "Myanmar (formerly Burma)",
+  "Namibia",
+  "Nauru",
+  "Nepal",
+  "Netherlands",
+  "New Zealand",
+  "Nicaragua",
+  "Niger",
+  "Nigeria",
+  "North Korea",
+  "North Macedonia",
+  "Norway",
+  "Oman",
+  "Pakistan",
+  "Palau",
+  "Panama",
+  "Papua New Guinea",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Qatar",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Saint Vincent and the Grenadines",
+  "Samoa",
+  "San Marino",
+  "Sao Tome and Principe",
+  "Saudi Arabia",
+  "Senegal",
+  "Serbia",
+  "Seychelles",
+  "Sierra Leone",
+  "Singapore",
+  "Slovakia",
+  "Slovenia",
+  "Solomon Islands",
+  "Somalia",
+  "South Africa",
+  "South Korea",
+  "South Sudan",
+  "Spain",
+  "Sri Lanka",
+  "Sudan",
+  "Suriname",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Timor-Leste",
+  "Togo",
+  "Tonga",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Turkmenistan",
+  "Tuvalu",
+  "Uganda",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States of America",
+  "Uruguay",
+  "Uzbekistan",
+  "Vanuatu",
+  "Vatican City",
+  "Venezuela",
+  "Vietnam",
+  "Yemen",
+  "Zambia",
+  "Zimbabwe",
+];
 
 export default function SignupPage() {
   const router = useRouter();
-  const supabase = createClient();
   const formRef = useRef<HTMLFormElement | null>(null);
-
-  // Keep checkbox controlled only
   const [agreed, setAgreed] = useState(false);
-
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState<string>("");
+
+  // Try to auto-detect country from browser locale (best-effort)
+  useEffect(() => {
+    try {
+      const lang = typeof navigator !== "undefined" ? navigator.language : null;
+      if (lang && lang.includes("-")) {
+        const code = lang.split("-")[1].toUpperCase(); // e.g. en-GB -> GB
+        // Intl.DisplayNames can map region code to localized country name
+        if ((Intl as any).DisplayNames) {
+          const dn = new (Intl as any).DisplayNames(["en"], { type: "region" });
+          const detected = dn.of(code);
+          if (detected && COUNTRIES.includes(detected)) {
+            setCountry(detected);
+          }
+        }
+      }
+    } catch {
+      // ignore and leave country empty
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,64 +241,40 @@ export default function SignupPage() {
     if (!form) return setError("Form not ready.");
 
     const fd = new FormData(form);
-    const rawName = fd.get("name");
-    const rawEmail = fd.get("email");
-    const rawPassword = fd.get("password");
-    const rawConfirm = fd.get("confirmPassword");
-
-    const name = typeof rawName === "string" ? rawName.trim() : "";
-    const email = typeof rawEmail === "string" ? rawEmail.trim() : "";
-    const password = typeof rawPassword === "string" ? rawPassword : "";
-    const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
+    const name = (fd.get("name") as string || "").trim();
+    const email = (fd.get("email") as string || "").trim();
+    const password = (fd.get("password") as string || "");
+    const confirmPassword = (fd.get("confirmPassword") as string || "");
+    const selectedCountry = country || (fd.get("country") as string || "");
 
     if (!name || !email || !password || !confirmPassword) {
-      return setError("All fields are required.");
+      return setError("All required fields must be filled.");
     }
-    if (password !== confirmPassword) {
-      return setError("Passwords do not match.");
-    }
-    if (!agreed) {
-      return setError("You must agree to Tradia’s Terms & Conditions and Privacy Policy.");
-    }
+    if (password !== confirmPassword) return setError("Passwords do not match.");
+    if (!agreed) return setError("You must agree to the terms.");
+    if (!selectedCountry) return setError("Please select your country.");
 
     setLoading(true);
     try {
-      // Supabase signup with email + password
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: name }, // store name in user_metadata
-          emailRedirectTo: `${window.location.origin}/auth/callback`, // where Supabase sends user after email verification
-        },
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, country: selectedCountry }),
       });
 
-      if (error) {
-        setError(error.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Signup failed.");
         return;
       }
 
-      setNotice("Account created! We’ve sent a verification link to your email. Please verify to continue.");
-
-      // redirect user to check-email page
+      setNotice("Account created. Check your email for a verification link.");
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
-      console.error("Signup failed:", err);
-      setError("Something went wrong. Please try again.");
+      console.error("Signup client error", err);
+      setError("Something went wrong; try again.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleSignup = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // Supabase will handle the redirect back
-      },
-    });
-    if (error) {
-      setError(error.message);
     }
   };
 
@@ -134,6 +323,26 @@ export default function SignupPage() {
             required
             autoComplete="email"
           />
+
+          {/* Country select */}
+          <label className="block text-sm text-gray-700 dark:text-gray-300">
+            <span className="sr-only">Country</span>
+            <select
+              name="country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+              aria-label="Country"
+            >
+              <option value="">Select your country</option>
+              {COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
 
           {/* Password */}
           <input
@@ -189,14 +398,6 @@ export default function SignupPage() {
         </form>
 
         <div className="text-center text-gray-500 dark:text-gray-400">OR</div>
-
-        <button
-          onClick={handleGoogleSignup}
-          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-        >
-          <FcGoogle size={22} />
-          <span>Continue with Google</span>
-        </button>
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           Already have an account?{" "}

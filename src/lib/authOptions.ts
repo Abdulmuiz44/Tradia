@@ -1,7 +1,7 @@
 // src/lib/authOptions.ts
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { pool } from "@/lib/db";
 import type { NextAuthOptions } from "next-auth";
 

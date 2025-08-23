@@ -1,6 +1,6 @@
 // app/api/auth/reset-password/route.ts
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { createClient } from "@/utils/supabase/server";
 
 type ResetRequestBody = { token?: unknown; password?: unknown };

@@ -1,70 +1,57 @@
 // app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminSupabase } from "@/utils/supabase/admin";
 
-type LoginBody = {
-  email?: string;
-  password?: string;
-};
-
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret"; // ⚠️ put a strong secret in .env
+const JWT_SECRET = process.env.JWT_SECRET!;
+if (!JWT_SECRET) console.warn("JWT_SECRET not set");
 
 export async function POST(req: Request) {
   try {
-    const body: LoginBody = await req.json();
-    const email = (body?.email || "").trim().toLowerCase();
-    const password = body?.password || "";
+    const { email = "", password = "" } = await req.json();
+    const normalized = String(email).trim().toLowerCase();
 
-    if (!email || !password) {
+    if (!normalized || !password) {
       return NextResponse.json({ error: "Email and password required." }, { status: 400 });
     }
 
-    const supabase = createClient();
-
-    // get user
-    const { data: user, error: fetchError } = await supabase
+    const supabase = createAdminSupabase();
+    const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, password, name")
-      .eq("email", email)
+      .select("id, password, email_verified, name")
+      .eq("email", normalized)
       .maybeSingle();
 
-    if (fetchError) {
-      console.error("Supabase select error:", fetchError.message);
+    if (error) {
+      console.error("Login select error:", error);
       return NextResponse.json({ error: "Database error." }, { status: 500 });
     }
+    if (!user) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    // require email_verified not null
+    if (!user.email_verified) {
+      return NextResponse.json({ error: "Email not verified. Please check your email." }, { status: 403 });
     }
 
-    // check password
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
-    }
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
 
     // create JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user.id, email: normalized, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
 
-    // set cookie
-    const response = NextResponse.json({ message: "Login successful." });
-    response.cookies.set("session", token, {
+    const res = NextResponse.json({ message: "Login successful." });
+    res.cookies.set("session", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
-    return response;
-  } catch (err: unknown) {
-    console.error("Login error:", err instanceof Error ? err.message : String(err));
+    return res;
+  } catch (err) {
+    console.error("Login error:", err);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

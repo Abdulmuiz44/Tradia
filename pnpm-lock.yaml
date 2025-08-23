@@ -50,6 +50,9 @@ importers:
       '@supabase/ssr':
         specifier: ^0.7.0
         version: 0.7.0(@supabase/supabase-js@2.56.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+      '@supabase/supabase-js':
+        specifier: ^2.56.0
+        version: 2.56.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
