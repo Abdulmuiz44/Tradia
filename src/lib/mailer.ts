@@ -1,9 +1,7 @@
 // lib/mailer.ts
-import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { createAdminClient } from "@/utils/supabase/admin";
-
-// ... your transporter setup stays the same
+import { sendEmail } from "@/lib/email";
 
 function getAppOrigin() {
   return (
@@ -44,10 +42,25 @@ export async function sendVerificationEmail(userId: string, to: string) {
     <p>If you did not create an account, ignore this email.</p>
   `;
 
-  return transporter.sendMail({
-    from: process.env.FROM_EMAIL,
-    to,
-    subject: "Verify your email",
-    html,
-  });
+  return sendEmail(to, "Verify your email", html);
+}
+
+// Sends a simple password reset email. The token storage is handled by the caller
+// (forgot-password route) so this function only builds and sends the email.
+export async function sendPasswordResetEmail(to: string, token: string) {
+  const origin = getAppOrigin();
+  const resetUrl = `${origin}/api/reset-password?token=${encodeURIComponent(
+    token
+  )}`;
+
+  const html = `
+    <p>Hi —</p>
+    <p>We received a request to reset your password. Click the link below to set a new password:</p>
+    <p><a href="${resetUrl}">Reset my password</a></p>
+    <p>If the link doesn't work, copy and paste this into your browser:</p>
+    <pre>${resetUrl}</pre>
+    <p>If you did not request a password reset, you can safely ignore this email.</p>
+  `;
+
+  return sendEmail(to, "Reset your password", html);
 }
