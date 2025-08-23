@@ -2,40 +2,27 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import jwt from "jsonwebtoken"; // <--- make sure installed
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-/**
- * Middleware that works with BOTH Supabase (via createMiddlewareClient)
- * and NextAuth (via getToken) so your app accepts sessions from either provider.
- *
- * Behavior:
- * - If no session and visiting /dashboard*  => redirect to /login
- * - If session exists but email not verified => redirect to /verify-email (when visiting /dashboard*)
- * - If user is auth'd and visits /login or /signup => redirect to /dashboard
- *
- * Make sure you have:
- * - NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in env
- * - NEXTAUTH_SECRET (for getToken) if you use next-auth
- * - npm i @supabase/auth-helpers-nextjs
- */
-export async function middleware(req: NextRequest) {
-  // Use a response object we can mutate and return (createMiddlewareClient expects it)
-  const res = NextResponse.next();
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // same secret you used to sign tokens
 
-  // create Supabase middleware client (uses NEXT_PUBLIC_SUPABASE_* env vars)
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const pathname = req.nextUrl.pathname;
+
+  // Supabase client (if you still want to support Supabase auth)
   const supabase = createMiddlewareClient({ req, res });
 
-  // Try Supabase session/user first
   let supabaseUser = null;
   try {
     const { data } = await supabase.auth.getUser();
     supabaseUser = data?.user ?? null;
   } catch (err) {
-    // ignore errors (no supabase session or misconfigured)
     supabaseUser = null;
   }
 
-  // Fallback to NextAuth JWT token (if you use next-auth)
+  // Try NextAuth token
   let nextAuthToken = null;
   try {
     nextAuthToken = await getToken({ req }) ?? null;
@@ -43,19 +30,29 @@ export async function middleware(req: NextRequest) {
     nextAuthToken = null;
   }
 
-  // Auth detection: accept either provider
-  const isAuth = Boolean(supabaseUser || nextAuthToken);
+  // Try custom JWT from Authorization header or cookie
+  let customJwtPayload: any = null;
+  const authHeader = req.headers.get("authorization");
+  const cookieToken = req.cookies.get("app_token")?.value; // adjust name if you use a cookie
+  const rawToken = authHeader?.replace("Bearer ", "") || cookieToken;
 
-  // Email verification detection:
-  // - Supabase: user.email_confirmed_at or user.confirmed_at or metadata flag
-  // - NextAuth token: token.emailVerified or token.email_verified
+  if (rawToken) {
+    try {
+      customJwtPayload = jwt.verify(rawToken, JWT_SECRET);
+    } catch (err) {
+      console.error("Invalid custom JWT:", err);
+    }
+  }
+
+  // Auth detection
+  const isAuth = Boolean(supabaseUser || nextAuthToken || customJwtPayload);
+
+  // Email verification detection
   const supabaseEmailVerified =
     Boolean(
       supabaseUser &&
         (supabaseUser.email_confirmed_at ||
-          // some setups use confirmed_at
           (supabaseUser as any).confirmed_at ||
-          // user_metadata may contain a custom flag
           (supabaseUser as any).user_metadata?.emailVerified)
     ) ?? false;
 
@@ -65,10 +62,13 @@ export async function middleware(req: NextRequest) {
         ((nextAuthToken as any).emailVerified || (nextAuthToken as any).email_verified)
     ) ?? false;
 
-  const isEmailVerified = Boolean(supabaseEmailVerified || nextAuthEmailVerified);
+  const customEmailVerified =
+    Boolean(customJwtPayload?.email_verified) ?? false;
 
-  // Path checks (same as your original logic)
-  const pathname = req.nextUrl.pathname;
+  const isEmailVerified =
+    supabaseEmailVerified || nextAuthEmailVerified || customEmailVerified;
+
+  // Path checks
   const isDashboard = pathname.startsWith("/dashboard");
   const isLoginOrSignup = ["/login", "/signup"].includes(pathname);
 
