@@ -85,6 +85,8 @@ function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   // get trades + refresh helper from context
   const { trades, refreshTrades } = useTrade();
@@ -110,7 +112,67 @@ function DashboardContent() {
     return () => clearTimeout(t);
   }, []);
 
-  if (!session) {
+  // Helper: read cookie by name
+  function getCookie(name: string) {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+
+  // Decode JWT payload (no verification) to inspect claims client-side
+  function parseJwtPayload(token: string | null) {
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = parts[1];
+      // base64 url -> base64
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(json);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Check authentication: prefer NextAuth session, fall back to JWT cookie used by custom login route
+  useEffect(() => {
+    // If NextAuth session is present and not loading, accept
+    if (session && (session as any).user) {
+      setIsAuthed(true);
+      setAuthChecked(true);
+      return;
+    }
+
+    // Check server JWT cookie (name: session)
+    try {
+      const token = getCookie('session') || getCookie('app_token') || getCookie('refresh_token');
+      if (token) {
+        const payload = parseJwtPayload(token);
+        if (payload && payload.email_verified) {
+          setIsAuthed(true);
+        } else {
+          setIsAuthed(false);
+        }
+      } else {
+        setIsAuthed(false);
+      }
+    } catch (err) {
+      console.error('Auth cookie parse error:', err);
+      setIsAuthed(false);
+    }
+    setAuthChecked(true);
+  }, [session]);
+
+  // Wait until we've evaluated auth info client-side
+  if (!authChecked) return <Spinner />;
+
+  if (!isAuthed) {
     return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
   }
 
@@ -144,11 +206,11 @@ function DashboardContent() {
 
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
-                <Avatar className="w-9 h-9">
-                  <AvatarImage src={session.user?.image ?? ""} alt={session.user?.name ?? "Profile"} />
-                  <AvatarFallback>{session.user?.name?.[0] ?? "U"}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
+                  <Avatar className="w-9 h-9">
+                    <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? "Profile"} />
+                    <AvatarFallback>{session?.user?.name?.[0] ?? "U"}</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
               <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
                 <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
