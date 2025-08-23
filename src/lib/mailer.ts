@@ -1,24 +1,22 @@
 // lib/mailer.ts
 import nodemailer from "nodemailer";
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const FROM_EMAIL = process.env.FROM_EMAIL || "no-reply@yourdomain.com";
+// Support both SMTP_* (code expectation) and EMAIL_* (your .env)
+const SMTP_HOST = process.env.SMTP_HOST || process.env.EMAIL_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT || 587);
+const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
+const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+const FROM_EMAIL = process.env.FROM_EMAIL || process.env.EMAIL_FROM || "no-reply@yourdomain.com";
 
 if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-  console.warn("Mailer not fully configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS.");
+  console.warn("Mailer not fully configured. Set SMTP_HOST/EMAIL_HOST, SMTP_USER/EMAIL_USER and SMTP_PASS/EMAIL_PASS.");
 }
 
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
   secure: SMTP_PORT === 465,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
+  auth: SMTP_USER && SMTP_PASS ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
 });
 
 export async function sendVerificationEmail(to: string, token: string) {
