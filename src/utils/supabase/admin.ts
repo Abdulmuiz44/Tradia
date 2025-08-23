@@ -16,3 +16,6 @@ export function createAdminClient() {
     },
   });
 }
+
+// Backwards-compatible alias: some files import createAdminSupabase
+export const createAdminSupabase = createAdminClient;
