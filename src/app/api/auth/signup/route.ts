@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
     if (selErr) {
       console.error("Select error:", selErr);
-      return NextResponse.json({ error: "Database error." }, { status: 500 });
+      return NextResponse.json({ error: "Database error.", details: selErr.message ?? selErr }, { status: 500 });
     }
 
     if (existing && existing.email_verified) {
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 
       if (updErr) {
         console.error("Update error:", updErr);
-        return NextResponse.json({ error: "Failed to update user." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to update user.", details: updErr.message ?? updErr }, { status: 500 });
       }
     } else {
       // create new
@@ -96,10 +96,11 @@ export async function POST(req: Request) {
 
       if (insErr) {
         console.error("Insert error:", insErr);
-        if ((insErr as any).code === "23505" || /unique/i.test(String(insErr.message || ""))) {
-          return NextResponse.json({ error: "Email already registered." }, { status: 409 });
+        const msg = (insErr as any)?.message ?? String(insErr);
+        if ((insErr as any).code === "23505" || /unique/i.test(msg)) {
+          return NextResponse.json({ error: "Email already registered.", details: msg }, { status: 409 });
         }
-        return NextResponse.json({ error: "Failed to create user." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to create user.", details: msg }, { status: 500 });
       }
     }
 
