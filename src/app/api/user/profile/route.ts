@@ -1,56 +1,54 @@
-// src/app/api/user/profile/route.ts
+// app/api/user/profile/route.ts
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminSupabase } from "@/utils/supabase/admin";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "";
+const JWT_SECRET = process.env.JWT_SECRET!;
+if (!JWT_SECRET) console.warn("JWT_SECRET not set");
 
-interface SessionUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
+function getCookieFromReq(req: Request, name: string) {
+  const cookieHeader = req.headers.get("cookie") || "";
+  const cookie = cookieHeader
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${name}=`));
+  if (!cookie) return null;
+  return decodeURIComponent(cookie.split("=")[1]);
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Try NextAuth session first
-    let userId: string | undefined;
+    const token = getCookieFromReq(req, "session") || getCookieFromReq(req, "app_token");
+    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+    let payload: any = null;
     try {
-      const session = await getServerSession(authOptions);
-      userId = (session?.user as SessionUser | undefined)?.id ?? undefined;
-    } catch (e) {
-      // ignore
+      payload = jwt.verify(token, JWT_SECRET) as any;
+    } catch (err) {
+      console.error("profile GET: invalid JWT", (err as any)?.message ?? err);
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
-    // If no NextAuth session, use server-side supabase client which can read cookies
-    if (!userId) {
-      try {
-        const supabase = createClient();
-        const { data: authData, error: authErr } = await (supabase.auth as any).getUser();
-        if (!authErr && authData?.user?.id) userId = String(authData.user.id);
-      } catch (e) {
-        console.error("profile: supabase cookie client failed:", e);
-      }
-    }
+    const userId = payload?.id ?? payload?.sub;
+    if (!userId) return NextResponse.json({ error: "Invalid session payload" }, { status: 401 });
 
-    if (!userId) return NextResponse.json({}, { status: 401 });
+    const supabase = createAdminSupabase();
 
-    const supabase = createClient();
-    const { data, error } = await supabase
+    const { data: user, error } = await supabase
       .from("users")
-      .select("id,name,email,image,phone,country,trading_style,trading_experience,bio")
+      .select("id, email, name, image, country, phone, trading_style, trading_experience, bio")
       .eq("id", userId)
       .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return NextResponse.json({}, { status: 404 });
+    if (error) {
+      console.error("profile GET DB error:", error);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    return NextResponse.json(data);
-  } catch (err: unknown) {
-    console.error("GET /api/user/profile error:", err);
-    return NextResponse.json({}, { status: 500 });
+    return NextResponse.json(user);
+  } catch (err) {
+    console.error("profile GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

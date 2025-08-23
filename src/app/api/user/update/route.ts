@@ -1,167 +1,110 @@
-// src/app/api/user/update/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import { createClient } from "@/utils/supabase/server";
-import bcrypt from "bcryptjs";
+// app/api/user/update/route.ts
+import { NextResponse } from "next/server";
+import { createAdminSupabase } from "@/utils/supabase/admin";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "";
+const JWT_SECRET = process.env.JWT_SECRET!;
+if (!JWT_SECRET) console.warn("JWT_SECRET not set");
 
-// Extend default NextAuth session typing
-interface SessionUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
+function getCookieFromReq(req: Request, name: string) {
+  const cookieHeader = req.headers.get("cookie") || "";
+  const cookie = cookieHeader
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${name}=`));
+  if (!cookie) return null;
+  return decodeURIComponent(cookie.split("=")[1]);
 }
 
-type UpdateBody = {
-  name?: unknown;
-  image?: unknown;
-  oldPassword?: unknown;
-  newPassword?: unknown;
-  phone?: unknown;
-  country?: unknown;
-  tradingStyle?: unknown;
-  tradingExperience?: unknown;
-  bio?: unknown;
-};
-
-function asStringOrUndefined(u: unknown): string | undefined {
-  if (typeof u === "string") {
-    const s = u.trim();
-    return s.length ? s : undefined;
-  }
-  return undefined;
-}
-
-export async function PATCH(req: NextRequest) {
+export async function PATCH(req: Request) {
   try {
-    // Resolve user id from NextAuth session or fallback to our JWT cookie (session/app_token)
-    let userId: string | undefined;
+    const body = await req.json().catch(() => ({}));
+    const {
+      name,
+      image,
+      phone,
+      country,
+      tradingStyle,
+      tradingExperience,
+      bio,
+      oldPassword,
+      newPassword,
+    } = body as Record<string, unknown>;
+
+    const token = getCookieFromReq(req, "session") || getCookieFromReq(req, "app_token");
+    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+    let payload: any = null;
     try {
-      const session = await getServerSession(authOptions);
-      userId = (session?.user as SessionUser | undefined)?.id ?? undefined;
-    } catch (e) {
-      // ignore
+      payload = jwt.verify(token, JWT_SECRET) as any;
+    } catch (err) {
+      console.error("update profile: invalid JWT", (err as any)?.message ?? err);
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
-    if (!userId) {
-      const cookieHeader = req.headers.get("cookie") || "";
-      const m = cookieHeader.match(/(?:^|; *)?(?:session|app_token)=([^;]+)/);
-      const token = m ? decodeURIComponent(m[1]) : null;
-      if (token && JWT_SECRET) {
-        try {
-          const payload = jwt.verify(token, JWT_SECRET) as any;
-          if (payload && payload.sub) userId = String(payload.sub);
-        } catch (e) {
-          console.error("JWT verify failed:", e);
-        }
-      }
-    }
+    const userId = payload?.id ?? payload?.sub;
+    if (!userId) return NextResponse.json({ error: "Invalid session payload" }, { status: 401 });
 
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = createAdminSupabase();
 
-  const body = (await req.json()) as UpdateBody;
-    const name = asStringOrUndefined(body?.name);
-    const image = asStringOrUndefined(body?.image);
-    const oldPassword =
-      typeof body?.oldPassword === "string" ? body.oldPassword : undefined;
-    const newPassword =
-      typeof body?.newPassword === "string" ? body.newPassword : undefined;
-  const phone = asStringOrUndefined(body?.phone);
-  const country = asStringOrUndefined(body?.country);
-  const tradingStyle = asStringOrUndefined(body?.tradingStyle);
-  const tradingExperience = asStringOrUndefined(body?.tradingExperience);
-  const bio = asStringOrUndefined(body?.bio);
-
-    if (!name && !image && !newPassword) {
-      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
-    }
-
-    // If changing password — verify old password first
-    if (newPassword) {
-      if (!oldPassword) {
-        return NextResponse.json(
-          { error: "Old password is required to change password" },
-          { status: 400 }
-        );
-      }
-
-      const supabase = createClient();
-      const { data: pwRow, error: pwErr } = await supabase
-        .from("users")
-        .select("password")
-        .eq("id", userId)
-        .maybeSingle();
-      if (pwErr) throw pwErr;
-
-      const hashed = (pwRow as any)?.password;
-      if (!hashed) {
-        return NextResponse.json(
-          { error: "No existing password set; cannot change" },
-          { status: 400 }
-        );
-      }
-
-      const ok = await bcrypt.compare(oldPassword, hashed);
-      if (!ok) {
-        return NextResponse.json(
-          { error: "Old password is incorrect" },
-          { status: 400 }
-        );
-      }
-
-      const newHashed = await bcrypt.hash(newPassword, 10);
-
-  const updateRow: Record<string, unknown> = {};
-  if (name) updateRow["name"] = name;
-  if (image) updateRow["image"] = image;
-  if (phone) updateRow["phone"] = phone;
-  if (country) updateRow["country"] = country;
-  if (tradingStyle) updateRow["trading_style"] = tradingStyle;
-  if (tradingExperience) updateRow["trading_experience"] = tradingExperience;
-  if (bio) updateRow["bio"] = bio;
-  updateRow["password"] = newHashed;
-  updateRow["updated_at"] = new Date().toISOString();
-  const { data: updatedUser } = await supabase.from("users").update(updateRow).eq("id", userId).select("id,name,email,image,phone,country,trading_style,trading_experience,bio,updated_at").maybeSingle();
-
-      return NextResponse.json({ success: true });
-    }
-
-    // Update name/image only
-    const fieldsToUpdate: Record<string, unknown> = {};
-    if (name) fieldsToUpdate["name"] = name;
-    if (image) fieldsToUpdate["image"] = image;
-    if (phone) fieldsToUpdate["phone"] = phone;
-    if (country) fieldsToUpdate["country"] = country;
-    if (tradingStyle) fieldsToUpdate["trading_style"] = tradingStyle;
-    if (tradingExperience) fieldsToUpdate["trading_experience"] = tradingExperience;
-    if (bio) fieldsToUpdate["bio"] = bio;
-
-    if (Object.keys(fieldsToUpdate).length === 0) {
-      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
-    }
-
-    fieldsToUpdate["updated_at"] = new Date().toISOString();
-
-    const { data: updatedUser, error: updErr } = await createClient()
+    // Fetch user current (to validate old password if needed)
+    const { data: currentUser, error: fetchErr } = await supabase
       .from("users")
-      .update(fieldsToUpdate)
+      .select("id, password, name, email, image")
       .eq("id", userId)
-      .select("id,name,email,image,phone,country,trading_style,trading_experience,bio,updated_at");
+      .maybeSingle();
 
-    if (updErr) throw updErr;
+    if (fetchErr) {
+      console.error("profile update: fetch user error", fetchErr);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+    if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // return updated user object
-    const user = Array.isArray(updatedUser) ? updatedUser[0] : updatedUser;
-    return NextResponse.json({ success: true, user });
-  } catch (err: unknown) {
-    console.error("user update error:", err);
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg || "Update failed" }, { status: 500 });
+    // If changing password: validate old -> set new
+    let hashedPasswordToSet: string | undefined = undefined;
+    if (oldPassword || newPassword) {
+      if (!oldPassword || !newPassword) {
+        return NextResponse.json({ error: "Old and new password required to change password" }, { status: 400 });
+      }
+      const ok = await bcrypt.compare(String(oldPassword), String(currentUser.password));
+      if (!ok) return NextResponse.json({ error: "Current password incorrect" }, { status: 403 });
+      if (String(newPassword).length < 8) return NextResponse.json({ error: "New password too short" }, { status: 400 });
+      hashedPasswordToSet = bcrypt.hashSync(String(newPassword), 10);
+    }
+
+    // Build update object (map client keys to DB columns)
+    const updates: Record<string, any> = {};
+    if (typeof name === "string") updates.name = name.trim() || null;
+    if (typeof image === "string") updates.image = image || null;
+    if (typeof phone === "string") updates.phone = phone || null;
+    if (typeof country === "string") updates.country = country || null;
+    if (typeof tradingStyle === "string") updates.trading_style = tradingStyle || null;
+    if (typeof tradingExperience === "string") updates.trading_experience = tradingExperience || null;
+    if (typeof bio === "string") updates.bio = bio || null;
+    if (hashedPasswordToSet) updates.password = hashedPasswordToSet;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ success: true, user: currentUser });
+    }
+
+    updates.updated_at = new Date().toISOString();
+
+    const { data: updated, error: updErr } = await supabase
+      .from("users")
+      .update(updates)
+      .eq("id", userId)
+      .select("id, email, name, image, country, phone, trading_style, trading_experience, bio")
+      .maybeSingle();
+
+    if (updErr) {
+      console.error("profile update: update error", updErr);
+      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, user: updated });
+  } catch (err) {
+    console.error("profile update error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
