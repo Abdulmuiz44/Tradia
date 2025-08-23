@@ -45,7 +45,7 @@ export async function sendVerificationEmail(to: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(to: string, token: string) {
-  const origin = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const origin = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://tradia-app.vercel.app";
   const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
 
   const html = `
