@@ -1,22 +1,29 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { BookOpen, GraduationCap, Video, Mail, Heart, CheckCircle, Zap } from "lucide-react";
+import { BookOpen, GraduationCap, Video, Heart, CheckCircle, Zap } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 /*
-  TraderEducation component
-  - Comprehensive trader education hub that complements Tradia's landing and dashboard
-  - Tabs for Courses, Videos, Articles, Setups & Signals, Tools
-  - Search + filter, risk calculator, downloadable cheat-sheet, checklist, Telegram CTA
-  - Lightweight, fully client-side, no external dependencies beyond lucide-react + framer-motion + tailwind
-
-  How to use:
-  - Place at src/components/TraderEducation.tsx and import into pages where needed.
+  TraderEducation (TypeScript / TSX)
+  - Fixed implicit any error on event parameter types
+  - All input onChange / form handlers typed
+  - Tab UI kept as rounded pills to match dashboard style
+  - Export default component returns JSX.Element
 */
 
-const RESOURCES = [
+type Resource = {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  link: string;
+  tags?: string[];
+};
+
+const RESOURCES: Resource[] = [
   {
     id: "psych-101",
     type: "course",
@@ -66,17 +73,17 @@ const RESOURCES = [
 
 const TELEGRAM = "https://t.me/theabdulmuizchannel"; // user's telegram link
 
-export default function TraderEducation() {
-  const [tab, setTab] = useState("courses");
-  const [query, setQuery] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-  const [email, setEmail] = useState("");
+export default function TraderEducation(): JSX.Element {
+  const [tab, setTab] = useState<"courses" | "videos" | "articles" | "setups" | "tools">("courses");
+  const [query, setQuery] = useState<string>("");
+  const [subscribed, setSubscribed] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>("");
 
   // risk calculator state
-  const [account, setAccount] = useState(1000);
-  const [riskPct, setRiskPct] = useState(1); // percent
-  const [stopPips, setStopPips] = useState(20);
-  const [pipValue, setPipValue] = useState(10); // $ per standard lot per pip (approx)
+  const [account, setAccount] = useState<number>(1000);
+  const [riskPct, setRiskPct] = useState<number>(1); // percent
+  const [stopPips, setStopPips] = useState<number>(20);
+  const [pipValue, setPipValue] = useState<number>(10); // $ per standard lot per pip (approx)
 
   useEffect(() => {
     const s = localStorage.getItem("tradia:edu:subscribed");
@@ -99,16 +106,24 @@ export default function TraderEducation() {
     return { riskAmount: Math.round(riskAmount * 100) / 100, lots };
   }, [account, riskPct, stopPips, pipValue]);
 
-  function handleSubscribe(e) {
-    e?.preventDefault();
-    if (!email.includes("@")) return alert("Please enter a valid email.");
+  const handleSubscribe = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    if (!email.includes("@")) {
+      alert("Please enter a valid email.");
+      return;
+    }
     localStorage.setItem("tradia:edu:subscribed", "1");
     setSubscribed(true);
     alert("Thanks — we've added your email to the education list. Check your inbox.");
-  }
+  };
 
-  function downloadCheatSheet() {
-    const text = `Tradia Cheat Sheet\n- Always size to risk %\n- Use journal to record setups and emotions\n- Check higher timeframe structure\n- Reduce lot size before news\n`;
+  function downloadCheatSheet(): void {
+    const text = `Tradia Cheat Sheet
+- Always size to risk %
+- Use journal to record setups and emotions
+- Check higher timeframe structure
+- Reduce lot size before news
+`;
     const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -126,11 +141,18 @@ export default function TraderEducation() {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold">Trader Education</h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Everything you need to make better trading decisions — courses, videos, setups, and practical tools.</p>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Everything you need to make better trading decisions — courses, videos, setups, and practical tools.
+              </p>
             </div>
 
             <div className="hidden sm:flex items-center gap-3">
-              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-black px-3 py-2 rounded-full font-semibold">
+              <a
+                href={TELEGRAM}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-black px-3 py-2 rounded-full font-semibold"
+              >
                 Join free setups on Telegram <span className="opacity-80">→</span>
               </a>
             </div>
@@ -139,16 +161,53 @@ export default function TraderEducation() {
           {/* Search & tabs */}
           <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1 flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-2">
-              <input value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 bg-transparent outline-none text-sm" placeholder="Search courses, articles, setups..." />
-              <button onClick={() => setQuery("")} className="text-xs text-gray-500">Clear</button>
+              <input
+                value={query}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-sm"
+                placeholder="Search courses, articles, setups..."
+              />
+              <button onClick={() => setQuery("")} className="text-xs text-gray-500">
+                Clear
+              </button>
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => setTab("courses")} className={`px-3 py-2 rounded-full ${tab === "courses" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}>Courses</button>
-              <button onClick={() => setTab("videos")} className={`px-3 py-2 rounded-full ${tab === "videos" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}>Videos</button>
-              <button onClick={() => setTab("articles")} className={`px-3 py-2 rounded-full ${tab === "articles" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}>Articles</button>
-              <button onClick={() => setTab("setups")} className={`px-3 py-2 rounded-full ${tab === "setups" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}>Setups & Signals</button>
-              <button onClick={() => setTab("tools")} className={`px-3 py-2 rounded-full ${tab === "tools" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}>Tools</button>
+              <button
+                onClick={() => setTab("courses")}
+                className={`px-3 py-2 rounded-full ${tab === "courses" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                aria-pressed={tab === "courses"}
+              >
+                Courses
+              </button>
+              <button
+                onClick={() => setTab("videos")}
+                className={`px-3 py-2 rounded-full ${tab === "videos" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                aria-pressed={tab === "videos"}
+              >
+                Videos
+              </button>
+              <button
+                onClick={() => setTab("articles")}
+                className={`px-3 py-2 rounded-full ${tab === "articles" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                aria-pressed={tab === "articles"}
+              >
+                Articles
+              </button>
+              <button
+                onClick={() => setTab("setups")}
+                className={`px-3 py-2 rounded-full ${tab === "setups" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                aria-pressed={tab === "setups"}
+              >
+                Setups & Signals
+              </button>
+              <button
+                onClick={() => setTab("tools")}
+                className={`px-3 py-2 rounded-full ${tab === "tools" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                aria-pressed={tab === "tools"}
+              >
+                Tools
+              </button>
             </div>
           </div>
 
@@ -163,7 +222,14 @@ export default function TraderEducation() {
                 return true;
               })
               .map((item) => (
-                <motion.a key={item.id} href={item.link} target="_blank" rel="noreferrer" whileHover={{ y: -4 }} className="group block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm hover:shadow-lg transition">
+                <motion.a
+                  key={item.id}
+                  href={item.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  whileHover={{ y: -4 }}
+                  className="group block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm hover:shadow-lg transition"
+                >
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-indigo-50 group-hover:bg-indigo-100">{item.icon}</div>
                     <div>
@@ -185,7 +251,9 @@ export default function TraderEducation() {
                       <p className="text-sm text-gray-500">Free setups and signals posted to Telegram — join to receive real-time alerts.</p>
                     </div>
 
-                    <a href={TELEGRAM} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-amber-500 px-3 py-2 rounded-full text-black font-semibold">Join Telegram</a>
+                    <a href={TELEGRAM} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-amber-500 px-3 py-2 rounded-full text-black font-semibold">
+                      Join Telegram
+                    </a>
                   </div>
 
                   <div className="mt-4 space-y-3">
@@ -195,7 +263,7 @@ export default function TraderEducation() {
                           <div className="text-sm font-semibold">EURUSD • Buy</div>
                           <div className="text-xs text-gray-500">Entry: 1.0872 · TP: 1.0900 · SL: 1.0840</div>
                         </div>
-                        <div className="text-xs text-gray-500">{['2m','5m','10m','1h','3h'][i % 5]} ago</div>
+                        <div className="text-xs text-gray-500">{["2m", "5m", "10m", "1h", "3h"][i % 5]} ago</div>
                       </div>
                     ))}
                   </div>
@@ -213,22 +281,44 @@ export default function TraderEducation() {
             {/* Risk calculator */}
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2"><CheckCircle className="w-5 h-5 text-indigo-600"/> <div className="font-semibold">Risk calculator</div></div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-indigo-600" /> <div className="font-semibold">Risk calculator</div>
+                </div>
                 <div className="text-xs text-gray-500">Quick calc</div>
               </div>
 
               <div className="mt-3 text-sm space-y-2">
                 <label className="block text-xs text-gray-500">Account balance</label>
-                <input type="number" value={account} onChange={(e) => setAccount(Number(e.target.value) || 0)} className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />
+                <input
+                  type="number"
+                  value={account}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccount(Number(e.target.value) || 0)}
+                  className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                />
 
                 <label className="block text-xs text-gray-500">Risk % per trade</label>
-                <input type="number" value={riskPct} onChange={(e) => setRiskPct(Number(e.target.value) || 0)} className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />
+                <input
+                  type="number"
+                  value={riskPct}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRiskPct(Number(e.target.value) || 0)}
+                  className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                />
 
                 <label className="block text-xs text-gray-500">Stop (pips)</label>
-                <input type="number" value={stopPips} onChange={(e) => setStopPips(Number(e.target.value) || 0)} className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />
+                <input
+                  type="number"
+                  value={stopPips}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStopPips(Number(e.target.value) || 0)}
+                  className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                />
 
                 <label className="block text-xs text-gray-500">Pip value ($ per lot)</label>
-                <input type="number" value={pipValue} onChange={(e) => setPipValue(Number(e.target.value) || 0)} className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />
+                <input
+                  type="number"
+                  value={pipValue}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPipValue(Number(e.target.value) || 0)}
+                  className="w-full p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                />
 
                 <div className="mt-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
                   <div className="text-xs text-gray-500">Risk amount</div>
@@ -238,15 +328,36 @@ export default function TraderEducation() {
                 </div>
 
                 <div className="mt-2 flex gap-2">
-                  <button onClick={() => { navigator.clipboard?.writeText(`Risk: $${positionSize.riskAmount}, Lots: ${positionSize.lots}`); alert('Copied to clipboard'); }} className="flex-1 px-3 py-2 rounded bg-indigo-600 text-white">Copy</button>
-                  <button onClick={() => { setAccount(1000); setRiskPct(1); setStopPips(20); setPipValue(10); }} className="flex-1 px-3 py-2 rounded border">Reset</button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard?.writeText(`Risk: $${positionSize.riskAmount}, Lots: ${positionSize.lots}`);
+                      alert("Copied to clipboard");
+                    }}
+                    className="flex-1 px-3 py-2 rounded bg-indigo-600 text-white"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAccount(1000);
+                      setRiskPct(1);
+                      setStopPips(20);
+                      setPipValue(10);
+                    }}
+                    className="flex-1 px-3 py-2 rounded border"
+                  >
+                    Reset
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Checklist */}
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-emerald-600"/><div className="font-semibold">Pre-trade checklist</div></div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-emerald-600" />
+                <div className="font-semibold">Pre-trade checklist</div>
+              </div>
               <ul className="mt-3 text-sm space-y-2 text-gray-600 dark:text-gray-300">
                 <li>✅ Higher timeframe structure aligns</li>
                 <li>✅ News / events checked</li>
@@ -259,19 +370,33 @@ export default function TraderEducation() {
             {/* Cheat sheet + subscribe */}
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2"><GraduationCap className="w-5 h-5 text-indigo-600"/><div className="font-semibold">Cheat sheet</div></div>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-indigo-600" />
+                  <div className="font-semibold">Cheat sheet</div>
+                </div>
                 <div className="text-xs text-gray-500">Download</div>
               </div>
 
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Download the one-page checklist and quick rules to trade better.</p>
               <div className="mt-3 flex gap-2">
-                <button onClick={downloadCheatSheet} className="flex-1 px-3 py-2 rounded bg-indigo-600 text-white">Download</button>
-                <a href={TELEGRAM} target="_blank" rel="noreferrer" className="flex-1 px-3 py-2 rounded border text-center">Join Telegram</a>
+                <button onClick={downloadCheatSheet} className="flex-1 px-3 py-2 rounded bg-indigo-600 text-white">
+                  Download
+                </button>
+                <a href={TELEGRAM} target="_blank" rel="noreferrer" className="flex-1 px-3 py-2 rounded border text-center">
+                  Join Telegram
+                </a>
               </div>
 
               <form onSubmit={handleSubscribe} className="mt-3 flex gap-2">
-                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email for education" className="flex-1 p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm" />
-                <button type="submit" className="px-3 py-2 rounded bg-emerald-500 text-black font-semibold">Subscribe</button>
+                <input
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  placeholder="Email for education"
+                  className="flex-1 p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                />
+                <button type="submit" className="px-3 py-2 rounded bg-emerald-500 text-black font-semibold">
+                  Subscribe
+                </button>
               </form>
 
               {subscribed && <div className="mt-2 text-xs text-green-400">You're subscribed — check your inbox.</div>}
@@ -279,7 +404,10 @@ export default function TraderEducation() {
 
             {/* Recommended next steps */}
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-2"><Heart className="w-5 h-5 text-rose-500"/><div className="font-semibold">Recommended</div></div>
+              <div className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-rose-500" />
+                <div className="font-semibold">Recommended</div>
+              </div>
               <ol className="mt-3 text-sm text-gray-600 dark:text-gray-300 space-y-2">
                 <li>1. Create a trade plan and stick to it.</li>
                 <li>2. Use Tradia's journal for every trade.</li>
@@ -288,7 +416,9 @@ export default function TraderEducation() {
               </ol>
             </div>
 
-            <div className="text-center text-xs text-gray-500">Need help? <Link href="/app/contact" className="underline">Contact support</Link></div>
+            <div className="text-center text-xs text-gray-500">
+              Need help? <Link href="/app/contact" className="underline">Contact support</Link>
+            </div>
           </div>
         </aside>
       </div>
