@@ -78,7 +78,12 @@ const computeResultRR = (t: Partial<Trade>): number => {
 const normalizeTrade = (raw: Partial<Trade>): Trade => {
   const id = String(raw.id ?? `${raw.symbol ?? "TRD"}-${Date.now()}`);
   const symbol = String(raw.symbol ?? "");
-  const direction = String(raw.direction ?? (toNumber(raw.takeProfitPrice) >= toNumber(raw.entryPrice) ? "Buy" : "Sell"));
+  const direction = String(
+    raw.direction ??
+      (toNumber(raw.takeProfitPrice) >= toNumber(raw.entryPrice)
+        ? "Buy"
+        : "Sell")
+  );
   const orderType = String(raw.orderType ?? "Market Execution");
   const openTime = String(raw.openTime ?? "");
   const closeTime = String(raw.closeTime ?? "");
@@ -88,7 +93,8 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
   const stopLossPrice = toNumber(raw.stopLossPrice);
   const takeProfitPrice = toNumber(raw.takeProfitPrice);
   let pnl = toNumber(raw.pnl);
-  const outcome: Trade["outcome"] = (raw.outcome as Trade["outcome"]) ?? "Breakeven";
+  const outcome: Trade["outcome"] =
+    (raw.outcome as Trade["outcome"]) ?? "Breakeven";
 
   // Enforce PnL sign from outcome
   if (outcome === "Win") pnl = Math.abs(pnl);
@@ -98,7 +104,12 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
   const resultRR =
     Number.isFinite(toNumber(raw.resultRR)) && toNumber(raw.resultRR) !== 0
       ? toNumber(raw.resultRR)
-      : computeResultRR({ entryPrice, stopLossPrice, takeProfitPrice, outcome });
+      : computeResultRR({
+          entryPrice,
+          stopLossPrice,
+          takeProfitPrice,
+          outcome,
+        });
 
   const duration =
     String(raw.duration ?? "") ||
@@ -150,10 +161,8 @@ export default function TradeHistoryTable() {
   const [filterOpen, setFilterOpen] = useState<boolean>(false);
   const [exportOpen, setExportOpen] = useState<boolean>(false);
 
-  const [csvMenuOpen, setCsvMenuOpen] = useState<boolean>(false);
+  // CSV modal state (now opens a modal directly)
   const [csvOpen, setCsvOpen] = useState<boolean>(false);
-  const csvMenuRef = useRef<HTMLDivElement | null>(null);
-  const csvButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const hasLoaded = useRef<boolean>(false);
 
@@ -214,27 +223,6 @@ export default function TradeHistoryTable() {
       // ignore
     }
   }, [trades]);
-
-  /* close CSV menu on outside click / Esc */
-  useEffect(() => {
-    function handleDocClick(e: MouseEvent) {
-      if (!csvMenuOpen) return;
-      const target = e.target as Node | null;
-      if (!csvMenuRef.current || !csvButtonRef.current) return;
-      if (csvMenuRef.current.contains(target) || csvButtonRef.current.contains(target))
-        return;
-      setCsvMenuOpen(false);
-    }
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setCsvMenuOpen(false);
-    }
-    document.addEventListener("mousedown", handleDocClick);
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleDocClick);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, [csvMenuOpen]);
 
   /* processed data (filters + search + sort) */
   const processed = useMemo(() => {
@@ -400,11 +388,63 @@ export default function TradeHistoryTable() {
     );
   };
 
+  /* small helper: mobile card for a trade */
+  const MobileTradeCard = ({ t, idx }: { t: Trade; idx: number }) => {
+    const pnl = toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
+    const open = toDateOrNull(getField(t, "openTime"));
+    const close = toDateOrNull(getField(t, "closeTime"));
+    return (
+      <div key={toStringSafe(getField(t, "id")) || `card-${idx}`} className="bg-[#071022] border border-zinc-700 rounded-lg p-3 space-y-2">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-sm font-semibold">{toStringSafe(getField(t, "symbol"))}</div>
+            <div className="text-xs text-zinc-400">{toStringSafe(getField(t, "direction"))} • {toStringSafe(getField(t, "orderType"))}</div>
+          </div>
+          <div className="text-right">
+            <div className={`font-semibold ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>${pnl.toFixed(2)}</div>
+            <div className="text-xs text-zinc-400">{formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300">
+          <div>
+            <div className="text-[11px] text-zinc-400">Open</div>
+            <div className="text-[12px]">{open ? format(open, "Pp") : "—"}</div>
+          </div>
+          <div>
+            <div className="text-[11px] text-zinc-400">Close</div>
+            <div className="text-[12px]">{close ? format(close, "Pp") : "—"}</div>
+          </div>
+          <div>
+            <div className="text-[11px] text-zinc-400">Outcome</div>
+            <div className="text-[12px]">{toStringSafe(getField(t, "outcome"))}</div>
+          </div>
+          <div>
+            <div className="text-[11px] text-zinc-400">Duration</div>
+            <div className="text-[12px]">{toStringSafe(getField(t, "duration"))}</div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 pt-2">
+          <div className="text-xs text-zinc-400 truncate">{toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}</div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setEditingTrade(t)} className="p-1 hover:text-blue-400" aria-label="Edit trade">
+              <Pencil size={16} />
+            </button>
+            <button onClick={() => deleteTrade(String(getField(t, "id")))} className="p-1 hover:text-red-400" aria-label="Delete trade">
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Top controls + quick stats */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <div className="flex items-center gap-2">
             <button
               className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
@@ -415,7 +455,7 @@ export default function TradeHistoryTable() {
               <Filter size={18} className="text-gray-300" />
             </button>
 
-            <div className="relative">
+            <div className="relative w-full max-w-xs md:max-w-md">
               <input
                 type="search"
                 value={query}
@@ -424,7 +464,7 @@ export default function TradeHistoryTable() {
                   setPage(1);
                 }}
                 placeholder="Search symbol, id or notes..."
-                className="px-3 py-2 rounded bg-[#0F1724] border border-zinc-700 text-white w-[320px]"
+                className="px-3 py-2 rounded bg-[#0F1724] border border-zinc-700 text-white w-full"
                 aria-label="Search trades"
               />
               {query && (
@@ -442,29 +482,41 @@ export default function TradeHistoryTable() {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-3 text-sm text-zinc-300 ml-4">
-            <div className="px-3 py-2 rounded bg-zinc-800">
-              <div className="text-xs">Trades</div>
-              <div className="font-medium">{stats.total}</div>
-            </div>
-            <div className="px-3 py-2 rounded bg-zinc-800">
-              <div className="text-xs">Win Rate</div>
-              <div className="font-medium">{stats.winRate}%</div>
-            </div>
-            <div className="px-3 py-2 rounded bg-zinc-800">
-              <div className="text-xs">Total PnL</div>
-              <div
-                className={`font-medium ${
-                  stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                ${stats.totalPnl.toFixed(2)}
+          {/* quick stats (compact on mobile) */}
+          <div className="flex gap-3 ml-2">
+            <div className="flex items-center gap-2 text-sm text-zinc-300">
+              <div className="hidden md:flex items-center gap-3">
+                <div className="px-3 py-2 rounded bg-zinc-800">
+                  <div className="text-xs">Trades</div>
+                  <div className="font-medium">{stats.total}</div>
+                </div>
+                <div className="px-3 py-2 rounded bg-zinc-800">
+                  <div className="text-xs">Win Rate</div>
+                  <div className="font-medium">{stats.winRate}%</div>
+                </div>
+                <div className="px-3 py-2 rounded bg-zinc-800">
+                  <div className="text-xs">Total PnL</div>
+                  <div
+                    className={`font-medium ${
+                      stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"
+                    }`}
+                  >
+                    ${stats.totalPnl.toFixed(2)}
+                  </div>
+                </div>
+                <div className="px-3 py-2 rounded bg-zinc-800">
+                  <div className="text-xs">Avg RR</div>
+                  <div className="font-medium">
+                    {Number.isFinite(stats.avgRR) ? stats.avgRR.toFixed(2) : "—"}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="px-3 py-2 rounded bg-zinc-800">
-              <div className="text-xs">Avg RR</div>
-              <div className="font-medium">
-                {Number.isFinite(stats.avgRR) ? stats.avgRR.toFixed(2) : "—"}
+
+              {/* compact summary for mobile */}
+              <div className="md:hidden flex items-center gap-2 text-xs text-zinc-300">
+                <div className="px-2 py-1 rounded bg-zinc-800">T:{stats.total}</div>
+                <div className="px-2 py-1 rounded bg-zinc-800">W:{stats.winRate}%</div>
+                <div className="px-2 py-1 rounded bg-zinc-800">{stats.totalPnl >= 0 ? "+" : ""}${stats.totalPnl.toFixed(0)}</div>
               </div>
             </div>
           </div>
@@ -479,59 +531,15 @@ export default function TradeHistoryTable() {
             <DownloadCloud size={18} className="text-gray-300" />
           </button>
 
-          <div className="relative">
-            <button
-              ref={csvButtonRef}
-              className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 flex items-center gap-2"
-              onClick={() => setCsvMenuOpen((s) => !s)}
-              title="Import CSV"
-              aria-expanded={csvMenuOpen}
-              aria-haspopup="menu"
-            >
-              <FilePlus size={18} className="text-gray-300" />
-            </button>
-
-            <div
-              ref={csvMenuRef}
-              className={`origin-top-left absolute left-full ml-2 top-0 z-50 transform transition-all duration-200 ${
-                csvMenuOpen
-                  ? "opacity-100 scale-100 translate-y-0"
-                  : "opacity-0 scale-95 -translate-y-1 pointer-events-none"
-              }`}
-              style={{ minWidth: 180 }}
-              role="menu"
-              aria-hidden={!csvMenuOpen}
-            >
-              <div className="bg-gray-900 text-white rounded-lg shadow-lg border border-zinc-700 overflow-hidden">
-                <div className="p-3">
-                  <div className="text-sm font-medium mb-2">CSV Import</div>
-                  <p className="text-xs text-zinc-400 mb-3">
-                    Upload CSV and map columns before import.
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      className="flex-1 px-3 py-2 bg-indigo-600 rounded hover:bg-indigo-500 text-sm"
-                      onClick={() => {
-                        setCsvOpen(true);
-                        setCsvMenuOpen(false);
-                      }}
-                    >
-                      Upload CSV
-                    </button>
-                    <button
-                      className="px-3 py-2 bg-zinc-800 rounded hover:bg-zinc-700 text-sm"
-                      onClick={() => {
-                        setCsvOpen(true);
-                        setCsvMenuOpen(false);
-                      }}
-                    >
-                      Preview
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Clicking this icon now opens the CSV import modal directly (no dropdown) */}
+          <button
+            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+            onClick={() => setCsvOpen(true)}
+            title="Import CSV"
+            aria-haspopup="dialog"
+          >
+            <FilePlus size={18} className="text-gray-300" />
+          </button>
 
           <button
             className="px-3 py-1 bg-green-600 rounded hover:bg-green-500 text-sm"
@@ -543,12 +551,12 @@ export default function TradeHistoryTable() {
       </div>
 
       {filterOpen && (
-        <div className="grid md:grid-cols-6 gap-2 mb-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2 mb-4 text-sm">
           {(["symbol", "outcome"] as const).map((f) => (
             <input
               key={f}
               type="text"
-              className="p-2 rounded bg-gray-800 text-white"
+              className="p-2 rounded bg-gray-800 text-white w-full"
               placeholder={f}
               value={(filters as Record<string, string>)[f]}
               onChange={(e) =>
@@ -560,7 +568,7 @@ export default function TradeHistoryTable() {
             <input
               key={f}
               type="date"
-              className="p-2 rounded bg-gray-800 text-white"
+              className="p-2 rounded bg-gray-800 text-white w-full"
               value={(filters as Record<string, string>)[f]}
               onChange={(e) =>
                 setFilters((p) => ({ ...p, [f]: e.target.value }))
@@ -571,11 +579,11 @@ export default function TradeHistoryTable() {
             <input
               key={f}
               type="number"
-              className="p-2 rounded bg-gray-800 text-white"
+              className="p-2 rounded bg-gray-800 text-white w-full"
               placeholder={f}
               value={(filters as Record<string, string>)[f]}
               onChange={(e) =>
-              setFilters((p) => ({ ...p, [f]: e.target.value }))
+                setFilters((p) => ({ ...p, [f]: e.target.value }))
               }
             />
           ))}
@@ -599,105 +607,118 @@ export default function TradeHistoryTable() {
         </div>
       )}
 
-      <div className="overflow-auto bg-gray-800 rounded-xl shadow-lg">
-        <table className="min-w-full text-sm text-left">
-          <thead className="bg-gray-700 text-gray-200 sticky top-0">
-            <tr>
-              {headerCell("Symbol", true, "symbol")}
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Direction</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Order Type</th>
-              {headerCell("Open Time", true, "openTime")}
-              {headerCell("Close Time", true, "closeTime")}
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Session</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Lot Size</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Entry Price</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Stop Loss</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Take Profit</th>
-              {headerCell("PNL ($)", true, "pnl")}
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Duration</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Outcome</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">RR</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Reason</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageItems.length === 0 ? (
+      {/* Table for desktop/tablet and Cards for mobile */}
+      <div className="space-y-3">
+        {/* Mobile list (cards) */}
+        <div className="sm:hidden space-y-2">
+          {pageItems.length === 0 ? (
+            <div className="p-4 text-center text-zinc-400">No trades found.</div>
+          ) : (
+            pageItems.map((t, idx) => <MobileTradeCard key={String(getField(t, "id")) || idx} t={t} idx={idx} />)
+          )}
+        </div>
+
+        {/* Table for sm+ */}
+        <div className="hidden sm:block overflow-x-auto bg-gray-800 rounded-xl shadow-lg">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-gray-700 text-gray-200 sticky top-0">
               <tr>
-                <td colSpan={18} className="p-4 text-center text-zinc-400">
-                  No trades found.
-                </td>
+                {headerCell("Symbol", true, "symbol")}
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Direction</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Order Type</th>
+                {headerCell("Open Time", true, "openTime")}
+                {headerCell("Close Time", true, "closeTime")}
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Session</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Lot Size</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Entry Price</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Stop Loss</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Take Profit</th>
+                {headerCell("PNL ($)", true, "pnl")}
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Duration</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Outcome</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">RR</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Reason</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
               </tr>
-            ) : (
-              pageItems.map((t, idx) => {
-                const pnl = toNumber(
-                  getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl")
-                );
-                const idKey =
-                  toStringSafe(getField(t, "id")) ||
-                  `${toStringSafe(getField(t, "symbol"))}-${idx}`;
-                return (
-                  <tr key={idKey} className="hover:bg-gray-700 transition-colors">
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "symbol"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "direction"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "orderType"))}</td>
-                    <td className="px-3 py-2">
-                      {toDateOrNull(getField(t, "openTime"))
-                        ? format(toDateOrNull(getField(t, "openTime")) as Date, "Pp")
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2">
-                      {toDateOrNull(getField(t, "closeTime"))
-                        ? format(toDateOrNull(getField(t, "closeTime")) as Date, "Pp")
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "session"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "lotSize"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "entryPrice"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "stopLossPrice"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "takeProfitPrice"))}</td>
-                    <td className={`px-3 py-2 ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
-                      ${pnl.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "duration"))}</td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "outcome"))}</td>
-                    <td className="px-3 py-2">
-                      {formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}
-                    </td>
-                    <td className="px-3 py-2">
-                      {toStringSafe(getField(t, "reasonForTrade"))}
-                    </td>
-                    <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
-                    <td className="px-3 py-2">
-                      {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}
-                    </td>
-                    <td className="px-3 py-2 flex items-center gap-2">
-                      <button
-                        onClick={() => setEditingTrade(t)}
-                        className="p-1 hover:text-blue-400"
-                        aria-label="Edit trade"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => deleteTrade(String(getField(t, "id")))}
-                        className="p-1 hover:text-red-400"
-                        aria-label="Delete trade"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pageItems.length === 0 ? (
+                <tr>
+                  <td colSpan={18} className="p-4 text-center text-zinc-400">
+                    No trades found.
+                  </td>
+                </tr>
+              ) : (
+                pageItems.map((t, idx) => {
+                  const pnl = toNumber(
+                    getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl")
+                  );
+                  const idKey =
+                    toStringSafe(getField(t, "id")) ||
+                    `${toStringSafe(getField(t, "symbol"))}-${idx}`;
+                  return (
+                    <tr key={idKey} className="hover:bg-gray-700 transition-colors">
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "symbol"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "direction"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "orderType"))}</td>
+                      <td className="px-3 py-2">
+                        {toDateOrNull(getField(t, "openTime"))
+                          ? format(toDateOrNull(getField(t, "openTime")) as Date, "Pp")
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {toDateOrNull(getField(t, "closeTime"))
+                          ? format(toDateOrNull(getField(t, "closeTime")) as Date, "Pp")
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "session"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "lotSize"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "entryPrice"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "stopLossPrice"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "takeProfitPrice"))}</td>
+                      <td className={`px-3 py-2 ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                        ${pnl.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "duration"))}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "outcome"))}</td>
+                      <td className="px-3 py-2">
+                        {formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}
+                      </td>
+                      <td className="px-3 py-2">
+                        {toStringSafe(getField(t, "reasonForTrade"))}
+                      </td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
+                      <td className="px-3 py-2">
+                        {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}
+                      </td>
+                      <td className="px-3 py-2 flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingTrade(t)}
+                          className="p-1 hover:text-blue-400"
+                          aria-label="Edit trade"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteTrade(String(getField(t, "id")))}
+                          className="p-1 hover:text-red-400"
+                          aria-label="Delete trade"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-sm text-zinc-300">
+      <div className="mt-3 flex flex-col sm:flex-row items-center justify-between text-sm text-zinc-300 gap-3">
         <div>
           Showing {processed.length === 0 ? 0 : (page - 1) * pageSize + 1}–
           {Math.min(page * pageSize, processed.length)} of {processed.length}
@@ -749,8 +770,10 @@ export default function TradeHistoryTable() {
         }}
       />
 
-      {/* CSV */}
+      {/* CSV Upload modal (opens directly on icon click) */}
       {csvOpen && (
+        // CsvUpload is expected to manage its own modal/content when isOpen is true.
+        // We pass onImport and onClose so it can call back into this component.
         <CsvUpload
           isOpen={csvOpen}
           onClose={() => setCsvOpen(false)}
@@ -758,21 +781,21 @@ export default function TradeHistoryTable() {
         />
       )}
 
-      {/* Export */}
+      {/* Export modal (simple) */}
       {exportOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <div className="bg-gray-900 p-6 rounded-xl shadow-lg w-full max-w-md overflow-auto">
             <h3 className="text-lg text-gray-200 mb-4">Export As</h3>
             <div className="flex gap-4">
               <button
                 onClick={() => exportCsv()}
-                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+                className="flex-1 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
               >
                 CSV
               </button>
               <button
                 onClick={() => alert("PDF export not implemented yet.")}
-                className="px-4 py-2 bg-purple-600 rounded hover:bg-purple-500"
+                className="flex-1 px-4 py-2 bg-purple-600 rounded hover:bg-purple-500"
               >
                 PDF
               </button>
