@@ -226,11 +226,13 @@ const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
   tradiaScore: { title: "Tradia Score", body: "Composite score combining win rate, profit factor, avg RR and consistency." },
 };
 
-const getGreeting = (name = "Trader") => {
+/* Greeting: uses full name but only display first name, format as requested */
+const makeGreeting = (fullName = "Trader") => {
   const hr = new Date().getHours();
-  if (hr < 12) return `Good morning, ${name}`;
-  if (hr < 18) return `Good afternoon, ${name}`;
-  return `Good evening, ${name}`;
+  const period = hr < 12 ? "MORNING" : hr < 18 ? "AFTERNOON" : "EVENING";
+  const firstName = (fullName || "Trader").toString().trim().split(/\s+/)[0] || "Trader";
+  // Format: GOOD (TIME OF DAY), TRADER (FIRSTNAME)
+  return `GOOD ${period}, TRADER ${firstName}`;
 };
 
 export default function OverviewCards({ trades: propTrades, fromDate, toDate }: OverviewCardsProps) {
@@ -238,7 +240,10 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const contextTrades = Array.isArray(ctx?.trades) ? (ctx.trades as TradeType[]) : [];
 
   const [mounted, setMounted] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
+  const [userFullName, setUserFullName] = useState<string | null>(null);
+
+  // responsive calendar weeks control so heatmap doesn't overflow the entire page on mobile
+  const [calendarWeeks, setCalendarWeeks] = useState<number>(53);
 
   const [pnlMode, setPnlMode] = useState<"cumulative" | "perTrade">("cumulative");
   const [showRR, setShowRR] = useState(true);
@@ -247,21 +252,44 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const [explainKey, setExplainKey] = useState<string | null>(null);
 
   useEffect(() => {
-    // client-only initialization
     setMounted(true);
 
-    // Try to detect username from TradeContext (various possible shapes) or localStorage
+    // Fetch full name from context if possible (commonly stored on ctx.user)
     let name: string | null = null;
     try {
-      // common shapes: ctx.user.name, ctx.userName, ctx.name, ctx.profile.name
-      name = ctx?.user?.name ?? ctx?.userName ?? ctx?.name ?? ctx?.profile?.name ?? null;
+      name =
+        ctx?.user?.fullName ??
+        ctx?.user?.full_name ??
+        ctx?.user?.name ??
+        ctx?.profile?.fullName ??
+        ctx?.profile?.name ??
+        ctx?.userName ??
+        ctx?.name ??
+        null;
+
+      // fallback to localStorage common keys
       if (!name && typeof window !== "undefined") {
-        name = localStorage.getItem("userName") ?? localStorage.getItem("name") ?? localStorage.getItem("traderName") ?? null;
+        name = localStorage.getItem("userFullName") ?? localStorage.getItem("userName") ?? localStorage.getItem("name") ?? null;
       }
     } catch {
       name = null;
     }
-    setUserName(name ?? "Trader");
+    setUserFullName(name ?? "Trader");
+
+    // calendar weeks responsive behavior
+    const updateWeeks = () => {
+      if (typeof window === "undefined") return;
+      const w = window.innerWidth;
+      // mobile: show fewer weeks so heatmap remains usable inside the card; still allow horizontal scroll
+      if (w < 640) setCalendarWeeks(26);
+      else if (w < 1024) setCalendarWeeks(40);
+      else setCalendarWeeks(53);
+    };
+    updateWeeks();
+    window.addEventListener("resize", updateWeeks);
+    return () => {
+      window.removeEventListener("resize", updateWeeks);
+    };
   }, [ctx]);
 
   const allTrades: TradeType[] = Array.isArray(propTrades) ? propTrades : Array.isArray(contextTrades) ? contextTrades : [];
@@ -539,8 +567,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const negativeClass = "text-red-400";
   const neutralClass = "text-white";
 
-  const nameToShow = userName ?? "Trader";
-  const greeting = getGreeting(nameToShow);
+  const greeting = makeGreeting(userFullName ?? "Trader");
   const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 
   const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
@@ -617,9 +644,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     );
   };
 
-  /* ---------- PROGRESS CALENDAR (GitHub-like, last 52 weeks / 1 year)
-      + Monthly summary row (Jan-Dec) so trader can see best performing month of the year.
-  ---------- */
+  /* ---------- PROGRESS CALENDAR (GitHub-like, responsive weeks; monthly summary hidden on small screens) ---------- */
   function ProgressCalendarCard() {
     // build a date->value map using metrics.dailyLabels and metrics.dailyNet
     const dailyMap = new Map<string, number>();
@@ -637,8 +662,10 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const dayOfWeek = start.getDay(); // 0..6
     start.setDate(start.getDate() - dayOfWeek);
 
-    // generate 53 weeks, 7 rows (Sunday->Saturday)
-    const weeks = 53;
+    // weeks controlled by responsive state
+    const weeks = Math.max(1, Math.min(53, calendarWeeks));
+    const isCompact = weeks <= 26; // decide cell size & monthly summary visibility
+
     const cells: { date: Date; value: number }[] = [];
     for (let w = 0; w < weeks; w++) {
       for (let d = 0; d < 7; d++) {
@@ -709,6 +736,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const monthAbs = months.map((m) => Math.abs(m.total));
     const monthMaxAbs = Math.max(...monthAbs, 1);
 
+    // cell size class for responsive small screens
+    const cellSizeClass = isCompact ? "w-2 h-2" : "w-3 h-3";
+
     return (
       <div className={cardBase}>
         <div className="flex items-center justify-between mb-3">
@@ -720,8 +750,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         </div>
 
         <div className="flex gap-4">
-          <div className="overflow-x-auto">
-            <div className="flex gap-1">
+          <div className="overflow-x-auto w-full">
+            {/* the inner flex can be quite wide on desktop but will scroll inside the card on mobile */}
+            <div className="flex gap-1 min-w-max">
               {/* render columns as vertical groups of 7 */}
               {Array.from({ length: weeks }).map((_, colIdx) => (
                 <div key={`week-${colIdx}`} className="flex flex-col gap-1">
@@ -734,7 +765,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
                       <div
                         key={`cell-${colIdx}-${rowIdx}`}
                         title={title}
-                        className={`w-3 h-3 rounded-sm ${isFuture ? "opacity-30" : ""} ${cellClass(cell.value)}`}
+                        className={`${cellSizeClass} rounded-sm ${isFuture ? "opacity-30" : ""} ${cellClass(cell.value)}`}
                       />
                     );
                   })}
@@ -760,8 +791,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           </div>
         </div>
 
-        {/* Monthly summary (Jan - Dec) */}
-        <div className="mt-4">
+        {/* Monthly summary (Jan - Dec) - hidden on small screens to save vertical space */}
+        <div className="mt-4 hidden sm:block">
           <div className="text-sm font-semibold mb-2">Monthly Summary — {currentYear}</div>
           <div className="flex items-end gap-2">
             {months.map((m) => {
