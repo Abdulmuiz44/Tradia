@@ -7,10 +7,9 @@ import { motion } from "framer-motion";
 
 /*
   TraderEducation (TypeScript / TSX)
-  - Fixed implicit any error on event parameter types
-  - All input onChange / form handlers typed
-  - Tab UI kept as rounded pills to match dashboard style
-  - Export default component returns JSX.Element
+  - Fixed implicit any error (handleSubscribe typed)
+  - Fixed JSX syntax errors (unterminated strings / mismatched quotes)
+  - Uses React.ReactElement return type (avoids JSX namespace issues)
 */
 
 type Resource = {
@@ -28,7 +27,8 @@ const RESOURCES: Resource[] = [
     id: "psych-101",
     type: "course",
     title: "Trading Psychology 101",
-    description: "Master the mindset of consistently profitable traders — bias control, routine, and decision rules.",
+    description:
+      "Master the mindset of consistently profitable traders — bias control, routine, and decision rules.",
     icon: <GraduationCap className="w-5 h-5 text-indigo-600" />,
     link: "https://www.investopedia.com/articles/trading/06/psychology.asp",
     tags: ["psychology", "mindset"],
@@ -64,17 +64,20 @@ const RESOURCES: Resource[] = [
     id: "setups",
     type: "setups",
     title: "Top setups: Order Block Pullback",
-    description: "Example: Wait for BOS, then pullback into order block on the higher timeframe and trade with trend.",
+    description:
+      "Example: Wait for BOS, then pullback into order block on the higher timeframe and trade with trend.",
     icon: <Zap className="w-5 h-5 text-yellow-500" />,
     link: "#",
     tags: ["smc", "order-block"],
   },
 ];
 
-const TELEGRAM = "https://t.me/theabdulmuizchannel"; // user's telegram link
+const TELEGRAM = "https://t.me/theabdulmuizchannel";
 
-export default function TraderEducation(): JSX.Element {
-  const [tab, setTab] = useState<"courses" | "videos" | "articles" | "setups" | "tools">("courses");
+export default function TraderEducation(): React.ReactElement {
+  const [tab, setTab] = useState<"courses" | "videos" | "articles" | "setups" | "tools">(
+    "courses"
+  );
   const [query, setQuery] = useState<string>("");
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
@@ -83,7 +86,7 @@ export default function TraderEducation(): JSX.Element {
   const [account, setAccount] = useState<number>(1000);
   const [riskPct, setRiskPct] = useState<number>(1); // percent
   const [stopPips, setStopPips] = useState<number>(20);
-  const [pipValue, setPipValue] = useState<number>(10); // $ per standard lot per pip (approx)
+  const [pipValue, setPipValue] = useState<number>(10); // $ per lot per pip
 
   useEffect(() => {
     const s = localStorage.getItem("tradia:edu:subscribed");
@@ -94,13 +97,13 @@ export default function TraderEducation(): JSX.Element {
     const q = query.trim().toLowerCase();
     return RESOURCES.filter((r) => {
       if (!q) return true;
-      return (r.title + " " + r.description + " " + (r.tags || []).join(" ")).toLowerCase().includes(q);
+      return (r.title + " " + r.description + " " + (r.tags || []).join(" "))
+        .toLowerCase()
+        .includes(q);
     });
   }, [query]);
 
   const positionSize = useMemo(() => {
-    // simple risk calculation: riskAmount = account * (riskPct/100)
-    // position lots = riskAmount / (stopPips * pipValue)
     const riskAmount = (account * riskPct) / 100;
     const lots = stopPips * pipValue > 0 ? +(riskAmount / (stopPips * pipValue)).toFixed(2) : 0;
     return { riskAmount: Math.round(riskAmount * 100) / 100, lots };
@@ -175,35 +178,49 @@ export default function TraderEducation(): JSX.Element {
             <div className="flex gap-2">
               <button
                 onClick={() => setTab("courses")}
-                className={`px-3 py-2 rounded-full ${tab === "courses" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`px-3 py-2 rounded-full ${
+                  tab === "courses" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
                 aria-pressed={tab === "courses"}
               >
                 Courses
               </button>
+
               <button
                 onClick={() => setTab("videos")}
-                className={`px-3 py-2 rounded-full ${tab === "videos" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`px-3 py-2 rounded-full ${
+                  tab === "videos" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
                 aria-pressed={tab === "videos"}
               >
                 Videos
               </button>
+
               <button
                 onClick={() => setTab("articles")}
-                className={`px-3 py-2 rounded-full ${tab === "articles" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`px-3 py-2 rounded-full ${
+                  tab === "articles" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
                 aria-pressed={tab === "articles"}
               >
                 Articles
               </button>
+
               <button
                 onClick={() => setTab("setups")}
-                className={`px-3 py-2 rounded-full ${tab === "setups" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`px-3 py-2 rounded-full ${
+                  tab === "setups" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
                 aria-pressed={tab === "setups"}
               >
                 Setups & Signals
               </button>
+
               <button
                 onClick={() => setTab("tools")}
-                className={`px-3 py-2 rounded-full ${tab === "tools" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`px-3 py-2 rounded-full ${
+                  tab === "tools" ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
                 aria-pressed={tab === "tools"}
               >
                 Tools
@@ -218,7 +235,8 @@ export default function TraderEducation(): JSX.Element {
                 if (tab === "courses") return r.type === "course" || r.type === "article";
                 if (tab === "videos") return r.type === "video";
                 if (tab === "articles") return r.type === "article" || r.type === "course";
-                if (tab === "setups") return r.type === "setups" || r.type === "setups";
+                if (tab === "setups") return r.type === "setups";
+                if (tab === "tools") return true;
                 return true;
               })
               .map((item) => (
@@ -248,17 +266,27 @@ export default function TraderEducation(): JSX.Element {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold">Live signals preview</h3>
-                      <p className="text-sm text-gray-500">Free setups and signals posted to Telegram — join to receive real-time alerts.</p>
+                      <p className="text-sm text-gray-500">
+                        Free setups and signals posted to Telegram — join to receive real-time alerts.
+                      </p>
                     </div>
 
-                    <a href={TELEGRAM} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-amber-500 px-3 py-2 rounded-full text-black font-semibold">
+                    <a
+                      href={TELEGRAM}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 bg-amber-500 px-3 py-2 rounded-full text-black font-semibold"
+                    >
                       Join Telegram
                     </a>
                   </div>
 
                   <div className="mt-4 space-y-3">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
+                      >
                         <div>
                           <div className="text-sm font-semibold">EURUSD • Buy</div>
                           <div className="text-xs text-gray-500">Entry: 1.0872 · TP: 1.0900 · SL: 1.0840</div>
@@ -268,7 +296,9 @@ export default function TraderEducation(): JSX.Element {
                     ))}
                   </div>
 
-                  <div className="mt-4 text-sm text-gray-500">Signals are educational and should be back-tested. Use your own risk plan.</div>
+                  <div className="mt-4 text-sm text-gray-500">
+                    Signals are educational and should be back-tested. Use your own risk plan.
+                  </div>
                 </div>
               </div>
             )}
