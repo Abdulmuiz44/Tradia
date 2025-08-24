@@ -238,6 +238,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const contextTrades = Array.isArray(ctx?.trades) ? (ctx.trades as TradeType[]) : [];
 
   const [mounted, setMounted] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   const [pnlMode, setPnlMode] = useState<"cumulative" | "perTrade">("cumulative");
   const [showRR, setShowRR] = useState(true);
@@ -246,8 +247,22 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const [explainKey, setExplainKey] = useState<string | null>(null);
 
   useEffect(() => {
+    // client-only initialization
     setMounted(true);
-  }, []);
+
+    // Try to detect username from TradeContext (various possible shapes) or localStorage
+    let name: string | null = null;
+    try {
+      // common shapes: ctx.user.name, ctx.userName, ctx.name, ctx.profile.name
+      name = ctx?.user?.name ?? ctx?.userName ?? ctx?.name ?? ctx?.profile?.name ?? null;
+      if (!name && typeof window !== "undefined") {
+        name = localStorage.getItem("userName") ?? localStorage.getItem("name") ?? localStorage.getItem("traderName") ?? null;
+      }
+    } catch {
+      name = null;
+    }
+    setUserName(name ?? "Trader");
+  }, [ctx]);
 
   const allTrades: TradeType[] = Array.isArray(propTrades) ? propTrades : Array.isArray(contextTrades) ? contextTrades : [];
 
@@ -524,7 +539,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const negativeClass = "text-red-400";
   const neutralClass = "text-white";
 
-  const greeting = getGreeting("Trader");
+  const nameToShow = userName ?? "Trader";
+  const greeting = getGreeting(nameToShow);
   const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 
   const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
@@ -563,7 +579,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     return (
       <div
         key={opts.keyId}
-        className={`${cardBase} flex flex-col sm:flex-row items-center gap-2 sm:gap-3`}
+        className={`${cardBase} flex flex-col sm:flex-row items-center gap-1 sm:gap-2`}
         role="article"
         aria-label={opts.title}
       >
@@ -575,7 +591,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
 
         {/* icon */}
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded bg-white/6">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded bg-white/6">
             {opts.icon}
           </div>
         </div>
@@ -601,7 +617,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     );
   };
 
-  /* ---------- PROGRESS CALENDAR (GitHub-like, last 52 weeks / 1 year) ---------- */
+  /* ---------- PROGRESS CALENDAR (GitHub-like, last 52 weeks / 1 year)
+      + Monthly summary row (Jan-Dec) so trader can see best performing month of the year.
+  ---------- */
   function ProgressCalendarCard() {
     // build a date->value map using metrics.dailyLabels and metrics.dailyNet
     const dailyMap = new Map<string, number>();
@@ -676,6 +694,21 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       { label: "Very High", cls: "bg-[rgba(5,150,105,0.85)]" },
     ];
 
+    // --- monthly aggregate (Jan..Dec for current calendar year)
+    const currentYear = new Date().getFullYear();
+    const months = Array.from({ length: 12 }).map((_, i) => {
+      return { idx: i, label: new Date(currentYear, i, 1).toLocaleString(undefined, { month: "short" }), total: 0 };
+    });
+
+    for (const [dateStr, val] of dailyMap.entries()) {
+      const d = new Date(dateStr);
+      if (d.getFullYear() === currentYear) {
+        months[d.getMonth()].total += val;
+      }
+    }
+    const monthAbs = months.map((m) => Math.abs(m.total));
+    const monthMaxAbs = Math.max(...monthAbs, 1);
+
     return (
       <div className={cardBase}>
         <div className="flex items-center justify-between mb-3">
@@ -725,6 +758,37 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
               Loss days: <span className="font-medium text-red-400">{(metrics.dailyNet || []).filter((v) => v < 0).length}</span>
             </div>
           </div>
+        </div>
+
+        {/* Monthly summary (Jan - Dec) */}
+        <div className="mt-4">
+          <div className="text-sm font-semibold mb-2">Monthly Summary — {currentYear}</div>
+          <div className="flex items-end gap-2">
+            {months.map((m) => {
+              const val = m.total;
+              const absVal = Math.abs(val);
+              const pct = Math.round((absVal / monthMaxAbs) * 100);
+              const bg = val > 0 ? "linear-gradient(90deg, rgba(110,231,183,0.45), rgba(5,150,105,0.85))" : "linear-gradient(90deg, rgba(249,205,190,0.28), rgba(185,28,28,0.85))";
+              return (
+                <div key={m.idx} className="flex flex-col items-center" title={`${m.label}: ${val >= 0 ? "+" : ""}${val.toFixed(2)}`}>
+                  <div className="mb-1" style={{ width: 24, height: 36, display: "flex", alignItems: "flex-end" }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${Math.max(6, Math.round((pct / 100) * 36))}px`,
+                        background: bg,
+                        borderRadius: 4,
+                        boxShadow: "inset 0 -2px 6px rgba(0,0,0,0.12)",
+                      }}
+                      className="border border-zinc-700"
+                    />
+                  </div>
+                  <div className="text-[10px] text-zinc-400">{m.label}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="text-xs text-zinc-400 mt-2">Hover a month to see total net for that month.</div>
         </div>
       </div>
     );
@@ -795,7 +859,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         </div>
       </div>
 
-      {/* KPI cards */}
+      {/* KPI cards (including avg pnl & avg duration inline among them) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {renderMetricCard({
           keyId: "totalTrades",
@@ -882,10 +946,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           small: `${metrics.dailyLabels.length} active days`,
           color: "#60a5fa",
         })}
-      </div>
-
-      {/* NEW: two small visual metrics moved above the performance chart for better visibility */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        {/* Avg PnL / Trade (now part of KPI cards so it fits in grid) */}
         {renderMetricCard({
           keyId: "avgPnlPerTrade",
           icon: <Percent size={16} className="text-yellow-300" />,
@@ -895,12 +956,13 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           color: (metrics.avgPnlPerTrade ?? 0) > 0 ? "#10b981" : (metrics.avgPnlPerTrade ?? 0) < 0 ? "#ef4444" : "#64748b",
           valueClass: (metrics.avgPnlPerTrade ?? 0) > 0 ? positiveClass : (metrics.avgPnlPerTrade ?? 0) < 0 ? negativeClass : neutralClass,
         })}
+        {/* Avg Trade Duration (also part of KPI grid) */}
         {renderMetricCard({
           keyId: "avgTradeDuration",
           icon: <Clock size={16} className="text-sky-400" />,
           title: "Avg Trade Duration",
           value: metrics.avgDurationHours ? `${metrics.avgDurationHours.toFixed(2)} h` : "N/A",
-          small: "Average across closed trades",
+          small: "Avg across closed trades",
           color: "#60a5fa",
         })}
       </div>
