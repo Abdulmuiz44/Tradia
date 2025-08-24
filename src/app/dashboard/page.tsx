@@ -33,7 +33,6 @@ const DrawdownChart = dynamic(() => import("@/components/charts/DrawdownChart"),
 const TradePatternChart = dynamic(() => import("@/components/charts/TradePatternChart"), { ssr: false });
 
 // Planner
-import TradePlannerForm from "@/components/planner/TradePlannerForm";
 import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
 import { TradePlanProvider } from "@/context/TradePlanContext";
 
@@ -68,7 +67,7 @@ const RiskMetricsAny = RiskMetrics as unknown as React.ComponentType<any>;
 const PositionSizingAny = PositionSizing as unknown as React.ComponentType<any>;
 const TraderEducationAny = TraderEducation as unknown as React.ComponentType<any>;
 const TradeJournalAny = TradeJournal as unknown as React.ComponentType<any>;
-const TradePlannerFormAny = TradePlannerForm as unknown as React.ComponentType<any>;
+// TradePlannerForm import was removed per your request
 const TradePlannerTableAny = TradePlannerTable as unknown as React.ComponentType<any>;
 const PricingPlansAny = PricingPlans as unknown as React.ComponentType<any>;
 
@@ -175,6 +174,32 @@ function DashboardContent() {
 
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
+  // Avatar initial: prefer NextAuth session.user.name, fallback to localStorage keys used during signup (try several), finally email or 'U'
+  const avatarInitial = (() => {
+    try {
+      if (session?.user?.name && String(session.user.name).length > 0) {
+        return String(session.user.name).trim()[0].toUpperCase();
+      }
+      if (typeof window !== "undefined") {
+        const keysToTry = ["signupName", "userName", "name", "displayName"];
+        for (const k of keysToTry) {
+          try {
+            const v = window.localStorage.getItem(k);
+            if (v && v.length > 0) return v.trim()[0].toUpperCase();
+          } catch {
+            // ignore localStorage read errors
+          }
+        }
+      }
+      if (session?.user?.email && String(session.user.email).length > 0) {
+        return String(session.user.email).trim()[0].toUpperCase();
+      }
+    } catch {
+      // ignore
+    }
+    return "U";
+  })();
+
   return (
     <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
       <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
@@ -203,11 +228,11 @@ function DashboardContent() {
 
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
-                  <Avatar className="w-9 h-9">
-                    <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? "Profile"} />
-                    <AvatarFallback>{session?.user?.name?.[0] ?? "U"}</AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
+                  <AvatarFallback>{avatarInitial}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
               <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
                 <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
@@ -283,7 +308,7 @@ function DashboardContent() {
               {activeTab === "planner" && (
                 <TradePlanProvider>
                   <div className="grid gap-6 bg-transparent">
-                    <TradePlannerFormAny />
+                    {/* TradePlannerForm removed as requested; keep TradePlannerTable */}
                     <TradePlannerTableAny />
                   </div>
                 </TradePlanProvider>
