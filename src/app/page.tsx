@@ -150,7 +150,7 @@ export default function Home() {
   };
 
   // Main CTAs navigate to signup route the user requested (app/signup/page.tsx)
-  const navSignup = () => router.push('/app/signup/page.tsx');
+  const navSignup = () => router.push('/signup');
 
   return (
     <>
@@ -331,7 +331,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-6">
-                  <Link href="/app/signup/page.tsx" className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 font-semibold">See more insights <AiOutlineArrowRight /></Link>
+                  <Link href="/signup" className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 font-semibold">See more insights <AiOutlineArrowRight /></Link>
                 </div>
               </div>
             </div>
