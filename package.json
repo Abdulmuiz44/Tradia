@@ -28,6 +28,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/plotly.js": "^3.0.3",
     "@types/react-plotly.js": "^2.6.3",
+    "@vercel/analytics": "^1.5.0",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.5.0",

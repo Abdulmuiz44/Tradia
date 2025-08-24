@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 // import Navbar from "@/components/Navbar";
 import { UserProvider } from "@/context/UserContext"; // ✅ import UserProvider
+import { Analytics } from "@vercel/analytics/next" 
 
 // <-- added imports -->
 import PostHogInit from "@/components/analytics/PostHogInit";
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <UserProvider> {/* ✅ wrap everything with UserProvider */}
               <PostHogInit />
+              <Analytics />
               {children}
               {/* keep floating button available app-wide */}
               <FloatingFeedbackButton />
