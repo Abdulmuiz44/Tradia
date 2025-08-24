@@ -206,7 +206,7 @@ export default function TraderEducation(): React.ReactElement {
             <div>
               <h2 className="text-2xl font-bold text-gray-100">Trader Education</h2>
               <p className="mt-1 text-sm text-gray-400 max-w-xl">
-                Practical videos (YouTube), live setups (Telegram) and tools/promos (Headway). All learning links go directly to the channels/promos you provided.
+                Practical videos (YouTube), live setups (Telegram) and tools/promos (Headway). All learning links go directly to the founder's channels/youtube.
               </p>
             </div>
 
