@@ -516,15 +516,15 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   if (!mounted) return null;
 
   // center container
-  const containerClass = "space-y-5 px-2 sm:px-0 max-w-7xl mx-auto";
+  const containerClass = "space-y-5 px-4 sm:px-0 max-w-7xl mx-auto";
 
   // card base with border + subtle left accent space reserved
-  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg border border-zinc-700 relative";
+  const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg border border-zinc-700 relative overflow-hidden";
   const positiveClass = "text-green-400";
   const negativeClass = "text-red-400";
   const neutralClass = "text-white";
 
-  const greeting = getGreeting("Abdulmuiz");
+  const greeting = getGreeting("Trader");
   const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 
   const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
@@ -548,7 +548,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     );
   };
 
-  // render metric card: centered contents & centered icon box
+  // render metric card: responsive (stack on mobile, horizontal on >=sm), tighter gap between icon & text
   const renderMetricCard = (opts: {
     keyId: string;
     icon: React.ReactNode;
@@ -561,12 +561,26 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const leftColor = opts.color ?? "#0ea5a4";
 
     return (
-      <div key={opts.keyId} className={`${cardBase} flex items-center gap-3`} role="article" aria-label={opts.title}>
-        <div style={{ width: 6, background: leftColor }} className="rounded-l-md" />
-        <div className="w-14 flex items-center justify-center">
-          <div className="w-11 h-11 flex items-center justify-center rounded bg-white/6">{opts.icon}</div>
+      <div
+        key={opts.keyId}
+        className={`${cardBase} flex flex-col sm:flex-row items-center gap-2 sm:gap-3`}
+        role="article"
+        aria-label={opts.title}
+      >
+        {/* vertical bar on desktop, horizontal on mobile */}
+        <div className="w-full sm:w-auto">
+          <div className="block sm:hidden h-1 w-full rounded-sm" style={{ background: leftColor }} />
+          <div className="hidden sm:block" style={{ width: 6, background: leftColor, height: "100%", borderTopRightRadius: 0, borderBottomRightRadius: 0 }} />
         </div>
 
+        {/* icon */}
+        <div className="flex-shrink-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded bg-white/6">
+            {opts.icon}
+          </div>
+        </div>
+
+        {/* center text always centered for better mobile UX */}
         <div className="flex-1 text-center">
           <div className="text-xs text-zinc-400">{opts.title}</div>
           <div className="text-lg font-semibold mt-1">
@@ -575,7 +589,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           <div className="text-xs text-zinc-400 mt-1">{typeof opts.small === "string" ? opts.small : opts.small}</div>
         </div>
 
-        {/* explanation button top-right */}
+        {/* explanation button top-right for desktop and floating in card for mobile */}
         <button
           onClick={() => setExplainKey(opts.keyId)}
           className="absolute top-2 right-2 p-1 rounded bg-zinc-800"
@@ -785,7 +799,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {renderMetricCard({
           keyId: "totalTrades",
-          icon: <BarChart2 size={18} className="text-sky-400" />,
+          icon: <BarChart2 size={16} className="text-sky-400" />,
           title: "Total Trades",
           value: metrics.total,
           small: `${metrics.filtered.length} filtered`,
@@ -793,7 +807,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "wins",
-          icon: <CheckCircle size={18} className="text-green-400" />,
+          icon: <CheckCircle size={16} className="text-green-400" />,
           title: "Wins",
           value: metrics.wins,
           small: `${metrics.winRate.toFixed(1)}% win rate`,
@@ -801,7 +815,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "losses",
-          icon: <XCircle size={18} className="text-red-400" />,
+          icon: <XCircle size={16} className="text-red-400" />,
           title: "Losses",
           value: metrics.losses,
           small: `SLs ${metrics.totalSLCount}`,
@@ -810,7 +824,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "pnl",
-          icon: <DollarSign size={18} />,
+          icon: <DollarSign size={16} />,
           title: "PNL ($)",
           value: `$${metrics.totalPnl.toFixed(2)}`,
           small: `PF ${metrics.profitFactor === Infinity ? "∞" : Number(metrics.profitFactor).toFixed(2)}`,
@@ -819,7 +833,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "rrTP",
-          icon: <ArrowUp size={18} className="text-green-400" />,
+          icon: <ArrowUp size={16} className="text-green-400" />,
           title: "Total TP (RR)",
           value: `${metrics.totalTP.toFixed(2)}R`,
           small: `Avg ${metrics.avgRR.toFixed(2)}R`,
@@ -828,7 +842,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "rrSL",
-          icon: <ArrowDown size={18} className="text-red-400" />,
+          icon: <ArrowDown size={16} className="text-red-400" />,
           title: "Total SL (RR)",
           value: metrics.totalSLCount,
           small: `Net ${metrics.profitRR >= 0 ? "+" : ""}${metrics.profitRR.toFixed(2)}R`,
@@ -837,7 +851,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "best",
-          icon: <Star size={18} className="text-yellow-300" />,
+          icon: <Star size={16} className="text-yellow-300" />,
           title: "Best Trade",
           value: metrics.best ? `$${toNumber(getField(metrics.best, "pnl")).toFixed(2)}` : "$0.00",
           small: metrics.best ? toStringSafe(getField(metrics.best, "symbol")) : "",
@@ -845,7 +859,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "worst",
-          icon: <ThumbsDown size={18} className="text-red-500" />,
+          icon: <ThumbsDown size={16} className="text-red-500" />,
           title: "Worst Trade",
           value: metrics.worst ? `$${toNumber(getField(metrics.worst, "pnl")).toFixed(2)}` : "$0.00",
           small: metrics.worst ? toStringSafe(getField(metrics.worst, "symbol")) : "",
@@ -854,7 +868,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "mostTraded",
-          icon: <PieChart size={18} className="text-pink-400" />,
+          icon: <PieChart size={16} className="text-pink-400" />,
           title: "Most Traded",
           value: metrics.mostTraded,
           small: "Symbol with most trades",
@@ -862,10 +876,31 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         })}
         {renderMetricCard({
           keyId: "tradesPerDay",
-          icon: <Calendar size={18} className="text-blue-300" />,
+          icon: <Calendar size={16} className="text-blue-300" />,
           title: "Trades / Day",
           value: metrics.tradesPerDay,
           small: `${metrics.dailyLabels.length} active days`,
+          color: "#60a5fa",
+        })}
+      </div>
+
+      {/* NEW: two small visual metrics moved above the performance chart for better visibility */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+        {renderMetricCard({
+          keyId: "avgPnlPerTrade",
+          icon: <Percent size={16} className="text-yellow-300" />,
+          title: "Avg PnL / Trade",
+          value: `$${(metrics.avgPnlPerTrade ?? 0).toFixed(2)}`,
+          small: `${metrics.total ?? 0} trades`,
+          color: (metrics.avgPnlPerTrade ?? 0) > 0 ? "#10b981" : (metrics.avgPnlPerTrade ?? 0) < 0 ? "#ef4444" : "#64748b",
+          valueClass: (metrics.avgPnlPerTrade ?? 0) > 0 ? positiveClass : (metrics.avgPnlPerTrade ?? 0) < 0 ? negativeClass : neutralClass,
+        })}
+        {renderMetricCard({
+          keyId: "avgTradeDuration",
+          icon: <Clock size={16} className="text-sky-400" />,
+          title: "Avg Trade Duration",
+          value: metrics.avgDurationHours ? `${metrics.avgDurationHours.toFixed(2)} h` : "N/A",
+          small: "Average across closed trades",
           color: "#60a5fa",
         })}
       </div>
@@ -975,27 +1010,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         <div>
           <ProgressCalendarCard />
         </div>
-      </div>
-
-      {/* NEW: two small visual metrics below the progress tracker (keeps the same look/feel) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-        {renderMetricCard({
-          keyId: "avgPnlPerTrade",
-          icon: <Percent size={18} className="text-yellow-300" />,
-          title: "Avg PnL / Trade",
-          value: `$${(metrics.avgPnlPerTrade ?? 0).toFixed(2)}`,
-          small: `${metrics.total ?? 0} trades`,
-          color: (metrics.avgPnlPerTrade ?? 0) > 0 ? "#10b981" : (metrics.avgPnlPerTrade ?? 0) < 0 ? "#ef4444" : "#64748b",
-          valueClass: (metrics.avgPnlPerTrade ?? 0) > 0 ? positiveClass : (metrics.avgPnlPerTrade ?? 0) < 0 ? negativeClass : neutralClass,
-        })}
-        {renderMetricCard({
-          keyId: "avgTradeDuration",
-          icon: <Clock size={18} className="text-sky-400" />,
-          title: "Avg Trade Duration",
-          value: metrics.avgDurationHours ? `${metrics.avgDurationHours.toFixed(2)} h` : "N/A",
-          small: "Average across closed trades",
-          color: "#60a5fa",
-        })}
       </div>
 
       {explainKey && <ExplanationModal k={explainKey} onClose={() => setExplainKey(null)} />}
