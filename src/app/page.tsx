@@ -187,7 +187,7 @@ export default function Home() {
                     Start free — Create account <AiOutlineArrowRight />
                   </motion.button>
 
-                  <Link href="/app/pricing" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-600 text-indigo-600 hover:bg-indigo-50">
+                  <Link href="/pricing" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-600 text-indigo-600 hover:bg-indigo-50">
                     View plans
                   </Link>
 
@@ -231,7 +231,7 @@ export default function Home() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-xs opacity-80">Account</div>
-                        <div className="text-lg font-semibold">TRD-USD • Live</div>
+                        <div className="text-lg font-semibold">GBP-USD • Live</div>
                       </div>
                       <div className="text-right">
                         <div className="text-xs opacity-80">Equity</div>
@@ -263,7 +263,7 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                <div className="mt-4 text-xs text-gray-500">Live dashboard preview — connect an account for full interactive charts.</div>
+                <div className="mt-4 text-xs text-gray-500">Live dashboard preview — connect an account or upload csv trade data for full interactive charts.</div>
               </div>
             </div>
           </div>
@@ -449,7 +449,7 @@ export default function Home() {
               <p className="mt-2 text-sm opacity-90">Create a free account and upload your first trade history — get instant insights.</p>
               <div className="mt-6 flex gap-3">
                 <button onClick={navSignup} className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold">Create free account</button>
-                <Link href="/app/pricing" className="bg-white/20 border border-white/30 px-4 py-2 rounded-full">See plans</Link>
+                <Link href="/pricing" className="bg-white/20 border border-white/30 px-4 py-2 rounded-full">See plans</Link>
               </div>
 
               <div className="mt-6 text-xs opacity-90">Need help? <Link href="/app/contact" className="underline">Contact us</Link>.</div>
