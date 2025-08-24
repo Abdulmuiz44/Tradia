@@ -37,12 +37,6 @@ import {
   Filler,
 } from "chart.js";
 
-// Optional - if your project has @supabase/supabase-js installed,
-// this will allow fetching profile info from a "profiles" table.
-// If not installed, this import can be removed and the code will gracefully degrade
-// to using TradeContext or localStorage for the name.
-import { createClient } from "@supabase/supabase-js";
-
 ChartJS.register(
   LineElement,
   CategoryScale,
@@ -232,12 +226,11 @@ const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
   tradiaScore: { title: "Tradia Score", body: "Composite score combining win rate, profit factor, avg RR and consistency." },
 };
 
-/* Greeting helper returns only the prefix (Good morning/afternoon/evening) */
-const getGreetingPrefix = () => {
+const getGreeting = (name = "Trader") => {
   const hr = new Date().getHours();
-  if (hr < 12) return "Good morning";
-  if (hr < 18) return "Good afternoon";
-  return "Good evening";
+  if (hr < 12) return `Good morning, ${name}`;
+  if (hr < 18) return `Good afternoon, ${name}`;
+  return `Good evening, ${name}`;
 };
 
 export default function OverviewCards({ trades: propTrades, fromDate, toDate }: OverviewCardsProps) {
@@ -245,7 +238,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const contextTrades = Array.isArray(ctx?.trades) ? (ctx.trades as TradeType[]) : [];
 
   const [mounted, setMounted] = useState(false);
-  const [userFirstName, setUserFirstName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
 
   const [pnlMode, setPnlMode] = useState<"cumulative" | "perTrade">("cumulative");
   const [showRR, setShowRR] = useState(true);
@@ -256,89 +249,77 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   useEffect(() => {
     setMounted(true);
 
-    // 1) Try TradeContext (common shapes)
-    let candidate: string | null = null;
-    try {
-      candidate =
-        ctx?.user?.full_name ??
-        ctx?.user?.fullName ??
-        ctx?.user?.name ??
-        ctx?.userName ??
-        ctx?.name ??
-        ctx?.profile?.full_name ??
-        ctx?.profile?.name ??
-        null;
-    } catch {
-      candidate = null;
-    }
-
-    // 2) Try localStorage fallback
-    if (!candidate && typeof window !== "undefined") {
-      candidate =
-        window.localStorage.getItem("userFullName") ??
-        window.localStorage.getItem("userName") ??
-        window.localStorage.getItem("name") ??
-        window.localStorage.getItem("traderName") ??
-        null;
-    }
-
-    // Helper: extract first name from any full name-like string
-    const getFirst = (full?: string | null) => {
-      if (!full) return null;
-      const s = full.trim();
-      if (!s) return null;
-      const parts = s.split(/\s+/);
-      return parts[0];
-    };
-
-    if (candidate) {
-      setUserFirstName(getFirst(candidate) ?? "Trader");
-      return;
-    }
-
-    // 3) Try Supabase profiles if environment and library present
+    // attempt to resolve user's name from multiple possible sources,
+    // preferring Supabase users table when a supabase client is present in context or window.
     (async () => {
       try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (!url || !key) {
-          // no supabase env provided, stop here
-          setUserFirstName("Trader");
-          return;
-        }
+        let name: string | null =
+          (ctx?.user?.name as string | undefined) ??
+          (ctx?.userName as string | undefined) ??
+          (ctx?.name as string | undefined) ??
+          (ctx?.profile?.name as string | undefined) ??
+          null;
 
-        // create a lightweight client
-        const supabase = createClient(url, key);
+        // If there's a supabase client in context (or exported globally on window), try to fetch from users table
+        const supabaseClient = ctx?.supabase ?? (typeof window !== "undefined" ? (window as any).supabase : null);
 
-        // Try get current auth user
-        // supabase.auth.getUser() (v2) returns { data: { user }, error }
-        const maybeUserResp: any = await supabase.auth.getUser();
-        const supaUser = maybeUserResp?.data?.user ?? maybeUserResp?.user ?? null;
+        if (!name && supabaseClient && typeof supabaseClient.from === "function") {
+          try {
+            // try user id from context first
+            const userId = ctx?.user?.id ?? ctx?.userId ?? null;
+            let targetId = userId;
 
-        let profileName: string | null = null;
-        if (supaUser?.id) {
-          // assume a "profiles" table keyed by id exists - query common full-name fields
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("full_name,fullName,name")
-            .eq("id", supaUser.id)
-            .limit(1)
-            .single();
-          if (!error && data) {
-            profileName = data?.full_name ?? data?.fullName ?? data?.name ?? null;
+            // if no id from ctx try auth methods (supports multiple supabase auth versions)
+            if (!targetId && supabaseClient.auth) {
+              // new SDK: auth.getUser()
+              if (typeof supabaseClient.auth.getUser === "function") {
+                try {
+                  const userRes = await supabaseClient.auth.getUser();
+                  targetId = (userRes && (userRes as any).data?.user?.id) ?? null;
+                } catch {
+                  // ignore
+                }
+              }
+              // older SDK: auth.user()
+              if (!targetId && typeof (supabaseClient.auth as any).user === "function") {
+                try {
+                  const u = (supabaseClient.auth as any).user();
+                  targetId = u?.id ?? null;
+                } catch {
+                  // ignore
+                }
+              }
+            }
+
+            if (targetId) {
+              const { data, error } = await supabaseClient.from("users").select("name").eq("id", targetId).limit(1).single();
+              if (!error && data && (data as any).name) {
+                name = (data as any).name;
+              }
+            }
+          } catch {
+            // fail silently and continue to fallback
           }
         }
 
-        // fall back to user metadata if available
-        if (!profileName && supaUser?.user_metadata) {
-          profileName = supaUser.user_metadata.full_name ?? supaUser.user_metadata.name ?? supaUser.user_metadata?.fullName ?? null;
+        // fallback to localStorage (if available)
+        if (!name && typeof window !== "undefined") {
+          name =
+            localStorage.getItem("userName") ??
+            localStorage.getItem("name") ??
+            localStorage.getItem("traderName") ??
+            null;
         }
 
-        if (profileName) setUserFirstName(getFirst(profileName) ?? "Trader");
-        else setUserFirstName("Trader");
-      } catch (e) {
-        // non-fatal; fall back
-        setUserFirstName("Trader");
+        // finally set the first name only
+        if (name) {
+          const first = String(name).trim().split(/\s+/)[0];
+          setUserName(first || "Trader");
+        } else {
+          setUserName("Trader");
+        }
+      } catch {
+        setUserName("Trader");
       }
     })();
   }, [ctx]);
@@ -469,7 +450,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       return Math.round(Math.max(0, Math.min(100, score)));
     })();
 
-    // --- avg trade duration (hours) & avg PnL per trade
+    // --- NEW: avg trade duration (hours) & avg PnL per trade
     const durationsMs: number[] = [];
     for (const t of filtered) {
       const o = toDateOrNull(getField(t, "openTime"));
@@ -618,9 +599,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const negativeClass = "text-red-400";
   const neutralClass = "text-white";
 
-  const firstName = userFirstName ?? "Trader";
-  const greetingPrefix = getGreetingPrefix();
-  const greeting = `${greetingPrefix}, Trader ${firstName}`;
+  // show only first name and prefix with "Trader "
+  const first = (userName ?? "Trader").trim().split(/\s+/)[0] ?? "Trader";
+  const greeting = getGreeting(`Trader ${first}`);
   const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 
   const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
@@ -669,9 +650,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           <div className="hidden sm:block" style={{ width: 6, background: leftColor, height: "100%", borderTopRightRadius: 0, borderBottomRightRadius: 0 }} />
         </div>
 
-        {/* icon */}
+        {/* icon (reduced size on mobile to save space) */}
         <div className="flex-shrink-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded bg-white/6">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded bg-white/6">
             {opts.icon}
           </div>
         </div>
@@ -679,7 +660,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         {/* center text always centered for better mobile UX */}
         <div className="flex-1 text-center">
           <div className="text-xs text-zinc-400 truncate">{opts.title}</div>
-          <div className="text-lg font-semibold mt-1">
+          <div className="text-lg font-semibold mt-1 truncate">
             <ColoredValue value={opts.value} forceClass={opts.valueClass} />
           </div>
           <div className="text-xs text-zinc-400 mt-1 truncate">{typeof opts.small === "string" ? opts.small : opts.small}</div>
@@ -699,8 +680,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
 
   /* ---------- PROGRESS CALENDAR (GitHub-like, last 52 weeks / 1 year)
       + Monthly summary row (Jan-Dec) so trader can see best performing month of the year.
-      Improved mobile fitting: the heatmap has a reasonable min-width and horizontal scrolling on small screens,
-      monthly summary is horizontally scrollable if it doesn't fit.
+      Mobile optimizations: smaller cells, horizontal scrolling, compact month bars.
   ---------- */
   function ProgressCalendarCard() {
     // build a date->value map using metrics.dailyLabels and metrics.dailyNet
@@ -719,8 +699,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     const dayOfWeek = start.getDay(); // 0..6
     start.setDate(start.getDate() - dayOfWeek);
 
-    // generate 52 weeks for a cleaner view
-    const weeks = 52;
+    // generate 53 weeks, 7 rows (Sunday->Saturday)
+    const weeks = 53;
     const cells: { date: Date; value: number }[] = [];
     for (let w = 0; w < weeks; w++) {
       for (let d = 0; d < 7; d++) {
@@ -802,22 +782,22 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         </div>
 
         <div className="flex gap-4">
-          <div className="overflow-x-auto w-full">
-            {/* min-w ensures heatmap doesn't squish; horizontal scroll on small screens */}
-            <div className="flex gap-1 min-w-[520px]">
+          <div className="w-full overflow-x-auto">
+            <div className="flex gap-1">
               {/* render columns as vertical groups of 7 */}
               {Array.from({ length: weeks }).map((_, colIdx) => (
                 <div key={`week-${colIdx}`} className="flex flex-col gap-1">
                   {Array.from({ length: 7 }).map((__, rowIdx) => {
                     const idx = colIdx * 7 + rowIdx;
-                    const cell = cells[idx] ?? { date: new Date(start.getTime() + (colIdx * 7 + rowIdx) * 24 * 60 * 60 * 1000), value: 0 };
+                    const cell = cells[idx];
                     const isFuture = cell.date > new Date();
                     const title = `${format(cell.date, "MMM d, yyyy")}: ${cell.value >= 0 ? "+" : ""}${cell.value.toFixed(2)}`;
                     return (
                       <div
                         key={`cell-${colIdx}-${rowIdx}`}
                         title={title}
-                        className={`w-3 h-3 rounded-sm ${isFuture ? "opacity-30" : ""} ${cellClass(cell.value)}`}
+                        // smaller squares on mobile (w-2 h-2) and slightly larger on sm+
+                        className={`w-2 h-2 sm:w-3 sm:h-3 rounded-sm ${isFuture ? "opacity-30" : ""} ${cellClass(cell.value)}`}
                       />
                     );
                   })}
@@ -826,7 +806,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
             </div>
           </div>
 
-          <div className="flex flex-col items-start gap-2 shrink-0">
+          <div className="hidden sm:flex flex-col items-start gap-2">
             <div className="text-xs text-zinc-400">Legend</div>
             <div className="flex items-center gap-2">
               {legend.map((l, i) => (
@@ -843,25 +823,27 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
           </div>
         </div>
 
-        {/* Monthly summary (Jan - Dec) */}
+        {/* Monthly summary (Jan - Dec) - horizontally scrollable on mobile */}
         <div className="mt-4">
           <div className="text-sm font-semibold mb-2">Monthly Summary — {currentYear}</div>
-          <div className="overflow-x-auto pb-2">
-            <div className="flex items-end gap-2" style={{ minWidth: 420 }}>
+
+          <div className="w-full overflow-x-auto">
+            <div className="flex items-end gap-2 px-1">
               {months.map((m) => {
                 const val = m.total;
                 const absVal = Math.abs(val);
                 const pct = Math.round((absVal / monthMaxAbs) * 100);
+                const barHeight = Math.max(6, Math.round((pct / 100) * 48)); // up to 48px tall
                 const bg = val > 0 ? "linear-gradient(90deg, rgba(110,231,183,0.45), rgba(5,150,105,0.85))" : "linear-gradient(90deg, rgba(249,205,190,0.28), rgba(185,28,28,0.85))";
                 return (
-                  <div key={m.idx} className="flex flex-col items-center" title={`${m.label}: ${val >= 0 ? "+" : ""}${val.toFixed(2)}`}>
-                    <div className="mb-1" style={{ width: 22, height: 48, display: "flex", alignItems: "flex-end" }}>
+                  <div key={m.idx} className="flex flex-col items-center min-w-[28px]" title={`${m.label}: ${val >= 0 ? "+" : ""}${val.toFixed(2)}`}>
+                    <div className="mb-1" style={{ width: 28, height: 48, display: "flex", alignItems: "flex-end" }}>
                       <div
                         style={{
                           width: "100%",
-                          height: `${Math.max(6, Math.round((pct / 100) * 48))}px`,
+                          height: `${barHeight}px`,
                           background: bg,
-                          borderRadius: 4,
+                          borderRadius: 6,
                           boxShadow: "inset 0 -2px 6px rgba(0,0,0,0.12)",
                         }}
                         className="border border-zinc-700"
@@ -873,7 +855,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
               })}
             </div>
           </div>
-          <div className="text-xs text-zinc-400 mt-2">Scroll horizontally to see all months on small screens. Hover a month to see numeric total.</div>
+
+          <div className="text-xs text-zinc-400 mt-2">Tap/hover a month to see total net for that month.</div>
         </div>
       </div>
     );
