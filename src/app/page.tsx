@@ -172,7 +172,7 @@ export default function Home(): React.ReactElement {
                   transition={{ duration: 0.5 }}
                   className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight"
                 >
-                  Tradia — <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">AI Trading Assistant</span>
+                  Tradia — <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">AI Trading Performance Assistant</span>
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
