@@ -386,7 +386,7 @@ export default function Home(): React.ReactElement {
             <div className="rounded-xl border border-white/10 p-6 flex flex-col justify-between">
               <div>
                 <h4 className="font-bold text-lg">Pattern & setup preview</h4>
-                <p className="mt-2 text-gray-400">Identify repeating patterns and high-probability setups with quick filters and tagging.</p>
+                <p className="mt-2 text-gray-400">Identify repeating patterns and trading with quick filters and tagging.</p>
               </div>
 
               <div className="mt-4 rounded-md overflow-hidden border border-white/10">
@@ -409,7 +409,7 @@ export default function Home(): React.ReactElement {
               <div className="space-y-3">
                 {[
                   { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                  { q: "Which brokers are supported?", a: "We support MT5 and CSV imports today and are adding more broker integrations." },
+                  { q: "Which brokers are supported?", a: "We support CSV imports today and are adding MT5 and more broker integrations soon." },
                   { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-white/10">
