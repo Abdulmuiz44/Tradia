@@ -209,6 +209,7 @@ export default function Home(): React.ReactElement {
               </div>
             </div>
           </div>
+          
         </section>
 
         {/* FEATURES */}
