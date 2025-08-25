@@ -184,7 +184,7 @@ export default function Home(): React.ReactElement {
                     Create free account <AiOutlineArrowRight />
                   </motion.button>
 
-                  <Link href="/payment" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20">
+                  <Link href="/components/payment" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20">
                     View plans
                   </Link>
 
@@ -330,7 +330,7 @@ export default function Home(): React.ReactElement {
                         {p.cta}
                       </button>
 
-                      <Link href="/payment" className="text-center text-sm text-gray-400 hover:underline">
+                      <Link href="/components/payment" className="text-center text-sm text-gray-400 hover:underline">
                         Compare plans
                       </Link>
                     </div>
@@ -425,7 +425,7 @@ export default function Home(): React.ReactElement {
               <p className="mt-2 text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
               <div className="mt-6 flex gap-3">
                 <button onClick={navSignup} className="bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold">Create free account</button>
-                <Link href="/payment" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">See plans</Link>
+                <Link href="/components/payment" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">See plans</Link>
               </div>
 
               <div className="mt-6 text-xs text-gray-400">Need help? <Link href="/signup" className="underline">Contact us</Link>.</div>
