@@ -1,11 +1,14 @@
-// app/signup/page.tsx
-'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-// removed client-side supabase signUp — server handles signup now
+"use client";
 
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+/* === Countries list (kept intact) === */
 const COUNTRIES = [
   'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan',
   'Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi',
@@ -18,22 +21,23 @@ const COUNTRIES = [
   'Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States of America','Uruguay','Uzbekistan','Vanuatu','Vatican City','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
 ];
 
-export default function SignupPage() {
+export default function SignupPage(): React.ReactElement {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement | null>(null);
+
   const [agreed, setAgreed] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
-  const [country, setCountry] = useState<string>('');
+  const [country, setCountry] = useState<string>("");
 
   useEffect(() => {
     try {
-      const lang = typeof navigator !== 'undefined' ? navigator.language : null;
-      if (lang && lang.includes('-')) {
-        const code = lang.split('-')[1].toUpperCase();
+      const lang = typeof navigator !== "undefined" ? navigator.language : null;
+      if (lang && lang.includes("-")) {
+        const code = lang.split("-")[1].toUpperCase();
         if ((Intl as any).DisplayNames) {
-          const dn = new (Intl as any).DisplayNames(['en'], { type: 'region' });
+          const dn = new (Intl as any).DisplayNames(["en"], { type: "region" });
           const detected = dn.of(code);
           if (detected && COUNTRIES.includes(detected)) {
             setCountry(detected);
@@ -47,35 +51,32 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setNotice('');
+    setError("");
+    setNotice("");
 
     const form = formRef.current;
-    if (!form) return setError('Form not ready.');
+    if (!form) return setError("Form not ready.");
 
     const fd = new FormData(form);
-    const name = (fd.get('name') as string || '').trim();
-    const email = (fd.get('email') as string || '').trim();
-    const password = (fd.get('password') as string || '');
-    const confirmPassword = (fd.get('confirmPassword') as string || '');
-    const selectedCountry = country || (fd.get('country') as string || '');
+    const name = (fd.get("name") as string || "").trim();
+    const email = (fd.get("email") as string || "").trim();
+    const password = (fd.get("password") as string || "");
+    const confirmPassword = (fd.get("confirmPassword") as string || "");
+    const selectedCountry = country || (fd.get("country") as string || "");
 
     if (!name || !email || !password || !confirmPassword) {
-      return setError('All required fields must be filled.');
+      return setError("All required fields must be filled.");
     }
-    if (password !== confirmPassword) return setError('Passwords do not match.');
-    if (!agreed) return setError('You must agree to the terms.');
-    if (!selectedCountry) return setError('Please select your country.');
+    if (password !== confirmPassword) return setError("Passwords do not match.");
+    if (!agreed) return setError("You must agree to the terms.");
+    if (!selectedCountry) return setError("Please select your country.");
 
     setLoading(true);
 
     try {
-      // POST directly to our server signup API which manages users in our Postgres
-      // and sends verification emails. This avoids relying on Supabase Auth signUp
-      // (which may be disabled for the project) and simplifies the flow.
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           email,
@@ -86,149 +87,213 @@ export default function SignupPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // Surface server-side message (we may return `raw` for debugging)
-        console.warn('Server signup failed:', data);
-        const msg = data?.error || data?.message || 'Signup failed on server.';
-        const raw = data?.raw ? ` — details: ${JSON.stringify(data.raw)}` : '';
+        console.warn("Server signup failed:", data);
+        const msg = (data && (data.error || data.message)) || "Signup failed on server.";
+        const raw = data && data.raw ? ` — details: ${JSON.stringify(data.raw)}` : "";
         setError(`${msg}${raw}`);
         setLoading(false);
         return;
       }
 
-      setNotice(data?.message || 'Account created. Check your email for a verification link.');
-
-      // Redirect to a "check your email" page (same as original flow)
+      setNotice(data?.message || "Account created. Check your email for a verification link.");
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (err: any) {
-      console.error('Signup client error', err);
-      setError(err?.message ?? 'Something went wrong; try again.');
+      console.error("Signup client error", err);
+      setError(err?.message ?? "Something went wrong; try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 py-8">
-      <div className="w-full max-w-lg bg-white dark:bg-gray-800 shadow-md rounded-2xl p-8 space-y-6">
-        <h2 className="text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400">
-          Create Your Tradia Account
-        </h2>
+    <>
+      <Navbar />
 
-        {error && (
-          <div
-            role="alert"
-            className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md text-sm text-center"
-          >
-            {error}
+      <main className="min-h-screen bg-[#061226] text-gray-100 flex items-center justify-center py-12 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="w-full max-w-3xl"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+            {/* Left — marketing / reassurance (matches login/landing visual style) */}
+            <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm">
+              <div>
+                <h1 className="text-2xl font-extrabold leading-tight">Welcome to Tradia</h1>
+                <p className="mt-3 text-gray-300">
+                  Create your account to upload trades, get AI reviews and start improving your edge.
+                </p>
+
+                <ul className="mt-6 space-y-3">
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">✓</span>
+                    <div>
+                      <div className="font-medium">Secure & private</div>
+                      <div className="text-sm text-gray-400">All data encrypted and for your eyes only.</div>
+                    </div>
+                  </li>
+
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">⚡</span>
+                    <div>
+                      <div className="font-medium">Fast insights</div>
+                      <div className="text-sm text-gray-400">Upload CSV or connect MT5 and get instant feedback.</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-6 text-sm text-gray-400">
+                Already have an account?{" "}
+                <Link href="/login" className="text-indigo-300 hover:underline">
+                  Sign in
+                </Link>
+                {" — "}or view plans{" "}
+                <Link href="/payment" className="text-indigo-300 hover:underline">
+                  here
+                </Link>
+                .
+              </div>
+            </aside>
+
+            {/* Right — signup form (redesigned to match login) */}
+            <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm shadow-2xl">
+              <h2 className="text-3xl font-bold text-indigo-300">Create Your Tradia Account</h2>
+              <p className="mt-2 text-sm text-gray-400">Fill in the details to get started — verification required.</p>
+
+              {error && (
+                <div
+                  role="alert"
+                  className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 p-3 rounded-md text-sm"
+                >
+                  {error}
+                </div>
+              )}
+
+              {notice && (
+                <div
+                  role="status"
+                  className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 p-3 rounded-md text-sm"
+                >
+                  {notice}
+                </div>
+              )}
+
+              <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+                <label className="block">
+                  <span className="text-sm text-gray-300">Full name</span>
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="Your full name"
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                    autoComplete="name"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-300">Email</span>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="name@domain.com"
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                    autoComplete="email"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-300">Country</span>
+                  <select
+                    name="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                    aria-label="Country"
+                  >
+                    <option value="">Select your country</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-300">Password</span>
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Create a password"
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                    autoComplete="new-password"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-300">Confirm password</span>
+                  <input
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="Confirm password"
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                    autoComplete="new-password"
+                  />
+                </label>
+
+                <label className="flex items-start gap-3 text-sm text-gray-300">
+                  <input
+                    id="agree"
+                    name="agree"
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-white/10 bg-transparent checked:bg-indigo-500 checked:border-indigo-500"
+                    aria-required="true"
+                  />
+                  <span className="text-sm text-gray-300">
+                    I agree to Tradia’s{" "}
+                    <Link href="/terms" className="text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
+                      Terms & Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" className="text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Creating Account..." : "Sign Up"}
+                </button>
+              </form>
+
+              <div className="text-center text-gray-400 mt-4">OR</div>
+
+              <p className="mt-4 text-center text-sm text-gray-400">
+                Already have an account?{" "}
+                <Link href="/login" className="text-indigo-300 hover:underline">
+                  Login here
+                </Link>
+              </p>
+            </section>
           </div>
-        )}
+        </motion.div>
+      </main>
 
-        {notice && (
-          <div
-            role="status"
-            className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-md text-sm text-center"
-          >
-            {notice}
-          </div>
-        )}
-
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <input
-            name="name"
-            type="text"
-            placeholder="Full Name"
-            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-            autoComplete="name"
-          />
-
-          <input
-            name="email"
-            type="email"
-            placeholder="Email Address"
-            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-            autoComplete="email"
-          />
-
-          <label className="block text-sm text-gray-700 dark:text-gray-300">
-            <span className="sr-only">Country</span>
-            <select
-              name="country"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-              aria-label="Country"
-            >
-              <option value="">Select your country</option>
-              {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-            autoComplete="new-password"
-          />
-
-          <input
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm Password"
-            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-            autoComplete="new-password"
-          />
-
-          <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
-            <input
-              id="agree"
-              name="agree"
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600"
-              aria-required="true"
-            />
-            <span>
-              I agree to Tradia’s{' '}
-              <Link href="/terms" className="text-indigo-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                Terms & Conditions
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-indigo-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                Privacy Policy
-              </Link>
-              .
-            </span>
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
-
-        <div className="text-center text-gray-500 dark:text-gray-400">OR</div>
-
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-          Already have an account?{' '}
-          <Link href="/login" className="text-indigo-600 hover:underline">
-            Login here
-          </Link>
-        </p>
-      </div>
-    </div>
+      <Footer />
+    </>
   );
 }
