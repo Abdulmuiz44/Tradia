@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -16,17 +17,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 /**
- * Landing page (src/app/page.tsx)
- * - Cleaned TSX/TS errors
- * - CTAs -> /signup and /pricing
- * - Dark/glass styling to match your app pages
- * - Uses public assets in /public:
- *   - /TradiaDashboard.png
- *   - /TradiaInsights.png
- *   - /TradiaCalendar.png
- *   - /TradiaPattern.png
- *
- * Drop into src/app/page.tsx (replace existing).
+ * src/app/page.tsx
+ * - Clean, compile-ready TSX
+ * - Visible stats removed per request
+ * - All /pricing routes changed to /payment
+ * - Keeps design and layout unchanged otherwise
  */
 
 /* === Content kept from your copy === */
@@ -103,7 +98,7 @@ const TESTIMONIALS = [
   { name: "Noah P.", role: "Risk Manager", text: "Audit-ready exports and clear risk charts saved our team hours.", initials: "N" },
 ];
 
-/* small animated counter hook */
+/* small animated counter hook (kept but not displayed) */
 function useCountTo(target: number, duration = 1200) {
   const [value, setValue] = useState(0);
   useEffect(() => {
@@ -128,9 +123,14 @@ export default function Home(): React.ReactElement {
   const [selectedPlan, setSelectedPlan] = useState<string>("pro");
   const [testimonialIdx, setTestimonialIdx] = useState<number>(0);
 
+  // counters intentionally kept but not shown (to satisfy earlier design)
   const users = useCountTo(31245, 1400);
   const trades = useCountTo(2435120, 1400);
   const avgWin = useCountTo(67, 1400);
+  // avoid unused variable complaints
+  void users;
+  void trades;
+  void avgWin;
 
   useEffect(() => {
     const id = setInterval(() => setTestimonialIdx((i) => (i + 1) % TESTIMONIALS.length), 6500);
@@ -184,33 +184,14 @@ export default function Home(): React.ReactElement {
                     Create free account <AiOutlineArrowRight />
                   </motion.button>
 
-                  <Link href="/pricing" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20">
+                  <Link href="/payment" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20">
                     View plans
                   </Link>
 
-                  <div className="ml-2 flex items-center gap-3 text-sm text-gray-400">
-                    <div className="font-semibold text-indigo-300">{users.toLocaleString()}</div>
-                    <div>traders onboard</div>
-                  </div>
+                  {/* stats intentionally removed — nothing visible here */}
                 </div>
 
-                {/* trust metrics */}
-                <div className="mt-8 flex flex-wrap gap-6 items-center text-sm text-gray-400">
-                  <div className="flex items-center gap-3">
-                    <div className="font-semibold text-indigo-300">{users.toLocaleString()}</div>
-                    <div>traders onboard</div>
-                  </div>
-                  <div className="h-6 w-px bg-white/10" />
-                  <div className="flex items-center gap-3">
-                    <div className="font-semibold text-indigo-300">{trades.toLocaleString()}</div>
-                    <div>trades analyzed</div>
-                  </div>
-                  <div className="h-6 w-px bg-white/10" />
-                  <div className="flex items-center gap-3">
-                    <div className="font-semibold text-indigo-300">{avgWin}%</div>
-                    <div>avg win rate</div>
-                  </div>
-                </div>
+                {/* trust metrics removed per request */}
               </div>
 
               {/* Dashboard mockup */}
@@ -224,7 +205,7 @@ export default function Home(): React.ReactElement {
                   <img src="/TradiaDashboard.png" alt="Tradia dashboard screenshot" className="w-full h-auto object-cover" />
                 </motion.div>
 
-                <div className="mt-3 text-xs text-gray-400">Live dashboard preview (connect account to see interactive charts).</div>
+                <div className="mt-3 text-xs text-gray-400">Live dashboard preview (Upload trade history to see interactive charts).</div>
               </div>
             </div>
           </div>
@@ -349,7 +330,7 @@ export default function Home(): React.ReactElement {
                         {p.cta}
                       </button>
 
-                      <Link href="/pricing" className="text-center text-sm text-gray-400 hover:underline">
+                      <Link href="/payment" className="text-center text-sm text-gray-400 hover:underline">
                         Compare plans
                       </Link>
                     </div>
@@ -444,7 +425,7 @@ export default function Home(): React.ReactElement {
               <p className="mt-2 text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
               <div className="mt-6 flex gap-3">
                 <button onClick={navSignup} className="bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold">Create free account</button>
-                <Link href="/pricing" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">See plans</Link>
+                <Link href="/payment" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">See plans</Link>
               </div>
 
               <div className="mt-6 text-xs text-gray-400">Need help? <Link href="/signup" className="underline">Contact us</Link>.</div>
@@ -457,3 +438,4 @@ export default function Home(): React.ReactElement {
     </>
   );
 }
+
