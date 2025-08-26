@@ -1,5 +1,5 @@
-/* src/components/Navbar.tsx */
 
+// src/components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -8,6 +8,17 @@ import { usePathname } from "next/navigation";
 import { Menu, Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
+
+/**
+ * Navbar redesigned to match the dark/glass aesthetic used across the app pages.
+ * - Replaced /insights -> /pricing
+ * - Responsive (desktop + mobile)
+ * - Theme toggle (next-themes) with mounted check to avoid hydration mismatch
+ * - Shows profile pill when signed in (initial + name)
+ * - Accessible mobile menu and aria attributes
+ *
+ * Drop this file in place of your previous Navbar component.
+ */
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -22,19 +33,31 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Insights", href: "/insights" },
+    { label: "Pricing", href: "/pricing" }, // replaced /insights -> /pricing
     { label: "About", href: "/about" },
   ];
 
   interface AuthLink {
     label: string;
     href: string;
-    onClick?: () => Promise<undefined>;
+    onClick?: () => void | Promise<void>;
   }
 
   const authLinks: AuthLink[] = session
     ? [
-        { label: "Log Out", href: "#", onClick: () => signOut() },
+        {
+          label: "Log Out",
+          href: "#",
+          onClick: async () => {
+            // ensure menu closes and then sign out
+            setMenuOpen(false);
+            try {
+              await signOut({ callbackUrl: "/" });
+            } catch {
+              // ignore
+            }
+          },
+        },
       ]
     : [
         { label: "Log In", href: "/login" },
@@ -48,114 +71,180 @@ export default function Navbar() {
 
   const isActive = (href: string) => pathname === href;
 
+  const profileInitial = (
+    session?.user?.name?.trim()?.charAt(0) ??
+    session?.user?.email?.trim()?.charAt(0) ??
+    "U"
+  ).toUpperCase();
+
   return (
-    <header className="w-full px-6 py-4 shadow-md bg-white dark:bg-gray-900 flex items-center justify-between sticky top-0 z-50">
-      <div className="text-xl font-bold text-gray-900 dark:text-white">
-        Tradia
-      </div>
-
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex space-x-6 items-center">
-        {navLinks.map(({ label, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`text-sm ${
-              isActive(href)
-                ? "text-blue-600 dark:text-blue-400 font-semibold"
-                : "text-gray-700 dark:text-gray-300"
-            } hover:underline`}
-          >
-            {label}
-          </Link>
-        ))}
-
-        {authLinks.map(({ label, href, onClick }) => (
-          <Link
-            key={label}
-            href={href}
-            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              if (onClick) {
-                e.preventDefault();
-                onClick();
-              }
-            }}
-            className="text-sm text-gray-700 dark:text-gray-300 hover:underline"
-          >
-            {label}
-          </Link>
-        ))}
-
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="ml-4 text-gray-700 dark:text-gray-300"
-        >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-
-        {/* Profile */}
-        {session && (
-          <Link href="/dashboard" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center">
-            <div className="rounded-full w-8 h-8 bg-gray-500 flex items-center justify-center text-white text-xs">
-              {session.user?.name?.[0] ?? "U"}
+    <header
+      className="w-full px-6 py-3 sticky top-0 z-50 backdrop-blur-md"
+      aria-label="Main navigation"
+    >
+      <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 no-underline">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-bold shadow">
+              T
             </div>
-            <span className="ml-2">{session.user?.name ?? "User"}</span>
+            <div className="hidden sm:block">
+              <div className="text-lg font-bold text-gray-900 dark:text-white">Tradia</div>
+              <div className="text-xs text-gray-500 dark:text-gray-300 -mt-1">Trade better, faster</div>
+            </div>
           </Link>
-        )}
-      </nav>
+        </div>
 
-      {/* Mobile Menu Button */}
-      <button
-        className="md:hidden text-gray-700 dark:text-gray-300"
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
-        <Menu size={24} />
-      </button>
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-6">
+          <ul className="flex items-center gap-6">
+            {navLinks.map(({ label, href }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={`text-sm font-medium ${
+                    isActive(href)
+                      ? "text-indigo-500 dark:text-indigo-300"
+                      : "text-gray-700 dark:text-gray-300"
+                  } hover:underline`}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
-      {/* Mobile Dropdown Menu */}
-      {menuOpen && (
-        <div className="absolute top-16 left-0 w-full bg-white dark:bg-gray-900 shadow-lg flex flex-col space-y-4 px-6 py-4 md:hidden animate-slide-in-down">
-          {navLinks.map(({ label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              onClick={() => setMenuOpen(false)}
-              className={`text-sm ${
-                isActive(href)
-                  ? "text-blue-600 dark:text-blue-400 font-semibold"
-                  : "text-gray-700 dark:text-gray-300"
-              } hover:underline`}
+          <div className="flex items-center gap-4 ml-4">
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="p-2 rounded-md hover:bg-white/5 transition text-gray-700 dark:text-gray-300"
             >
-              {label}
-            </Link>
-          ))}
+              {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
-          {authLinks.map(({ label, href, onClick }) => (
-            <Link
-              key={label}
-              href={href}
-              onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                setMenuOpen(false);
-                if (onClick) {
-                  e.preventDefault();
-                  onClick();
-                }
-              }}
-              className="text-sm text-gray-700 dark:text-gray-300 hover:underline"
-            >
-              {label}
-            </Link>
-          ))}
+            {/* Auth links */}
+            {authLinks.map(({ label, href, onClick }) => {
+              const isCta = label === "Get Started";
+              return (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={(e) => {
+                    if (onClick) {
+                      e.preventDefault();
+                      onClick();
+                    }
+                  }}
+                  className={`text-sm font-medium px-3 py-1 rounded-md ${
+                    isCta
+                      ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                      : "text-gray-700 dark:text-gray-300 hover:underline"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
 
-          {/* Theme Toggle */}
+            {/* Profile pill */}
+            {session && (
+              <Link
+                href="/dashboard"
+                className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-zinc-800 border border-white/6 shadow-sm"
+              >
+                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs font-semibold text-white">
+                  {profileInitial}
+                </div>
+                <span className="text-sm text-gray-800 dark:text-gray-100 hidden sm:inline">
+                  {session.user?.name ?? session.user?.email ?? "User"}
+                </span>
+              </Link>
+            )}
+          </div>
+        </nav>
+
+        {/* Mobile: right controls */}
+        <div className="md:hidden flex items-center gap-2">
           <button
             onClick={toggleTheme}
-            className="text-gray-700 dark:text-gray-300 flex items-center space-x-2"
+            aria-label="Toggle theme"
+            className="p-2 rounded-md text-gray-700 dark:text-gray-300"
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+
+          <button
+            onClick={() => setMenuOpen((s) => !s)}
+            aria-label="Open menu"
+            className="p-2 rounded-md text-gray-700 dark:text-gray-300"
+          >
+            <Menu size={22} />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile dropdown */}
+      {menuOpen && (
+        <div
+          className="md:hidden mt-3 w-full bg-white dark:bg-zinc-900 border-t border-white/6 shadow-lg"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col gap-3">
+            {navLinks.map(({ label, href }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className={`text-base ${
+                  isActive(href)
+                    ? "text-indigo-500 dark:text-indigo-300 font-semibold"
+                    : "text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+
+            <div className="flex flex-col gap-2 pt-2">
+              {authLinks.map(({ label, href, onClick }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={(e) => {
+                    setMenuOpen(false);
+                    if (onClick) {
+                      e.preventDefault();
+                      onClick();
+                    }
+                  }}
+                  className={`text-base px-3 py-2 rounded-md ${
+                    label === "Get Started"
+                      ? "bg-indigo-600 text-white text-center"
+                      : "text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+
+              {session && (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    signOut().catch(() => {});
+                  }}
+                  className="w-full text-left flex items-center gap-2 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-white/5"
+                >
+                  <LogOut size={16} />
+                  <span>Sign out</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </header>
