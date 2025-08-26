@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Tabs } from "@/components/ui/tabs";
 import OverviewCards from "@/components/dashboard/OverviewCards";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import RiskMetrics from "@/components/dashboard/RiskMetrics";
@@ -17,13 +16,6 @@ import LayoutClient from "@/components/LayoutClient";
 import ClientOnly from "@/components/ClientOnly";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { Menu, X, RefreshCw } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AiOutlineFilter } from "react-icons/ai";
 
 /* Lazy-loaded charts (ssr: false) */
@@ -40,7 +32,7 @@ import { TradePlanProvider } from "@/context/TradePlanContext";
 /* Pricing Component */
 import PricingPlans from "@/components/payment/PricingPlans";
 
-/* Tabs */
+/* Tabs definitions */
 const TAB_DEFS = [
   { value: "overview", label: "Overview" },
   { value: "history", label: "Trade History" },
@@ -54,7 +46,7 @@ const TAB_DEFS = [
   { value: "upgrade", label: "Upgrade" },
 ];
 
-/* Workaround typing for child components */
+/* Casts so TypeScript doesn't choke on props of child components */
 const OverviewCardsAny = OverviewCards as unknown as React.ComponentType<any>;
 const TradeHistoryTableAny = TradeHistoryTable as unknown as React.ComponentType<any>;
 const RiskMetricsAny = RiskMetrics as unknown as React.ComponentType<any>;
@@ -124,7 +116,7 @@ function computeRange(filter: FilterOption, customFrom?: string | null, customTo
   return { start, end };
 }
 
-/* Local error boundary to prevent client crash */
+/* Simple Error Boundary to avoid full app crash on render errors */
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -136,14 +128,14 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 
   componentDidCatch(error: any, info: any) {
-    // optionally log to monitoring
-    // console.error("Dashboard caught error:", error, info);
+    // Could send to Sentry / monitoring here
+    // console.error("Dashboard error:", error, info);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[#07101a]">
           <div className="max-w-2xl w-full bg-[#07101a] border border-white/6 rounded-2xl p-6 text-white">
             <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
             <p className="text-sm text-gray-300">An unexpected error occurred in the dashboard. Try refreshing the page.</p>
@@ -188,12 +180,14 @@ function DashboardContent(): React.ReactElement {
   const [customTo, setCustomTo] = useState<string>("");
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
+  // small profile menu for avatar
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
   // avatar initial
   const [avatarInitial, setAvatarInitial] = useState<string>("U");
 
   // trade context
   const tradeContext = useTrade();
-  // defensive: tradeContext may be undefined if context not provided (shouldn't happen because provider wraps)
   const trades = tradeContext?.trades ?? [];
   const refreshTrades = tradeContext?.refreshTrades ?? (async () => {});
 
@@ -208,7 +202,6 @@ function DashboardContent(): React.ReactElement {
     if (session && (session as any).user) {
       setIsAuthed(true);
       setAuthChecked(true);
-      // derive avatar initial from session user if name exists
       try {
         const name = (session as any).user?.name;
         if (name && typeof name === "string" && name.length > 0) {
@@ -222,7 +215,7 @@ function DashboardContent(): React.ReactElement {
       return;
     }
 
-    // cookie check fallback (unchanged)
+    // fallback cookie check
     function getCookie(name: string) {
       if (typeof document === "undefined") return null;
       const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
@@ -266,7 +259,6 @@ function DashboardContent(): React.ReactElement {
     const loadAvatarFromApi = async () => {
       try {
         if (session && (session as any).user && (session as any).user.name) return;
-        // Attempt fetch; implement this server-side to return { name, email }
         const res = await fetch("/api/user/me");
         if (!res.ok) return;
         const data = await res.json().catch(() => null);
@@ -280,7 +272,6 @@ function DashboardContent(): React.ReactElement {
           setAvatarInitial(email.trim()[0].toUpperCase());
           return;
         }
-        // fallback to localStorage keys used previously
         try {
           const keysToTry = ["signupName", "userName", "name", "displayName"];
           for (const k of keysToTry) {
@@ -298,7 +289,6 @@ function DashboardContent(): React.ReactElement {
       }
     };
 
-    // only run in browser
     if (typeof window !== "undefined") loadAvatarFromApi();
   }, [session]);
 
@@ -320,7 +310,6 @@ function DashboardContent(): React.ReactElement {
       const s = start.getTime();
       const e = end.getTime();
 
-      // Accept multiple possible date field names on trade objects
       return trades.filter((tr: any) => {
         try {
           const dateValue =
@@ -335,7 +324,6 @@ function DashboardContent(): React.ReactElement {
         }
       });
     } catch (err) {
-      // fail gracefully
       console.error("Filtering error:", err);
       return trades ?? [];
     }
@@ -351,9 +339,7 @@ function DashboardContent(): React.ReactElement {
   };
 
   const handleConnectPlatform = async () => {
-    // naive connect placeholder — implement server side route to actually connect
     try {
-      // simple client-side validation
       if (!platformLogin || !platformPassword) {
         alert("Please provide platform login and password.");
         return;
@@ -374,7 +360,6 @@ function DashboardContent(): React.ReactElement {
         alert(`Connection failed: ${d?.error || d?.message || "Unknown error"}`);
         return;
       }
-      // attempt refresh trades after connection
       try {
         await refreshTrades();
       } catch {
@@ -388,7 +373,7 @@ function DashboardContent(): React.ReactElement {
     }
   };
 
-  // Quick refresh (keeps original behavior also available)
+  // Quick refresh
   const handleQuickRefresh = async () => {
     try {
       setIsLoading(true);
@@ -512,7 +497,7 @@ function DashboardContent(): React.ReactElement {
                 <RefreshCw size={20} />
               </button>
 
-              {/* Sync / Connect (opens modal) */}
+              {/* Connect Account */}
               <button
                 className="px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white ml-2"
                 onClick={openConnectModal}
@@ -521,27 +506,54 @@ function DashboardContent(): React.ReactElement {
                 Connect Account
               </button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger className="focus:outline-none ml-3">
-                  <Avatar className="w-9 h-9">
-                    <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
-                    <AvatarFallback>{avatarInitial}</AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Simple Avatar + Menu (safe) */}
+              <div className="relative ml-3">
+                <button
+                  onClick={() => setProfileMenuOpen((s) => !s)}
+                  className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-white font-semibold"
+                  aria-label="Open profile menu"
+                >
+                  {avatarInitial}
+                </button>
+
+                {profileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-[#0b1116] border border-zinc-700 rounded-md p-2 z-50 shadow-lg">
+                    <button
+                      className="w-full text-left px-2 py-2 text-sm text-gray-200 hover:bg-zinc-800 rounded"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        router.push("/dashboard/profile");
+                      }}
+                    >
+                      Profile
+                    </button>
+                    <button
+                      className="w-full text-left px-2 py-2 text-sm text-gray-200 hover:bg-zinc-800 rounded"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        router.push("/dashboard/settings");
+                      }}
+                    >
+                      Settings
+                    </button>
+                    <button
+                      className="w-full text-left px-2 py-2 text-sm text-gray-200 hover:bg-zinc-800 rounded"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        signOut();
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Mobile Sidebar */}
           <div
-            className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
-              mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
+            className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-white text-lg font-semibold">Menu</h2>
@@ -553,9 +565,7 @@ function DashboardContent(): React.ReactElement {
               {TAB_DEFS.map((tab) => (
                 <button
                   key={tab.value}
-                  className={`text-left text-sm font-medium px-2 py-1 rounded ${
-                    activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"
-                  }`}
+                  className={`text-left text-sm font-medium px-2 py-1 rounded ${activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"}`}
                   onClick={() => {
                     setActiveTab(tab.value);
                     setMobileMenuOpen(false);
@@ -567,13 +577,21 @@ function DashboardContent(): React.ReactElement {
             </nav>
           </div>
 
-          {/* Desktop Tabs */}
-          <div className="hidden md:block">
-            <Tabs items={TAB_DEFS} activeTab={activeTab} setActiveTab={setActiveTab} />
+          {/* Desktop simple Tabs */}
+          <div className="hidden md:flex gap-2 mb-4">
+            {TAB_DEFS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => setActiveTab(t.value)}
+                className={`px-3 py-2 rounded text-sm font-medium ${activeTab === t.value ? "bg-indigo-600 text-white" : "text-gray-300 bg-transparent hover:bg-zinc-800"}`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
           {/* Tab Content */}
-          <div className="mt-8 text-sm">
+          <div className="mt-2 text-sm">
             {isLoading ? (
               <Spinner />
             ) : (
@@ -633,11 +651,7 @@ function DashboardContent(): React.ReactElement {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="text-sm text-gray-300">Platform</span>
-                  <select
-                    value={platform}
-                    onChange={(e) => setPlatform(e.target.value)}
-                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                  >
+                  <select value={platform} onChange={(e) => setPlatform(e.target.value)} className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100">
                     <option value="mt5">MT5</option>
                     <option value="metatrader">MetaTrader</option>
                     <option value="ctrader">cTrader</option>
@@ -647,49 +661,23 @@ function DashboardContent(): React.ReactElement {
 
                 <label className="block">
                   <span className="text-sm text-gray-300">Broker Server</span>
-                  <input
-                    value={platformServer}
-                    onChange={(e) => setPlatformServer(e.target.value)}
-                    placeholder="Broker server (host)"
-                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                  />
+                  <input value={platformServer} onChange={(e) => setPlatformServer(e.target.value)} placeholder="Broker server (host)" className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100" />
                 </label>
 
                 <label className="block md:col-span-2">
                   <span className="text-sm text-gray-300">Login</span>
-                  <input
-                    value={platformLogin}
-                    onChange={(e) => setPlatformLogin(e.target.value)}
-                    placeholder="Account login"
-                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                  />
+                  <input value={platformLogin} onChange={(e) => setPlatformLogin(e.target.value)} placeholder="Account login" className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100" />
                 </label>
 
                 <label className="block md:col-span-2">
                   <span className="text-sm text-gray-300">Password</span>
-                  <input
-                    type="password"
-                    value={platformPassword}
-                    onChange={(e) => setPlatformPassword(e.target.value)}
-                    placeholder="Account password"
-                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                  />
+                  <input type="password" value={platformPassword} onChange={(e) => setPlatformPassword(e.target.value)} placeholder="Account password" className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100" />
                 </label>
               </div>
 
               <div className="mt-4 flex justify-end gap-2">
-                <button
-                  onClick={() => setConnectModalOpen(false)}
-                  className="px-4 py-2 rounded border border-zinc-700 text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConnectPlatform}
-                  className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
-                >
-                  Connect
-                </button>
+                <button onClick={() => setConnectModalOpen(false)} className="px-4 py-2 rounded border border-zinc-700 text-sm">Cancel</button>
+                <button onClick={handleConnectPlatform} className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">Connect</button>
               </div>
             </div>
           </div>
@@ -700,7 +688,6 @@ function DashboardContent(): React.ReactElement {
 }
 
 export default function DashboardPage(): React.ReactElement {
-  // keep original session loading behavior
   const { status } = useSession();
   if (status === "loading") return <Spinner />;
 
