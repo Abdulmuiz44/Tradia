@@ -18,7 +18,7 @@ import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { Menu, X, RefreshCw } from "lucide-react";
 import { AiOutlineFilter } from "react-icons/ai";
 
-/* Lazy-loaded charts (ssr: false). We'll render them inside Suspense. */
+/* Lazy-loaded charts (ssr: false). Render inside Suspense. */
 const ProfitLossChart = dynamic(() => import("@/components/charts/ProfitLossChart"), { ssr: false });
 const PerformanceTimeline = dynamic(() => import("@/components/charts/PerformanceTimeline"), { ssr: false });
 const TradeBehavioralChart = dynamic(() => import("@/components/charts/TradeBehavioralChart"), { ssr: false });
@@ -72,51 +72,56 @@ type FilterOption =
   | "1y"
   | "custom";
 
-/* Helper: compute start date for filter */
+/* Helper: compute start date for filter (defensive) */
 function computeRange(filter: FilterOption, customFrom?: string | null, customTo?: string | null) {
-  const now = new Date();
-  let start: Date | null = null;
-  let end: Date = now;
-  switch (filter) {
-    case "24h":
-      start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      break;
-    case "7d":
-      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      break;
-    case "30d":
-      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      break;
-    case "60d":
-      start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-      break;
-    case "90d":
-      start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      break;
-    case "3m": {
-      start = new Date();
-      start.setMonth(now.getMonth() - 3);
-      break;
+  try {
+    const now = new Date();
+    let start: Date | null = null;
+    let end: Date = now;
+    switch (filter) {
+      case "24h":
+        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case "7d":
+        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "30d":
+        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case "60d":
+        start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+        break;
+      case "90d":
+        start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case "3m": {
+        start = new Date(now);
+        start.setMonth(now.getMonth() - 3);
+        break;
+      }
+      case "6m": {
+        start = new Date(now);
+        start.setMonth(now.getMonth() - 6);
+        break;
+      }
+      case "1y": {
+        start = new Date(now);
+        start.setFullYear(now.getFullYear() - 1);
+        break;
+      }
+      case "custom":
+        if (customFrom) start = new Date(customFrom);
+        else start = null;
+        if (customTo) end = new Date(customTo);
+        break;
+      default:
+        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
-    case "6m": {
-      start = new Date();
-      start.setMonth(now.getMonth() - 6);
-      break;
-    }
-    case "1y": {
-      start = new Date();
-      start.setFullYear(now.getFullYear() - 1);
-      break;
-    }
-    case "custom":
-      if (customFrom) start = new Date(customFrom);
-      else start = null;
-      if (customTo) end = new Date(customTo);
-      break;
-    default:
-      start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    return { start, end };
+  } catch (err) {
+    console.error("computeRange failed:", err);
+    return { start: null, end: new Date() };
   }
-  return { start, end };
 }
 
 /* Error boundary to avoid whole-app crash when a child throws */
@@ -130,6 +135,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
   componentDidCatch(error: any, info: any) {
     // optionally send to monitoring
+    // safe-guard: do not throw here
     // console.error("Dashboard caught error:", error, info);
   }
   render() {
@@ -140,7 +146,18 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
             <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
             <p className="text-sm text-gray-300">An unexpected error occurred in the dashboard. Try refreshing the page.</p>
             <div className="mt-4">
-              <button onClick={() => location.reload()} className="px-4 py-2 bg-indigo-600 rounded text-white">
+              <button
+                onClick={() => {
+                  try {
+                    if (typeof window !== "undefined" && window.location && typeof window.location.reload === "function") {
+                      window.location.reload();
+                    }
+                  } catch {
+                    // fallback: do nothing
+                  }
+                }}
+                className="px-4 py-2 bg-indigo-600 rounded text-white"
+              >
                 Refresh
               </button>
             </div>
@@ -153,6 +170,53 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
       );
     }
     return this.props.children;
+  }
+}
+
+/* Safe base64 decode for JWT payloads (browser-friendly) */
+function safeBase64Decode(input: string) {
+  try {
+    if (typeof window !== "undefined" && typeof window.atob === "function") {
+      return window.atob(input);
+    }
+    // fallback for environments providing Buffer
+    if (typeof globalThis !== "undefined" && (globalThis as any).Buffer) {
+      return String((globalThis as any).Buffer.from(input, "base64"));
+    }
+    return "";
+  } catch (err) {
+    return "";
+  }
+}
+
+/* Parse JWT payload safely: returns object or null */
+function parseJwtPayloadSafe(token: string | null) {
+  if (!token || typeof token !== "string") return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payload = parts[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = safeBase64Decode(base64);
+    if (!decoded) return null;
+    // decoded may include percent-encoding - try to JSON.parse directly, fallback to decodeURIComponent
+    try {
+      return JSON.parse(decoded);
+    } catch {
+      try {
+        const json = decodeURIComponent(
+          decoded
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        return JSON.parse(json);
+      } catch {
+        return null;
+      }
+    }
+  } catch (err) {
+    return null;
   }
 }
 
@@ -198,11 +262,10 @@ function DashboardContent(): React.ReactElement {
     return () => clearTimeout(t);
   }, []);
 
-  /* AUTH check strategy:
-     1) If next-auth session exists, attempt to confirm emailVerified via /api/user/me
-     2) Else fallback to cookie JWT (parse safely)
-     3) If server check indicates emailVerified true => allow
-     4) If unable to verify but session exists -> allow (pragmatic; you can tighten later)
+  /* AUTH check strategy (very defensive):
+     - Prefer next-auth session & server verification
+     - fallback to cookie JWT parsing
+     - ensure authChecked is always set at the end
   */
   useEffect(() => {
     let cancelled = false;
@@ -212,14 +275,16 @@ function DashboardContent(): React.ReactElement {
           // try server-side truth check if available
           try {
             const res = await fetch("/api/user/me");
-            if (res.ok) {
+            if (res && res.ok) {
               const data = await res.json().catch(() => null);
-              // Accept either boolean flag or truthy field names
               const emailVerified = data?.emailVerified ?? data?.email_verified ?? data?.verified ?? false;
-              if (!cancelled) setIsAuthed(Boolean(emailVerified) || Boolean(session));
+              if (!cancelled) {
+                setIsAuthed(Boolean(emailVerified) || Boolean(session));
+                setAuthChecked(true);
+              }
               return;
             }
-            // if /api/user/me not implemented or fails, at least accept session
+            // accept session in absence of server truth
             if (!cancelled) setIsAuthed(true);
             return;
           } catch {
@@ -228,7 +293,7 @@ function DashboardContent(): React.ReactElement {
           }
         }
 
-        // fallback: check cookie JWTs (session/app_token)
+        // fallback to cookie JWTs (session/app_token)
         const getCookie = (name: string) => {
           try {
             if (typeof document === "undefined") return null;
@@ -239,28 +304,9 @@ function DashboardContent(): React.ReactElement {
           }
         };
 
-        const parseJwtPayload = (token: string | null) => {
-          if (!token) return null;
-          try {
-            const parts = token.split(".");
-            if (parts.length < 2) return null;
-            const payload = parts[1];
-            const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-            const json = decodeURIComponent(
-              atob(base64)
-                .split("")
-                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                .join("")
-            );
-            return JSON.parse(json);
-          } catch {
-            return null;
-          }
-        };
-
         const token = getCookie("session") || getCookie("app_token");
         if (token) {
-          const payload = parseJwtPayload(token);
+          const payload = parseJwtPayloadSafe(token);
           const emailVerified = payload?.email_verified ?? payload?.emailVerified ?? false;
           if (!cancelled) setIsAuthed(Boolean(emailVerified));
         } else {
@@ -274,7 +320,6 @@ function DashboardContent(): React.ReactElement {
     };
 
     checkAuth();
-
     return () => {
       cancelled = true;
     };
@@ -284,6 +329,7 @@ function DashboardContent(): React.ReactElement {
   useEffect(() => {
     const loadAvatar = async () => {
       try {
+        // 1) session name
         if (session && (session as any).user && (session as any).user.name) {
           const name = (session as any).user.name;
           if (typeof name === "string" && name.length > 0) {
@@ -291,10 +337,11 @@ function DashboardContent(): React.ReactElement {
             return;
           }
         }
-        // try server
+
+        // 2) server /api/user/me
         try {
           const res = await fetch("/api/user/me");
-          if (res.ok) {
+          if (res && res.ok) {
             const data = await res.json().catch(() => null);
             const name = data?.name ?? data?.fullName ?? data?.displayName;
             const email = data?.email;
@@ -310,22 +357,25 @@ function DashboardContent(): React.ReactElement {
         } catch {
           // ignore server failure
         }
-        // localStorage fallback
+
+        // 3) localStorage fallback (guarded)
         try {
-          const keysToTry = ["signupName", "userName", "name", "displayName"];
-          for (const k of keysToTry) {
-            try {
-              const v = window.localStorage.getItem(k);
-              if (v && v.length > 0) {
-                setAvatarInitial(v.trim()[0].toUpperCase());
-                return;
+          if (typeof window !== "undefined" && window.localStorage) {
+            const keysToTry = ["signupName", "userName", "name", "displayName"];
+            for (const k of keysToTry) {
+              try {
+                const v = window.localStorage.getItem(k);
+                if (v && v.length > 0) {
+                  setAvatarInitial(v.trim()[0].toUpperCase());
+                  return;
+                }
+              } catch {
+                // ignore single key read error
               }
-            } catch {
-              // ignore single key read error
             }
           }
         } catch {
-          // ignore localStorage errors entirely
+          // ignore
         }
       } catch {
         // silent
@@ -355,7 +405,7 @@ function DashboardContent(): React.ReactElement {
 
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
-  // Filtered trades memoized, very defensive
+  // Filtered trades memoized, defensive
   const filteredTrades = useMemo(() => {
     try {
       if (!Array.isArray(trades)) return [];
