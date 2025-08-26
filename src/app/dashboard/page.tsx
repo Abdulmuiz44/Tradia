@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -192,17 +191,69 @@ function DashboardContent() {
     return () => clearTimeout(t);
   }, []);
 
+  // --- Robust auth detection: prefer NextAuth session, fallback to cookie JWTs (session or app_token) ---
   useEffect(() => {
-    if (session && (session as any).user) {
-      setIsAuthed(true);
-      setAuthChecked(true);
-    } else {
-      setIsAuthed(false);
-      setAuthChecked(true);
-    }
+    const checkAuth = (): void => {
+      // If NextAuth session is present and has user, accept it immediately.
+      if (session && (session as any).user) {
+        setIsAuthed(true);
+        setAuthChecked(true);
+        return;
+      }
+
+      // Fallback: look for JWT in cookies (session or app_token).
+      try {
+        if (typeof document === "undefined") {
+          setIsAuthed(false);
+          setAuthChecked(true);
+          return;
+        }
+        const getCookie = (name: string) => {
+          const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+          return match ? decodeURIComponent(match[2]) : null;
+        };
+
+        const token = getCookie("session") || getCookie("app_token") || null;
+        if (token) {
+          // parse payload (no verification) to check claims like email_verified
+          try {
+            const parts = token.split(".");
+            if (parts.length >= 2) {
+              const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+              const json = decodeURIComponent(
+                atob(base64)
+                  .split("")
+                  .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                  .join("")
+              );
+              const payload = JSON.parse(json) as any;
+              // If token indicates email_verified OR contains an email, accept it.
+              const verified = Boolean(payload?.email_verified || payload?.email);
+              setIsAuthed(verified);
+            } else {
+              setIsAuthed(false);
+            }
+          } catch (err) {
+            console.error("JWT parse error:", err);
+            setIsAuthed(false);
+          }
+        } else {
+          setIsAuthed(false);
+        }
+      } catch (err) {
+        console.error("Auth cookie parse error:", err);
+        setIsAuthed(false);
+      } finally {
+        setAuthChecked(true);
+      }
+    };
+
+    checkAuth();
   }, [session]);
 
+  // Wait until we've evaluated auth info client-side
   if (!authChecked) return <Spinner />;
+
   if (!isAuthed) {
     return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
   }
@@ -309,9 +360,13 @@ function DashboardContent() {
           ) : (
             <>
               {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
+
               {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
+
               {activeTab === "journal" && <TradeJournalAny />}
+
               {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
+
               {activeTab === "analytics" && (
                 <div className="grid gap-6">
                   <ProfitLossChartAny trades={filteredTrades} />
@@ -321,7 +376,9 @@ function DashboardContent() {
                   <TradePatternChartAny trades={filteredTrades} />
                 </div>
               )}
+
               {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
+
               {activeTab === "planner" && (
                 <TradePlanProvider>
                   <div className="grid gap-6 bg-transparent">
@@ -329,8 +386,11 @@ function DashboardContent() {
                   </div>
                 </TradePlanProvider>
               )}
+
               {activeTab === "position-sizing" && <PositionSizingAny />}
+
               {activeTab === "education" && <TraderEducationAny />}
+
               {activeTab === "upgrade" && (
                 <div className="max-w-4xl mx-auto">
                   <PricingPlansAny />
