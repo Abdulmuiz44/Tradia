@@ -1,4 +1,3 @@
-// app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -54,26 +53,37 @@ export async function POST(req: Request) {
       { expiresIn: "12h" }
     );
 
-    // --- Create refresh token ---
+    // --- Create refresh token (client will get raw, DB stores a hashed copy) ---
     const refreshTokenRaw = crypto.randomBytes(48).toString("hex");
     const refreshId = uuidv4();
     const hashedRefresh = bcrypt.hashSync(refreshTokenRaw, 10);
     const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(); // 30 days
 
+    // --- Create a session_token (DB expects non-null) ---
+    // This is a server-side token for identifying the session row (not the same as the refresh_token).
+    const sessionTokenRaw = crypto.randomBytes(32).toString("hex");
+
+    // Insert session row — include session_token to satisfy NOT NULL constraint
     const { error: sessionErr } = await supabase.from("sessions").insert([
       {
         id: refreshId,
         user_id: user.id,
+        session_token: sessionTokenRaw, // <-- required non-null column
         refresh_token: hashedRefresh,
         expires_at: refreshExpiresAt,
       },
     ]);
 
-    if (sessionErr) console.error("Failed to create refresh session:", sessionErr);
+    if (sessionErr) {
+      console.error("Failed to create refresh session:", sessionErr);
+      // surface the failure to the client so it's actionable
+      return NextResponse.json({ error: "Failed to create refresh session." }, { status: 500 });
+    }
 
     // --- Set cookies ---
     const res = NextResponse.json({ message: "Login successful." });
 
+    // httpOnly server-side session token (used by server)
     res.cookies.set("session", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -82,9 +92,7 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 12, // 12h
     });
 
-    // ALSO set a client-readable token so client-side code can inspect `email_verified`.
-    // Keep it short-lived and mirror the server token. This is a convenience for the
-    // dashboard client; the httpOnly `session` cookie remains the primary auth cookie.
+    // client-readable mirror token (convenience for client-side checks like email_verified)
     res.cookies.set("app_token", accessToken, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
@@ -93,6 +101,7 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 12, // 12h
     });
 
+    // store raw refresh token in a secure httpOnly cookie (server will verify against hashed DB value)
     res.cookies.set("refresh_token", refreshTokenRaw, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -101,6 +110,7 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 30, // 30d
     });
 
+    // store refresh id so server can locate the DB row
     res.cookies.set("refresh_id", refreshId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -108,6 +118,9 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });
+
+    // Optionally (not httpOnly) expose the session_token to client if you need it — usually unnecessary.
+    // res.cookies.set("session_token", sessionTokenRaw, { httpOnly: false, maxAge: 60 * 60 * 24 * 30 });
 
     return res;
   } catch (err) {
