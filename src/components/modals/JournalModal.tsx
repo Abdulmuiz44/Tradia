@@ -50,6 +50,7 @@ function isoFromLocalDatetimeInput(val: string): string {
 export default function JournalModal({ isOpen, trade, onClose, onSave }: JournalModalProps) {
   // editing fields (start from trade values)
   const [symbol, setSymbol] = useState<string>("");
+  const [direction, setDirection] = useState<Trade["direction"]>("Buy");
   const [orderType, setOrderType] = useState<string>(ORDER_TYPES[0]);
   const [session, setSession] = useState<string>(SESSIONS[0]);
   const [openTimeInput, setOpenTimeInput] = useState<string>(""); // datetime-local
@@ -71,6 +72,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
     if (!isOpen || !trade) {
       // reset
       setSymbol("");
+      setDirection("Buy");
       setOrderType(ORDER_TYPES[0]);
       setSession(SESSIONS[0]);
       setOpenTimeInput("");
@@ -91,6 +93,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
 
     // populate from trade
     setSymbol(String(trade.symbol ?? ""));
+    setDirection((trade.direction as Trade["direction"]) ?? "Buy");
     setOrderType(String(trade.orderType ?? ORDER_TYPES[0]));
     setSession(String(trade.session ?? SESSIONS[0]));
     setOpenTimeInput(toLocalDatetimeInputValue(trade.openTime));
@@ -180,6 +183,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
       const updated: Trade = {
         id: trade?.id ?? `${symbol}-${Date.now()}`,
         symbol: String(symbol),
+        direction: direction ?? "Buy",
         orderType: String(orderType),
         session: String(session),
         openTime: openIso || "",
@@ -202,6 +206,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
 
       // Overwrite fields we explicitly edited (to ensure priority)
       updated.symbol = String(symbol);
+      updated.direction = direction ?? updated.direction;
       updated.orderType = String(orderType);
       updated.session = String(session);
       updated.openTime = openIso || updated.openTime || "";
@@ -237,10 +242,10 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
         }}
         aria-hidden
       />
-      <div className="relative z-10 w-full max-w-3xl bg-[#071026] rounded-lg shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+      <div className="relative z-10 w-full max-w-3xl bg-gray-900 text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold">
               {trade ? `Edit Trade — ${trade.symbol ?? ""}` : "Edit Trade"}
             </h3>
             {trade && (
@@ -266,177 +271,201 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
           </div>
         </div>
 
-        <div className="max-h-[70vh] overflow-auto p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Symbol</label>
-              <input
-                type="text"
-                value={symbol}
-                onChange={(e) => setSymbol(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-                placeholder="e.g. EURUSD"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Order Type</label>
-              <select
-                value={orderType}
-                onChange={(e) => setOrderType(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              >
-                {ORDER_TYPES.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Session</label>
-              <select
-                value={session}
-                onChange={(e) => setSession(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              >
-                {SESSIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Lot size</label>
-              <input
-                type="number"
-                step="any"
-                value={lotSize}
-                onChange={(e) => setLotSize(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Open time</label>
-              <input
-                type="datetime-local"
-                value={openTimeInput}
-                onChange={(e) => setOpenTimeInput(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Close time</label>
-              <input
-                type="datetime-local"
-                value={closeTimeInput}
-                onChange={(e) => setCloseTimeInput(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Entry price</label>
-              <input
-                type="text"
-                value={entryPrice}
-                onChange={(e) => setEntryPrice(e.target.value)}
-                placeholder="Full precision allowed (e.g. 1.234567)"
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Stop loss</label>
-              <input
-                type="text"
-                value={stopLossPrice}
-                onChange={(e) => setStopLossPrice(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Take profit</label>
-              <input
-                type="text"
-                value={takeProfitPrice}
-                onChange={(e) => setTakeProfitPrice(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Outcome</label>
-              <select
-                value={outcome}
-                onChange={(e) => setOutcome(e.target.value as Trade["outcome"])}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              >
-                <option value="Win">Win</option>
-                <option value="Loss">Loss</option>
-                <option value="Breakeven">Breakeven</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">PNL ($)</label>
-              <input
-                type="number"
-                step="any"
-                value={pnl}
-                onChange={(e) => setPnl(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-zinc-300 mb-1">Reason for trade</label>
-              <input
-                type="text"
-                value={reasonForTrade}
-                onChange={(e) => setReasonForTrade(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-300 mb-1">Emotion</label>
-              <select
-                value={emotion}
-                onChange={(e) => setEmotion(e.target.value)}
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              >
-                {EMOTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-zinc-300 mb-1">Journal notes</label>
-              <textarea
-                rows={6}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Write your trade hindsight, what went well, what you can improve..."
-                className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-              />
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Symbol */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Symbol</label>
+            <input
+              type="text"
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              placeholder="e.g. EURUSD"
+            />
           </div>
 
-          {error && <div className="mt-3 text-sm text-red-400">{error}</div>}
+          {/* Direction (inserted as requested) */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Direction</label>
+            <select
+              value={direction ?? "Buy"}
+              onChange={(e) => setDirection(e.target.value as Trade["direction"])}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            >
+              <option>Buy</option>
+              <option>Sell</option>
+            </select>
+          </div>
+
+          {/* Order Type */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Order Type</label>
+            <select
+              value={orderType}
+              onChange={(e) => setOrderType(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            >
+              {ORDER_TYPES.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Session */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Session</label>
+            <select
+              value={session}
+              onChange={(e) => setSession(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            >
+              {SESSIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Open Time */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Open time</label>
+            <input
+              type="datetime-local"
+              value={openTimeInput}
+              onChange={(e) => setOpenTimeInput(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Close Time */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Close time</label>
+            <input
+              type="datetime-local"
+              value={closeTimeInput}
+              onChange={(e) => setCloseTimeInput(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Lot size */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Lot size</label>
+            <input
+              type="number"
+              step="any"
+              value={lotSize}
+              onChange={(e) => setLotSize(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Entry Price */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Entry price</label>
+            <input
+              type="text"
+              value={entryPrice}
+              onChange={(e) => setEntryPrice(e.target.value)}
+              placeholder="Full precision allowed (e.g. 1.234567)"
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Stop Loss */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Stop loss</label>
+            <input
+              type="text"
+              value={stopLossPrice}
+              onChange={(e) => setStopLossPrice(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Take Profit */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Take profit</label>
+            <input
+              type="text"
+              value={takeProfitPrice}
+              onChange={(e) => setTakeProfitPrice(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Outcome */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Outcome</label>
+            <select
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value as Trade["outcome"])}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            >
+              <option value="Win">Win</option>
+              <option value="Loss">Loss</option>
+              <option value="Breakeven">Breakeven</option>
+            </select>
+          </div>
+
+          {/* PNL */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">PNL ($)</label>
+            <input
+              type="number"
+              step="any"
+              value={pnl}
+              onChange={(e) => setPnl(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Reason For Trade (span two columns) */}
+          <div className="sm:col-span-2">
+            <label className="block text-sm text-zinc-300 mb-1">Reason for trade</label>
+            <input
+              type="text"
+              value={reasonForTrade}
+              onChange={(e) => setReasonForTrade(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Emotion */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Emotion</label>
+            <select
+              value={emotion}
+              onChange={(e) => setEmotion(e.target.value)}
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            >
+              {EMOTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Journal Notes */}
+          <div className="sm:col-span-2">
+            <label className="block text-sm text-zinc-300 mb-1">Journal notes</label>
+            <textarea
+              rows={6}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Write your trade hindsight, what went well, what you can improve..."
+              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-zinc-800 bg-gradient-to-t from-transparent to-transparent">
+        {error && <div className="mt-3 text-sm text-red-400">{error}</div>}
+
+        <div className="flex items-center justify-end gap-3 mt-4">
           <button
             type="button"
             onClick={() => {
@@ -451,7 +480,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             type="button"
             onClick={onSaveClick}
             disabled={saving}
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save Trade"}
           </button>
