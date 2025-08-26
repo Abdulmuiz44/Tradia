@@ -124,6 +124,46 @@ function computeRange(filter: FilterOption, customFrom?: string | null, customTo
   return { start, end };
 }
 
+/* Local error boundary to prevent client crash */
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: undefined };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, info: any) {
+    // optionally log to monitoring
+    // console.error("Dashboard caught error:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="max-w-2xl w-full bg-[#07101a] border border-white/6 rounded-2xl p-6 text-white">
+            <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
+            <p className="text-sm text-gray-300">An unexpected error occurred in the dashboard. Try refreshing the page.</p>
+            <div className="mt-4">
+              <button onClick={() => location.reload()} className="px-4 py-2 bg-indigo-600 rounded text-white">
+                Refresh
+              </button>
+            </div>
+            <details className="mt-4 text-xs text-gray-400">
+              <summary>Technical details</summary>
+              <pre className="whitespace-pre-wrap mt-2 text-xs">{String(this.state.error)}</pre>
+            </details>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function DashboardContent(): React.ReactElement {
   const { data: session } = useSession();
   const router = useRouter();
@@ -152,7 +192,10 @@ function DashboardContent(): React.ReactElement {
   const [avatarInitial, setAvatarInitial] = useState<string>("U");
 
   // trade context
-  const { trades, refreshTrades } = useTrade();
+  const tradeContext = useTrade();
+  // defensive: tradeContext may be undefined if context not provided (shouldn't happen because provider wraps)
+  const trades = tradeContext?.trades ?? [];
+  const refreshTrades = tradeContext?.refreshTrades ?? (async () => {});
 
   // --- on mount reduce splash ---
   useEffect(() => {
@@ -250,12 +293,13 @@ function DashboardContent(): React.ReactElement {
         } catch {
           // ignore
         }
-      } catch (err) {
+      } catch {
         // silent
       }
     };
 
-    loadAvatarFromApi();
+    // only run in browser
+    if (typeof window !== "undefined") loadAvatarFromApi();
   }, [session]);
 
   // Wait until we've evaluated auth
@@ -269,22 +313,32 @@ function DashboardContent(): React.ReactElement {
 
   // --- Filtered trades computed from current filterOption / custom range
   const filteredTrades = useMemo(() => {
-    if (!Array.isArray(trades)) return trades;
-    const { start, end } = computeRange(filterOption, customFrom || null, customTo || null);
-    if (!start) return trades;
-    const s = start.getTime();
-    const e = end.getTime();
+    try {
+      if (!Array.isArray(trades)) return trades ?? [];
+      const { start, end } = computeRange(filterOption, customFrom || null, customTo || null);
+      if (!start) return trades;
+      const s = start.getTime();
+      const e = end.getTime();
 
-    // Accept multiple possible date field names on trade objects
-    return trades.filter((tr: any) => {
-      const dateValue =
-        tr?.openedAt || tr?.opened_at || tr?.date || tr?.timestamp || tr?.time || tr?.createdAt || tr?.created_at;
-      if (!dateValue) return false;
-      const d = typeof dateValue === "number" ? new Date(dateValue) : new Date(dateValue);
-      if (isNaN(d.getTime())) return false;
-      const t = d.getTime();
-      return t >= s && t <= e;
-    });
+      // Accept multiple possible date field names on trade objects
+      return trades.filter((tr: any) => {
+        try {
+          const dateValue =
+            tr?.openedAt ?? tr?.opened_at ?? tr?.date ?? tr?.timestamp ?? tr?.time ?? tr?.createdAt ?? tr?.created_at;
+          if (!dateValue) return false;
+          const d = typeof dateValue === "number" ? new Date(dateValue) : new Date(dateValue);
+          if (isNaN(d.getTime())) return false;
+          const t = d.getTime();
+          return t >= s && t <= e;
+        } catch {
+          return false;
+        }
+      });
+    } catch (err) {
+      // fail gracefully
+      console.error("Filtering error:", err);
+      return trades ?? [];
+    }
   }, [trades, filterOption, customFrom, customTo]);
 
   // --- Handlers ---
@@ -321,12 +375,10 @@ function DashboardContent(): React.ReactElement {
         return;
       }
       // attempt refresh trades after connection
-      if (typeof refreshTrades === "function") {
-        try {
-          await refreshTrades();
-        } catch {
-          // ignore
-        }
+      try {
+        await refreshTrades();
+      } catch {
+        // ignore
       }
       setConnectModalOpen(false);
       alert("Connected successfully and trades refreshed.");
@@ -351,297 +403,299 @@ function DashboardContent(): React.ReactElement {
   };
 
   return (
-    <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
-      <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            {/* mobile hamburger */}
-            <button
-              className="md:hidden p-1"
-              onClick={() => setMobileMenuOpen((s) => !s)}
-              aria-label="Toggle Menu"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <h1 className="text-xl font-semibold">{currentTabLabel}</h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Filter button */}
-            <div className="relative">
-              <button
-                title="Filter trades"
-                className="p-2 rounded-full bg-transparent hover:bg-zinc-700"
-                onClick={() => setFilterDropdownOpen((s) => !s)}
-              >
-                <AiOutlineFilter size={18} />
-              </button>
-
-              {filterDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-[#0b1116] border border-zinc-700 rounded-md p-3 z-50 shadow-lg">
-                  <div className="text-sm font-medium text-gray-200 mb-2">Quick ranges</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: "24h", label: "Last 24 hours" },
-                      { id: "7d", label: "Last 7 days" },
-                      { id: "30d", label: "Last 30 days" },
-                      { id: "60d", label: "Last 60 days" },
-                      { id: "3m", label: "Last 3 months" },
-                      { id: "90d", label: "Last 90 days" },
-                      { id: "6m", label: "Last 6 months" },
-                      { id: "1y", label: "Last 1 year" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => {
-                          setFilterOption(opt.id as FilterOption);
-                          setFilterDropdownOpen(false);
-                        }}
-                        className={`text-left px-2 py-2 rounded text-sm ${filterOption === (opt.id as FilterOption) ? "bg-green-600 text-white" : "text-gray-200 hover:bg-zinc-800"}`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-3 border-t border-zinc-700 pt-3">
-                    <div className="text-sm text-gray-200 mb-2">Custom range</div>
-                    <div className="flex gap-2">
-                      <input
-                        type="date"
-                        value={customFrom}
-                        onChange={(e) => setCustomFrom(e.target.value)}
-                        className="w-1/2 p-2 rounded bg-transparent border border-zinc-700 text-gray-200"
-                      />
-                      <input
-                        type="date"
-                        value={customTo}
-                        onChange={(e) => setCustomTo(e.target.value)}
-                        className="w-1/2 p-2 rounded bg-transparent border border-zinc-700 text-gray-200"
-                      />
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        onClick={() => {
-                          if (!customFrom || !customTo) {
-                            alert("Please select both from and to dates.");
-                            return;
-                          }
-                          setFilterOption("custom");
-                          setFilterDropdownOpen(false);
-                        }}
-                        className="px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-sm"
-                      >
-                        Apply
-                      </button>
-                      <button
-                        onClick={() => {
-                          setCustomFrom("");
-                          setCustomTo("");
-                        }}
-                        className="px-3 py-2 rounded border border-zinc-700 text-sm"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick refresh */}
-            <button
-              className="p-2 rounded-full bg-transparent hover:bg-zinc-600"
-              onClick={handleQuickRefresh}
-              title="Refresh Trades"
-            >
-              <RefreshCw size={20} />
-            </button>
-
-            {/* Sync / Connect (opens modal) */}
-            <button
-              className="px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white ml-2"
-              onClick={openConnectModal}
-              title="Connect trading account"
-            >
-              Connect Account
-            </button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger className="focus:outline-none ml-3">
-                <Avatar className="w-9 h-9">
-                  <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
-                  <AvatarFallback>{avatarInitial}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
-                <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        {/* Mobile Sidebar */}
-        <div
-          className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
-            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
+    <ErrorBoundary>
+      <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
+        <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
+          {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-white text-lg font-semibold">Menu</h2>
-            <button onClick={() => setMobileMenuOpen(false)} aria-label="Close Menu">
-              <X size={20} className="text-white" />
-            </button>
-          </div>
-          <nav className="flex flex-col gap-4">
-            {TAB_DEFS.map((tab) => (
+            <div className="flex items-center gap-3">
+              {/* mobile hamburger */}
               <button
-                key={tab.value}
-                className={`text-left text-sm font-medium px-2 py-1 rounded ${
-                  activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"
-                }`}
-                onClick={() => {
-                  setActiveTab(tab.value);
-                  setMobileMenuOpen(false);
-                }}
+                className="md:hidden p-1"
+                onClick={() => setMobileMenuOpen((s) => !s)}
+                aria-label="Toggle Menu"
               >
-                {tab.label}
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Desktop Tabs */}
-        <div className="hidden md:block">
-          <Tabs items={TAB_DEFS} activeTab={activeTab} setActiveTab={setActiveTab} />
-        </div>
-
-        {/* Tab Content */}
-        <div className="mt-8 text-sm">
-          {isLoading ? (
-            <Spinner />
-          ) : (
-            <>
-              {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
-
-              {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
-
-              {activeTab === "journal" && <TradeJournalAny trades={filteredTrades} />}
-
-              {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
-
-              {activeTab === "analytics" && (
-                <div className="grid gap-6">
-                  <ProfitLossChartAny trades={filteredTrades} />
-                  <DrawdownChartAny trades={filteredTrades} />
-                  <PerformanceTimelineAny trades={filteredTrades} />
-                  <TradeBehavioralChartAny trades={filteredTrades} />
-                  <TradePatternChartAny trades={filteredTrades} />
-                </div>
-              )}
-
-              {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
-
-              {activeTab === "planner" && (
-                <TradePlanProvider>
-                  <div className="grid gap-6 bg-transparent">
-                    <TradePlannerTableAny trades={filteredTrades} />
-                  </div>
-                </TradePlanProvider>
-              )}
-
-              {activeTab === "position-sizing" && <PositionSizingAny trades={filteredTrades} />}
-
-              {activeTab === "education" && <TraderEducationAny trades={filteredTrades} />}
-
-              {activeTab === "upgrade" && (
-                <div className="max-w-4xl mx-auto">
-                  <PricingPlansAny />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Connect Account Modal */}
-      {connectModalOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setConnectModalOpen(false)} />
-          <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-6 backdrop-blur-sm shadow-2xl z-50">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Connect Trading Account</h3>
-              <button onClick={() => setConnectModalOpen(false)} className="text-gray-300">Close</button>
+              <h1 className="text-xl font-semibold">{currentTabLabel}</h1>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="block">
-                <span className="text-sm text-gray-300">Platform</span>
-                <select
-                  value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
-                  className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
+            <div className="flex items-center gap-2">
+              {/* Filter button */}
+              <div className="relative">
+                <button
+                  title="Filter trades"
+                  className="p-2 rounded-full bg-transparent hover:bg-zinc-700"
+                  onClick={() => setFilterDropdownOpen((s) => !s)}
                 >
-                  <option value="mt5">MT5</option>
-                  <option value="metatrader">MetaTrader</option>
-                  <option value="ctrader">cTrader</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
+                  <AiOutlineFilter size={18} />
+                </button>
 
-              <label className="block">
-                <span className="text-sm text-gray-300">Broker Server</span>
-                <input
-                  value={platformServer}
-                  onChange={(e) => setPlatformServer(e.target.value)}
-                  placeholder="Broker server (host)"
-                  className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                />
-              </label>
+                {filterDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-[#0b1116] border border-zinc-700 rounded-md p-3 z-50 shadow-lg">
+                    <div className="text-sm font-medium text-gray-200 mb-2">Quick ranges</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: "24h", label: "Last 24 hours" },
+                        { id: "7d", label: "Last 7 days" },
+                        { id: "30d", label: "Last 30 days" },
+                        { id: "60d", label: "Last 60 days" },
+                        { id: "3m", label: "Last 3 months" },
+                        { id: "90d", label: "Last 90 days" },
+                        { id: "6m", label: "Last 6 months" },
+                        { id: "1y", label: "Last 1 year" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => {
+                            setFilterOption(opt.id as FilterOption);
+                            setFilterDropdownOpen(false);
+                          }}
+                          className={`text-left px-2 py-2 rounded text-sm ${filterOption === (opt.id as FilterOption) ? "bg-green-600 text-white" : "text-gray-200 hover:bg-zinc-800"}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
 
-              <label className="block md:col-span-2">
-                <span className="text-sm text-gray-300">Login</span>
-                <input
-                  value={platformLogin}
-                  onChange={(e) => setPlatformLogin(e.target.value)}
-                  placeholder="Account login"
-                  className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                />
-              </label>
+                    <div className="mt-3 border-t border-zinc-700 pt-3">
+                      <div className="text-sm text-gray-200 mb-2">Custom range</div>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={customFrom}
+                          onChange={(e) => setCustomFrom(e.target.value)}
+                          className="w-1/2 p-2 rounded bg-transparent border border-zinc-700 text-gray-200"
+                        />
+                        <input
+                          type="date"
+                          value={customTo}
+                          onChange={(e) => setCustomTo(e.target.value)}
+                          className="w-1/2 p-2 rounded bg-transparent border border-zinc-700 text-gray-200"
+                        />
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (!customFrom || !customTo) {
+                              alert("Please select both from and to dates.");
+                              return;
+                            }
+                            setFilterOption("custom");
+                            setFilterDropdownOpen(false);
+                          }}
+                          className="px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-sm"
+                        >
+                          Apply
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCustomFrom("");
+                            setCustomTo("");
+                          }}
+                          className="px-3 py-2 rounded border border-zinc-700 text-sm"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              <label className="block md:col-span-2">
-                <span className="text-sm text-gray-300">Password</span>
-                <input
-                  type="password"
-                  value={platformPassword}
-                  onChange={(e) => setPlatformPassword(e.target.value)}
-                  placeholder="Account password"
-                  className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
-                />
-              </label>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-2">
+              {/* Quick refresh */}
               <button
-                onClick={() => setConnectModalOpen(false)}
-                className="px-4 py-2 rounded border border-zinc-700 text-sm"
+                className="p-2 rounded-full bg-transparent hover:bg-zinc-600"
+                onClick={handleQuickRefresh}
+                title="Refresh Trades"
               >
-                Cancel
+                <RefreshCw size={20} />
               </button>
+
+              {/* Sync / Connect (opens modal) */}
               <button
-                onClick={handleConnectPlatform}
-                className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
+                className="px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white ml-2"
+                onClick={openConnectModal}
+                title="Connect trading account"
               >
-                Connect
+                Connect Account
               </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger className="focus:outline-none ml-3">
+                  <Avatar className="w-9 h-9">
+                    <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
+                    <AvatarFallback>{avatarInitial}</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
+
+          {/* Mobile Sidebar */}
+          <div
+            className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
+              mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-white text-lg font-semibold">Menu</h2>
+              <button onClick={() => setMobileMenuOpen(false)} aria-label="Close Menu">
+                <X size={20} className="text-white" />
+              </button>
+            </div>
+            <nav className="flex flex-col gap-4">
+              {TAB_DEFS.map((tab) => (
+                <button
+                  key={tab.value}
+                  className={`text-left text-sm font-medium px-2 py-1 rounded ${
+                    activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"
+                  }`}
+                  onClick={() => {
+                    setActiveTab(tab.value);
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Desktop Tabs */}
+          <div className="hidden md:block">
+            <Tabs items={TAB_DEFS} activeTab={activeTab} setActiveTab={setActiveTab} />
+          </div>
+
+          {/* Tab Content */}
+          <div className="mt-8 text-sm">
+            {isLoading ? (
+              <Spinner />
+            ) : (
+              <>
+                {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
+
+                {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
+
+                {activeTab === "journal" && <TradeJournalAny trades={filteredTrades} />}
+
+                {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
+
+                {activeTab === "analytics" && (
+                  <div className="grid gap-6">
+                    <ProfitLossChartAny trades={filteredTrades} />
+                    <DrawdownChartAny trades={filteredTrades} />
+                    <PerformanceTimelineAny trades={filteredTrades} />
+                    <TradeBehavioralChartAny trades={filteredTrades} />
+                    <TradePatternChartAny trades={filteredTrades} />
+                  </div>
+                )}
+
+                {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
+
+                {activeTab === "planner" && (
+                  <TradePlanProvider>
+                    <div className="grid gap-6 bg-transparent">
+                      <TradePlannerTableAny trades={filteredTrades} />
+                    </div>
+                  </TradePlanProvider>
+                )}
+
+                {activeTab === "position-sizing" && <PositionSizingAny trades={filteredTrades} />}
+
+                {activeTab === "education" && <TraderEducationAny trades={filteredTrades} />}
+
+                {activeTab === "upgrade" && (
+                  <div className="max-w-4xl mx-auto">
+                    <PricingPlansAny />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      )}
-    </main>
+
+        {/* Connect Account Modal */}
+        {connectModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60" onClick={() => setConnectModalOpen(false)} />
+            <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-6 backdrop-blur-sm shadow-2xl z-50">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Connect Trading Account</h3>
+                <button onClick={() => setConnectModalOpen(false)} className="text-gray-300">Close</button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="text-sm text-gray-300">Platform</span>
+                  <select
+                    value={platform}
+                    onChange={(e) => setPlatform(e.target.value)}
+                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
+                  >
+                    <option value="mt5">MT5</option>
+                    <option value="metatrader">MetaTrader</option>
+                    <option value="ctrader">cTrader</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-300">Broker Server</span>
+                  <input
+                    value={platformServer}
+                    onChange={(e) => setPlatformServer(e.target.value)}
+                    placeholder="Broker server (host)"
+                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
+                  />
+                </label>
+
+                <label className="block md:col-span-2">
+                  <span className="text-sm text-gray-300">Login</span>
+                  <input
+                    value={platformLogin}
+                    onChange={(e) => setPlatformLogin(e.target.value)}
+                    placeholder="Account login"
+                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
+                  />
+                </label>
+
+                <label className="block md:col-span-2">
+                  <span className="text-sm text-gray-300">Password</span>
+                  <input
+                    type="password"
+                    value={platformPassword}
+                    onChange={(e) => setPlatformPassword(e.target.value)}
+                    placeholder="Account password"
+                    className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={() => setConnectModalOpen(false)}
+                  className="px-4 py-2 rounded border border-zinc-700 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConnectPlatform}
+                  className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
+                >
+                  Connect
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </ErrorBoundary>
   );
 }
 
