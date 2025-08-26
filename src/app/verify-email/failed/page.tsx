@@ -52,7 +52,7 @@ export default function VerifyFailed(): React.ReactElement {
 
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Link
-                href="/signup"
+                href="/resend-verification"
                 className="inline-flex items-center justify-center col-span-1 w-full px-4 py-2 rounded-lg border border-white/10 bg-transparent text-center text-sm font-medium hover:bg-white/5"
               >
                 Resend verification
