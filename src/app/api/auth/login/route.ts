@@ -8,6 +8,22 @@ import { createAdminSupabase } from "@/utils/supabase/admin";
 const JWT_SECRET = process.env.JWT_SECRET!;
 if (!JWT_SECRET) console.warn("JWT_SECRET not set");
 
+/**
+ * POST /api/auth/login
+ * - Authenticates user (email+password)
+ * - Requires user.email_verified === true
+ * - Issues access JWT and a refresh session row in `sessions`
+ *
+ * NOTE: sessions table schema expected:
+ * create table sessions (
+ *   id uuid primary key default gen_random_uuid(),
+ *   user_id uuid references users(id) on delete cascade,
+ *   session_token text not null unique,
+ *   refresh_token text unique,
+ *   expires_at timestamptz not null,
+ *   created_at timestamptz default now()
+ * );
+ */
 export async function POST(req: Request) {
   try {
     const { email = "", password = "" } = await req.json();
@@ -19,71 +35,92 @@ export async function POST(req: Request) {
 
     const supabase = createAdminSupabase();
 
-    // --- Fetch latest user info including email_verified ---
-    const { data: user, error } = await supabase
+    // --- Fetch user record (id, password hash, email_verified, name) ---
+    const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id, password, email_verified, name")
       .eq("email", normalizedEmail)
       .maybeSingle();
 
-    if (error) {
-      console.error("Login select error:", error);
+    if (userErr) {
+      console.error("Login select error:", userErr);
       return NextResponse.json({ error: "Database error." }, { status: 500 });
     }
     if (!user) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
 
-    // Check password
+    // Verify password
     const passwordValid = await bcrypt.compare(password, user.password);
     if (!passwordValid) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
 
-    // Ensure email is verified
+    // Ensure email verified
     if (!user.email_verified) {
       return NextResponse.json({ error: "Email not verified. Please check your email." }, { status: 403 });
     }
 
-    // --- Create short-lived access JWT ---
+    // Create access JWT (12h)
     const accessToken = jwt.sign(
       {
         sub: user.id,
         email: normalizedEmail,
         name: user.name,
-        email_verified: true, // always true here because we checked above
+        email_verified: true,
       },
       JWT_SECRET,
       { expiresIn: "12h" }
     );
 
-    // --- Create refresh token (client will get raw, DB stores a hashed copy) ---
+    // Create refresh token raw + hashed + id + expiry
     const refreshTokenRaw = crypto.randomBytes(48).toString("hex");
     const refreshId = uuidv4();
     const hashedRefresh = bcrypt.hashSync(refreshTokenRaw, 10);
     const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(); // 30 days
 
-    // --- Create a session_token (DB expects non-null) ---
-    // This is a server-side token for identifying the session row (not the same as the refresh_token).
-    const sessionTokenRaw = crypto.randomBytes(32).toString("hex");
+    // Create session_token (non-null). Use crypto and fallback to uuid.
+    let sessionTokenRaw: string;
+    try {
+      sessionTokenRaw = crypto.randomBytes(32).toString("hex");
+      if (!sessionTokenRaw || sessionTokenRaw.length === 0) throw new Error("empty session token");
+    } catch (err) {
+      // fallback
+      sessionTokenRaw = uuidv4();
+    }
 
-    // Insert session row — include session_token to satisfy NOT NULL constraint
-    const { error: sessionErr } = await supabase.from("sessions").insert([
-      {
-        id: refreshId,
-        user_id: user.id,
-        session_token: sessionTokenRaw, // <-- required non-null column
-        refresh_token: hashedRefresh,
-        expires_at: refreshExpiresAt,
-      },
-    ]);
+    // Defensive check: ensure none are empty
+    if (!refreshId || !hashedRefresh || !sessionTokenRaw || !refreshExpiresAt) {
+      console.error("Login: invalid session values", {
+        refreshId,
+        hashedRefreshPresent: Boolean(hashedRefresh),
+        sessionTokenRawPresent: Boolean(sessionTokenRaw),
+        refreshExpiresAt,
+      });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    }
+
+    // Attempt insert into sessions table
+    const rowToInsert = {
+      id: refreshId,
+      user_id: user.id,
+      session_token: sessionTokenRaw,
+      refresh_token: hashedRefresh,
+      expires_at: refreshExpiresAt,
+    };
+
+    const { error: sessionErr } = await supabase.from("sessions").insert([rowToInsert]);
 
     if (sessionErr) {
+      // Log the exact attempted row and DB error for debugging
       console.error("Failed to create refresh session:", sessionErr);
-      // surface the failure to the client so it's actionable
+      console.error("Attempted session row:", JSON.stringify(rowToInsert));
+
+      // If inserted row failed due to missing column defaults or constraints, surface clear message
+      // Do NOT return DB internals to client; return generic message
       return NextResponse.json({ error: "Failed to create refresh session." }, { status: 500 });
     }
 
-    // --- Set cookies ---
+    // Successful insertion — set cookies and return success
     const res = NextResponse.json({ message: "Login successful." });
 
-    // httpOnly server-side session token (used by server)
+    // httpOnly server session token (primary server session)
     res.cookies.set("session", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -92,26 +129,17 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 12, // 12h
     });
 
-    // client-readable mirror token (convenience for client-side checks like email_verified)
+    // app_token for client-side checks (not httpOnly) — convenience only
     res.cookies.set("app_token", accessToken, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 12, // 12h
+      maxAge: 60 * 60 * 12,
     });
 
-    // store raw refresh token in a secure httpOnly cookie (server will verify against hashed DB value)
+    // refresh token (raw) stored in httpOnly cookie (server will compare with hashed DB value when refreshing)
     res.cookies.set("refresh_token", refreshTokenRaw, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30d
-    });
-
-    // store refresh id so server can locate the DB row
-    res.cookies.set("refresh_id", refreshId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -119,8 +147,14 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 30,
     });
 
-    // Optionally (not httpOnly) expose the session_token to client if you need it — usually unnecessary.
-    // res.cookies.set("session_token", sessionTokenRaw, { httpOnly: false, maxAge: 60 * 60 * 24 * 30 });
+    // refresh id cookie to locate the DB row
+    res.cookies.set("refresh_id", refreshId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
 
     return res;
   } catch (err) {
