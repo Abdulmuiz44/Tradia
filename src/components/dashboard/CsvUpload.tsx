@@ -1,9 +1,14 @@
-// src/components/dashboard/CsvUpload.tsx
 "use client";
 
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 // papaparse often has no types in some setups; tolerate that here:
-// @ts-ignore - allow use even if no @types/papaparse installed
+// @ts-ignore
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { TradeContext } from "@/context/TradeContext";
@@ -12,9 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "sonner";
 
-/**
- * Simple header heuristics => canonical field keys used by TradeContext normalizer.
- */
+/* =========================
+   Header heuristics / utils
+   ========================= */
+
 const HEADER_KEY_MAP: [RegExp, string][] = [
   [/^\s*sym(?:bol)?\s*$/i, "symbol"],
   [/^\s*ticker\s*$/i, "symbol"],
@@ -71,13 +77,127 @@ function coerceValue(v: unknown): string | number {
 type ParsedRow = Record<string, string | number | null | undefined>;
 const PREVIEW_LIMIT = 20;
 
-/**
- * papaparse can export either a default or a cjs object depending on build.
- * Make a safe runtime alias so we always call parse on the correct object.
- *
- * Note: typed as `any` to avoid TS issues when no @types/papaparse installed.
- */
-const PapaLib: any = ((Papa as unknown) && (Papa as any).parse ? (Papa as any) : (Papa as any).default ?? Papa) as any;
+/* papaparse default alias (handles ESM/CJS differences) */
+const PapaLib: any =
+  ((Papa as unknown) && (Papa as any).parse
+    ? (Papa as any)
+    : (Papa as any).default ?? Papa) as any;
+
+/* =========================
+   CSV <-> Trade mapping
+   ========================= */
+
+function parseCsvRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let cur: string[] = [];
+  let curCell = "";
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const ch = text[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          curCell += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i += 1;
+        continue;
+      }
+      curCell += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === '"') {
+      inQuotes = true;
+      i += 1;
+      continue;
+    }
+
+    if (ch === ",") {
+      cur.push(curCell);
+      curCell = "";
+      i += 1;
+      continue;
+    }
+
+    if (ch === "\r") {
+      i += 1;
+      continue;
+    }
+
+    if (ch === "\n") {
+      cur.push(curCell);
+      rows.push(cur);
+      cur = [];
+      curCell = "";
+      i += 1;
+      continue;
+    }
+
+    curCell += ch;
+    i += 1;
+  }
+
+  if (curCell !== "" || cur.length > 0) {
+    cur.push(curCell);
+    rows.push(cur);
+  }
+
+  return rows;
+}
+
+function rowToTradeObject(row: Record<string, string>, idx: number): Trade {
+  const get = (keys: string[], fallback = ""): string =>
+    keys.reduce<string>((acc, k) => acc || (row[k]?.trim() ?? ""), "").trim() ||
+    fallback;
+
+  const parseNumber = (v: string): number => {
+    if (!v) return 0;
+    const cleaned = v.replace(/[^0-9.\-eE]/g, "");
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const toISO = (v: string): string => {
+    if (!v) return "";
+    const d = new Date(v);
+    if (!isNaN(d.getTime())) return d.toISOString();
+    if (/^\d{10}$/.test(v)) return new Date(Number(v) * 1000).toISOString();
+    if (/^\d{13}$/.test(v)) return new Date(Number(v)).toISOString();
+    return v;
+  };
+
+  const trade: Trade = {
+    id: get(["id", "deal_id", "ticket", "trade_id"], `imported-${idx}-${Date.now()}`),
+    symbol: get(["symbol", "pair", "instrument"], "UNKNOWN"),
+    entryPrice: get(["entryPrice", "entry_price", "openPrice", "open_price", "price_open"], ""),
+    exitPrice: get(["exitPrice", "exit_price", "closePrice", "close_price", "price_close"], ""),
+    lotSize: get(["lotSize", "lots", "volume", "size"], "1"),
+    pnl: parseNumber(get(["pnl", "profit", "netpl", "profit_loss"], "0")),
+    profitLoss: get(["profitLoss", "profit_loss", "profit_formatted"], ""),
+    openTime: toISO(get(["openTime", "open_time", "time", "entry_time"], "")),
+    closeTime: toISO(get(["closeTime", "close_time", "time_close", "exit_time"], "")),
+    outcome: (get(["outcome", "result"], "Breakeven") as Trade["outcome"]) ?? "Breakeven",
+    notes: get(["notes", "comment", "journalNotes", "client_comment"], ""),
+    reasonForTrade: get(["reason", "reasonForTrade", "strategy"], ""),
+    strategy: get(["strategy", "strategyName"], ""),
+    emotion: get(["emotion"], ""),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as Trade;
+
+  return trade;
+}
+
+/* =========================
+   Component
+   ========================= */
 
 type CsvUploadProps = {
   isOpen?: boolean;
@@ -85,12 +205,18 @@ type CsvUploadProps = {
   onImport?: (imported: Partial<Trade>[]) => void;
 };
 
-export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledOnClose, onImport: controlledOnImport }: CsvUploadProps): React.ReactElement {
-  const { setTradesFromCsv } = useContext(TradeContext) as { setTradesFromCsv: (arr: unknown[]) => void };
+export default function CsvUpload({
+  isOpen: controlledOpen,
+  onClose: controlledOnClose,
+  onImport: controlledOnImport,
+}: CsvUploadProps): React.ReactElement {
+  const { setTradesFromCsv } = useContext(TradeContext) as {
+    setTradesFromCsv: (arr: unknown[]) => void;
+  };
 
-  const [open, setOpen] = useState(false);
-  const [parsing, setParsing] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [open, setOpen] = useState<boolean>(false);
+  const [parsing, setParsing] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
   const [fileName, setFileName] = useState<string | null>(null);
 
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
@@ -98,7 +224,6 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
 
-  // sync controlled open prop if provided
   useEffect(() => {
     if (typeof controlledOpen === "boolean") {
       setOpen(controlledOpen);
@@ -193,15 +318,16 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
 
         try {
           setProgress(25);
-          // removed generic call on untyped function; assert shape afterward
           const rawResults = PapaLib.parse(txt, {
             header: true,
             skipEmptyLines: true,
             dynamicTyping: false,
           });
 
-          // ensure shape and types
-          const results = (rawResults as { data?: unknown; meta?: { fields?: unknown[] } }) ?? {};
+          const results = (rawResults as {
+            data?: unknown;
+            meta?: { fields?: unknown[] };
+          }) ?? {};
           const parsedRows = Array.isArray(results.data) ? (results.data as ParsedRow[]) : [];
 
           const headers =
@@ -300,11 +426,12 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
       setTimeout(() => {
         setOpen(false);
         setParsing(false);
-        // notify parent if controlled
         if (typeof controlledOnImport === "function") {
           try {
             controlledOnImport(mappedForImport as Partial<Trade>[]);
           } catch (e) {
+            // continue
+            // eslint-disable-next-line no-console
             console.warn("onImport handler threw", e);
           }
         }
@@ -312,6 +439,7 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
           try {
             controlledOnClose();
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.warn("onClose handler threw", e);
           }
         }
@@ -322,13 +450,16 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
       setParsing(false);
       setProgress(0);
     }
-  }, [mappedForImport, setTradesFromCsv]);
+  }, [mappedForImport, setTradesFromCsv, controlledOnImport, controlledOnClose]);
 
   const PreviewTable = useMemo(() => {
     if (!rows || rows.length === 0) {
       return <div className="text-sm text-zinc-400">No parsed rows yet.</div>;
     }
-    const headers = detectedHeaders.length > 0 ? detectedHeaders : Array.from(new Set(rows.flatMap((r) => Object.keys(r))));
+    const headers =
+      detectedHeaders.length > 0
+        ? detectedHeaders
+        : Array.from(new Set(rows.flatMap((r) => Object.keys(r))));
     const show = previewAll ? rows : rows.slice(0, PREVIEW_LIMIT);
 
     return (
@@ -362,7 +493,10 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
             <div className="text-xs text-zinc-400">
               Showing {previewAll ? rows.length : PREVIEW_LIMIT} of {rows.length}
             </div>
-            <button onClick={() => setPreviewAll((p) => !p)} className="text-xs text-indigo-400 hover:underline">
+            <button
+              onClick={() => setPreviewAll((p) => !p)}
+              className="text-xs text-indigo-400 hover:underline"
+            >
               {previewAll ? "Show less" : "Show all"}
             </button>
           </div>
@@ -389,15 +523,55 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
         title="Upload trade CSV / XLSX"
         description="We will attempt to auto-map file columns to trade fields. Preview then import."
       >
-        {/* Modal inner container: column layout with a scrollable main area so footer stays visible */}
         <div className="flex flex-col h-[70vh] min-h-[500px] gap-4">
           {/* Top controls */}
           <div className="flex items-center gap-3">
             <label className="inline-block p-2 rounded bg-zinc-700 cursor-pointer">
-              <input type="file" accept=".csv,.xlsx,.xls" onChange={onFileChange} className="hidden" />
-              <span className="text-sm text-white">Choose file</span>
+              <input
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={onFileChange}
+                className="hidden"
+              />
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-indigo-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden
+                >
+                  <path
+                    d="M12 3v12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 7l4-4 4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <rect
+                    x="3"
+                    y="14"
+                    width="18"
+                    height="6"
+                    rx="2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+                <span className="text-sm text-white">Choose file</span>
+              </div>
             </label>
-            <div className="text-sm text-zinc-300">{fileName ? <strong className="text-white">{fileName}</strong> : "No file selected"}</div>
+
+            <div className="text-sm text-zinc-300">
+              {fileName ? <strong className="text-white">{fileName}</strong> : "No file selected"}
+            </div>
+
             {parsing && <div className="ml-auto text-xs text-zinc-400">Parsing…</div>}
           </div>
 
@@ -408,14 +582,19 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
               <div className="w-full bg-zinc-900 h-2 rounded overflow-hidden">
                 <div
                   className="h-2 transition-all"
-                  style={{ width: `${progress}%`, background: progress > 80 ? "#10b981" : "#60a5fa" }}
+                  style={{
+                    width: `${progress}%`,
+                    background: progress > 80 ? "#10b981" : "#60a5fa",
+                  }}
                 />
               </div>
             </div>
 
             <div className="mb-4">
               <div className="text-sm font-semibold text-zinc-200">Detected headers</div>
-              <div className="text-xs text-zinc-400">{detectedHeaders.length > 0 ? detectedHeaders.join(", ") : "No headers yet"}</div>
+              <div className="text-xs text-zinc-400">
+                {detectedHeaders.length > 0 ? detectedHeaders.join(", ") : "No headers yet"}
+              </div>
             </div>
 
             <div className="mb-4">
@@ -454,15 +633,22 @@ export default function CsvUpload({ isOpen: controlledOpen, onClose: controlledO
             </div>
           </div>
 
-          {/* Sticky footer inside modal so Import/Cancel always visible */}
+          {/* Footer actions */}
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800 bg-gradient-to-t from-transparent to-transparent">
-            <button onClick={() => setOpen(false)} className="px-4 py-2 rounded bg-zinc-700 text-sm text-zinc-200">
+            <button
+              onClick={() => {
+                setOpen(false);
+                if (typeof controlledOnClose === "function") controlledOnClose();
+              }}
+              className="px-4 py-2 rounded bg-zinc-700 text-sm text-zinc-200"
+              disabled={parsing}
+            >
               Cancel
             </button>
             <button
               onClick={handleImport}
               disabled={parsing || rows.length === 0}
-              className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+              className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50"
             >
               Import ({rows.length})
             </button>
