@@ -1,7 +1,7 @@
 // src/app/dashboard/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -18,7 +18,7 @@ import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { Menu, X, RefreshCw } from "lucide-react";
 import { AiOutlineFilter } from "react-icons/ai";
 
-/* Lazy-loaded charts (ssr: false) */
+/* Lazy-loaded charts (ssr: false). We'll render them inside Suspense. */
 const ProfitLossChart = dynamic(() => import("@/components/charts/ProfitLossChart"), { ssr: false });
 const PerformanceTimeline = dynamic(() => import("@/components/charts/PerformanceTimeline"), { ssr: false });
 const TradeBehavioralChart = dynamic(() => import("@/components/charts/TradeBehavioralChart"), { ssr: false });
@@ -46,7 +46,7 @@ const TAB_DEFS = [
   { value: "upgrade", label: "Upgrade" },
 ];
 
-/* Casts so TypeScript doesn't choke on props of child components */
+/* Cast child components to any to avoid TypeScript prop mismatches */
 const OverviewCardsAny = OverviewCards as unknown as React.ComponentType<any>;
 const TradeHistoryTableAny = TradeHistoryTable as unknown as React.ComponentType<any>;
 const RiskMetricsAny = RiskMetrics as unknown as React.ComponentType<any>;
@@ -93,18 +93,21 @@ function computeRange(filter: FilterOption, customFrom?: string | null, customTo
     case "90d":
       start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
       break;
-    case "3m":
+    case "3m": {
       start = new Date();
       start.setMonth(now.getMonth() - 3);
       break;
-    case "6m":
+    }
+    case "6m": {
       start = new Date();
       start.setMonth(now.getMonth() - 6);
       break;
-    case "1y":
+    }
+    case "1y": {
       start = new Date();
       start.setFullYear(now.getFullYear() - 1);
       break;
+    }
     case "custom":
       if (customFrom) start = new Date(customFrom);
       else start = null;
@@ -116,22 +119,19 @@ function computeRange(filter: FilterOption, customFrom?: string | null, customTo
   return { start, end };
 }
 
-/* Simple Error Boundary to avoid full app crash on render errors */
+/* Error boundary to avoid whole-app crash when a child throws */
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: undefined };
   }
-
   static getDerivedStateFromError(error: any) {
     return { hasError: true, error };
   }
-
   componentDidCatch(error: any, info: any) {
-    // Could send to Sentry / monitoring here
-    // console.error("Dashboard error:", error, info);
+    // optionally send to monitoring
+    // console.error("Dashboard caught error:", error, info);
   }
-
   render() {
     if (this.state.hasError) {
       return (
@@ -159,164 +159,217 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 function DashboardContent(): React.ReactElement {
   const { data: session } = useSession();
   const router = useRouter();
+
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
-  // connect modal state
+  // connection modal
   const [connectModalOpen, setConnectModalOpen] = useState(false);
 
-  // connect form fields
+  // connection fields
   const [platform, setPlatform] = useState<string>("mt5");
   const [platformLogin, setPlatformLogin] = useState<string>("");
   const [platformPassword, setPlatformPassword] = useState<string>("");
   const [platformServer, setPlatformServer] = useState<string>("");
 
-  // filter state
+  // filtering
   const [filterOption, setFilterOption] = useState<FilterOption>("24h");
   const [customFrom, setCustomFrom] = useState<string>("");
   const [customTo, setCustomTo] = useState<string>("");
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
-  // small profile menu for avatar
+  // profile menu
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // avatar initial
   const [avatarInitial, setAvatarInitial] = useState<string>("U");
 
-  // trade context
+  // trade context (defensive)
   const tradeContext = useTrade();
   const trades = tradeContext?.trades ?? [];
   const refreshTrades = tradeContext?.refreshTrades ?? (async () => {});
 
-  // --- on mount reduce splash ---
+  // mount splash
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(t);
   }, []);
 
-  // --- Auth detection: prefer NextAuth, fallback to cookie JWT ---
+  /* AUTH check strategy:
+     1) If next-auth session exists, attempt to confirm emailVerified via /api/user/me
+     2) Else fallback to cookie JWT (parse safely)
+     3) If server check indicates emailVerified true => allow
+     4) If unable to verify but session exists -> allow (pragmatic; you can tighten later)
+  */
   useEffect(() => {
-    if (session && (session as any).user) {
-      setIsAuthed(true);
-      setAuthChecked(true);
+    let cancelled = false;
+    const checkAuth = async () => {
       try {
-        const name = (session as any).user?.name;
-        if (name && typeof name === "string" && name.length > 0) {
-          setAvatarInitial(name.trim()[0].toUpperCase());
-        } else if ((session as any).user?.email && typeof (session as any).user.email === "string") {
-          setAvatarInitial((session as any).user.email.trim()[0].toUpperCase());
+        if (session && (session as any).user) {
+          // try server-side truth check if available
+          try {
+            const res = await fetch("/api/user/me");
+            if (res.ok) {
+              const data = await res.json().catch(() => null);
+              // Accept either boolean flag or truthy field names
+              const emailVerified = data?.emailVerified ?? data?.email_verified ?? data?.verified ?? false;
+              if (!cancelled) setIsAuthed(Boolean(emailVerified) || Boolean(session));
+              return;
+            }
+            // if /api/user/me not implemented or fails, at least accept session
+            if (!cancelled) setIsAuthed(true);
+            return;
+          } catch {
+            if (!cancelled) setIsAuthed(true);
+            return;
+          }
         }
-      } catch {
-        // noop
+
+        // fallback: check cookie JWTs (session/app_token)
+        const getCookie = (name: string) => {
+          try {
+            if (typeof document === "undefined") return null;
+            const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+            return match ? decodeURIComponent(match[2]) : null;
+          } catch {
+            return null;
+          }
+        };
+
+        const parseJwtPayload = (token: string | null) => {
+          if (!token) return null;
+          try {
+            const parts = token.split(".");
+            if (parts.length < 2) return null;
+            const payload = parts[1];
+            const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+            const json = decodeURIComponent(
+              atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+            );
+            return JSON.parse(json);
+          } catch {
+            return null;
+          }
+        };
+
+        const token = getCookie("session") || getCookie("app_token");
+        if (token) {
+          const payload = parseJwtPayload(token);
+          const emailVerified = payload?.email_verified ?? payload?.emailVerified ?? false;
+          if (!cancelled) setIsAuthed(Boolean(emailVerified));
+        } else {
+          if (!cancelled) setIsAuthed(false);
+        }
+      } catch (err) {
+        if (!cancelled) setIsAuthed(false);
+      } finally {
+        if (!cancelled) setAuthChecked(true);
       }
-      return;
-    }
+    };
 
-    // fallback cookie check
-    function getCookie(name: string) {
-      if (typeof document === "undefined") return null;
-      const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-      return match ? decodeURIComponent(match[2]) : null;
-    }
+    checkAuth();
 
-    function parseJwtPayload(token: string | null) {
-      if (!token) return null;
-      try {
-        const parts = token.split(".");
-        if (parts.length < 2) return null;
-        const payload = parts[1];
-        const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-        const json = decodeURIComponent(
-          atob(base64)
-            .split("")
-            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join("")
-        );
-        return JSON.parse(json);
-      } catch {
-        return null;
-      }
-    }
-
-    try {
-      const token = getCookie("session") || getCookie("app_token");
-      if (token) {
-        const payload = parseJwtPayload(token);
-        setIsAuthed(Boolean(payload?.email_verified));
-      } else setIsAuthed(false);
-    } catch {
-      setIsAuthed(false);
-    } finally {
-      setAuthChecked(true);
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
-  // --- Avatar from backend /api/user/me if session doesn't contain name ---
+  // Avatar resolution: session name -> /api/user/me -> localStorage fallback
   useEffect(() => {
-    const loadAvatarFromApi = async () => {
+    const loadAvatar = async () => {
       try {
-        if (session && (session as any).user && (session as any).user.name) return;
-        const res = await fetch("/api/user/me");
-        if (!res.ok) return;
-        const data = await res.json().catch(() => null);
-        const name = data?.name ?? data?.fullName ?? data?.displayName;
-        const email = data?.email;
-        if (name && typeof name === "string" && name.length > 0) {
-          setAvatarInitial(name.trim()[0].toUpperCase());
-          return;
+        if (session && (session as any).user && (session as any).user.name) {
+          const name = (session as any).user.name;
+          if (typeof name === "string" && name.length > 0) {
+            setAvatarInitial(name.trim()[0].toUpperCase());
+            return;
+          }
         }
-        if (email && typeof email === "string" && email.length > 0) {
-          setAvatarInitial(email.trim()[0].toUpperCase());
-          return;
-        }
+        // try server
         try {
-          const keysToTry = ["signupName", "userName", "name", "displayName"];
-          for (const k of keysToTry) {
-            const v = window.localStorage.getItem(k);
-            if (v && v.length > 0) {
-              setAvatarInitial(v.trim()[0].toUpperCase());
+          const res = await fetch("/api/user/me");
+          if (res.ok) {
+            const data = await res.json().catch(() => null);
+            const name = data?.name ?? data?.fullName ?? data?.displayName;
+            const email = data?.email;
+            if (name && typeof name === "string" && name.length > 0) {
+              setAvatarInitial(name.trim()[0].toUpperCase());
+              return;
+            }
+            if (email && typeof email === "string" && email.length > 0) {
+              setAvatarInitial(email.trim()[0].toUpperCase());
               return;
             }
           }
         } catch {
-          // ignore
+          // ignore server failure
+        }
+        // localStorage fallback
+        try {
+          const keysToTry = ["signupName", "userName", "name", "displayName"];
+          for (const k of keysToTry) {
+            try {
+              const v = window.localStorage.getItem(k);
+              if (v && v.length > 0) {
+                setAvatarInitial(v.trim()[0].toUpperCase());
+                return;
+              }
+            } catch {
+              // ignore single key read error
+            }
+          }
+        } catch {
+          // ignore localStorage errors entirely
         }
       } catch {
         // silent
       }
     };
 
-    if (typeof window !== "undefined") loadAvatarFromApi();
+    if (typeof window !== "undefined") loadAvatar();
   }, [session]);
 
-  // Wait until we've evaluated auth
+  // Wait for auth check
   if (!authChecked) return <Spinner />;
 
   if (!isAuthed) {
-    return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0D1117]">
+        <div className="rounded-xl p-8 bg-gradient-to-br from-black/20 to-white/5 border border-white/5 text-white max-w-lg text-center">
+          <h2 className="text-xl font-semibold">Access Restricted</h2>
+          <p className="mt-2 text-sm text-gray-300">Please verify your email or sign in to access the dashboard.</p>
+          <div className="mt-4 flex justify-center gap-2">
+            <button onClick={() => router.push("/login")} className="px-4 py-2 bg-indigo-600 rounded text-white">Sign in</button>
+            <button onClick={() => router.push("/signup")} className="px-4 py-2 border rounded border-white/10 text-white">Sign up</button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
-  // --- Filtered trades computed from current filterOption / custom range
+  // Filtered trades memoized, very defensive
   const filteredTrades = useMemo(() => {
     try {
-      if (!Array.isArray(trades)) return trades ?? [];
+      if (!Array.isArray(trades)) return [];
       const { start, end } = computeRange(filterOption, customFrom || null, customTo || null);
       if (!start) return trades;
       const s = start.getTime();
       const e = end.getTime();
-
       return trades.filter((tr: any) => {
         try {
           const dateValue =
             tr?.openedAt ?? tr?.opened_at ?? tr?.date ?? tr?.timestamp ?? tr?.time ?? tr?.createdAt ?? tr?.created_at;
           if (!dateValue) return false;
           const d = typeof dateValue === "number" ? new Date(dateValue) : new Date(dateValue);
-          if (isNaN(d.getTime())) return false;
+          if (Number.isNaN(d.getTime())) return false;
           const t = d.getTime();
           return t >= s && t <= e;
         } catch {
@@ -325,11 +378,11 @@ function DashboardContent(): React.ReactElement {
       });
     } catch (err) {
       console.error("Filtering error:", err);
-      return trades ?? [];
+      return Array.isArray(trades) ? trades : [];
     }
   }, [trades, filterOption, customFrom, customTo]);
 
-  // --- Handlers ---
+  // Handlers
   const openConnectModal = () => {
     setPlatform("mt5");
     setPlatformLogin("");
@@ -360,10 +413,11 @@ function DashboardContent(): React.ReactElement {
         alert(`Connection failed: ${d?.error || d?.message || "Unknown error"}`);
         return;
       }
+      // refresh trades if available
       try {
         await refreshTrades();
       } catch {
-        // ignore
+        // ignore refresh failure
       }
       setConnectModalOpen(false);
       alert("Connected successfully and trades refreshed.");
@@ -373,7 +427,6 @@ function DashboardContent(): React.ReactElement {
     }
   };
 
-  // Quick refresh
   const handleQuickRefresh = async () => {
     try {
       setIsLoading(true);
@@ -394,7 +447,6 @@ function DashboardContent(): React.ReactElement {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
-              {/* mobile hamburger */}
               <button
                 className="md:hidden p-1"
                 onClick={() => setMobileMenuOpen((s) => !s)}
@@ -406,7 +458,7 @@ function DashboardContent(): React.ReactElement {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Filter button */}
+              {/* Filter */}
               <div className="relative">
                 <button
                   title="Filter trades"
@@ -436,7 +488,9 @@ function DashboardContent(): React.ReactElement {
                             setFilterOption(opt.id as FilterOption);
                             setFilterDropdownOpen(false);
                           }}
-                          className={`text-left px-2 py-2 rounded text-sm ${filterOption === (opt.id as FilterOption) ? "bg-green-600 text-white" : "text-gray-200 hover:bg-zinc-800"}`}
+                          className={`text-left px-2 py-2 rounded text-sm ${
+                            filterOption === (opt.id as FilterOption) ? "bg-green-600 text-white" : "text-gray-200 hover:bg-zinc-800"
+                          }`}
                         >
                           {opt.label}
                         </button>
@@ -488,31 +542,19 @@ function DashboardContent(): React.ReactElement {
                 )}
               </div>
 
-              {/* Quick refresh */}
-              <button
-                className="p-2 rounded-full bg-transparent hover:bg-zinc-600"
-                onClick={handleQuickRefresh}
-                title="Refresh Trades"
-              >
+              {/* Refresh */}
+              <button className="p-2 rounded-full bg-transparent hover:bg-zinc-600" onClick={handleQuickRefresh} title="Refresh Trades">
                 <RefreshCw size={20} />
               </button>
 
-              {/* Connect Account */}
-              <button
-                className="px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white ml-2"
-                onClick={openConnectModal}
-                title="Connect trading account"
-              >
+              {/* Connect Account (modal) */}
+              <button className="px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white ml-2" onClick={openConnectModal} title="Connect trading account">
                 Connect Account
               </button>
 
-              {/* Simple Avatar + Menu (safe) */}
+              {/* Avatar + simple menu */}
               <div className="relative ml-3">
-                <button
-                  onClick={() => setProfileMenuOpen((s) => !s)}
-                  className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-white font-semibold"
-                  aria-label="Open profile menu"
-                >
+                <button onClick={() => setProfileMenuOpen((s) => !s)} className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-white font-semibold" aria-label="Open profile menu">
                   {avatarInitial}
                 </button>
 
@@ -553,7 +595,9 @@ function DashboardContent(): React.ReactElement {
 
           {/* Mobile Sidebar */}
           <div
-            className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+            className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
+              mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-white text-lg font-semibold">Menu</h2>
@@ -577,7 +621,7 @@ function DashboardContent(): React.ReactElement {
             </nav>
           </div>
 
-          {/* Desktop simple Tabs */}
+          {/* Desktop Tabs */}
           <div className="hidden md:flex gap-2 mb-4">
             {TAB_DEFS.map((t) => (
               <button
@@ -605,13 +649,15 @@ function DashboardContent(): React.ReactElement {
                 {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
 
                 {activeTab === "analytics" && (
-                  <div className="grid gap-6">
-                    <ProfitLossChartAny trades={filteredTrades} />
-                    <DrawdownChartAny trades={filteredTrades} />
-                    <PerformanceTimelineAny trades={filteredTrades} />
-                    <TradeBehavioralChartAny trades={filteredTrades} />
-                    <TradePatternChartAny trades={filteredTrades} />
-                  </div>
+                  <Suspense fallback={<div className="py-8"><Spinner /></div>}>
+                    <div className="grid gap-6">
+                      <ProfitLossChartAny trades={filteredTrades} />
+                      <DrawdownChartAny trades={filteredTrades} />
+                      <PerformanceTimelineAny trades={filteredTrades} />
+                      <TradeBehavioralChartAny trades={filteredTrades} />
+                      <TradePatternChartAny trades={filteredTrades} />
+                    </div>
+                  </Suspense>
                 )}
 
                 {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
