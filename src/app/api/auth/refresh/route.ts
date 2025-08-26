@@ -1,9 +1,9 @@
-// app/api/auth/refresh/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import { createAdminSupabase } from "@/utils/supabase/admin";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -42,7 +42,6 @@ export async function POST() {
     // compare hashed token
     const match = await bcrypt.compare(refreshRaw, sessionRow.refresh_token);
     if (!match) {
-      // possible token theft or mismatch
       return NextResponse.json({ error: "Invalid refresh credentials" }, { status: 401 });
     }
 
@@ -70,18 +69,23 @@ export async function POST() {
       { expiresIn: "12h" }
     );
 
-    // rotate refresh token: generate new raw, hash, update DB
+    // rotate both refresh + session tokens
     const newRefreshRaw = crypto.randomBytes(48).toString("hex");
-    const newHashed = bcrypt.hashSync(newRefreshRaw, 10);
+    const newHashedRefresh = bcrypt.hashSync(newRefreshRaw, 10);
+    const newSessionTokenRaw = crypto.randomBytes(32).toString("hex") || uuidv4();
     const newExpiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
 
     const { error: updErr } = await supabase
       .from("sessions")
-      .update({ refresh_token: newHashed, expires_at: newExpiresAt })
+      .update({
+        session_token: newSessionTokenRaw,
+        refresh_token: newHashedRefresh,
+        expires_at: newExpiresAt,
+      })
       .eq("id", refreshId);
 
     if (updErr) {
-      console.error("Failed to rotate refresh token:", updErr);
+      console.error("Failed to rotate refresh session:", updErr);
       return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 
@@ -104,7 +108,6 @@ export async function POST() {
       maxAge: 60 * 60 * 24 * 30,
     });
 
-    // keep refresh_id cookie (same id)
     res.cookies.set("refresh_id", refreshId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
