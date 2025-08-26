@@ -80,6 +80,92 @@ const FILTERS = [
   { label: "Custom", value: "custom" },
 ];
 
+/* ---------------------------
+   Module-level helpers (pure)
+   --------------------------- */
+
+// candidate keys to look for timestamps in a trade object
+const TIMESTAMP_KEYS = [
+  "openTime",
+  "open_time",
+  "opened_at",
+  "entered_at",
+  "enteredAt",
+  "time",
+  "timestamp",
+  "created_at",
+  "createdAt",
+  "closeTime",
+  "close_time",
+  "closedAt",
+  "closed_time",
+  "exit_time",
+  "exitTime",
+  "time_close",
+  "open_time_ms",
+  "open_ts",
+  "ts",
+];
+
+const parseToMs = (val: unknown): number | null => {
+  if (val === null || val === undefined) return null;
+  if (typeof val === "number") {
+    // heuristic: 10-digit -> seconds
+    if (val < 1e11) return Math.floor(val * 1000);
+    return Math.floor(val);
+  }
+  const s = String(val).trim();
+  if (!s) return null;
+  if (/^\d+$/.test(s)) {
+    const n = Number(s);
+    if (n < 1e11) return Math.floor(n * 1000);
+    return Math.floor(n);
+  }
+  const parsed = Date.parse(s);
+  if (!isNaN(parsed)) return parsed;
+  return null;
+};
+
+const extractTradeTimestamps = (tr: any): number[] => {
+  const out: number[] = [];
+  if (!tr || typeof tr !== "object") return out;
+  for (const k of TIMESTAMP_KEYS) {
+    if (k in tr) {
+      const ms = parseToMs(tr[k]);
+      if (ms !== null) out.push(ms);
+    }
+  }
+  try {
+    for (const key of Object.keys(tr)) {
+      if (out.length > 200) break;
+      if (/time|date|ts|created|opened|closed/i.test(key) && !TIMESTAMP_KEYS.includes(key)) {
+        const ms = parseToMs((tr as any)[key]);
+        if (ms !== null) out.push(ms);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return Array.from(new Set(out)).sort((a, b) => a - b);
+};
+
+const isTradeInRange = (tr: any, fromMs: number, toMs: number): boolean => {
+  const times = extractTradeTimestamps(tr);
+  if (!times || times.length === 0) return false;
+  return times.some((t) => t >= fromMs && t <= toMs);
+};
+
+const monthsAgo = (months: number) => {
+  const d = new Date();
+  const target = new Date(d.getTime());
+  target.setMonth(d.getMonth() - months);
+  return target;
+};
+
+/* ---------------------------
+   Component
+   --------------------------- */
+
 function DashboardContent() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -107,7 +193,7 @@ function DashboardContent() {
     const fetchUser = async () => {
       if (!session?.user?.email) return;
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("users")
           .select("name")
           .eq("email", session.user.email)
@@ -117,8 +203,7 @@ function DashboardContent() {
         } else if (session.user.email) {
           setUserInitial(session.user.email.trim()[0].toUpperCase());
         }
-      } catch (e) {
-        // fallback to email initial
+      } catch {
         if (session?.user?.email) setUserInitial(session.user.email.trim()[0].toUpperCase());
       }
     };
@@ -201,107 +286,9 @@ function DashboardContent() {
     checkAuth();
   }, [session]);
 
-  // Wait until we've evaluated auth info client-side
-  if (!authChecked) return <Spinner />;
-
-  if (!isAuthed) {
-    return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
-  }
-
-  const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
-
   /* ---------------------------
-     Robust helpers for filtering
+     Hooks that must run every render (unconditional)
      --------------------------- */
-
-  // candidate keys to look for timestamps in a trade object
-  const TIMESTAMP_KEYS = [
-    "openTime",
-    "open_time",
-    "opened_at",
-    "entered_at",
-    "enteredAt",
-    "time",
-    "timestamp",
-    "created_at",
-    "createdAt",
-    "closeTime",
-    "close_time",
-    "closedAt",
-    "closed_time",
-    "exit_time",
-    "exitTime",
-    "time_close",
-    "open_time_ms",
-    "open_ts",
-    "ts",
-  ];
-
-  // Convert candidate value to epoch ms if possible. Returns null if can't parse.
-  const parseToMs = (val: unknown): number | null => {
-    if (val === null || val === undefined) return null;
-    // number (could be seconds or ms)
-    if (typeof val === "number") {
-      // heuristic: 10-digit -> seconds
-      if (val < 1e11) return Math.floor(val * 1000);
-      return Math.floor(val);
-    }
-    const s = String(val).trim();
-    if (!s) return null;
-    // numeric string?
-    if (/^\d+$/.test(s)) {
-      const n = Number(s);
-      if (n < 1e11) return Math.floor(n * 1000);
-      return Math.floor(n);
-    }
-    // try Date.parse
-    const parsed = Date.parse(s);
-    if (!isNaN(parsed)) return parsed;
-    return null;
-  };
-
-  // Extract all timestamps (ms) present on a trade object (best effort)
-  const extractTradeTimestamps = (tr: any): number[] => {
-    const out: number[] = [];
-    if (!tr || typeof tr !== "object") return out;
-    for (const k of TIMESTAMP_KEYS) {
-      if (k in tr) {
-        const ms = parseToMs(tr[k]);
-        if (ms !== null) out.push(ms);
-      }
-    }
-    // also attempt to inspect nested fields or common fallback names
-    // e.g., tr.meta?.time or tr.details?.timestamp
-    try {
-      // shallow scan: any keys that look like time/date and not yet captured
-      for (const key of Object.keys(tr)) {
-        if (out.length > 0 && out.length > 50) break;
-        if (/time|date|ts|created|opened|closed/i.test(key) && !TIMESTAMP_KEYS.includes(key)) {
-          const ms = parseToMs((tr as any)[key]);
-          if (ms !== null) out.push(ms);
-        }
-      }
-    } catch {
-      // ignore
-    }
-    // make unique & sorted
-    return Array.from(new Set(out)).sort((a, b) => a - b);
-  };
-
-  const isTradeInRange = (tr: any, fromMs: number, toMs: number): boolean => {
-    const times = extractTradeTimestamps(tr);
-    if (!times || times.length === 0) return false;
-    // if any timestamp falls within inclusive window, include the trade
-    return times.some((t) => t >= fromMs && t <= toMs);
-  };
-
-  // helper to produce a new date offset in months safely
-  const monthsAgo = (months: number) => {
-    const d = new Date();
-    const target = new Date(d.getTime());
-    target.setMonth(d.getMonth() - months);
-    return target;
-  };
 
   // compute filteredTrades based on `filter` and `customRange`
   const filteredTrades = useMemo(() => {
@@ -329,22 +316,19 @@ function DashboardContent() {
       case "6m":
         fromMs = monthsAgo(6).getTime();
         break;
-      case "1y":
-        {
-          const d = new Date();
-          d.setFullYear(d.getFullYear() - 1);
-          fromMs = d.getTime();
-        }
+      case "1y": {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() - 1);
+        fromMs = d.getTime();
         break;
+      }
       case "custom":
         if (customRange.from && customRange.to) {
-          // from at start of day, to at end of day
           const f = new Date(customRange.from + "T00:00:00");
           const t = new Date(customRange.to + "T23:59:59.999");
           if (!isNaN(f.getTime())) fromMs = f.getTime();
           if (!isNaN(t.getTime())) toMs = t.getTime();
         } else {
-          // incomplete custom -> fallback to 24h default
           fromMs = now - 24 * 60 * 60 * 1000;
         }
         break;
@@ -352,7 +336,6 @@ function DashboardContent() {
         fromMs = now - 24 * 60 * 60 * 1000;
     }
 
-    // Filter: keep trades with at least one timestamp in [fromMs, toMs]
     return arr.filter((tr) => {
       try {
         return isTradeInRange(tr, fromMs, toMs);
@@ -385,6 +368,15 @@ function DashboardContent() {
         return "Last 24 hours";
     }
   }, [filter, customRange]);
+
+  // Now it's safe to early-return UI that avoids calling more hooks conditionally
+  if (!authChecked) return <Spinner />;
+
+  if (!isAuthed) {
+    return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
+  }
+
+  const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
     <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
@@ -425,7 +417,6 @@ function DashboardContent() {
                   <DropdownMenuItem
                     key="custom"
                     onClick={() => {
-                      // Keep filter set to custom so inputs become visible.
                       setFilter("custom");
                     }}
                   >
@@ -458,7 +449,6 @@ function DashboardContent() {
                           if (customRange.from && customRange.to) {
                             setFilter("custom");
                           } else {
-                            // incomplete -> fallback to 24h
                             setFilter("24h");
                             setCustomRange({ from: "", to: "" });
                           }
