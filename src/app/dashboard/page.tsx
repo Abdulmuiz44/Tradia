@@ -94,7 +94,7 @@ function DashboardContent() {
   const { trades, refreshTrades } = useTrade();
 
   // Filtering state
-  const [filter, setFilter] = useState("24h");
+  const [filter, setFilter] = useState<string>("24h"); // default Last 24 hours
   const [customRange, setCustomRange] = useState<{ from: string; to: string }>({
     from: "",
     to: "",
@@ -106,70 +106,24 @@ function DashboardContent() {
   useEffect(() => {
     const fetchUser = async () => {
       if (!session?.user?.email) return;
-      const { data, error } = await supabase
-        .from("users")
-        .select("name")
-        .eq("email", session.user.email)
-        .single();
-      if (data?.name) {
-        setUserInitial(data.name.trim()[0].toUpperCase());
-      } else if (session.user.email) {
-        setUserInitial(session.user.email.trim()[0].toUpperCase());
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("name")
+          .eq("email", session.user.email)
+          .single();
+        if (data?.name) {
+          setUserInitial(data.name.trim()[0].toUpperCase());
+        } else if (session.user.email) {
+          setUserInitial(session.user.email.trim()[0].toUpperCase());
+        }
+      } catch (e) {
+        // fallback to email initial
+        if (session?.user?.email) setUserInitial(session.user.email.trim()[0].toUpperCase());
       }
     };
     fetchUser();
   }, [session, supabase]);
-
-  // Apply filter to trades
-  const filteredTrades = useMemo(() => {
-    if (!trades) return [];
-    const now = new Date();
-    let fromDate: Date | null = null;
-
-    switch (filter) {
-      case "24h":
-        fromDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case "7d":
-        fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case "30d":
-        fromDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case "60d":
-        fromDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-        break;
-      case "3m":
-        fromDate = new Date(now.setMonth(now.getMonth() - 3));
-        break;
-      case "6m":
-        fromDate = new Date(now.setMonth(now.getMonth() - 6));
-        break;
-      case "1y":
-        fromDate = new Date(now.setFullYear(now.getFullYear() - 1));
-        break;
-      case "custom":
-        if (customRange.from && customRange.to) {
-          fromDate = new Date(customRange.from);
-          const toDate = new Date(customRange.to);
-          return trades.filter((t: any) => {
-            const d = new Date(t.open_time || t.time);
-            return d >= fromDate! && d <= toDate;
-          });
-        }
-        break;
-      default:
-        break;
-    }
-
-    if (fromDate) {
-      return trades.filter((t: any) => {
-        const d = new Date(t.open_time || t.time);
-        return d >= fromDate!;
-      });
-    }
-    return trades;
-  }, [filter, trades, customRange]);
 
   // refresh trades
   const handleSyncNow = async () => {
@@ -194,14 +148,12 @@ function DashboardContent() {
   // --- Robust auth detection: prefer NextAuth session, fallback to cookie JWTs (session or app_token) ---
   useEffect(() => {
     const checkAuth = (): void => {
-      // If NextAuth session is present and has user, accept it immediately.
       if (session && (session as any).user) {
         setIsAuthed(true);
         setAuthChecked(true);
         return;
       }
 
-      // Fallback: look for JWT in cookies (session or app_token).
       try {
         if (typeof document === "undefined") {
           setIsAuthed(false);
@@ -215,7 +167,6 @@ function DashboardContent() {
 
         const token = getCookie("session") || getCookie("app_token") || null;
         if (token) {
-          // parse payload (no verification) to check claims like email_verified
           try {
             const parts = token.split(".");
             if (parts.length >= 2) {
@@ -227,7 +178,6 @@ function DashboardContent() {
                   .join("")
               );
               const payload = JSON.parse(json) as any;
-              // If token indicates email_verified OR contains an email, accept it.
               const verified = Boolean(payload?.email_verified || payload?.email);
               setIsAuthed(verified);
             } else {
@@ -260,6 +210,182 @@ function DashboardContent() {
 
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
+  /* ---------------------------
+     Robust helpers for filtering
+     --------------------------- */
+
+  // candidate keys to look for timestamps in a trade object
+  const TIMESTAMP_KEYS = [
+    "openTime",
+    "open_time",
+    "opened_at",
+    "entered_at",
+    "enteredAt",
+    "time",
+    "timestamp",
+    "created_at",
+    "createdAt",
+    "closeTime",
+    "close_time",
+    "closedAt",
+    "closed_time",
+    "exit_time",
+    "exitTime",
+    "time_close",
+    "open_time_ms",
+    "open_ts",
+    "ts",
+  ];
+
+  // Convert candidate value to epoch ms if possible. Returns null if can't parse.
+  const parseToMs = (val: unknown): number | null => {
+    if (val === null || val === undefined) return null;
+    // number (could be seconds or ms)
+    if (typeof val === "number") {
+      // heuristic: 10-digit -> seconds
+      if (val < 1e11) return Math.floor(val * 1000);
+      return Math.floor(val);
+    }
+    const s = String(val).trim();
+    if (!s) return null;
+    // numeric string?
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      if (n < 1e11) return Math.floor(n * 1000);
+      return Math.floor(n);
+    }
+    // try Date.parse
+    const parsed = Date.parse(s);
+    if (!isNaN(parsed)) return parsed;
+    return null;
+  };
+
+  // Extract all timestamps (ms) present on a trade object (best effort)
+  const extractTradeTimestamps = (tr: any): number[] => {
+    const out: number[] = [];
+    if (!tr || typeof tr !== "object") return out;
+    for (const k of TIMESTAMP_KEYS) {
+      if (k in tr) {
+        const ms = parseToMs(tr[k]);
+        if (ms !== null) out.push(ms);
+      }
+    }
+    // also attempt to inspect nested fields or common fallback names
+    // e.g., tr.meta?.time or tr.details?.timestamp
+    try {
+      // shallow scan: any keys that look like time/date and not yet captured
+      for (const key of Object.keys(tr)) {
+        if (out.length > 0 && out.length > 50) break;
+        if (/time|date|ts|created|opened|closed/i.test(key) && !TIMESTAMP_KEYS.includes(key)) {
+          const ms = parseToMs((tr as any)[key]);
+          if (ms !== null) out.push(ms);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    // make unique & sorted
+    return Array.from(new Set(out)).sort((a, b) => a - b);
+  };
+
+  const isTradeInRange = (tr: any, fromMs: number, toMs: number): boolean => {
+    const times = extractTradeTimestamps(tr);
+    if (!times || times.length === 0) return false;
+    // if any timestamp falls within inclusive window, include the trade
+    return times.some((t) => t >= fromMs && t <= toMs);
+  };
+
+  // helper to produce a new date offset in months safely
+  const monthsAgo = (months: number) => {
+    const d = new Date();
+    const target = new Date(d.getTime());
+    target.setMonth(d.getMonth() - months);
+    return target;
+  };
+
+  // compute filteredTrades based on `filter` and `customRange`
+  const filteredTrades = useMemo(() => {
+    const arr: any[] = Array.isArray(trades) ? trades : [];
+    const now = Date.now();
+    let fromMs = now - 24 * 60 * 60 * 1000; // default 24h
+    let toMs = now;
+
+    switch (filter) {
+      case "24h":
+        fromMs = now - 24 * 60 * 60 * 1000;
+        break;
+      case "7d":
+        fromMs = now - 7 * 24 * 60 * 60 * 1000;
+        break;
+      case "30d":
+        fromMs = now - 30 * 24 * 60 * 60 * 1000;
+        break;
+      case "60d":
+        fromMs = now - 60 * 24 * 60 * 60 * 1000;
+        break;
+      case "3m":
+        fromMs = monthsAgo(3).getTime();
+        break;
+      case "6m":
+        fromMs = monthsAgo(6).getTime();
+        break;
+      case "1y":
+        {
+          const d = new Date();
+          d.setFullYear(d.getFullYear() - 1);
+          fromMs = d.getTime();
+        }
+        break;
+      case "custom":
+        if (customRange.from && customRange.to) {
+          // from at start of day, to at end of day
+          const f = new Date(customRange.from + "T00:00:00");
+          const t = new Date(customRange.to + "T23:59:59.999");
+          if (!isNaN(f.getTime())) fromMs = f.getTime();
+          if (!isNaN(t.getTime())) toMs = t.getTime();
+        } else {
+          // incomplete custom -> fallback to 24h default
+          fromMs = now - 24 * 60 * 60 * 1000;
+        }
+        break;
+      default:
+        fromMs = now - 24 * 60 * 60 * 1000;
+    }
+
+    // Filter: keep trades with at least one timestamp in [fromMs, toMs]
+    return arr.filter((tr) => {
+      try {
+        return isTradeInRange(tr, fromMs, toMs);
+      } catch {
+        return false;
+      }
+    });
+  }, [trades, filter, customRange]);
+
+  // Label for UI showing selected filter
+  const filterLabel = useMemo(() => {
+    switch (filter) {
+      case "24h":
+        return "Last 24 hours";
+      case "7d":
+        return "Last 7 days";
+      case "30d":
+        return "Last 30 days";
+      case "60d":
+        return "Last 60 days";
+      case "3m":
+        return "Last 3 months";
+      case "6m":
+        return "Last 6 months";
+      case "1y":
+        return "Last 1 year";
+      case "custom":
+        return customRange.from && customRange.to ? `${customRange.from} → ${customRange.to}` : "Custom range";
+      default:
+        return "Last 24 hours";
+    }
+  }, [filter, customRange]);
+
   return (
     <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
       <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
@@ -271,30 +397,88 @@ function DashboardContent() {
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <h1 className="text-xl font-semibold">{currentTabLabel}</h1>
+            <div className="ml-3 text-sm text-gray-300 hidden sm:flex items-center px-2 py-1 rounded bg-white/2">
+              {filterLabel}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Filter */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="p-2 rounded-full bg-transparent hover:bg-zinc-600">
+              <DropdownMenuTrigger className="p-2 rounded-full bg-transparent hover:bg-zinc-600" title="Filter trades">
                 <Filter size={20} />
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700 p-2">
-                {FILTERS.map((f) => (
-                  <DropdownMenuItem key={f.value} onClick={() => setFilter(f.value)}>
-                    {f.label}
+              <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700 p-2 min-w-[220px]">
+                <div className="px-1 py-1">
+                  {FILTERS.slice(0, FILTERS.length - 1).map((f) => (
+                    <DropdownMenuItem
+                      key={f.value}
+                      onClick={() => {
+                        setFilter(f.value);
+                        setCustomRange({ from: "", to: "" });
+                      }}
+                    >
+                      {f.label}
+                    </DropdownMenuItem>
+                  ))}
+
+                  <DropdownMenuItem
+                    key="custom"
+                    onClick={() => {
+                      // Keep filter set to custom so inputs become visible.
+                      setFilter("custom");
+                    }}
+                  >
+                    Custom range
                   </DropdownMenuItem>
-                ))}
-                {filter === "custom" && (
-                  <div className="flex flex-col gap-2 p-2 text-xs">
-                    <label>
-                      From: <input type="date" className="bg-zinc-700 p-1 rounded" value={customRange.from} onChange={(e) => setCustomRange((r) => ({ ...r, from: e.target.value }))} />
-                    </label>
-                    <label>
-                      To: <input type="date" className="bg-zinc-700 p-1 rounded" value={customRange.to} onChange={(e) => setCustomRange((r) => ({ ...r, to: e.target.value }))} />
-                    </label>
+
+                  <div className="border-t border-white/6 my-2" />
+
+                  {/* Custom inputs — remain visible after "Custom range" selected */}
+                  <div className="px-2 py-1">
+                    <div className="text-xs text-gray-400 mb-1">Custom range</div>
+                    <label className="text-xs text-gray-300">From</label>
+                    <input
+                      type="date"
+                      value={customRange.from}
+                      onChange={(e) => setCustomRange((r) => ({ ...r, from: e.target.value }))}
+                      className="w-full mt-1 mb-2 p-2 rounded bg-zinc-800 border border-zinc-700 text-sm"
+                    />
+                    <label className="text-xs text-gray-300">To</label>
+                    <input
+                      type="date"
+                      value={customRange.to}
+                      onChange={(e) => setCustomRange((r) => ({ ...r, to: e.target.value }))}
+                      className="w-full mt-1 mb-3 p-2 rounded bg-zinc-800 border border-zinc-700 text-sm"
+                    />
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (customRange.from && customRange.to) {
+                            setFilter("custom");
+                          } else {
+                            // incomplete -> fallback to 24h
+                            setFilter("24h");
+                            setCustomRange({ from: "", to: "" });
+                          }
+                        }}
+                        className="flex-1 px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-sm"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFilter("24h");
+                          setCustomRange({ from: "", to: "" });
+                        }}
+                        className="px-3 py-1 rounded bg-transparent border border-white/6 text-sm"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
-                )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
