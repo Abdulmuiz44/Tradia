@@ -1,10 +1,10 @@
-// src/app/dashboard/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState, Suspense } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { Tabs } from "@/components/ui/tabs";
 import OverviewCards from "@/components/dashboard/OverviewCards";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import RiskMetrics from "@/components/dashboard/RiskMetrics";
@@ -15,24 +15,27 @@ import Spinner from "@/components/ui/spinner";
 import LayoutClient from "@/components/LayoutClient";
 import ClientOnly from "@/components/ClientOnly";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { Menu, X, RefreshCw } from "lucide-react";
-import { AiOutlineFilter } from "react-icons/ai";
+import { Menu, X, RefreshCw, Filter } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Layout from "@/components/LayoutClient";
+import { TradePlanProvider } from "@/context/TradePlanContext";
+import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
+import PricingPlans from "@/components/payment/PricingPlans";
 
-/* Lazy-loaded charts (ssr: false). Render inside Suspense. */
+// Lazy-loaded charts
 const ProfitLossChart = dynamic(() => import("@/components/charts/ProfitLossChart"), { ssr: false });
 const PerformanceTimeline = dynamic(() => import("@/components/charts/PerformanceTimeline"), { ssr: false });
 const TradeBehavioralChart = dynamic(() => import("@/components/charts/TradeBehavioralChart"), { ssr: false });
 const DrawdownChart = dynamic(() => import("@/components/charts/DrawdownChart"), { ssr: false });
 const TradePatternChart = dynamic(() => import("@/components/charts/TradePatternChart"), { ssr: false });
 
-/* Planner */
-import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
-import { TradePlanProvider } from "@/context/TradePlanContext";
-
-/* Pricing Component */
-import PricingPlans from "@/components/payment/PricingPlans";
-
-/* Tabs definitions */
+// Tabs
 const TAB_DEFS = [
   { value: "overview", label: "Overview" },
   { value: "history", label: "Trade History" },
@@ -46,7 +49,12 @@ const TAB_DEFS = [
   { value: "upgrade", label: "Upgrade" },
 ];
 
-/* Cast child components to any to avoid TypeScript prop mismatches */
+/**
+ * NOTE:
+ * Several child components have loose/absent typings. To avoid TypeScript complaints
+ * at the call sites we cast them to React.ComponentType<any>.
+ * This is a minimal-change local workaround so the dashboard compiles cleanly.
+ */
 const OverviewCardsAny = OverviewCards as unknown as React.ComponentType<any>;
 const TradeHistoryTableAny = TradeHistoryTable as unknown as React.ComponentType<any>;
 const RiskMetricsAny = RiskMetrics as unknown as React.ComponentType<any>;
@@ -61,731 +69,521 @@ const PerformanceTimelineAny = PerformanceTimeline as unknown as React.Component
 const TradeBehavioralChartAny = TradeBehavioralChart as unknown as React.ComponentType<any>;
 const TradePatternChartAny = TradePatternChart as unknown as React.ComponentType<any>;
 
-type FilterOption =
-  | "24h"
-  | "7d"
-  | "30d"
-  | "60d"
-  | "3m"
-  | "90d"
-  | "6m"
-  | "1y"
-  | "custom";
-
-/* Helper: compute start date for filter (defensive) */
-function computeRange(filter: FilterOption, customFrom?: string | null, customTo?: string | null) {
-  try {
-    const now = new Date();
-    let start: Date | null = null;
-    let end: Date = now;
-    switch (filter) {
-      case "24h":
-        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case "7d":
-        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case "30d":
-        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case "60d":
-        start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-        break;
-      case "90d":
-        start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case "3m": {
-        start = new Date(now);
-        start.setMonth(now.getMonth() - 3);
-        break;
-      }
-      case "6m": {
-        start = new Date(now);
-        start.setMonth(now.getMonth() - 6);
-        break;
-      }
-      case "1y": {
-        start = new Date(now);
-        start.setFullYear(now.getFullYear() - 1);
-        break;
-      }
-      case "custom":
-        if (customFrom) start = new Date(customFrom);
-        else start = null;
-        if (customTo) end = new Date(customTo);
-        break;
-      default:
-        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    }
-    return { start, end };
-  } catch (err) {
-    console.error("computeRange failed:", err);
-    return { start: null, end: new Date() };
-  }
-}
-
-/* Error boundary to avoid whole-app crash when a child throws */
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: undefined };
-  }
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error: any, info: any) {
-    // optionally send to monitoring
-    // safe-guard: do not throw here
-    // console.error("Dashboard caught error:", error, info);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-[#07101a]">
-          <div className="max-w-2xl w-full bg-[#07101a] border border-white/6 rounded-2xl p-6 text-white">
-            <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
-            <p className="text-sm text-gray-300">An unexpected error occurred in the dashboard. Try refreshing the page.</p>
-            <div className="mt-4">
-              <button
-                onClick={() => {
-                  try {
-                    if (typeof window !== "undefined" && window.location && typeof window.location.reload === "function") {
-                      window.location.reload();
-                    }
-                  } catch {
-                    // fallback: do nothing
-                  }
-                }}
-                className="px-4 py-2 bg-indigo-600 rounded text-white"
-              >
-                Refresh
-              </button>
-            </div>
-            <details className="mt-4 text-xs text-gray-400">
-              <summary>Technical details</summary>
-              <pre className="whitespace-pre-wrap mt-2 text-xs">{String(this.state.error)}</pre>
-            </details>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-/* Safe base64 decode for JWT payloads (browser-friendly) */
-function safeBase64Decode(input: string) {
-  try {
-    if (typeof window !== "undefined" && typeof window.atob === "function") {
-      return window.atob(input);
-    }
-    // fallback for environments providing Buffer
-    if (typeof globalThis !== "undefined" && (globalThis as any).Buffer) {
-      return String((globalThis as any).Buffer.from(input, "base64"));
-    }
-    return "";
-  } catch (err) {
-    return "";
-  }
-}
-
-/* Parse JWT payload safely: returns object or null */
-function parseJwtPayloadSafe(token: string | null) {
-  if (!token || typeof token !== "string") return null;
-  try {
-    const parts = token.split(".");
-    if (parts.length < 2) return null;
-    const payload = parts[1];
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = safeBase64Decode(base64);
-    if (!decoded) return null;
-    // decoded may include percent-encoding - try to JSON.parse directly, fallback to decodeURIComponent
-    try {
-      return JSON.parse(decoded);
-    } catch {
-      try {
-        const json = decodeURIComponent(
-          decoded
-            .split("")
-            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join("")
-        );
-        return JSON.parse(json);
-      } catch {
-        return null;
-      }
-    }
-  } catch (err) {
-    return null;
-  }
-}
-
-function DashboardContent(): React.ReactElement {
+function DashboardContent() {
   const { data: session } = useSession();
   const router = useRouter();
-
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
-  // connection modal
-  const [connectModalOpen, setConnectModalOpen] = useState(false);
+  // trades + refresh helper from context
+  const { trades, refreshTrades } = useTrade();
 
-  // connection fields
-  const [platform, setPlatform] = useState<string>("mt5");
-  const [platformLogin, setPlatformLogin] = useState<string>("");
-  const [platformPassword, setPlatformPassword] = useState<string>("");
-  const [platformServer, setPlatformServer] = useState<string>("");
+  // --- filter state & custom dates ---
+  type RangeKey =
+    | "24h"
+    | "7d"
+    | "30d"
+    | "60d"
+    | "3m"
+    | "6m"
+    | "1y"
+    | "custom";
 
-  // filtering
-  const [filterOption, setFilterOption] = useState<FilterOption>("24h");
-  const [customFrom, setCustomFrom] = useState<string>("");
-  const [customTo, setCustomTo] = useState<string>("");
-  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [filterRange, setFilterRange] = useState<RangeKey>("24h"); // default to Last 24 hours
+  const [customFrom, setCustomFrom] = useState<string>(""); // yyyy-mm-dd
+  const [customTo, setCustomTo] = useState<string>(""); // yyyy-mm-dd
 
-  // profile menu
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-
-  // avatar initial
-  const [avatarInitial, setAvatarInitial] = useState<string>("U");
-
-  // trade context (defensive)
-  const tradeContext = useTrade();
-  const trades = tradeContext?.trades ?? [];
-  const refreshTrades = tradeContext?.refreshTrades ?? (async () => {});
-
-  // mount splash
+  // --- ensure default filter on every mount (explicit) ---
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 600);
+    setFilterRange("24h");
+    setCustomFrom("");
+    setCustomTo("");
+  }, []);
+
+  // small loading indicator on initial render
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(t);
   }, []);
 
-  /* AUTH check strategy (very defensive):
-     - Prefer next-auth session & server verification
-     - fallback to cookie JWT parsing
-     - ensure authChecked is always set at the end
-  */
+  // --- auth detection (NextAuth session preferred; fallback to cookie JWT) ---
   useEffect(() => {
-    let cancelled = false;
-    const checkAuth = async () => {
-      try {
-        if (session && (session as any).user) {
-          // try server-side truth check if available
-          try {
-            // UPDATED PATH: try server truth at /api/mt5/connect
-            const res = await fetch("/api/mt5/connect");
-            if (res && res.ok) {
-              const data = await res.json().catch(() => null);
-              const emailVerified = data?.emailVerified ?? data?.email_verified ?? data?.verified ?? false;
-              if (!cancelled) {
-                setIsAuthed(Boolean(emailVerified) || Boolean(session));
-                setAuthChecked(true);
-              }
-              return;
-            }
-            // accept session in absence of server truth
-            if (!cancelled) setIsAuthed(true);
-            return;
-          } catch {
-            if (!cancelled) setIsAuthed(true);
-            return;
-          }
-        }
+    if (session && (session as any).user) {
+      setIsAuthed(true);
+      setAuthChecked(true);
+      return;
+    }
 
-        // fallback to cookie JWTs (session/app_token)
-        const getCookie = (name: string) => {
+    try {
+      const token = (typeof document !== "undefined" && (document.cookie.match(/(^| )session=([^;]+)/) || document.cookie.match(/(^| )app_token=([^;]+)/)))
+        ? (document.cookie.match(/(^| )session=([^;]+)/) ? document.cookie.match(/(^| )session=([^;]+)/)![2] : document.cookie.match(/(^| )app_token=([^;]+)/)![2])
+        : null;
+
+      if (token) {
+        const payload = (() => {
           try {
-            if (typeof document === "undefined") return null;
-            const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-            return match ? decodeURIComponent(match[2]) : null;
+            const parts = (token as string).split(".");
+            if (parts.length < 2) return null;
+            const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            const json = decodeURIComponent(
+              atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+            );
+            return JSON.parse(json) as any;
           } catch {
             return null;
           }
-        };
-
-        const token = getCookie("session") || getCookie("app_token");
-        if (token) {
-          const payload = parseJwtPayloadSafe(token);
-          const emailVerified = payload?.email_verified ?? payload?.emailVerified ?? false;
-          if (!cancelled) setIsAuthed(Boolean(emailVerified));
-        } else {
-          if (!cancelled) setIsAuthed(false);
-        }
-      } catch (err) {
-        if (!cancelled) setIsAuthed(false);
-      } finally {
-        if (!cancelled) setAuthChecked(true);
+        })();
+        setIsAuthed(Boolean(payload?.email_verified));
+      } else {
+        setIsAuthed(false);
       }
-    };
-
-    checkAuth();
-    return () => {
-      cancelled = true;
-    };
+    } catch (err) {
+      console.error("Auth cookie parse error:", err);
+      setIsAuthed(false);
+    } finally {
+      setAuthChecked(true);
+    }
   }, [session]);
 
-  // Avatar resolution: session name -> /api/mt5/connect -> localStorage fallback
-  useEffect(() => {
-    const loadAvatar = async () => {
-      try {
-        // 1) session name
-        if (session && (session as any).user && (session as any).user.name) {
-          const name = (session as any).user.name;
-          if (typeof name === "string" && name.length > 0) {
-            setAvatarInitial(name.trim()[0].toUpperCase());
-            return;
-          }
-        }
-
-        // 2) server /api/mt5/connect (updated path)
-        try {
-          const res = await fetch("/api/mt5/connect");
-          if (res && res.ok) {
-            const data = await res.json().catch(() => null);
-            const name = data?.name ?? data?.fullName ?? data?.displayName;
-            const email = data?.email;
-            if (name && typeof name === "string" && name.length > 0) {
-              setAvatarInitial(name.trim()[0].toUpperCase());
-              return;
-            }
-            if (email && typeof email === "string" && email.length > 0) {
-              setAvatarInitial(email.trim()[0].toUpperCase());
-              return;
-            }
-          }
-        } catch {
-          // ignore server failure
-        }
-
-        // 3) localStorage fallback (guarded)
-        try {
-          if (typeof window !== "undefined" && window.localStorage) {
-            const keysToTry = ["signupName", "userName", "name", "displayName"];
-            for (const k of keysToTry) {
-              try {
-                const v = window.localStorage.getItem(k);
-                if (v && v.length > 0) {
-                  setAvatarInitial(v.trim()[0].toUpperCase());
-                  return;
-                }
-              } catch {
-                // ignore single key read error
-              }
-            }
-          }
-        } catch {
-          // ignore
-        }
-      } catch {
-        // silent
-      }
-    };
-
-    if (typeof window !== "undefined") loadAvatar();
-  }, [session]);
-
-  // Wait for auth check
+  // Wait until we've evaluated auth info client-side
   if (!authChecked) return <Spinner />;
 
   if (!isAuthed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D1117]">
-        <div className="rounded-xl p-8 bg-gradient-to-br from-black/20 to-white/5 border border-white/5 text-white max-w-lg text-center">
-          <h2 className="text-xl font-semibold">Access Restricted</h2>
-          <p className="mt-2 text-sm text-gray-300">Please verify your email or sign in to access the dashboard.</p>
-          <div className="mt-4 flex justify-center gap-2">
-            <button onClick={() => router.push("/login")} className="px-4 py-2 bg-indigo-600 rounded text-white">Sign in</button>
-            <button onClick={() => router.push("/signup")} className="px-4 py-2 border rounded border-white/10 text-white">Sign up</button>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
   }
 
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
-  // Filtered trades memoized, defensive
-  const filteredTrades = useMemo(() => {
-    try {
-      if (!Array.isArray(trades)) return [];
-      const { start, end } = computeRange(filterOption, customFrom || null, customTo || null);
-      if (!start) return trades;
-      const s = start.getTime();
-      const e = end.getTime();
-      return trades.filter((tr: any) => {
-        try {
-          const dateValue =
-            tr?.openedAt ?? tr?.opened_at ?? tr?.date ?? tr?.timestamp ?? tr?.time ?? tr?.createdAt ?? tr?.created_at;
-          if (!dateValue) return false;
-          const d = typeof dateValue === "number" ? new Date(dateValue) : new Date(dateValue);
-          if (Number.isNaN(d.getTime())) return false;
-          const t = d.getTime();
-          return t >= s && t <= e;
-        } catch {
-          return false;
-        }
-      });
-    } catch (err) {
-      console.error("Filtering error:", err);
-      return Array.isArray(trades) ? trades : [];
-    }
-  }, [trades, filterOption, customFrom, customTo]);
+  // --- Avatar: try to source user name from multiple places, prioritizing authoritative sources ---
+  const [userName, setUserName] = useState<string | null>(null);
 
-  // Handlers
-  const openConnectModal = () => {
-    setPlatform("mt5");
-    setPlatformLogin("");
-    setPlatformPassword("");
-    setPlatformServer("");
-    setConnectModalOpen(true);
-  };
+  useEffect(() => {
+    let mounted = true;
 
-  const handleConnectPlatform = async () => {
-    try {
-      if (!platformLogin || !platformPassword) {
-        alert("Please provide platform login and password.");
-        return;
-      }
-      const payload = {
-        platform,
-        login: platformLogin,
-        password: platformPassword,
-        server: platformServer,
-      };
-      // UPDATED PATH: POST to /api/mt5/connect
-      const res = await fetch("/api/mt5/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        alert(`Connection failed: ${d?.error || d?.message || "Unknown error"}`);
-        return;
-      }
-      // refresh trades if available
+    async function loadName() {
       try {
-        await refreshTrades();
-      } catch {
-        // ignore refresh failure
-      }
-      setConnectModalOpen(false);
-      alert("Connected successfully and trades refreshed.");
-    } catch (err) {
-      console.error("Connect error", err);
-      alert("Failed to connect. Check console for details.");
-    }
-  };
+        // 1) prefer NextAuth session user.name
+        if (session?.user?.name) {
+          if (!mounted) return;
+          setUserName(String(session.user.name));
+          return;
+        }
 
-  const handleQuickRefresh = async () => {
+        // 2) if session provides email, try server-side profile endpoint (if you have one)
+        const email = session?.user?.email;
+        if (email) {
+          try {
+            const res = await fetch(`/api/profile?email=${encodeURIComponent(email)}`);
+            if (res.ok) {
+              const json = await res.json().catch(() => ({}));
+              if (json && json.name) {
+                if (!mounted) return;
+                setUserName(String(json.name));
+                return;
+              }
+            }
+          } catch (err) {
+            // ignore and fallback
+          }
+        }
+
+        // 3) fallback: read localStorage keys that might have been set on signup
+        if (typeof window !== "undefined") {
+          const keysToTry = ["signupName", "userName", "name", "displayName"];
+          for (const k of keysToTry) {
+            try {
+              const v = window.localStorage.getItem(k);
+              if (v && v.length > 0) {
+                if (!mounted) return;
+                setUserName(v);
+                return;
+              }
+            } catch {
+              // ignore localStorage access errors
+            }
+          }
+        }
+
+        // 4) last fallback: session email first char
+        if (email && email.length > 0) {
+          if (!mounted) return;
+          setUserName(email.split("@")[0]);
+          return;
+        }
+      } catch (e) {
+        // swallow errors
+      }
+    }
+
+    loadName();
+
+    return () => {
+      mounted = false;
+    };
+  }, [session]);
+
+  const avatarInitial = String((userName && userName.length > 0 ? userName.trim()[0] : (session?.user?.name ? String(session.user.name).trim()[0] : (session?.user?.email ? String(session.user.email).trim()[0] : "U")))).toUpperCase();
+
+  // --- Sync handler (keeps existing behavior) ---
+  const handleSyncNow = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await refreshTrades();
+      // small user feedback
       alert("Trades refreshed.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      console.error("Sync/refresh error:", msg);
       alert(`Sync failed: ${msg}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- Filtering logic: compute filteredTrades derived from `trades` and the selected range ---
+  const filteredTrades = useMemo(() => {
+    const arr: any[] = Array.isArray(trades) ? trades : [];
+    const now = Date.now();
+    let fromTime = now - 24 * 60 * 60 * 1000; // default 24h
+    let toTime = now;
+
+    switch (filterRange) {
+      case "24h":
+        fromTime = now - 24 * 60 * 60 * 1000;
+        break;
+      case "7d":
+        fromTime = now - 7 * 24 * 60 * 60 * 1000;
+        break;
+      case "30d":
+        fromTime = now - 30 * 24 * 60 * 60 * 1000;
+        break;
+      case "60d":
+        fromTime = now - 60 * 24 * 60 * 60 * 1000;
+        break;
+      case "3m":
+        fromTime = now - 90 * 24 * 60 * 60 * 1000;
+        break;
+      case "6m":
+        fromTime = now - 180 * 24 * 60 * 60 * 1000;
+        break;
+      case "1y":
+        fromTime = now - 365 * 24 * 60 * 60 * 1000;
+        break;
+      case "custom":
+        {
+          const f = customFrom ? new Date(customFrom).getTime() : NaN;
+          const t = customTo ? new Date(customTo).getTime() + 24 * 60 * 60 * 1000 - 1 : NaN; // include full day
+          if (!isNaN(f)) fromTime = f;
+          if (!isNaN(t)) toTime = t;
+        }
+        break;
+      default:
+        fromTime = now - 24 * 60 * 60 * 1000;
+    }
+
+    // Helper to extract a date/time from a trade object (best-effort)
+    const extractTradeTime = (tr: any): number | null => {
+      if (!tr) return null;
+      const candidateKeys = [
+        "timestamp",
+        "time",
+        "date",
+        "created_at",
+        "createdAt",
+        "entered_at",
+        "enteredAt",
+        "open_time",
+        "openTime",
+        "closed_time",
+        "closedAt",
+      ];
+      for (const k of candidateKeys) {
+        const v = tr[k];
+        if (!v && v !== 0) continue;
+        try {
+          // handle numeric epoch (seconds or ms)
+          if (typeof v === "number") {
+            // heuristic: if in seconds (10 digits), convert to ms
+            if (v < 1e11) return v * 1000;
+            return v;
+          }
+          // strings:
+          if (typeof v === "string") {
+            // ISO or date string
+            const parsed = Date.parse(v);
+            if (!isNaN(parsed)) return parsed;
+            // maybe numeric string
+            const n = Number(v);
+            if (!isNaN(n)) {
+              if (n < 1e11) return n * 1000;
+              return n;
+            }
+          }
+        } catch {
+          // continue trying other keys
+        }
+      }
+      // if no date keys, attempt to see if trade has `created` or `ts`
+      if (tr?.created) {
+        const p = Date.parse(String(tr.created));
+        if (!isNaN(p)) return p;
+      }
+      return null;
+    };
+
+    return arr.filter((tr) => {
+      const ts = extractTradeTime(tr);
+      if (!ts) return false;
+      return ts >= fromTime && ts <= toTime;
+    });
+  }, [trades, filterRange, customFrom, customTo]);
+
+  // Label for UI showing selected filter
+  const filterLabel = useMemo(() => {
+    switch (filterRange) {
+      case "24h":
+        return "Last 24 hours";
+      case "7d":
+        return "Last 7 days";
+      case "30d":
+        return "Last 30 days";
+      case "60d":
+        return "Last 60 days";
+      case "3m":
+        return "Last 3 months";
+      case "6m":
+        return "Last 6 months";
+      case "1y":
+        return "Last 1 year";
+      case "custom":
+        return customFrom && customTo ? `From ${customFrom} to ${customTo}` : "Custom range";
+      default:
+        return "Last 24 hours";
+    }
+  }, [filterRange, customFrom, customTo]);
+
   return (
-    <ErrorBoundary>
-      <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
-        <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <button
-                className="md:hidden p-1"
-                onClick={() => setMobileMenuOpen((s) => !s)}
-                aria-label="Toggle Menu"
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-              <h1 className="text-xl font-semibold">{currentTabLabel}</h1>
+    <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
+      <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            {/* mobile hamburger */}
+            <button
+              className="md:hidden p-1"
+              onClick={() => setMobileMenuOpen((s) => !s)}
+              aria-label="Toggle Menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <h1 className="text-xl font-semibold">{currentTabLabel}</h1>
+            <div className="ml-3 text-sm text-gray-300 hidden sm:flex items-center px-2 py-1 rounded bg-white/2">
+              {filterLabel}
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              {/* Filter */}
-              <div className="relative">
-                <button
-                  title="Filter trades"
-                  className="p-2 rounded-full bg-transparent hover:bg-zinc-700"
-                  onClick={() => setFilterDropdownOpen((s) => !s)}
-                >
-                  <AiOutlineFilter size={18} />
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 rounded-full bg-transparent hover:bg-zinc-600"
+              onClick={handleSyncNow}
+              title="Refresh Trades"
+            >
+              <RefreshCw size={20} />
+            </button>
+
+            {/* Filter dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <button className="p-2 rounded-full bg-transparent hover:bg-zinc-600" title="Filter trades">
+                  <Filter size={18} />
                 </button>
+              </DropdownMenuTrigger>
 
-                {filterDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-[#0b1116] border border-zinc-700 rounded-md p-3 z-50 shadow-lg">
-                    <div className="text-sm font-medium text-gray-200 mb-2">Quick ranges</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[ 
-                        { id: "24h", label: "Last 24 hours" },
-                        { id: "7d", label: "Last 7 days" },
-                        { id: "30d", label: "Last 30 days" },
-                        { id: "60d", label: "Last 60 days" },
-                        { id: "3m", label: "Last 3 months" },
-                        { id: "90d", label: "Last 90 days" },
-                        { id: "6m", label: "Last 6 months" },
-                        { id: "1y", label: "Last 1 year" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          onClick={() => {
-                            setFilterOption(opt.id as FilterOption);
-                            setFilterDropdownOpen(false);
-                          }}
-                          className={`text-left px-2 py-2 rounded text-sm ${
-                            filterOption === (opt.id as FilterOption) ? "bg-green-600 text-white" : "text-gray-200 hover:bg-zinc-800"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
+              <DropdownMenuContent className="mt-2 bg-zinc-900 text-white border border-zinc-700 min-w-[220px] p-2">
+                <div className="px-1 py-1">
+                  <DropdownMenuItem onClick={() => { setFilterRange("24h"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 24 hours
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterRange("7d"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 7 days
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterRange("30d"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 30 days
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterRange("60d"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 60 days
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterRange("3m"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 3 months
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterRange("6m"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 6 months
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterRange("1y"); setCustomFrom(""); setCustomTo(""); }}>
+                    Last 1 year
+                  </DropdownMenuItem>
 
-                    <div className="mt-3 border-t border-zinc-700 pt-3">
-                      <div className="text-sm text-gray-200 mb-2">Custom range</div>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          value={customFrom}
-                          onChange={(e) => setCustomFrom(e.target.value)}
-                          className="w-1/2 p-2 rounded bg-transparent border border-zinc-700 text-gray-200"
-                        />
-                        <input
-                          type="date"
-                          value={customTo}
-                          onChange={(e) => setCustomTo(e.target.value)}
-                          className="w-1/2 p-2 rounded bg-transparent border border-zinc-700 text-gray-200"
-                        />
-                      </div>
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          onClick={() => {
-                            if (!customFrom || !customTo) {
-                              alert("Please select both from and to dates.");
-                              return;
-                            }
-                            setFilterOption("custom");
-                            setFilterDropdownOpen(false);
-                          }}
-                          className="px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-sm"
-                        >
-                          Apply
-                        </button>
-                        <button
-                          onClick={() => {
+                  <div className="border-t border-white/6 my-2" />
+
+                  <div className="px-2 py-1">
+                    <div className="text-xs text-gray-400 mb-1">Custom range</div>
+                    <label className="text-xs text-gray-300">From</label>
+                    <input
+                      type="date"
+                      value={customFrom}
+                      onChange={(e) => setCustomFrom(e.target.value)}
+                      className="w-full mt-1 mb-2 p-2 rounded bg-zinc-800 border border-zinc-700 text-sm"
+                    />
+                    <label className="text-xs text-gray-300">To</label>
+                    <input
+                      type="date"
+                      value={customTo}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                      className="w-full mt-1 mb-3 p-2 rounded bg-zinc-800 border border-zinc-700 text-sm"
+                    />
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (customFrom && customTo) {
+                            setFilterRange("custom");
+                          } else {
+                            // if incomplete, fallback to 24h
+                            setFilterRange("24h");
                             setCustomFrom("");
                             setCustomTo("");
-                          }}
-                          className="px-3 py-2 rounded border border-zinc-700 text-sm"
-                        >
-                          Clear
-                        </button>
-                      </div>
+                          }
+                        }}
+                        className="flex-1 px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-sm"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFilterRange("24h");
+                          setCustomFrom("");
+                          setCustomTo("");
+                        }}
+                        className="px-3 py-1 rounded bg-transparent border border-white/6 text-sm"
+                      >
+                        Reset
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              {/* Refresh */}
-              <button className="p-2 rounded-full bg-transparent hover:bg-zinc-600" onClick={handleQuickRefresh} title="Refresh Trades">
-                <RefreshCw size={20} />
-              </button>
-
-              {/* Connect Account (modal) */}
-              <button className="px-3 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white ml-2" onClick={openConnectModal} title="Connect trading account">
-                Connect Account
-              </button>
-
-              {/* Avatar + simple menu */}
-              <div className="relative ml-3">
-                <button onClick={() => setProfileMenuOpen((s) => !s)} className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-white font-semibold" aria-label="Open profile menu">
-                  {avatarInitial}
-                </button>
-
-                {profileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-[#0b1116] border border-zinc-700 rounded-md p-2 z-50 shadow-lg">
-                    <button
-                      className="w-full text-left px-2 py-2 text-sm text-gray-200 hover:bg-zinc-800 rounded"
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        router.push("/dashboard/profile");
-                      }}
-                    >
-                      Profile
-                    </button>
-                    <button
-                      className="w-full text-left px-2 py-2 text-sm text-gray-200 hover:bg-zinc-800 rounded"
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        router.push("/dashboard/settings");
-                      }}
-                    >
-                      Settings
-                    </button>
-                    <button
-                      className="w-full text-left px-2 py-2 text-sm text-gray-200 hover:bg-zinc-800 rounded"
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        signOut();
-                      }}
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Sidebar */}
-          <div
-            className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
-              mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-white text-lg font-semibold">Menu</h2>
-              <button onClick={() => setMobileMenuOpen(false)} aria-label="Close Menu">
-                <X size={20} className="text-white" />
-              </button>
-            </div>
-            <nav className="flex flex-col gap-4">
-              {TAB_DEFS.map((tab) => (
-                <button
-                  key={tab.value}
-                  className={`text-left text-sm font-medium px-2 py-1 rounded ${activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"}`}
-                  onClick={() => {
-                    setActiveTab(tab.value);
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Desktop Tabs */}
-          <div className="hidden md:flex gap-2 mb-4">
-            {TAB_DEFS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setActiveTab(t.value)}
-                className={`px-3 py-2 rounded text-sm font-medium ${activeTab === t.value ? "bg-indigo-600 text-white" : "text-gray-300 bg-transparent hover:bg-zinc-800"}`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          <div className="mt-2 text-sm">
-            {isLoading ? (
-              <Spinner />
-            ) : (
-              <>
-                {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
-
-                {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
-
-                {activeTab === "journal" && <TradeJournalAny trades={filteredTrades} />}
-
-                {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
-
-                {activeTab === "analytics" && (
-                  <Suspense fallback={<div className="py-8"><Spinner /></div>}>
-                    <div className="grid gap-6">
-                      <ProfitLossChartAny trades={filteredTrades} />
-                      <DrawdownChartAny trades={filteredTrades} />
-                      <PerformanceTimelineAny trades={filteredTrades} />
-                      <TradeBehavioralChartAny trades={filteredTrades} />
-                      <TradePatternChartAny trades={filteredTrades} />
-                    </div>
-                  </Suspense>
-                )}
-
-                {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
-
-                {activeTab === "planner" && (
-                  <TradePlanProvider>
-                    <div className="grid gap-6 bg-transparent">
-                      <TradePlannerTableAny trades={filteredTrades} />
-                    </div>
-                  </TradePlanProvider>
-                )}
-
-                {activeTab === "position-sizing" && <PositionSizingAny trades={filteredTrades} />}
-
-                {activeTab === "education" && <TraderEducationAny trades={filteredTrades} />}
-
-                {activeTab === "upgrade" && (
-                  <div className="max-w-4xl mx-auto">
-                    <PricingPlansAny />
-                  </div>
-                )}
-              </>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none">
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
+                  <AvatarFallback>{avatarInitial}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
+                <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Connect Account Modal */}
-        {connectModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60" onClick={() => setConnectModalOpen(false)} />
-            <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-6 backdrop-blur-sm shadow-2xl z-50">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Connect Trading Account</h3>
-                <button onClick={() => setConnectModalOpen(false)} className="text-gray-300">Close</button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="block">
-                  <span className="text-sm text-gray-300">Platform</span>
-                  <select value={platform} onChange={(e) => setPlatform(e.target.value)} className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100">
-                    <option value="mt5">MT5</option>
-                    <option value="metatrader">MetaTrader</option>
-                    <option value="ctrader">cTrader</option>
-                    <option value="other">Other</option>
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="text-sm text-gray-300">Broker Server</span>
-                  <input value={platformServer} onChange={(e) => setPlatformServer(e.target.value)} placeholder="Broker server (host)" className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100" />
-                </label>
-
-                <label className="block md:col-span-2">
-                  <span className="text-sm text-gray-300">Login</span>
-                  <input value={platformLogin} onChange={(e) => setPlatformLogin(e.target.value)} placeholder="Account login" className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100" />
-                </label>
-
-                <label className="block md:col-span-2">
-                  <span className="text-sm text-gray-300">Password</span>
-                  <input type="password" value={platformPassword} onChange={(e) => setPlatformPassword(e.target.value)} placeholder="Account password" className="mt-2 w-full p-2 rounded bg-transparent border border-white/10 text-gray-100" />
-                </label>
-              </div>
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button onClick={() => setConnectModalOpen(false)} className="px-4 py-2 rounded border border-zinc-700 text-sm">Cancel</button>
-                <button onClick={handleConnectPlatform} className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm">Connect</button>
-              </div>
-            </div>
+        {/* Mobile Sidebar */}
+        <div
+          className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-white text-lg font-semibold">Menu</h2>
+            <button onClick={() => setMobileMenuOpen(false)} aria-label="Close Menu">
+              <X size={20} className="text-white" />
+            </button>
           </div>
-        )}
-      </main>
-    </ErrorBoundary>
+          <nav className="flex flex-col gap-4">
+            {TAB_DEFS.map((tab) => (
+              <button
+                key={tab.value}
+                className={`text-left text-sm font-medium px-2 py-1 rounded ${
+                  activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"
+                }`}
+                onClick={() => {
+                  setActiveTab(tab.value);
+                  setMobileMenuOpen(false);
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Desktop Tabs */}
+        <div className="hidden md:block">
+          <Tabs items={TAB_DEFS} activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+
+        {/* Tab Content */}
+        <div className="mt-8 text-sm">
+          {isLoading ? (
+            <Spinner />
+          ) : (
+            <>
+              {/* PASS filteredTrades into components so metrics reflect the selected range */}
+              {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
+
+              {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
+
+              {activeTab === "journal" && <TradeJournalAny />}
+
+              {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
+
+              {activeTab === "analytics" && (
+                <div className="grid gap-6">
+                  <ProfitLossChartAny trades={filteredTrades} />
+                  <DrawdownChartAny trades={filteredTrades} />
+                  <PerformanceTimelineAny trades={filteredTrades} />
+                  <TradeBehavioralChartAny trades={filteredTrades} />
+                  <TradePatternChartAny trades={filteredTrades} />
+                </div>
+              )}
+
+              {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
+
+              {activeTab === "planner" && (
+                <TradePlanProvider>
+                  <div className="grid gap-6 bg-transparent">
+                    <TradePlannerTableAny />
+                  </div>
+                </TradePlanProvider>
+              )}
+
+              {activeTab === "position-sizing" && <PositionSizingAny />}
+
+              {activeTab === "education" && <TraderEducationAny />}
+
+              {activeTab === "upgrade" && (
+                <div className="max-w-4xl mx-auto">
+                  <PricingPlansAny />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }
 
-export default function DashboardPage(): React.ReactElement {
+export default function DashboardPage() {
   const { status } = useSession();
   if (status === "loading") return <Spinner />;
 
