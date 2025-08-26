@@ -274,7 +274,8 @@ function DashboardContent(): React.ReactElement {
         if (session && (session as any).user) {
           // try server-side truth check if available
           try {
-            const res = await fetch("/api/user/me");
+            // UPDATED PATH: try server truth at /api/mt5/connect
+            const res = await fetch("/api/mt5/connect");
             if (res && res.ok) {
               const data = await res.json().catch(() => null);
               const emailVerified = data?.emailVerified ?? data?.email_verified ?? data?.verified ?? false;
@@ -325,7 +326,7 @@ function DashboardContent(): React.ReactElement {
     };
   }, [session]);
 
-  // Avatar resolution: session name -> /api/user/me -> localStorage fallback
+  // Avatar resolution: session name -> /api/mt5/connect -> localStorage fallback
   useEffect(() => {
     const loadAvatar = async () => {
       try {
@@ -338,9 +339,9 @@ function DashboardContent(): React.ReactElement {
           }
         }
 
-        // 2) server /api/user/me
+        // 2) server /api/mt5/connect (updated path)
         try {
-          const res = await fetch("/api/user/me");
+          const res = await fetch("/api/mt5/connect");
           if (res && res.ok) {
             const data = await res.json().catch(() => null);
             const name = data?.name ?? data?.fullName ?? data?.displayName;
@@ -453,7 +454,8 @@ function DashboardContent(): React.ReactElement {
         password: platformPassword,
         server: platformServer,
       };
-      const res = await fetch("/api/connect-platform", {
+      // UPDATED PATH: POST to /api/mt5/connect
+      const res = await fetch("/api/mt5/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -522,7 +524,7 @@ function DashboardContent(): React.ReactElement {
                   <div className="absolute right-0 mt-2 w-64 bg-[#0b1116] border border-zinc-700 rounded-md p-3 z-50 shadow-lg">
                     <div className="text-sm font-medium text-gray-200 mb-2">Quick ranges</div>
                     <div className="grid grid-cols-2 gap-2">
-                      {[
+                      {[ 
                         { id: "24h", label: "Last 24 hours" },
                         { id: "7d", label: "Last 7 days" },
                         { id: "30d", label: "Last 30 days" },
