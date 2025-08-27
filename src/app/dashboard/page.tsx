@@ -1,3 +1,5 @@
+
+// src/app/dashboard/page.tsx
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -222,6 +224,28 @@ function DashboardContent() {
       alert(`Sync failed: ${msg}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // NEW: handle sign out and redirect to login page reliably
+  const handleSignOut = async () => {
+    try {
+      // Use signOut without redirect then navigate with Next router to ensure SPA navigation.
+      await signOut({ redirect: false });
+    } catch (err) {
+      console.error("Sign out error:", err);
+    } finally {
+      // Always navigate to login page after attempting sign out.
+      try {
+        router.push("/login");
+      } catch (e) {
+        // fallback: set location if router fails
+        try {
+          window.location.href = "/login";
+        } catch {
+          /* swallow */
+        }
+      }
     }
   };
 
@@ -486,7 +510,7 @@ function DashboardContent() {
               <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
                 <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => signOut()}>Sign Out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
