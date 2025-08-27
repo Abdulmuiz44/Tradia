@@ -172,7 +172,7 @@ export default function LoginPage(): React.ReactElement {
                   Create an account
                 </Link>
                 {" — "}or view plans{" "}
-                <Link href="/payment" className="text-indigo-300 hover:underline">
+                <Link href="/pricing" className="text-indigo-300 hover:underline">
                   here
                 </Link>
                 .
