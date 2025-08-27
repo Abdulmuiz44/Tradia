@@ -426,7 +426,7 @@ export default function Home(): React.ReactElement {
               <p className="mt-2 text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
               <div className="mt-6 flex gap-3">
                 <button onClick={navSignup} className="bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold">Create free account</button>
-                <Link href="/components/payment" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">See plans</Link>
+                <Link href="/pricing" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">See plans</Link>
               </div>
 
               <div className="mt-6 text-xs text-gray-400">Need help? <Link href="/contact" className="underline">Contact us</Link>.</div>

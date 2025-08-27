@@ -14,6 +14,7 @@ import Footer from "@/components/Footer";
  *
  * - Keeps original form logic and behavior exactly (remember-me, localStorage, submit flow).
  * - Redesigned to match landing page look & feel (dark glass panels, consistent spacing).
+ * - Fixed robustness issues around localStorage access and fetch error handling.
  * - Do NOT add any leading/trailing non-code text when pasting this file into your project.
  */
 
@@ -25,40 +26,50 @@ export default function LoginPage(): React.ReactElement {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load remembered email
+  // Load remembered email (defensive: guard localStorage access)
   useEffect(() => {
     try {
-      const saved =
-        typeof window !== "undefined" && localStorage.getItem("tradia_remember_email");
-      if (saved) {
-        setForm((f) => ({ ...f, email: saved }));
-        setRemember(true);
+      if (typeof window !== "undefined" && window.localStorage) {
+        const saved = localStorage.getItem("tradia_remember_email");
+        if (saved) {
+          setForm((f) => ({ ...f, email: saved }));
+          setRemember(true);
+        }
       }
     } catch {
-      /* ignore */
+      // ignore storage access errors (e.g. strict privacy mode)
     }
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((s) => ({ ...s, [name]: value }));
   };
 
   const toggleRemember = () => {
     const newVal = !remember;
     setRemember(newVal);
     try {
-      if (newVal && form.email) {
-        localStorage.setItem("tradia_remember_email", form.email);
-      } else {
-        localStorage.removeItem("tradia_remember_email");
+      if (typeof window !== "undefined" && window.localStorage) {
+        if (newVal && form.email) {
+          localStorage.setItem("tradia_remember_email", form.email);
+        } else {
+          localStorage.removeItem("tradia_remember_email");
+        }
       }
-    } catch {}
+    } catch {
+      // ignore
+    }
   };
 
   useEffect(() => {
     try {
-      if (remember && form.email) localStorage.setItem("tradia_remember_email", form.email);
-    } catch {}
+      if (remember && form.email && typeof window !== "undefined" && window.localStorage) {
+        localStorage.setItem("tradia_remember_email", form.email);
+      }
+    } catch {
+      // ignore localStorage errors
+    }
   }, [form.email, remember]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -78,7 +89,13 @@ export default function LoginPage(): React.ReactElement {
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
+      // defensive: only attempt to parse JSON when possible
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
       if (!res.ok) {
         setError(data.error || "Login failed.");
@@ -87,10 +104,15 @@ export default function LoginPage(): React.ReactElement {
 
       // Remember email if chosen
       try {
-        if (remember) localStorage.setItem("tradia_remember_email", form.email);
-        else localStorage.removeItem("tradia_remember_email");
-      } catch {}
+        if (typeof window !== "undefined" && window.localStorage) {
+          if (remember) localStorage.setItem("tradia_remember_email", form.email);
+          else localStorage.removeItem("tradia_remember_email");
+        }
+      } catch {
+        // ignore
+      }
 
+      // success -> navigate
       router.push("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
@@ -260,4 +282,3 @@ export default function LoginPage(): React.ReactElement {
     </>
   );
 }
-
