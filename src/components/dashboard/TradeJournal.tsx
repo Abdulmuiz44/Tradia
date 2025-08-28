@@ -486,8 +486,21 @@ export default function TradeJournal(): React.ReactElement {
       datasets: [{ label: "Trades", data: buckets, backgroundColor: "#f472b6" }]
     };
 
-    return { pnp: pnlOverTime, rollingWinData, pnlHistogram };
-  }, [trades]);
+    // Additional chart for strategy net PnL
+    const stratLabels = Object.keys(patterns.stratMap).sort();
+    const stratData = stratLabels.map(k => patterns.stratMap[k].netPL);
+    const stratColors = stratData.map(d => d >= 0 ? '#34d399' : '#ef4444');
+    const stratNetPL = {
+      labels: stratLabels,
+      datasets: [{
+        label: 'Net PnL by Strategy',
+        data: stratData,
+        backgroundColor: stratColors
+      }]
+    };
+
+    return { pnp: pnlOverTime, rollingWinData, pnlHistogram, stratNetPL };
+  }, [trades, patterns]);
 
   /* ---------------------------
      RR parsing utility (borrowed from Overview)
@@ -973,6 +986,30 @@ export default function TradeJournal(): React.ReactElement {
     return patterns.calMap[key] ?? { trades: 0, net: 0 };
   };
 
+  const topProfitableDays = useMemo(() => {
+    return Object.entries(patterns.calMap).sort((a, b) => b[1].net - a[1].net).slice(0, 5).map(([day, s]) => ({ day, ...s }));
+  }, [patterns.calMap]);
+
+  /* ---------------------------
+     Forecast helpers
+     --------------------------- */
+  const projectedMonthly = useMemo(() => {
+    const numDays = Object.keys(patterns.calMap).length;
+    const totalTrades = Object.values(patterns.calMap).reduce((sum, s) => sum + s.trades, 0);
+    const avgDailyTrades = numDays ? totalTrades / numDays : 0;
+    return avgDailyTrades * 30 * summary.expectancy;
+  }, [patterns.calMap, summary.expectancy]);
+
+  /* ---------------------------
+     Optimizer helpers
+     --------------------------- */
+  const kellyRisk = useMemo(() => {
+    const wr = summary.winRate / 100;
+    const rr = summary.avgWin / Math.abs(summary.avgLoss) || 1;
+    const kelly = wr - (1 - wr) / rr;
+    return Math.max(0, kelly) * 100;
+  }, [summary.winRate, summary.avgWin, summary.avgLoss]);
+
   /* ---------------------------
      UI render
      --------------------------- */
@@ -1002,7 +1039,7 @@ export default function TradeJournal(): React.ReactElement {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
         <div className="flex items-center gap-2">
           <input type="number" placeholder="Account" className="w-28 rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm" value={accountBalance === "" ? "" : String(accountBalance)} onChange={(e)=> setAccountBalance(e.target.value === "" ? "" : Number(e.target.value))} />
           <input type="number" placeholder="% risk" className="w-20 rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm" value={String(riskPercent)} onChange={(e)=> setRiskPercent(Number(e.target.value))} />
@@ -1187,6 +1224,18 @@ export default function TradeJournal(): React.ReactElement {
             </div>
 
             <div>
+              <h4 className="text-sm font-semibold text-white mb-2">Strategy Performance</h4>
+              <div className="space-y-2">
+                {Object.entries(patterns.stratMap || {}).map(([strat, s]) => (
+                  <div key={strat} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                    <span className="font-medium">{strat}</span>
+                    <span className="text-xs text-zinc-300">{s.trades} trades • {s.trades ? ((s.wins / s.trades) * 100).toFixed(0) : 0}% WR • <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <h4 className="text-sm font-semibold text-white mb-2">Hourly Performance (UTC)</h4>
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 lg:grid-cols-24 gap-1 sm:gap-2">
                 {patterns.hours.map((h, idx) => {
@@ -1218,6 +1267,11 @@ export default function TradeJournal(): React.ReactElement {
               <h5 className="text-sm text-zinc-200 mb-2">PnL Distribution</h5>
               {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.pnlHistogram} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
             </div>
+
+            <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
+              <h5 className="text-sm text-zinc-200 mb-2">Strategy Net PnL</h5>
+              {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.stratNetPL} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -1237,6 +1291,7 @@ export default function TradeJournal(): React.ReactElement {
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <h5 className="text-sm text-zinc-300">Actionable suggestion</h5>
                 <p className="mt-2 text-white">Combine the probability shown with your plan — do not rely only on this. This is not financial advice.</p>
+                <div className="mt-2 text-xs text-zinc-300">Projected monthly based on expectancy: ${projectedMonthly.toFixed(2)}</div>
                 <div className="mt-4 text-xs text-zinc-400">For a production-grade forecast, integrate a trained model server-side and surface calibrated probabilities here.</div>
               </div>
             </div>
@@ -1254,6 +1309,7 @@ export default function TradeJournal(): React.ReactElement {
                 <div className="text-sm text-zinc-300">Global suggested RR</div>
                 <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : "—"}</div>
                 <div className="text-xs text-zinc-400">{sltpSuggestion?.note}</div>
+                <div className="text-xs text-zinc-300 mt-2">Suggested Kelly risk %: {kellyRisk.toFixed(2)}%</div>
                 <div className="mt-4 flex gap-2">
                   <Button variant="secondary" onClick={()=> applySltpToSelected(sltpSuggestion?.recommendedRR ?? 1)}>Apply to selected</Button>
                   <Button variant="ghost" onClick={()=> alert("Heuristic: uses average wins/losses. Use backtests or model-based optimizer for production.")}>Explain</Button>
@@ -1314,6 +1370,7 @@ export default function TradeJournal(): React.ReactElement {
                   <h5 className="text-sm text-zinc-300">Behavioral Insights</h5>
                   <div className="mt-2 text-xs text-zinc-400">Max win streak: {streaks.maxWinStreak} • Max loss streak: {streaks.maxLossStreak}</div>
                   <div className="mt-2 text-xs text-zinc-400">Avg trade time: {summary.avgLengthMin.toFixed(1)} min • Sharpe-like: {summary.sharpe.toFixed(2)}</div>
+                  <div className="mt-2 text-xs text-zinc-400">Consistency: {summary.consistency.toFixed(1)}% • Expectancy: {summary.expectancy.toFixed(2)}</div>
                   {revengeDetector.flagged ? <div className="mt-3 p-2 bg-red-900/30 rounded text-xs text-red-300">⚠️ {revengeDetector.reason}</div> : null}
                 </div>
 
@@ -1340,19 +1397,31 @@ export default function TradeJournal(): React.ReactElement {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            <div className="grid grid-cols-7 gap-2 sm:gap-3">
               {monthDays.map(d => {
                 const ds = daySummary(d);
                 const net = ds.net;
                 const bg = net > 0 ? "bg-emerald-600/15" : net < 0 ? "bg-red-600/15" : "bg-zinc-800/10";
                 return (
-                  <button key={d.toISOString()} onClick={() => { setSelectedDay(prev => prev && isSameDay(prev,d) ? null : d); setSubTab("journal"); }} className={`p-1 sm:p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`} title={`${ds.trades} trade(s) • ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}>
-                    <div className="text-[10px] sm:text-xs text-zinc-300">{format(d,"dd")}</div>
-                    <div className="text-[9px] sm:text-[11px] text-zinc-200">{ds.trades} trades</div>
-                    <div className={`text-[9px] sm:text-[11px] ${net>=0 ? "text-green-400" : "text-red-400"}`}>${net.toFixed(0)}</div>
+                  <button key={d.toISOString()} onClick={() => { setSelectedDay(prev => prev && isSameDay(prev,d) ? null : d); setSubTab("journal"); }} className={`p-2 sm:p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`} title={`${ds.trades} trade(s) • ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}>
+                    <div className="text-xs sm:text-sm text-zinc-300">{format(d,"dd")}</div>
+                    <div className="text-[10px] sm:text-xs text-zinc-200">{ds.trades} trades</div>
+                    <div className={`text-[10px] sm:text-xs ${net>=0 ? "text-green-400" : "text-red-400"}`}>${net.toFixed(0)}</div>
                   </button>
                 );
               })}
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-2">Top Profitable Days</h4>
+              <div className="space-y-2">
+                {topProfitableDays.map(d => (
+                  <div key={d.day} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                    <span className="font-medium">{d.day}</span>
+                    <span className="text-xs text-zinc-300">{d.trades} trades • <span className={d.net >= 0 ? "text-green-400" : "text-red-400"}>${d.net.toFixed(2)}</span></span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="text-xs text-zinc-400">Click a day to filter Journal. Use calendar to spot streaks, cluster risk events and outlier days.</div>
