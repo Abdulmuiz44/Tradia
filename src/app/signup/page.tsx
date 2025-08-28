@@ -1,24 +1,25 @@
-
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
-/* === Countries list (kept intact) === */
+// Client-only Navbar/Footer
+const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+
 const COUNTRIES = [
-  'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan',
-  'Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi',
-  'Côte d\'Ivoire','Cabo Verde','Cambodia','Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo (Congo-Brazzaville)','Costa Rica','Croatia','Cuba','Cyprus','Czechia',
-  'Democratic Republic of the Congo','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Federated States of Micronesia','Fiji','Finland','France',
-  'Gabon','Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
-  'Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar',
-  'Namibia','Nauru','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palau','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal',
-  'Qatar','Romania','Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino','Sao Tome and Principe','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria',
-  'Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States of America','Uruguay','Uzbekistan','Vanuatu','Vatican City','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+  "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan",
+  "Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi",
+  "Côte d'Ivoire","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (Congo-Brazzaville)","Costa Rica","Croatia","Cuba","Cyprus","Czechia",
+  "Democratic Republic of the Congo","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Federated States of Micronesia","Fiji","Finland","France",
+  "Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy",
+  "Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar",
+  "Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal",
+  "Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria",
+  "Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States of America","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
 ];
 
 export default function SignupPage(): React.ReactElement {
@@ -29,19 +30,27 @@ export default function SignupPage(): React.ReactElement {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // hydration guard
+  const [hydrated, setHydrated] = useState(false);
   const [country, setCountry] = useState<string>("");
 
   useEffect(() => {
+    setHydrated(true);
+
     try {
       const lang = typeof navigator !== "undefined" ? navigator.language : null;
-      if (lang && lang.includes("-")) {
-        const code = lang.split("-")[1].toUpperCase();
-        if ((Intl as any).DisplayNames) {
-          const dn = new (Intl as any).DisplayNames(["en"], { type: "region" });
-          const detected = dn.of(code);
-          if (detected && COUNTRIES.includes(detected)) {
-            setCountry(detected);
-          }
+      if (!lang) return;
+
+      const parts = lang.split("-");
+      if (parts.length < 2) return;
+      const code = parts[1].toUpperCase();
+
+      if (typeof Intl !== "undefined" && (Intl as any).DisplayNames) {
+        const dn = new (Intl as any).DisplayNames(["en"], { type: "region" });
+        const detected = dn.of(code);
+        if (detected && COUNTRIES.includes(detected)) {
+          setCountry(detected);
         }
       }
     } catch {
@@ -55,21 +64,34 @@ export default function SignupPage(): React.ReactElement {
     setNotice("");
 
     const form = formRef.current;
-    if (!form) return setError("Form not ready.");
+    if (!form) {
+      setError("Form not ready.");
+      return;
+    }
 
     const fd = new FormData(form);
-    const name = (fd.get("name") as string || "").trim();
-    const email = (fd.get("email") as string || "").trim();
-    const password = (fd.get("password") as string || "");
-    const confirmPassword = (fd.get("confirmPassword") as string || "");
-    const selectedCountry = country || (fd.get("country") as string || "");
+    const name = String(fd.get("name") ?? "").trim();
+    const email = String(fd.get("email") ?? "").trim();
+    const password = String(fd.get("password") ?? "");
+    const confirmPassword = String(fd.get("confirmPassword") ?? "");
+    const selectedCountry = country || String(fd.get("country") ?? "");
 
     if (!name || !email || !password || !confirmPassword) {
-      return setError("All required fields must be filled.");
+      setError("All required fields must be filled.");
+      return;
     }
-    if (password !== confirmPassword) return setError("Passwords do not match.");
-    if (!agreed) return setError("You must agree to the terms.");
-    if (!selectedCountry) return setError("Please select your country.");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (!agreed) {
+      setError("You must agree to the terms.");
+      return;
+    }
+    if (!selectedCountry) {
+      setError("Please select your country.");
+      return;
+    }
 
     setLoading(true);
 
@@ -85,11 +107,17 @@ export default function SignupPage(): React.ReactElement {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (!res.ok) {
-        console.warn("Server signup failed:", data);
-        const msg = (data && (data.error || data.message)) || "Signup failed on server.";
-        const raw = data && data.raw ? ` — details: ${JSON.stringify(data.raw)}` : "";
+        const msg = data?.error || data?.message || `Signup failed (status ${res.status})`;
+        const raw = data?.raw ? ` — details: ${JSON.stringify(data.raw)}` : "";
         setError(`${msg}${raw}`);
         setLoading(false);
         return;
@@ -98,7 +126,6 @@ export default function SignupPage(): React.ReactElement {
       setNotice(data?.message || "Account created. Check your email for a verification link.");
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (err: any) {
-      console.error("Signup client error", err);
       setError(err?.message ?? "Something went wrong; try again.");
     } finally {
       setLoading(false);
@@ -109,7 +136,7 @@ export default function SignupPage(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#061226] text-gray-100 flex items-center justify-center py-12 px-4">
+      <div role="main" className="min-h-screen bg-[#061226] text-gray-100 flex items-center justify-center py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,7 +144,7 @@ export default function SignupPage(): React.ReactElement {
           className="w-full max-w-3xl"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            {/* Left — marketing / reassurance (matches login/landing visual style) */}
+            {/* Aside */}
             <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm">
               <div>
                 <h1 className="text-2xl font-extrabold leading-tight">Welcome to Tradia</h1>
@@ -133,7 +160,6 @@ export default function SignupPage(): React.ReactElement {
                       <div className="text-sm text-gray-400">All data encrypted and for your eyes only.</div>
                     </div>
                   </li>
-
                   <li className="flex items-start gap-3">
                     <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">⚡</span>
                     <div>
@@ -146,36 +172,25 @@ export default function SignupPage(): React.ReactElement {
 
               <div className="mt-6 text-sm text-gray-400">
                 Already have an account?{" "}
-                <Link href="/login" className="text-indigo-300 hover:underline">
-                  Sign in
-                </Link>
+                <Link href="/login" className="text-indigo-300 hover:underline">Sign in</Link>
                 {" — "}or view plans{" "}
-                <Link href="/payment" className="text-indigo-300 hover:underline">
-                  here
-                </Link>
-                .
+                <Link href="/payment" className="text-indigo-300 hover:underline">here</Link>.
               </div>
             </aside>
 
-            {/* Right — signup form (redesigned to match login) */}
+            {/* Form */}
             <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm shadow-2xl">
               <h2 className="text-3xl font-bold text-indigo-300">Create Your Tradia Account</h2>
               <p className="mt-2 text-sm text-gray-400">Fill in the details to get started — verification required.</p>
 
               {error && (
-                <div
-                  role="alert"
-                  className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 p-3 rounded-md text-sm"
-                >
+                <div role="alert" className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 p-3 rounded-md text-sm">
                   {error}
                 </div>
               )}
 
               {notice && (
-                <div
-                  role="status"
-                  className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 p-3 rounded-md text-sm"
-                >
+                <div role="status" className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 p-3 rounded-md text-sm">
                   {notice}
                 </div>
               )}
@@ -205,24 +220,25 @@ export default function SignupPage(): React.ReactElement {
                   />
                 </label>
 
-                <label className="block">
-                  <span className="text-sm text-gray-300">Country</span>
-                  <select
-                    name="country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    required
-                    aria-label="Country"
-                  >
-                    <option value="">Select your country</option>
-                    {COUNTRIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {/* Country - only render after hydration */}
+                {hydrated && (
+                  <label className="block">
+                    <span className="text-sm text-gray-300">Country</span>
+                    <select
+                      name="country"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      required
+                      aria-label="Country"
+                    >
+                      <option value="">Select your country</option>
+                      {COUNTRIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
 
                 <label className="block">
                   <span className="text-sm text-gray-300">Password</span>
@@ -230,7 +246,7 @@ export default function SignupPage(): React.ReactElement {
                     name="password"
                     type="password"
                     placeholder="Create a password"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                     autoComplete="new-password"
                   />
@@ -242,7 +258,7 @@ export default function SignupPage(): React.ReactElement {
                     name="confirmPassword"
                     type="password"
                     placeholder="Confirm password"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                     autoComplete="new-password"
                   />
@@ -258,7 +274,7 @@ export default function SignupPage(): React.ReactElement {
                     className="mt-1 h-4 w-4 rounded border-white/10 bg-transparent checked:bg-indigo-500 checked:border-indigo-500"
                     aria-required="true"
                   />
-                  <span className="text-sm text-gray-300">
+                  <span>
                     I agree to Tradia’s{" "}
                     <Link href="/terms" className="text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
                       Terms & Conditions
@@ -266,14 +282,14 @@ export default function SignupPage(): React.ReactElement {
                     and{" "}
                     <Link href="/privacy" className="text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
                       Privacy Policy
-                    </Link>
-                    .
+                    </Link>.
                   </span>
                 </label>
 
                 <button
                   type="submit"
                   disabled={loading}
+                  aria-busy={loading}
                   className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Creating Account..." : "Sign Up"}
@@ -284,14 +300,12 @@ export default function SignupPage(): React.ReactElement {
 
               <p className="mt-4 text-center text-sm text-gray-400">
                 Already have an account?{" "}
-                <Link href="/login" className="text-indigo-300 hover:underline">
-                  Login here
-                </Link>
+                <Link href="/login" className="text-indigo-300 hover:underline">Login here</Link>
               </p>
             </section>
           </div>
         </motion.div>
-      </main>
+      </div>
 
       <Footer />
     </>

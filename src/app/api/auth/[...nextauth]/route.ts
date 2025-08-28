@@ -3,17 +3,7 @@ import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { createClient } from "@/utils/supabase/server"; // 🔑 use supabase server client
-import type { AdapterUser } from "next-auth/adapters";
-import type { Account, Profile, User, Session } from "next-auth";
-import type { JWT } from "next-auth/jwt";
-
-if (!process.env.NEXTAUTH_URL) {
-  console.warn("⚠️ NEXTAUTH_URL not set");
-}
-if (!process.env.NEXTAUTH_SECRET) {
-  console.warn("⚠️ NEXTAUTH_SECRET not set");
-}
+import { createClient } from "@/utils/supabase/server";
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -54,48 +44,69 @@ const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       const supabase = createClient();
+      const email = user.email?.toLowerCase();
+      if (!email) return false;
 
-      if (account?.provider === "google") {
-        const email = user.email?.toLowerCase();
-        if (!email) return false;
+      // Ensure profile row exists
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("id")
+        .eq("email", email)
+        .single();
 
-        const { data: existingUser } = await supabase
-          .from("users")
-          .select("id")
-          .eq("email", email)
-          .single();
-
-        if (!existingUser) {
-          await supabase.from("users").insert({
-            name: user.name,
-            email,
-            image: user.image,
-            created_at: new Date().toISOString(),
-          });
-        }
+      if (!profile) {
+        await supabase.from("profile").insert({
+          email,
+          name: user.name ?? "",
+          country: "",
+          phone: "",
+          tradingStyle: "",
+          tradingExperience: "",
+          bio: "",
+          image: user.image ?? "",
+          created_at: new Date().toISOString(),
+        });
       }
 
       return true;
     },
 
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
+    async jwt({ token }) {
+      const supabase = createClient();
+      const email = token.email as string;
+      if (!email) return token;
+
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("id, name, email, country, phone, tradingStyle, tradingExperience, bio, image")
+        .eq("email", email)
+        .single();
+
+      if (profile) {
+        token.profile = {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          country: profile.country,
+          phone: profile.phone,
+          tradingStyle: profile.tradingStyle,
+          tradingExperience: profile.tradingExperience,
+          bio: profile.bio,
+          image: profile.image,
+        };
       }
+
       return token;
     },
 
     async session({ session, token }) {
-      if (session.user) {
-        // cast to any to attach custom fields set in jwt callback
-        const su: any = session.user as any;
-        su.id = token.id as string;
-        su.email = token.email as string;
-        su.name = token.name as string;
+      if (session.user && token.profile) {
+        session.user = {
+          ...(session.user as any),
+          ...(token.profile as any),
+        };
       }
       return session;
     },

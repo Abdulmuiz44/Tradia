@@ -1,54 +1,94 @@
 // app/api/user/profile/route.ts
 import { NextResponse } from "next/server";
-import { createAdminSupabase } from "@/utils/supabase/admin";
-import jwt from "jsonwebtoken";
+import { createClient } from "@supabase/supabase-js";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) console.warn("JWT_SECRET not set");
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function getCookieFromReq(req: Request, name: string) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const cookie = cookieHeader
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${name}=`));
-  if (!cookie) return null;
-  return decodeURIComponent(cookie.split("=")[1]);
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  // throw early so devs can catch misconfiguration quickly
+  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars");
 }
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
 
 export async function GET(req: Request) {
   try {
-    const token = getCookieFromReq(req, "session") || getCookieFromReq(req, "app_token");
-    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const url = new URL(req.url);
+    const email = url.searchParams.get("email")?.trim();
 
-    let payload: any = null;
+    if (!email) {
+      return NextResponse.json({ error: "Missing email query param" }, { status: 400 });
+    }
+
+    // Try to read the application profile row
     try {
-      payload = jwt.verify(token, JWT_SECRET) as any;
+      // We intentionally select '*' so if schema changes we still return available columns
+      const { data: profile, error: profileErr } = await supabaseAdmin
+        .from("profiles")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (profileErr && profileErr.code === "42P01") {
+        // table does not exist
+        // fall through to auth user fetch
+      } else if (profileErr) {
+        // other DB error
+        console.error("profiles table query error:", profileErr);
+        return NextResponse.json({ error: "Database error reading profile", details: profileErr }, { status: 500 });
+      }
+
+      if (profile) {
+        // return merged minimal object
+        return NextResponse.json({
+          email,
+          name: profile.name ?? null,
+          image: profile.image ?? null,
+          phone: profile.phone ?? null,
+          country: profile.country ?? null,
+          tradingStyle: profile.trading_style ?? profile.tradingStyle ?? null,
+          tradingExperience: profile.trading_experience ?? profile.tradingExperience ?? null,
+          bio: profile.bio ?? null,
+          raw: profile,
+        });
+      }
     } catch (err) {
-      console.error("profile GET: invalid JWT", (err as any)?.message ?? err);
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+      // In case the profiles table is absent or other runtime error
+      console.warn("profiles fetch attempt failed:", err);
+      // continue to attempt auth user fallback below
     }
 
-    const userId = payload?.id ?? payload?.sub;
-    if (!userId) return NextResponse.json({ error: "Invalid session payload" }, { status: 401 });
+    // Fallback: query auth user by email using admin API
+    try {
+      // requires service role key - safe on server
+      const { data: userResult, error: userErr } = await supabaseAdmin.auth.admin.getUserByEmail(email);
 
-    const supabase = createAdminSupabase();
+      if (userErr) {
+        console.error("auth.admin.getUserByEmail error:", userErr);
+        return NextResponse.json({ error: "Unable to fetch user info", details: userErr }, { status: 500 });
+      }
 
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("id, email, name, image, country, phone, trading_style, trading_experience, bio")
-      .eq("id", userId)
-      .maybeSingle();
+      const user = userResult?.user ?? null;
+      if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    if (error) {
-      console.error("profile GET DB error:", error);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      // Construct a minimal response from auth data (user_metadata may contain name/image)
+      const metadata = (user.user_metadata as any) || {};
+      return NextResponse.json({
+        email: user.email ?? null,
+        name: metadata?.full_name ?? metadata?.name ?? user.email,
+        image: metadata?.avatar_url ?? metadata?.image ?? null,
+        bio: metadata?.bio ?? null,
+        rawAuthUser: user,
+      });
+    } catch (err) {
+      console.error("auth fallback failed:", err);
+      return NextResponse.json({ error: "Internal server error", details: String(err) }, { status: 500 });
     }
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-    return NextResponse.json(user);
-  } catch (err) {
+  } catch (err: any) {
     console.error("profile GET error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Unexpected error", details: String(err) }, { status: 500 });
   }
 }

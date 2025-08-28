@@ -1,110 +1,62 @@
 // app/api/user/update/route.ts
 import { NextResponse } from "next/server";
-import { createAdminSupabase } from "@/utils/supabase/admin";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) console.warn("JWT_SECRET not set");
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function getCookieFromReq(req: Request, name: string) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const cookie = cookieHeader
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${name}=`));
-  if (!cookie) return null;
-  return decodeURIComponent(cookie.split("=")[1]);
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars");
 }
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
 
 export async function PATCH(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const {
-      name,
-      image,
-      phone,
-      country,
-      tradingStyle,
-      tradingExperience,
-      bio,
-      oldPassword,
-      newPassword,
-    } = body as Record<string, unknown>;
+    const email = (body.email ?? "").toString().trim();
 
-    const token = getCookieFromReq(req, "session") || getCookieFromReq(req, "app_token");
-    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    if (!email) {
+      return NextResponse.json({ error: "Missing email in body" }, { status: 400 });
+    }
 
-    let payload: any = null;
+    // Normalize payload fields
+    const payload: Record<string, unknown> = {};
+    if (typeof body.name === "string") payload.name = body.name;
+    if (typeof body.image === "string") payload.image = body.image;
+    if (typeof body.phone === "string") payload.phone = body.phone;
+    if (typeof body.country === "string") payload.country = body.country;
+    if (typeof body.tradingStyle === "string") payload.trading_style = body.tradingStyle;
+    if (typeof body.tradingExperience === "string") payload.trading_experience = body.tradingExperience;
+    if (typeof body.bio === "string") payload.bio = body.bio;
+    payload.email = email;
+
+    // Try to upsert into profiles table (create if missing)
     try {
-      payload = jwt.verify(token, JWT_SECRET) as any;
-    } catch (err) {
-      console.error("update profile: invalid JWT", (err as any)?.message ?? err);
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
+      // If you have user_id available on payload prefer to set it as well.
+      const { data, error } = await supabaseAdmin.from("profiles").upsert(payload, { onConflict: "email" }).select().maybeSingle();
 
-    const userId = payload?.id ?? payload?.sub;
-    if (!userId) return NextResponse.json({ error: "Invalid session payload" }, { status: 401 });
-
-    const supabase = createAdminSupabase();
-
-    // Fetch user current (to validate old password if needed)
-    const { data: currentUser, error: fetchErr } = await supabase
-      .from("users")
-      .select("id, password, name, email, image")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (fetchErr) {
-      console.error("profile update: fetch user error", fetchErr);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
-    }
-    if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-    // If changing password: validate old -> set new
-    let hashedPasswordToSet: string | undefined = undefined;
-    if (oldPassword || newPassword) {
-      if (!oldPassword || !newPassword) {
-        return NextResponse.json({ error: "Old and new password required to change password" }, { status: 400 });
+      if (error) {
+        if (error.code === "42P01") {
+          // table missing
+          return NextResponse.json(
+            { error: "profiles table does not exist. Create it in Supabase. See docs or run provided SQL." },
+            { status: 500 }
+          );
+        }
+        console.error("profiles upsert error:", error);
+        return NextResponse.json({ error: "Failed to save profile", details: error }, { status: 500 });
       }
-      const ok = await bcrypt.compare(String(oldPassword), String(currentUser.password));
-      if (!ok) return NextResponse.json({ error: "Current password incorrect" }, { status: 403 });
-      if (String(newPassword).length < 8) return NextResponse.json({ error: "New password too short" }, { status: 400 });
-      hashedPasswordToSet = bcrypt.hashSync(String(newPassword), 10);
+
+      return NextResponse.json({ success: true, user: data ?? null });
+    } catch (err) {
+      console.error("profiles upsert runtime error:", err);
+      return NextResponse.json({ error: "Internal server error", details: String(err) }, { status: 500 });
     }
-
-    // Build update object (map client keys to DB columns)
-    const updates: Record<string, any> = {};
-    if (typeof name === "string") updates.name = name.trim() || null;
-    if (typeof image === "string") updates.image = image || null;
-    if (typeof phone === "string") updates.phone = phone || null;
-    if (typeof country === "string") updates.country = country || null;
-    if (typeof tradingStyle === "string") updates.trading_style = tradingStyle || null;
-    if (typeof tradingExperience === "string") updates.trading_experience = tradingExperience || null;
-    if (typeof bio === "string") updates.bio = bio || null;
-    if (hashedPasswordToSet) updates.password = hashedPasswordToSet;
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ success: true, user: currentUser });
-    }
-
-    updates.updated_at = new Date().toISOString();
-
-    const { data: updated, error: updErr } = await supabase
-      .from("users")
-      .update(updates)
-      .eq("id", userId)
-      .select("id, email, name, image, country, phone, trading_style, trading_experience, bio")
-      .maybeSingle();
-
-    if (updErr) {
-      console.error("profile update: update error", updErr);
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, user: updated });
   } catch (err) {
-    console.error("profile update error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("profile PATCH error:", err);
+    return NextResponse.json({ error: "Unexpected error", details: String(err) }, { status: 500 });
   }
 }
