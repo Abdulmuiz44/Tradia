@@ -1187,14 +1187,14 @@ export default function TradeJournal(): React.ReactElement {
 
             <div>
               <h4 className="text-sm font-semibold text-white mb-2">Hourly Performance (UTC)</h4>
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 lg:grid-cols-24 gap-1 sm:gap-2">
+              <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
                 {patterns.hours.map((h, idx) => {
                   const bg = h.pl >= 0 ? `bg-emerald-600/15` : `bg-red-600/15`;
                   return (
-                    <div key={idx} className={`p-1 sm:p-2 rounded border border-zinc-800 text-[10px] sm:text-xs text-zinc-200 ${bg}`}>
+                    <div key={idx} className={`p-2 rounded border border-zinc-800 text-xs text-zinc-200 ${bg}`}>
                       <div className="font-semibold">{idx}:00</div>
-                      <div className="text-[9px] sm:text-[11px] text-zinc-300">{h.trades} trades</div>
-                      <div className={`${h.pl >= 0 ? "text-green-400" : "text-red-400"} text-[10px] sm:text-sm`}>${h.pl.toFixed(2)}</div>
+                      <div className="text-[11px] text-zinc-300">{h.trades} trades</div>
+                      <div className={`${h.pl >= 0 ? "text-green-400" : "text-red-400"} text-sm`}>${h.pl.toFixed(2)}</div>
                     </div>
                   );
                 })}
@@ -1204,18 +1204,18 @@ export default function TradeJournal(): React.ReactElement {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
                 <h5 className="text-sm text-zinc-200 mb-2">Equity Curve</h5>
-                {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.pnp} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+                {mounted ? <Line data={charts.pnp} /> : <div className="h-48" />}
               </div>
 
               <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
                 <h5 className="text-sm text-zinc-200 mb-2">Rolling Win Rate</h5>
-                {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.rollingWinData} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+                {mounted ? <Line data={charts.rollingWinData} /> : <div className="h-48" />}
               </div>
             </div>
 
             <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
               <h5 className="text-sm text-zinc-200 mb-2">PnL Distribution</h5>
-              {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.pnlHistogram} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+              {mounted ? <Bar data={charts.pnlHistogram} /> : <div className="h-48" />}
             </div>
           </CardContent>
         </Card>
@@ -1339,16 +1339,16 @@ export default function TradeJournal(): React.ReactElement {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            <div className="grid grid-cols-7 gap-2">
               {monthDays.map(d => {
                 const ds = daySummary(d);
                 const net = ds.net;
                 const bg = net > 0 ? "bg-emerald-600/15" : net < 0 ? "bg-red-600/15" : "bg-zinc-800/10";
                 return (
-                  <button key={d.toISOString()} onClick={() => { setSelectedDay(prev => prev && isSameDay(prev,d) ? null : d); setSubTab("journal"); }} className={`p-1 sm:p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`} title={`${ds.trades} trade(s) • ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}>
-                    <div className="text-[10px] sm:text-xs text-zinc-300">{format(d,"dd")}</div>
-                    <div className="text-[9px] sm:text-[11px] text-zinc-200">{ds.trades} trades</div>
-                    <div className={`text-[9px] sm:text-[11px] ${net>=0 ? "text-green-400" : "text-red-400"}`}>${net.toFixed(0)}</div>
+                  <button key={d.toISOString()} onClick={() => { setSelectedDay(prev => prev && isSameDay(prev,d) ? null : d); setSubTab("journal"); }} className={`p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`} title={`${ds.trades} trade(s) • ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}>
+                    <div className="text-xs text-zinc-300">{format(d,"dd")}</div>
+                    <div className="text-[11px] text-zinc-200">{ds.trades} trades</div>
+                    <div className={`text-[11px] ${net>=0 ? "text-green-400" : "text-red-400"}`}>${net.toFixed(0)}</div>
                   </button>
                 );
               })}
