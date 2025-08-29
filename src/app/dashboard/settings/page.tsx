@@ -88,14 +88,18 @@ export default function SettingsPage() {
   }, []);
 
   const loadSettings = () => {
-    const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings) {
-      try {
+    try {
+      const savedSettings = localStorage.getItem('userSettings');
+      if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Failed to parse settings:', error);
+        if (parsed && typeof parsed === 'object') {
+          setSettings(prev => ({ ...prev, ...parsed }));
+        }
       }
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      // Reset to defaults if loading fails
+      setSettings(prev => ({ ...prev }));
     }
   };
 
@@ -140,23 +144,18 @@ export default function SettingsPage() {
     setSettings(prev => ({
       ...prev,
       [section]: typeof prev[section] === 'object' && prev[section] !== null
-        ? { ...(prev[section] as object), [key]: value }
+        ? { ...(prev[section] as Record<string, any>), [key]: value }
         : value
     }));
   };
 
-  const updateNestedSetting = (section: keyof UserSettings, subsection: string, key: string, value: any) => {
+  const updateNestedSetting = (section: keyof UserSettings, key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
-      [section]: typeof prev[section] === 'object' && prev[section] !== null
-        ? {
-            ...(prev[section] as object),
-            [subsection]: {
-              ...((prev[section] as any)[subsection] || {}),
-              [key]: value
-            }
-          }
-        : prev[section]
+      [section]: {
+        ...(prev[section] as Record<string, any>),
+        [key]: value
+      }
     }));
   };
 
@@ -330,7 +329,7 @@ export default function SettingsPage() {
                           <input
                             type="checkbox"
                             checked={(settings.notifications as any)[item.key]}
-                            onChange={(e) => updateNestedSetting('notifications', 'notifications', item.key, e.target.checked)}
+                            onChange={(e) => updateNestedSetting('notifications', item.key, e.target.checked)}
                             className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -364,7 +363,7 @@ export default function SettingsPage() {
                               name="profileVisibility"
                               value={option.value}
                               checked={settings.privacy.profileVisibility === option.value}
-                              onChange={(e) => updateNestedSetting('privacy', 'privacy', 'profileVisibility', e.target.value)}
+                              onChange={(e) => updateNestedSetting('privacy', 'profileVisibility', e.target.value)}
                               className="text-blue-600"
                             />
                             <div>
@@ -391,7 +390,7 @@ export default function SettingsPage() {
                             <input
                               type="checkbox"
                               checked={(settings.privacy as any)[item.key]}
-                              onChange={(e) => updateNestedSetting('privacy', 'privacy', item.key, e.target.checked)}
+                              onChange={(e) => updateNestedSetting('privacy', item.key, e.target.checked)}
                               className="sr-only peer"
                             />
                             <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -416,7 +415,7 @@ export default function SettingsPage() {
                       <label className="block text-sm font-medium mb-2">Default Timeframe</label>
                       <select
                         value={settings.trading.defaultTimeframe}
-                        onChange={(e) => updateNestedSetting('trading', 'trading', 'defaultTimeframe', e.target.value)}
+                        onChange={(e) => updateNestedSetting('trading', 'defaultTimeframe', e.target.value)}
                         className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="1m">1 Minute</option>
@@ -438,7 +437,7 @@ export default function SettingsPage() {
                           max="10"
                           step="0.1"
                           value={settings.trading.riskPerTrade}
-                          onChange={(e) => updateNestedSetting('trading', 'trading', 'riskPerTrade', parseFloat(e.target.value))}
+                          onChange={(e) => updateNestedSetting('trading', 'riskPerTrade', parseFloat(e.target.value))}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
@@ -451,7 +450,7 @@ export default function SettingsPage() {
                           max="10000"
                           step="10"
                           value={settings.trading.maxDailyLoss}
-                          onChange={(e) => updateNestedSetting('trading', 'trading', 'maxDailyLoss', parseFloat(e.target.value))}
+                          onChange={(e) => updateNestedSetting('trading', 'maxDailyLoss', parseFloat(e.target.value))}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
@@ -467,7 +466,7 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={settings.trading.autoSaveTrades}
-                          onChange={(e) => updateNestedSetting('trading', 'trading', 'autoSaveTrades', e.target.checked)}
+                          onChange={(e) => updateNestedSetting('trading', 'autoSaveTrades', e.target.checked)}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -495,7 +494,7 @@ export default function SettingsPage() {
                         <input
                           type="checkbox"
                           checked={settings.sound.enabled}
-                          onChange={(e) => updateNestedSetting('sound', 'sound', 'enabled', e.target.checked)}
+                          onChange={(e) => updateNestedSetting('sound', 'enabled', e.target.checked)}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -518,7 +517,7 @@ export default function SettingsPage() {
                               <input
                                 type="checkbox"
                                 checked={(settings.sound as any)[item.key]}
-                                onChange={(e) => updateNestedSetting('sound', 'sound', item.key, e.target.checked)}
+                                onChange={(e) => updateNestedSetting('sound', item.key, e.target.checked)}
                                 className="sr-only peer"
                               />
                               <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
