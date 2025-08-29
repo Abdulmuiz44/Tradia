@@ -407,7 +407,6 @@ export default function MT5SyncPage() {
                   credentials={{
                     server: selectedAccount.server,
                     login: selectedAccount.login,
-                    investorPassword: "", // We don't store passwords in the frontend
                     password: "", // We don't store passwords in the frontend
                     name: selectedAccount.name
                   }}

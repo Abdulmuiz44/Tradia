@@ -21,8 +21,8 @@ export type ConnectionError =
 export interface MT5Credentials {
   server: string;
   login: string;
-  investorPassword: string;
-  password?: string;
+  password: string;
+  investorPassword?: string;
   name?: string;
 }
 

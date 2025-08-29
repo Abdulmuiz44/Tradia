@@ -154,7 +154,7 @@ export default function CredentialManager({
   };
 
   const handleDelete = async (credential: StoredCredential) => {
-    if (!confirm(`Are you sure you want to delete the credential for ${credential.name}?`)) {
+    if (!confirm(`Are you sure you want to delete the credential for ${credential.name || 'this account'}?`)) {
       return;
     }
 

@@ -94,7 +94,7 @@ export class CredentialStorageService {
 
     const credentialData = {
       user_id: userId,
-      name: credentials.name || `MT5 ${credentials.login}`,
+      name: (credentials.name || `MT5 ${credentials.login}`).trim(),
       server: credentials.server,
       login: credentials.login,
       encrypted_password: encryptedPassword,
@@ -170,7 +170,7 @@ export class CredentialStorageService {
       return {
         server: data.server,
         login: data.login,
-        investorPassword: decryptedPassword,
+        password: decryptedPassword,
         name: data.name || undefined
       };
     } catch (decryptError) {

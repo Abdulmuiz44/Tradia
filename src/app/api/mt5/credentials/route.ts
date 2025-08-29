@@ -126,7 +126,7 @@ export async function POST(req: Request) {
     const credentials: MT5Credentials = {
       server: body.server.trim(),
       login: body.login.trim(),
-      investorPassword: body.investorPassword,
+      password: body.investorPassword,
       name: body.name?.trim()
     };
 

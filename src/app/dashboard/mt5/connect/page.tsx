@@ -39,7 +39,7 @@ export default function MT5ConnectPage() {
   const connectionState = useConnectionStatus({
     server: form.server,
     login: form.login,
-    investorPassword: form.investorPassword,
+    password: form.investorPassword,
     name: form.name || undefined
   });
 
@@ -117,7 +117,6 @@ export default function MT5ConnectPage() {
       mt5ConnectionManager.clearValidationTimeout({
         server: form.server,
         login: form.login,
-        investorPassword: form.investorPassword,
         password: form.investorPassword
       });
     }
@@ -458,11 +457,10 @@ export default function MT5ConnectPage() {
                   credentials={{
                     server: form.server,
                     login: form.login,
-                    investorPassword: form.investorPassword,
+                    password: form.investorPassword,
                     name: form.name || undefined
                   }}
                   showDetails={true}
-                  showRetryControls={true}
                 />
               </div>
             )}
