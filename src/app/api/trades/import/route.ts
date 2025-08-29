@@ -89,7 +89,13 @@ export async function POST(req: Request) {
             skippedTrades++;
           } else {
             newTrades++;
-            importedTrades.push({ ...normalizedTrade, id: tradeId });
+            importedTrades.push({
+              ...normalizedTrade,
+              id: tradeId,
+              symbol: normalizedTrade.symbol || 'UNKNOWN',
+              openTime: normalizedTrade.openTime || new Date().toISOString(),
+              pnl: normalizedTrade.pnl || 0
+            });
           }
         }
       } catch (err) {
@@ -170,7 +176,7 @@ async function normalizeAndValidateTrade(tradeData: Partial<Trade>, userId: stri
 
     // Normalize numeric fields
     const normalized: Partial<Trade> = {
-      symbol: String(tradeData.symbol).toUpperCase(),
+      symbol: tradeData.symbol ? String(tradeData.symbol).toUpperCase() : '',
       direction: tradeData.direction || (tradeData.pnl && tradeData.pnl >= 0 ? 'Buy' : 'Sell'),
       orderType: tradeData.orderType || 'Market Execution',
       openTime: openTime?.toISOString(),

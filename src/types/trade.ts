@@ -35,4 +35,7 @@ export interface Trade {
   TP?: string | number;
   exitPrice?: string | number;
   note?: string;
+  // MT5 specific fields
+  commission?: number;
+  swap?: number;
 }

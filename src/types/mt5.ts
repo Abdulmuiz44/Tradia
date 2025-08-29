@@ -5,7 +5,9 @@ export type ConnectionStatus =
   | 'connected'
   | 'validating'
   | 'error'
-  | 'timeout';
+  | 'timeout'
+  | 'unknown'
+  | 'degraded';
 
 export type ConnectionError =
   | 'invalid_credentials'
@@ -20,6 +22,7 @@ export interface MT5Credentials {
   server: string;
   login: string;
   investorPassword: string;
+  password?: string;
   name?: string;
 }
 
@@ -68,4 +71,17 @@ export interface MT5ConnectionState {
   isValidating: boolean;
   error?: ConnectionError;
   errorMessage?: string;
+}
+
+export interface StoredCredential {
+  id: string;
+  userId: string;
+  server: string;
+  login: string;
+  name?: string;
+  securityLevel?: string;
+  rotationRequired?: boolean;
+  lastUsedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }

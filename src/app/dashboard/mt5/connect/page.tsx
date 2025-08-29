@@ -2,7 +2,7 @@
 
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MT5Credentials } from "@/types/mt5";
+import { MT5Credentials, ConnectionError } from "@/types/mt5";
 import { mt5ConnectionManager } from "@/lib/mt5-connection-manager";
 import ConnectionStatusComponent, { useConnectionStatus } from "@/components/mt5/ConnectionStatus";
 import ErrorRecoveryComponent, { QuickErrorRecovery } from "@/components/mt5/ErrorRecovery";
@@ -73,7 +73,8 @@ export default function MT5ConnectPage() {
         server: form.server.trim(),
         login: form.login.trim(),
         investorPassword: form.investorPassword,
-        name: form.name.trim() || undefined
+        name: form.name.trim() || undefined,
+        password: form.investorPassword
       };
 
       // Set validation timeout
@@ -116,7 +117,8 @@ export default function MT5ConnectPage() {
       mt5ConnectionManager.clearValidationTimeout({
         server: form.server,
         login: form.login,
-        investorPassword: form.investorPassword
+        investorPassword: form.investorPassword,
+        password: form.investorPassword
       });
     }
   };

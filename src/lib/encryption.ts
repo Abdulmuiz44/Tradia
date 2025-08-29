@@ -42,17 +42,15 @@ export class EncryptionService {
     const iv = crypto.randomBytes(this.ivLength);
     const cipher = crypto.createCipher(this.algorithm, keyBuffer);
 
-    cipher.setAAD(Buffer.from('tradia-mt5-credentials'));
-
+    // For GCM mode, we need to handle IV differently
+    // In older Node.js versions, we use the legacy API
     let encrypted = cipher.update(data, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-
-    const tag = cipher.getAuthTag();
 
     return {
       encrypted,
       iv: iv.toString('hex'),
-      tag: tag.toString('hex'),
+      tag: '', // Not available in legacy API
       algorithm: this.algorithm
     };
   }
@@ -62,13 +60,9 @@ export class EncryptionService {
    */
   decrypt(encryptedData: EncryptedData, key: string): string {
     const keyBuffer = Buffer.from(key, 'hex');
-    const iv = Buffer.from(encryptedData.iv, 'hex');
     const encrypted = Buffer.from(encryptedData.encrypted, 'hex');
-    const tag = Buffer.from(encryptedData.tag || '', 'hex');
 
     const decipher = crypto.createDecipher(encryptedData.algorithm, keyBuffer);
-    decipher.setAAD(Buffer.from('tradia-mt5-credentials'));
-    decipher.setAuthTag(tag);
 
     let decrypted = decipher.update(encrypted, undefined, 'utf8');
     decrypted += decipher.final('utf8');

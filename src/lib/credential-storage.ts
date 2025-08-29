@@ -15,7 +15,7 @@ export interface StoredCredential {
   createdAt: Date;
   updatedAt: Date;
   rotationRequired: boolean;
-  securityLevel: 'high' | 'medium' | 'low';
+  securityLevel: string;
 }
 
 export interface CredentialValidationResult {
@@ -23,6 +23,21 @@ export interface CredentialValidationResult {
   errors: string[];
   warnings: string[];
   securityScore: number; // 0-100
+}
+
+interface DatabaseCredentialRecord {
+  id: string;
+  user_id: string;
+  name: string;
+  server: string;
+  login: string;
+  encrypted_password: any;
+  is_active: boolean;
+  last_used_at?: string;
+  created_at: string;
+  updated_at: string;
+  rotation_required: boolean;
+  security_level: string;
 }
 
 export class CredentialStorageService {
@@ -87,7 +102,7 @@ export class CredentialStorageService {
       last_used_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       rotation_required: false,
-      security_level: this.calculateSecurityLevel(credentials, validation)
+      security_level: this.calculateSecurityLevel(credentials, validation) as string
     };
 
     if (existing) {
@@ -156,7 +171,7 @@ export class CredentialStorageService {
         server: data.server,
         login: data.login,
         investorPassword: decryptedPassword,
-        name: data.name
+        name: data.name || undefined
       };
     } catch (decryptError) {
       console.error('Failed to decrypt credentials:', decryptError);
@@ -179,7 +194,7 @@ export class CredentialStorageService {
 
     if (error) throw error;
 
-    return data.map(item => this.transformStoredCredential(item));
+    return data.map((item: DatabaseCredentialRecord) => this.transformStoredCredential(item));
   }
 
   /**
@@ -328,7 +343,7 @@ export class CredentialStorageService {
   /**
    * Transform database record to StoredCredential
    */
-  private transformStoredCredential(data: any): StoredCredential {
+  private transformStoredCredential(data: DatabaseCredentialRecord): StoredCredential {
     return {
       id: data.id,
       userId: data.user_id,
@@ -356,7 +371,7 @@ export class CredentialStorageService {
 
     for (const credential of credentials) {
       const plainPassword = await this.getCredentials(userId, credential.id);
-      if (!plainPassword) continue;
+      if (!plainPassword || !plainPassword.investorPassword) continue;
 
       const newEncryptedPassword = encryptionService.encrypt(plainPassword.investorPassword, newUserKey);
 

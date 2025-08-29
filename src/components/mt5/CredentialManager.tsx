@@ -148,7 +148,7 @@ export default function CredentialManager({
       server: credential.server,
       login: credential.login,
       investorPassword: "", // Don't show existing password
-      name: credential.name
+      name: credential.name || ""
     });
     setShowForm(true);
   };
@@ -392,7 +392,7 @@ export default function CredentialManager({
               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                 selectedCredentialId === credential.id
                   ? 'border-indigo-500 bg-indigo-50'
-                  : `${getSecurityColor(credential.securityLevel)} hover:shadow-md`
+                  : `${getSecurityColor(credential.securityLevel || 'low')} hover:shadow-md`
               }`}
               onClick={() => onCredentialSelect?.(credential)}
             >

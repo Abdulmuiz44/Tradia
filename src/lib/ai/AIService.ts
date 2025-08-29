@@ -209,7 +209,7 @@ export class AIService {
     const patterns: TradePattern[] = [];
 
     // Analyze winning/losing streaks
-    const outcomes = trades.map(t => t.outcome);
+    const outcomes = trades.map(t => t.outcome || 'Breakeven');
     const streaks = this.calculateStreaks(outcomes);
 
     if (streaks.longestWinStreak >= 5) {
@@ -514,7 +514,15 @@ export class AIService {
     const insights: PerformanceInsight[] = [];
 
     // Analyze position sizing consistency
-    const lotSizes = trades.map(t => t.lotSize || 0).filter(size => size > 0);
+    const lotSizes = trades.map(t => {
+      const size = t.lotSize;
+      if (typeof size === 'string') {
+        const numSize = parseFloat(size);
+        return isNaN(numSize) ? 0 : numSize;
+      }
+      return size || 0;
+    }).filter(size => size > 0);
+
     if (lotSizes.length > 0) {
       const avgSize = lotSizes.reduce((a, b) => a + b, 0) / lotSizes.length;
       const variance = lotSizes.reduce((a, b) => a + Math.pow(b - avgSize, 2), 0) / lotSizes.length;
@@ -532,7 +540,14 @@ export class AIService {
     }
 
     // Analyze stop loss usage
-    const tradesWithSL = trades.filter(t => (t.stopLossPrice || 0) > 0);
+    const tradesWithSL = trades.filter(t => {
+      const sl = t.stopLossPrice;
+      if (typeof sl === 'string') {
+        const numSl = parseFloat(sl);
+        return !isNaN(numSl) && numSl > 0;
+      }
+      return (sl || 0) > 0;
+    });
     const slUsage = tradesWithSL.length / trades.length;
 
     if (slUsage < 0.7) {
@@ -821,7 +836,7 @@ You're doing ${winRate > 60 ? 'excellent' : winRate > 45 ? 'well' : 'okay'} - fo
   }
 
   private generateMistakesResponse(analysis: MLTradeAnalysis, trades: Trade[], hasAISuggestions: boolean): string {
-    const mistakes = analysis.insights.filter(i => i.impact === 'negative' || i.priority === 'high');
+    const mistakes = analysis.insights.filter(i => i.priority === 'high');
 
     let response = `🔍 **AI Mistake Analysis:**
 
@@ -1186,7 +1201,16 @@ What specific aspect of your trading would you like to explore? I'm here to help
     };
 
     trades.forEach(trade => {
-      const size = trade.lotSize || 0;
+      const rawSize = trade.lotSize;
+      let size = 0;
+
+      if (typeof rawSize === 'string') {
+        const numSize = parseFloat(rawSize);
+        size = isNaN(numSize) ? 0 : numSize;
+      } else if (typeof rawSize === 'number') {
+        size = rawSize;
+      }
+
       let group = 'Small (0-0.01)';
 
       if (size >= 0.1) group = 'Large (0.1+)';

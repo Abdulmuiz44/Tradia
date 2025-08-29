@@ -20,6 +20,50 @@ interface ConnectionStatusProps {
   onStatusChange?: (connected: boolean) => void;
 }
 
+export function useConnectionStatus(credentials: MT5Credentials) {
+  const [status, setStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking');
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const checkConnection = async () => {
+    setStatus('checking');
+    setError(null);
+
+    try {
+      const result = await mt5Integration.testConnection(credentials);
+
+      if (result.success) {
+        setStatus('connected');
+        setLastChecked(new Date());
+      } else {
+        setStatus('error');
+        setError(result.error || 'Connection failed');
+      }
+    } catch (err) {
+      setStatus('error');
+      setError(err instanceof Error ? err.message : 'Connection test failed');
+    }
+  };
+
+  useEffect(() => {
+    checkConnection();
+
+    // Set up periodic checks every 5 minutes
+    const interval = setInterval(() => {
+      checkConnection();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [credentials]);
+
+  return {
+    status,
+    lastChecked,
+    error,
+    checkConnection
+  };
+}
+
 export default function ConnectionStatusComponent({
   credentials,
   showDetails = false,

@@ -106,7 +106,7 @@ export default function MT5SyncPage() {
       { name: "Saving to Database", description: "Storing trades securely", weight: 10 }
     ];
 
-    let syncId: string;
+    let syncId: string | null = null;
 
     try {
       // Start progress tracking
@@ -408,6 +408,7 @@ export default function MT5SyncPage() {
                     server: selectedAccount.server,
                     login: selectedAccount.login,
                     investorPassword: "", // We don't store passwords in the frontend
+                    password: "", // We don't store passwords in the frontend
                     name: selectedAccount.name
                   }}
                   showDetails={true}

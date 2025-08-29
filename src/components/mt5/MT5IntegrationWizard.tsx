@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { mt5Integration, MT5Credentials, MT5ConnectionResult, MT5SyncResult } from "@/lib/mt5-integration";
 import SyncProgressComponent from "./SyncProgress";
-import { MonitoringWidget } from "./MonitoringWidget";
+import MonitoringWidget from "./MonitoringWidget";
 import RequirementsGuide from "./RequirementsGuide";
 import {
   CheckCircle,
@@ -228,7 +228,7 @@ export default function MT5IntegrationWizard({
           {/* Add Account Button */}
           <button
             onClick={() => setShowConnectForm(true)}
-            disabled={accountLimits && !accountLimits.canAdd}
+            disabled={accountLimits ? !accountLimits.canAdd : false}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />

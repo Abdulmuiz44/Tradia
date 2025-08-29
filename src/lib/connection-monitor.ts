@@ -350,6 +350,7 @@ export class ConnectionMonitor {
       });
 
     // Notify listeners
+    const config = this.monitoringConfigs.get(userId);
     if (config?.enableRealTimeUpdates) {
       this.notifyListeners(userId, newHealth);
     }

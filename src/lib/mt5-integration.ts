@@ -76,7 +76,7 @@ export class MT5IntegrationService {
       title: "Server Address",
       description: "Valid broker server address (e.g., ICMarketsSC-MT5)",
       required: true,
-      validator: (value: string) => value && value.trim().length > 0,
+      validator: (value: string) => Boolean(value && value.trim().length > 0),
       errorMessage: "Please enter a valid server address"
     },
     {
@@ -90,7 +90,7 @@ export class MT5IntegrationService {
       title: "Password",
       description: "Your MT5 account password (investor or master)",
       required: true,
-      validator: (value: string) => value && value.length >= 4,
+      validator: (value: string) => Boolean(value && value.length >= 4),
       errorMessage: "Please enter a valid password (minimum 4 characters)"
     },
     {
