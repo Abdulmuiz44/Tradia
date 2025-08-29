@@ -3,9 +3,10 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useTrade } from "@/context/TradeContext";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Trash2,
@@ -250,29 +251,29 @@ export default function TradeJournal(): React.ReactElement {
      --------------------------- */
 
   const summary = useMemo(() => {
-  const plValues = tradesTyped.map((t: Trade) => parsePL(t.pnl));
+    const plValues = tradesTyped.map((t: Trade) => parsePL(t.pnl));
     const total = plValues.length;
-  const win = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").length;
-  const loss = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
-  const breakeven = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "breakeven").length;
-  const netPL = plValues.reduce((s: number, v: number) => s + v, 0);
-  const avgPL = total ? netPL / total : 0;
-  const winRate = total ? (win / total) * 100 : 0;
-  const winsArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").map((t: Trade) => parsePL(t.pnl));
-  const lossesArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").map((t: Trade) => parsePL(t.pnl));
-  const avgWin = winsArr.length ? winsArr.reduce((s: number, v: number) => s + v, 0) / winsArr.length : 0;
-  const avgLoss = lossesArr.length ? lossesArr.reduce((s: number, v: number) => s + v, 0) / lossesArr.length : 0;
-  const expectancy = (winRate / 100) * avgWin - ((lossesArr.length / (total || 1)) * Math.abs(avgLoss));
-  const variance = total ? plValues.reduce((sum: number, v: number) => sum + Math.pow(v - avgPL, 2), 0) / total : 0;
+    const win = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").length;
+    const loss = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
+    const breakeven = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "breakeven").length;
+    const netPL = plValues.reduce((s: number, v: number) => s + v, 0);
+    const avgPL = total ? netPL / total : 0;
+    const winRate = total ? (win / total) * 100 : 0;
+    const winsArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").map((t: Trade) => parsePL(t.pnl));
+    const lossesArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").map((t: Trade) => parsePL(t.pnl));
+    const avgWin = winsArr.length ? winsArr.reduce((s: number, v: number) => s + v, 0) / winsArr.length : 0;
+    const avgLoss = lossesArr.length ? lossesArr.reduce((s: number, v: number) => s + v, 0) / lossesArr.length : 0;
+    const expectancy = (winRate / 100) * avgWin - ((lossesArr.length / (total || 1)) * Math.abs(avgLoss));
+    const variance = total ? plValues.reduce((sum: number, v: number) => sum + Math.pow(v - avgPL, 2), 0) / total : 0;
     const stdev = Math.sqrt(variance);
-  const consistentCount = plValues.filter((v: number) => Math.abs(v - avgPL) <= stdev).length;
+    const consistentCount = plValues.filter((v: number) => Math.abs(v - avgPL) <= stdev).length;
     const consistency = total ? (consistentCount / total) * 100 : 0;
 
     // sharpe-like ratio (no risk-free)
     const sharpe = stdev ? (avgPL / stdev) : 0;
 
     // average trade length
-  const lengths = tradesTyped.map((t: Trade) => {
+    const lengths = tradesTyped.map((t: Trade) => {
       try {
         const o = new Date(t.openTime as any).getTime();
         const c = new Date(t.closeTime as any).getTime();
@@ -280,7 +281,7 @@ export default function TradeJournal(): React.ReactElement {
         return Math.max(0, (c - o) / (1000 * 60)); // minutes
       } catch { return 0; }
     });
-  const avgLengthMin = lengths.length ? lengths.reduce((s: number, v: number) => s + v, 0) / lengths.length : 0;
+    const avgLengthMin = lengths.length ? lengths.reduce((s: number, v: number) => s + v, 0) / lengths.length : 0;
 
     return { total, win, loss, breakeven, netPL, avgPL, winRate, consistency, expectancy, avgWin, avgLoss, stdev, sharpe, avgLengthMin };
   }, [trades]);
@@ -715,7 +716,7 @@ export default function TradeJournal(): React.ReactElement {
   /* ---------------------------
      Row component
      --------------------------- */
-  function Row({ t }: { t: Trade }) {
+  function Row({ t, key, ...props }: { t: Trade; key?: string | number | bigint; [key: string]: any }) {
     const id = getTradeId(t);
     const patch = rowEdits[id] || {};
     const pending = !!savingMap[id];
@@ -851,7 +852,7 @@ export default function TradeJournal(): React.ReactElement {
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e)=> { if (e.target.files) setAttachments(prev => ({...prev, [id]: [...(prev[id]||[]), ...Array.from(e.target.files!)] })); }} multiple />
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e)=> { if (e.target.files && e.target.files.length > 0) setAttachments(prev => ({...prev, [id]: [...(prev[id]||[]), ...Array.from(e.target.files as FileList)] })); }} multiple />
           <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-300 hover:text-white" onClick={()=> fileRef.current?.click()} title="Attach image"><ImageIcon className="h-4 w-4" /></Button>
           {attachments[id]?.length ? <span className="text-[10px] text-zinc-400">{attachments[id]!.length} file(s)</span> : null}
 
@@ -1068,6 +1069,57 @@ export default function TradeJournal(): React.ReactElement {
         </div>
       )}
 
+      {/* Strategy Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="rounded-2xl shadow-md border bg-white dark:bg-[#0b1220] dark:border-[#202830]">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="w-5 h-5 text-blue-500" />
+              <h3 className="font-semibold text-sm">Top Strategy</h3>
+            </div>
+            <p className="text-2xl font-bold text-blue-600">
+              {patterns.stratMap && Object.keys(patterns.stratMap).length > 0
+                ? Object.entries(patterns.stratMap).reduce((best, [name, data]) =>
+                    data.netPL > (best?.data?.netPL || 0) ? { name, data } : best,
+                    { name: 'None', data: { netPL: 0 } }
+                  ).name
+                : 'No Data'
+              }
+            </p>
+            <p className="text-xs text-muted-foreground">Highest performing strategy</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-md border bg-white dark:bg-[#0b1220] dark:border-[#202830]">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-5 h-5 text-green-500" />
+              <h3 className="font-semibold text-sm">Strategy Win Rate</h3>
+            </div>
+            <p className="text-2xl font-bold text-green-600">
+              {patterns.stratMap && Object.keys(patterns.stratMap).length > 0
+                ? (Object.values(patterns.stratMap).reduce((sum, data) => sum + (data.wins / Math.max(1, data.trades)) * 100, 0) / Object.keys(patterns.stratMap).length).toFixed(1)
+                : '0.0'
+              }%
+            </p>
+            <p className="text-xs text-muted-foreground">Average across all strategies</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-md border bg-white dark:bg-[#0b1220] dark:border-[#202830]">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart2 className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold text-sm">Active Strategies</h3>
+            </div>
+            <p className="text-2xl font-bold text-purple-600">
+              {patterns.stratMap ? Object.keys(patterns.stratMap).length : 0}
+            </p>
+            <p className="text-xs text-muted-foreground">Different strategies used</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Top toolbar */}
       {Toolbar}
 
@@ -1145,9 +1197,60 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Patterns */}
       {subTab === "patterns" && (
-        <Card className="rounded-2xl shadow-md border bg-white dark:bg-[#0b1220] dark:border-[#202830]">
-          <CardContent className="p-5 space-y-6">
-            <div className="grid md:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          {/* Strategy Performance Overview */}
+          <Card className="rounded-2xl shadow-md border bg-white dark:bg-[#0b1220] dark:border-[#202830]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Strategy Performance Analysis
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Detailed breakdown of your trading strategies and their effectiveness
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {patterns.stratMap && Object.entries(patterns.stratMap).map(([strategy, data]) => (
+                  <div key={strategy} className="p-4 bg-muted/50 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm">{strategy}</h4>
+                      <Badge variant={data.netPL >= 0 ? "default" : "destructive"}>
+                        {data.netPL >= 0 ? "Profit" : "Loss"}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Trades:</span>
+                        <span className="font-medium">{data.trades}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Win Rate:</span>
+                        <span className="font-medium">{data.trades > 0 ? ((data.wins / data.trades) * 100).toFixed(1) : 0}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>P&L:</span>
+                        <span className={`font-medium ${data.netPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${data.netPL.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(!patterns.stratMap || Object.keys(patterns.stratMap).length === 0) && (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No strategy data available</p>
+                    <p className="text-sm">Start tagging your trades with strategies to see performance analysis</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl shadow-md border bg-white dark:bg-[#0b1220] dark:border-[#202830]">
+            <CardContent className="p-5 space-y-6">
+              <div className="grid md:grid-cols-3 gap-6">
               <div>
                 <h4 className="text-sm font-semibold text-white mb-2">Top Symbols</h4>
                 <div className="space-y-2">
@@ -1219,6 +1322,7 @@ export default function TradeJournal(): React.ReactElement {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Forecast */}
@@ -1413,7 +1517,7 @@ function HeuristicForecast({ trades, summary }: { trades: Trade[]; summary: any 
       <div className="text-3xl font-semibold text-white my-3">{p}%</div>
       <div className="text-xs text-zinc-400">Recent WR {(recentWinRate*100).toFixed(1)}% • streak {streak} • expectancy {summary.expectancy.toFixed(2)}</div>
       <div className="mt-4 flex gap-2">
-        <Button variant="secondary" onClick={()=> navigator.clipboard.writeText(`${p}% — Recent WR ${(recentWinRate*100).toFixed(1)}%`) }>Copy</Button>
+        <Button variant="secondary" onClick={()=> navigator.clipboard.writeText(`${p}% — Recent WR ${(recentWinRate*100).toFixed(1)}%`)}>Copy</Button>
         <Button variant="ghost" onClick={()=> alert("Heuristic forecast: uses recent WR, streak, and expectancy. Replace with a trained model for production.")}>Why this?</Button>
       </div>
     </div>

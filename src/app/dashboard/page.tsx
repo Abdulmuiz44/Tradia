@@ -28,12 +28,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-// Lazy-loaded charts
-const ProfitLossChart = dynamic(() => import("@/components/charts/ProfitLossChart"), { ssr: false });
-const PerformanceTimeline = dynamic(() => import("@/components/charts/PerformanceTimeline"), { ssr: false });
-const TradeBehavioralChart = dynamic(() => import("@/components/charts/TradeBehavioralChart"), { ssr: false });
-const DrawdownChart = dynamic(() => import("@/components/charts/DrawdownChart"), { ssr: false });
-const TradePatternChart = dynamic(() => import("@/components/charts/TradePatternChart"), { ssr: false });
+// Advanced Analytics Component
+const TradeAnalytics = dynamic(() => import("@/components/dashboard/TradeAnalytics"), { ssr: false });
 
 // Planner
 import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
@@ -664,13 +660,7 @@ function DashboardContent() {
                 )}
 
                 {activeTab === "analytics" && (
-                  <div className="grid gap-6">
-                    <ProfitLossChartAny trades={filteredTrades} />
-                    <DrawdownChartAny trades={filteredTrades} />
-                    <PerformanceTimelineAny trades={filteredTrades} />
-                    <TradeBehavioralChartAny trades={filteredTrades} />
-                    <TradePatternChartAny trades={filteredTrades} />
-                  </div>
+                  <TradeAnalytics />
                 )}
 
                 {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}

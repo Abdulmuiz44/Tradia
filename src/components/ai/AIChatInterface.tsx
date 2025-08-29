@@ -120,11 +120,23 @@ interface AIChatInterfaceProps {
 
 export default function AIChatInterface({ className = "" }: AIChatInterfaceProps) {
   const { trades } = useContext(TradeContext);
+  const [userTier, setUserTier] = useState<'free' | 'pro' | 'plus' | 'elite'>('free');
+
+  // Get user subscription tier
+  useEffect(() => {
+    // In a real app, this would come from your auth/user context
+    // For now, we'll simulate based on localStorage or a prop
+    const tier = localStorage.getItem('user_tier') || 'free';
+    setUserTier(tier as any);
+  }, []);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'assistant',
-      content: "🎯 Hey there, fellow trader! I'm Tradia AI, your personal trading coach and AI mentor. I'm here to help you crush your trading goals, analyze your performance, and become the best version of yourself in the markets. Whether you need strategy advice, emotional support, or just someone to celebrate your wins with - I'm your guy! What's on your trading mind today?",
+      content: userTier === 'free'
+        ? "🎯 Hey there, fellow trader! I'm Tradia AI, your personal trading coach. I can help analyze your recent trades and give basic advice. Upgrade to PRO for advanced analytics, image analysis, and personalized strategies!"
+        : "🎯 Hey there, fellow trader! I'm Tradia AI, your personal trading coach and AI mentor. I'm here to help you crush your trading goals, analyze your performance, and become the best version of yourself in the markets. Whether you need strategy advice, emotional support, or just someone to celebrate your wins with - I'm your guy! What's on your trading mind today?",
       timestamp: new Date(),
     }
   ]);
@@ -263,12 +275,19 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       }));
 
       // Generate intelligent coaching response with trade analysis
-      const coachingResponse = generateIntelligentCoachingResponse(inputMessage, trades, uploadedFiles);
+      const coachingResponse = generateIntelligentCoachingResponse(inputMessage, trades, uploadedFiles, userTier);
+
+      // Add PRO analytics summary for PRO+ users
+      let finalResponse = coachingResponse;
+      if (userTier !== 'free' && (inputMessage.toLowerCase().includes('analytics') || inputMessage.toLowerCase().includes('performance'))) {
+        const analyticsSummary = generateProAnalyticsSummary(trades);
+        finalResponse += '\n\n' + analyticsSummary;
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: coachingResponse,
+        content: finalResponse,
         timestamp: new Date(),
       };
 
@@ -276,7 +295,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
       // Auto-speak response if enabled
       if (voiceSettings.autoSpeak && voiceSettings.voiceEnabled) {
-        setTimeout(() => speakText(coachingResponse), 500);
+        setTimeout(() => speakText(finalResponse), 500);
       }
 
     } catch (error) {
@@ -329,6 +348,23 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             AI Active
           </div>
+
+          {/* Subscription Tier Indicator */}
+          <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${
+            userTier === 'free' ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
+            userTier === 'pro' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
+            userTier === 'plus' ? 'bg-purple-900/30 text-purple-400 border-purple-700/50' :
+            'bg-yellow-900/30 text-yellow-400 border-yellow-700/50'
+          }`}>
+            <Crown className={`w-3 h-3 ${
+              userTier === 'free' ? 'text-gray-400' :
+              userTier === 'pro' ? 'text-blue-400' :
+              userTier === 'plus' ? 'text-purple-400' :
+              'text-yellow-400'
+            }`} />
+            {userTier.toUpperCase()}
+          </div>
+
           <button
             onClick={() => setShowVoiceSettings(!showVoiceSettings)}
             className="p-1.5 md:p-2 hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
@@ -552,11 +588,31 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 {isRecording ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 md:p-3 bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 hover:from-blue-600 hover:to-blue-700 hover:text-white rounded-full transition-all touch-manipulation active:scale-95 shadow-lg"
-                title="Upload trade screenshot or analysis"
+                onClick={() => {
+                  if (userTier === 'free') {
+                    setMessages(prev => [...prev, {
+                      id: Date.now().toString(),
+                      type: 'assistant',
+                      content: "🔒 **PRO Feature**: Image analysis is available for PRO subscribers and above! Upgrade to unlock advanced chart analysis, screenshot reviews, and visual trade insights. 🎯",
+                      timestamp: new Date(),
+                    }]);
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
+                className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation active:scale-95 shadow-lg ${
+                  userTier === 'free'
+                    ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 hover:from-blue-600 hover:to-blue-700 hover:text-white'
+                }`}
+                title={userTier === 'free' ? 'PRO Feature: Upgrade to analyze images' : 'Upload trade screenshot or analysis'}
+                disabled={userTier === 'free'}
               >
-                <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+                {userTier === 'free' ? (
+                  <Lock className="w-4 h-4 md:w-5 md:h-5" />
+                ) : (
+                  <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+                )}
               </button>
             </div>
 
@@ -607,7 +663,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 }
 
 // Intelligent Coaching Response Generator - Advanced AI Analysis with Trading Recommendations
-function generateIntelligentCoachingResponse(userMessage: string, trades: any[], uploadedFiles: File[]): string {
+function generateIntelligentCoachingResponse(userMessage: string, trades: any[], uploadedFiles: File[], userTier: string = 'free'): string {
   const lowerMessage = userMessage.toLowerCase();
 
   // Analyze user's trading performance for personalized insights
@@ -677,4 +733,79 @@ function getRandomTimeframe(): string {
 function getRandomMarketCondition(): string {
   const conditions = ['high volatility', 'low volatility', 'trending', 'ranging', 'news-driven'];
   return conditions[Math.floor(Math.random() * conditions.length)];
+}
+
+// PRO Analytics Summary Generator
+function generateProAnalyticsSummary(trades: any[]): string {
+  if (!trades || trades.length === 0) {
+    return "📊 **PRO Analytics**: No trades to analyze yet. Start trading to unlock deep insights!";
+  }
+
+  // Calculate advanced metrics
+  const totalTrades = trades.length;
+  const winningTrades = trades.filter(t => (t.outcome || '').toLowerCase() === 'win').length;
+  const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+
+  const totalPnL = trades.reduce((sum, t) => sum + (parseFloat(String(t.pnl || 0))), 0);
+  const avgTrade = totalTrades > 0 ? totalPnL / totalTrades : 0;
+
+  // Risk metrics
+  const winningPnL = trades
+    .filter(t => (t.outcome || '').toLowerCase() === 'win')
+    .reduce((sum, t) => sum + (parseFloat(String(t.pnl || 0))), 0);
+
+  const losingPnL = trades
+    .filter(t => (t.outcome || '').toLowerCase() === 'loss')
+    .reduce((sum, t) => sum + Math.abs(parseFloat(String(t.pnl || 0))), 0);
+
+  const profitFactor = losingPnL > 0 ? winningPnL / losingPnL : winningPnL > 0 ? Infinity : 0;
+
+  // Sharpe-like ratio
+  const returns = trades.map(t => parseFloat(String(t.pnl || 0)));
+  const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length || 0;
+  const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length || 0;
+  const volatility = Math.sqrt(variance);
+  const sharpeRatio = volatility > 0 ? avgReturn / volatility : 0;
+
+  // Strategy performance
+  const strategies = [...new Set(trades.map(t => t.strategy || 'Unknown'))];
+  const bestStrategy = strategies.reduce((best, strategy) => {
+    const strategyTrades = trades.filter(t => t.strategy === strategy);
+    const strategyPnL = strategyTrades.reduce((sum, t) => sum + (parseFloat(String(t.pnl || 0))), 0);
+    return strategyPnL > (best.pnl || 0) ? { name: strategy, pnl: strategyPnL } : best;
+  }, { name: 'None', pnl: 0 });
+
+  // Time-based analysis
+  const recentTrades = trades.slice(-10);
+  const recentWinRate = recentTrades.length > 0 ?
+    (recentTrades.filter(t => (t.outcome || '').toLowerCase() === 'win').length / recentTrades.length) * 100 : 0;
+
+  return `
+🎯 **PRO Analytics Deep Dive**:
+
+**Performance Metrics:**
+• Win Rate: ${winRate.toFixed(1)}%
+• Total P&L: $${totalPnL.toFixed(2)}
+• Average Trade: $${avgTrade.toFixed(2)}
+• Profit Factor: ${profitFactor === Infinity ? '∞' : profitFactor.toFixed(2)}
+
+**Risk Analysis:**
+• Sharpe Ratio: ${sharpeRatio.toFixed(2)}
+• Volatility: $${volatility.toFixed(2)}
+• Best Strategy: ${bestStrategy.name} ($${bestStrategy.pnl.toFixed(2)})
+
+**Recent Performance:**
+• Last 10 Trades Win Rate: ${recentWinRate.toFixed(1)}%
+• Momentum: ${recentWinRate > winRate ? '🔥 Improving' : recentWinRate < winRate ? '⚠️ Declining' : '➡️ Stable'}
+
+**AI Insights:**
+${winRate > 60 ? '• Excellent consistency! Keep up the great work.' : winRate > 50 ? '• Good performance, focus on consistency.' : '• Room for improvement in trade selection.'}
+${sharpeRatio > 1 ? '• Strong risk-adjusted returns.' : '• Consider improving risk management.'}
+${profitFactor > 1.5 ? '• Excellent profit capture.' : '• Focus on cutting losses and letting profits run.'}
+
+**Recommendations:**
+${winRate < 50 ? '• Review your entry criteria and market timing.' : ''}
+${volatility > Math.abs(avgReturn) * 2 ? '• High volatility detected - consider position sizing.' : ''}
+${bestStrategy.name !== 'Unknown' ? `• Your strongest strategy is "${bestStrategy.name}" - focus on this.` : '• Consider developing specific trading strategies.'}
+`;
 }

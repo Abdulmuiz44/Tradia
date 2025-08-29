@@ -48,8 +48,28 @@ export default function RiskMetrics() {
     let balance = 0;
     return trades.map((t) => {
       balance += t.pnl;
+
+      // Safely handle date formatting with fallbacks
+      let dateToFormat: Date;
+      const closeTime = t.closeTime;
+      const openTime = t.openTime;
+
+      if (closeTime && closeTime.trim() !== '') {
+        dateToFormat = new Date(closeTime);
+      } else if (openTime && openTime.trim() !== '') {
+        dateToFormat = new Date(openTime);
+      } else {
+        // Fallback to current date if both are invalid
+        dateToFormat = new Date();
+      }
+
+      // Check if the date is valid
+      if (isNaN(dateToFormat.getTime())) {
+        dateToFormat = new Date(); // Use current date as fallback
+      }
+
       return {
-        date: format(new Date(t.closeTime || t.openTime), "dd/MM/yyyy"),
+        date: format(dateToFormat, "dd/MM/yyyy"),
         equity: Number(balance.toFixed(2)),
       };
     });
