@@ -41,10 +41,17 @@ import { TradePlanProvider } from "@/context/TradePlanContext";
 // Pricing Component
 import PricingPlans from "@/components/payment/PricingPlans";
 
+// MT5 Components
+import MT5IntegrationWizard from "@/components/mt5/MT5IntegrationWizard";
+
+// AI Chat Interface
+import AIChatInterface from "@/components/ai/AIChatInterface";
+
 // Tabs
 const TAB_DEFS = [
   { value: "overview", label: "Overview" },
   { value: "history", label: "Trade History" },
+  { value: "mt5", label: "MT5 Integration" },
   { value: "journal", label: "Trade Journal" },
   { value: "insights", label: "AI Insights" },
   { value: "analytics", label: "Trade Analytics" },
@@ -419,6 +426,7 @@ function DashboardContent() {
           </div>
 
           <div className="flex items-center gap-2">
+
             {/* Filter */}
             <DropdownMenu>
               <DropdownMenuTrigger className="p-2 rounded-full bg-transparent hover:bg-zinc-600" title="Filter trades">
@@ -561,9 +569,19 @@ function DashboardContent() {
 
               {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
 
+              {activeTab === "mt5" && (
+                <div className="max-w-4xl mx-auto">
+                  <MT5IntegrationWizard userId={session?.user?.id} />
+                </div>
+              )}
+
               {activeTab === "journal" && <TradeJournalAny />}
 
-              {activeTab === "insights" && <div className="text-center text-gray-300 py-20">AI Insights coming soon...</div>}
+              {activeTab === "insights" && (
+                <div className="h-[calc(100vh-200px)]">
+                  <AIChatInterface />
+                </div>
+              )}
 
               {activeTab === "analytics" && (
                 <div className="grid gap-6">
@@ -588,6 +606,7 @@ function DashboardContent() {
               {activeTab === "position-sizing" && <PositionSizingAny />}
 
               {activeTab === "education" && <TraderEducationAny />}
+
 
               {activeTab === "upgrade" && (
                 <div className="max-w-4xl mx-auto">

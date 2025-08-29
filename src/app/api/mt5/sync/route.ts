@@ -5,12 +5,14 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import { getMetaApi } from "@/lib/metaapi";
 import { mapMt5Deals } from "@/lib/mt5-map";
+import { syncProgressTracker } from "@/lib/sync-progress";
 import { z } from "zod";
 
 const bodySchema = z.object({
   mt5AccountId: z.string(),
   from: z.string().optional(),
   to: z.string().optional(),
+  syncId: z.string().optional(), // For progress tracking
 });
 
 function toDateOrNull(u: unknown): Date | null {
@@ -41,7 +43,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
-    const { mt5AccountId, from, to } = parsed.data;
+    const { mt5AccountId, from, to, syncId } = parsed.data;
 
     // fetch account and check ownership via Supabase
     const supabase = createClient();
@@ -63,6 +65,16 @@ export async function POST(req: Request) {
     if (!metaapiAccountId)
       return NextResponse.json({ error: "Account not connected to MetaApi" }, { status: 400 });
 
+  // Update progress: Connecting
+  if (syncId) {
+    await syncProgressTracker.updateProgress(syncId, {
+      currentStep: "Connecting to MT5",
+      currentStepIndex: 0,
+      message: "Establishing connection to MetaTrader 5...",
+      progress: 10
+    });
+  }
+
   // initialize MetaApi client (lazy import to avoid browser/global eval at module load)
   const metaApi = await getMetaApi();
   const mtAccountApi = metaApi.metatraderAccountApi;
@@ -70,15 +82,74 @@ export async function POST(req: Request) {
     const rpc = await account.getRPCConnection();
     if (!rpc.isConnected()) await rpc.connect();
 
+  // Update progress: Authenticating
+  if (syncId) {
+    await syncProgressTracker.updateProgress(syncId, {
+      currentStep: "Authenticating",
+      currentStepIndex: 1,
+      message: "Verifying account credentials...",
+      progress: 25
+    });
+  }
+
     const fromTs = from ? new Date(from) : new Date(Date.now() - 1000 * 60 * 60 * 24 * 90); // last 90 days
     const toTs = to ? new Date(to) : new Date();
 
+    // Update progress: Fetching Account Info
+    if (syncId) {
+      await syncProgressTracker.updateProgress(syncId, {
+        currentStep: "Fetching Account Info",
+        currentStepIndex: 2,
+        message: "Retrieving account information...",
+        progress: 35
+      });
+    }
+
     // get deals via RPC
     const dealsRaw = await rpc.getDealsByTimeRange(fromTs, toTs);
+
+    // Update progress: Analyzing Trade History
+    if (syncId) {
+      await syncProgressTracker.updateProgress(syncId, {
+        currentStep: "Analyzing Trade History",
+        currentStepIndex: 3,
+        message: "Scanning for new trades...",
+        progress: 45,
+        totalTrades: Array.isArray(dealsRaw) ? dealsRaw.length : 0
+      });
+    }
+
     const normalized = mapMt5Deals(Array.isArray(dealsRaw) ? dealsRaw : []);
 
+    // Update progress: Processing Data
+    if (syncId) {
+      await syncProgressTracker.updateProgress(syncId, {
+        currentStep: "Processing Data",
+        currentStepIndex: 4,
+        message: "Validating and formatting trades...",
+        progress: 60,
+        totalTrades: normalized.length
+      });
+    }
+
+
+    // Update progress: Saving to Database
+    if (syncId) {
+      await syncProgressTracker.updateProgress(syncId, {
+        currentStep: "Saving to Database",
+        currentStepIndex: 5,
+        message: "Storing trades securely...",
+        progress: 75,
+        totalTrades: normalized.length,
+        processedTrades: 0
+      });
+    }
 
     // upsert each trade via Supabase (no explicit transaction)
+    let processedCount = 0;
+    let newTrades = 0;
+    let updatedTrades = 0;
+
     for (const t of normalized) {
       const dealId =
         (t as Record<string, unknown>)["id"] ??
@@ -131,10 +202,42 @@ export async function POST(req: Request) {
         .upsert(row, { onConflict: ["mt5_account_id", "deal_id"] });
       if (upErr) {
         console.error("Failed to upsert mt5 trade:", upErr, row);
+      } else {
+        newTrades++; // Assume new if no error (simplified logic)
+      }
+
+      processedCount++;
+
+      // Update progress every 10 trades or at key milestones
+      if (syncId && (processedCount % 10 === 0 || processedCount === normalized.length)) {
+        const progressPercent = 75 + Math.floor((processedCount / normalized.length) * 20); // 75-95%
+        await syncProgressTracker.updateProgress(syncId, {
+          progress: Math.min(progressPercent, 95),
+          processedTrades: processedCount,
+          newTrades,
+          updatedTrades: processedCount - newTrades,
+          message: `Processing trade ${processedCount} of ${normalized.length}...`
+        });
       }
     }
 
-    return NextResponse.json({ imported: normalized.length });
+    // Complete progress tracking
+    if (syncId) {
+      await syncProgressTracker.completeSync(syncId, {
+        totalTrades: normalized.length,
+        newTrades,
+        updatedTrades: processedCount - newTrades,
+        skippedTrades: 0
+      });
+    }
+
+    return NextResponse.json({
+      imported: processedCount,
+      totalTrades: normalized.length,
+      newTrades,
+      updatedTrades: processedCount - newTrades,
+      syncId
+    });
   } catch (err: unknown) {
     console.error("mt5 sync error:", err);
     const msg = err instanceof Error ? err.message : String(err);

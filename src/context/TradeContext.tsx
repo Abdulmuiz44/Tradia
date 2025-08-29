@@ -313,14 +313,42 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     setFilteredTrades(filtered);
   };
 
-  // --- Refresh (fetch persisted trades) ---
+  // --- Refresh (fetch persisted trades from database) ---
   const refreshTrades = async () => {
     try {
       const res = await fetch("/api/trades", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load trades");
       const data = await res.json();
       const rows = Array.isArray(data?.trades) ? data.trades : [];
-      setTradesFromCsv(rows);
+
+      // Convert database format to Trade format
+      const normalizedTrades = rows.map((row: any) => ({
+        id: row.id,
+        symbol: row.symbol,
+        direction: row.direction,
+        orderType: row.order_type,
+        openTime: row.open_time,
+        closeTime: row.close_time,
+        session: row.session,
+        lotSize: row.lot_size,
+        entryPrice: row.entry_price,
+        exitPrice: row.exit_price,
+        stopLossPrice: row.stop_loss_price,
+        takeProfitPrice: row.take_profit_price,
+        pnl: row.pnl,
+        outcome: row.outcome,
+        resultRR: row.result_rr,
+        duration: row.duration,
+        reasonForTrade: row.reason_for_trade,
+        emotion: row.emotion,
+        journalNotes: row.journal_notes,
+        commission: row.commission,
+        swap: row.swap,
+        source: row.source,
+        updated_at: row.updated_at
+      }));
+
+      setTradesFromCsv(normalizedTrades);
     } catch (err: unknown) {
       // console error but don't crash
       // eslint-disable-next-line no-console

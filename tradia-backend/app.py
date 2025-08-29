@@ -1,21 +1,39 @@
 # tradia-backend/app.py
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Any, Dict
 import datetime
 import importlib
 import logging
 import os
+import re
 
 logging.basicConfig(level=logging.INFO)
-app = FastAPI(title="Tradia MT5 Sync (safe import)")
+app = FastAPI(title="Tradia MT5 Sync (safe import)", version="2.0.0")
 
 class SyncRequest(BaseModel):
-    login: int = Field(..., description="MT account login (integer)")
-    password: str = Field(..., description="MT account password")
-    server: str = Field(..., description="Broker server name (string)")
+    login: int = Field(..., description="MT account login (integer)", ge=10000, le=999999999)
+    password: str = Field(..., description="MT account password", min_length=4)
+    server: str = Field(..., description="Broker server name (string)", min_length=3)
     from_ts: Optional[str] = Field(None, description="ISO date string (inclusive)")
     to_ts: Optional[str] = Field(None, description="ISO date string (inclusive)")
+
+    @field_validator('server')
+    @classmethod
+    def validate_server(cls, v):
+        if not re.match(r'^[a-zA-Z0-9_-]+(-MT5|-Live|Live|MT5)?$', v):
+            raise ValueError('Invalid server format. Expected format: BrokerName-MT5 or BrokerName-Live')
+        return v
+
+    @field_validator('from_ts', 'to_ts')
+    @classmethod
+    def validate_date(cls, v):
+        if v is not None:
+            try:
+                datetime.datetime.fromisoformat(v.replace('Z', '+00:00'))
+            except ValueError:
+                raise ValueError('Invalid ISO date format')
+        return v
 
 def get_mt5_module():
     """
@@ -74,6 +92,177 @@ def namedtuple_to_dict(nt) -> Dict[str, Any]:
         except Exception:
             continue
     return out
+
+def validate_mt5_requirements() -> Dict[str, Any]:
+    """Check if MT5 environment is properly configured"""
+    requirements = {
+        "mt5_installed": False,
+        "mt5_running": False,
+        "api_accessible": False,
+        "network_connection": True,  # Assume true, will be checked by connection
+        "errors": [],
+        "warnings": []
+    }
+
+    try:
+        mt5 = get_mt5_module()
+        requirements["mt5_installed"] = True
+
+        # Try to initialize MT5
+        if mt5.initialize():
+            requirements["mt5_running"] = True
+            requirements["api_accessible"] = True
+            mt5.shutdown()  # Clean up
+        else:
+            requirements["errors"].append("MT5 terminal not running or not accessible")
+
+    except RuntimeError as e:
+        requirements["errors"].append(f"MT5 not available: {str(e)}")
+    except Exception as e:
+        requirements["errors"].append(f"Unexpected error: {str(e)}")
+
+    return requirements
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "version": "2.0.0"
+    }
+
+@app.get("/requirements")
+async def check_requirements():
+    """Check MT5 environment requirements"""
+    try:
+        requirements = validate_mt5_requirements()
+        return {
+            "success": True,
+            "requirements": requirements,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+    except Exception as e:
+        logging.exception("Requirements check error")
+        return {
+            "success": False,
+            "error": str(e),
+            "requirements": None
+        }
+
+class ValidateRequest(BaseModel):
+    login: int = Field(..., description="MT account login (integer)")
+    password: str = Field(..., description="MT account password")
+    server: str = Field(..., description="Broker server name (string)")
+
+@app.post("/validate_mt5")
+async def validate_mt5(body: ValidateRequest):
+    """
+    POST /validate_mt5
+    Body: { login, password, server }
+    Returns: { success: True, account_info: {...} } or error details
+    """
+    try:
+        # Import & initialize MT5 at runtime (will raise RuntimeError if import fails)
+        mt5 = ensure_mt5_initialized()
+
+        # Attempt login with timeout
+        ok = False
+        login_error = None
+
+        try:
+            ok = mt5.login(int(body.login), password=body.password, server=body.server)
+        except TypeError as te:
+            # Some MT5 builds accept different signature; try best-effort
+            try:
+                ok = mt5.login(int(body.login))
+            except Exception as e2:
+                login_error = f"Login signature error: {e2}"
+        except Exception as le:
+            login_error = str(le)
+
+        if not ok:
+            # Get detailed error information
+            mt5_error = mt5.last_error() if hasattr(mt5, "last_error") else None
+            error_msg = login_error or (mt5_error if mt5_error else "Login failed")
+
+            # Categorize the error
+            if "wrong password" in error_msg.lower() or "invalid password" in error_msg.lower():
+                error_type = "INVALID_CREDENTIALS"
+            elif "server" in error_msg.lower() or "connection" in error_msg.lower():
+                error_type = "SERVER_UNREACHABLE"
+            elif "terminal" in error_msg.lower() or "not found" in error_msg.lower():
+                error_type = "TERMINAL_NOT_FOUND"
+            else:
+                error_type = "LOGIN_FAILED"
+
+            # Cleanup before returning error
+            try:
+                mt5.shutdown()
+            except Exception:
+                pass
+
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": error_type,
+                    "message": error_msg,
+                    "details": {
+                        "login": body.login,
+                        "server": body.server,
+                        "mt5_error": mt5_error
+                    }
+                }
+            )
+
+        # Login successful, get account info
+        account_info = {}
+        try:
+            ai = mt5.account_info()
+            if ai is not None:
+                account_info = namedtuple_to_dict(ai)
+                logging.info(f"Account info retrieved for login {body.login}: balance={account_info.get('balance', 'N/A')}")
+            else:
+                logging.warning(f"No account info available for login {body.login}")
+        except Exception as e:
+            logging.warning("Could not fetch account_info: %s", e)
+            # Don't fail validation if we can't get account info, just log it
+
+        # Cleanup - logout to free resources
+        try:
+            mt5.shutdown()
+        except Exception:
+            pass
+
+        return {
+            "success": True,
+            "account_info": account_info,
+            "message": "MT5 connection validated successfully"
+        }
+
+    except HTTPException as he:
+        raise he
+    except RuntimeError as re:
+        logging.exception("MT5 runtime error during validation")
+        error_type = "TERMINAL_NOT_FOUND" if "import" in str(re).lower() else "UNKNOWN_ERROR"
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": error_type,
+                "message": str(re),
+                "details": {"stage": "initialization"}
+            }
+        )
+    except Exception as e:
+        logging.exception("MT5 validation error")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "UNKNOWN_ERROR",
+                "message": str(e),
+                "details": {"stage": "validation"}
+            }
+        )
 
 @app.post("/sync_mt5")
 async def sync_mt5(body: SyncRequest):
