@@ -6,6 +6,8 @@ import { mt5Integration, MT5Credentials, MT5ConnectionResult, MT5SyncResult } fr
 import SyncProgressComponent from "./SyncProgress";
 import { default as MonitoringWidget } from "./MonitoringWidget";
 import RequirementsGuide from "./RequirementsGuide";
+import { getUserPlan, canAccessMT5, getMT5AccountLimit, PlanType } from "@/lib/planAccess";
+import UpgradePrompt, { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import {
   CheckCircle,
   AlertCircle,
@@ -22,7 +24,8 @@ import {
   Activity,
   BarChart2,
   Info,
-  Shield
+  Shield,
+  Crown
 } from "lucide-react";
 
 interface MT5Account {
@@ -56,13 +59,34 @@ export default function MT5IntegrationWizard({
   const [showRequirements, setShowRequirements] = useState(false);
   const [accountLimits, setAccountLimits] = useState<{ canAdd: boolean; currentCount: number; limit: number; plan: any } | null>(null);
 
-  // Load user's MT5 accounts and limits
+  // Plan-related state
+  const [userPlan, setUserPlan] = useState<PlanType | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  // Load user's MT5 accounts, limits, and plan
   useEffect(() => {
     if (userId) {
+      loadUserPlan();
       loadAccounts();
       loadAccountLimits();
     }
   }, [userId]);
+
+  const loadUserPlan = async () => {
+    if (!userId) return;
+
+    try {
+      setPlanLoading(true);
+      const plan = await getUserPlan(userId);
+      setUserPlan(plan.type);
+    } catch (err) {
+      console.error('Failed to load user plan:', err);
+      setUserPlan('free'); // Default to free if error
+    } finally {
+      setPlanLoading(false);
+    }
+  };
 
   const loadAccountLimits = async () => {
     if (!userId) return;
@@ -162,7 +186,44 @@ export default function MT5IntegrationWizard({
 
   // Compact view
   if (compact) {
+    // Show loading state while checking plan
+    if (planLoading) {
+      return (
+        <div className={`flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg ${className}`}>
+          <Database className="w-5 h-5 text-blue-500" />
+          <div className="flex-1">
+            <div className="text-sm font-medium text-gray-900">
+              MT5 Integration
+            </div>
+            <div className="text-xs text-gray-600">
+              Loading...
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Check if user can access MT5
+    const hasMT5Access = userPlan ? canAccessMT5({ type: userPlan, isActive: true, features: [] }) : false;
+
+    if (!hasMT5Access) {
+      return (
+        <div className={className}>
+          <CompactUpgradePrompt
+            currentPlan={userPlan || 'free'}
+            feature="MT5 account connections"
+            onUpgrade={(plan) => {
+              // TODO: Implement upgrade logic
+              console.log('Upgrading to:', plan);
+              setShowUpgradePrompt(true);
+            }}
+          />
+        </div>
+      );
+    }
+
     const connectedCount = accounts.filter(acc => acc.state === 'connected').length;
+    const accountLimit = userPlan ? getMT5AccountLimit({ type: userPlan, isActive: true, features: [] }) : 0;
 
     return (
       <div className={`flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg ${className}`}>
@@ -172,15 +233,21 @@ export default function MT5IntegrationWizard({
             MT5 Integration
           </div>
           <div className="text-xs text-gray-600">
-            {connectedCount} account{connectedCount !== 1 ? 's' : ''} connected
+            {connectedCount}/{accountLimit === -1 ? '∞' : accountLimit} accounts connected
           </div>
         </div>
-        <button
-          onClick={() => setShowConnectForm(true)}
-          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-        >
-          {connectedCount > 0 ? 'Add Account' : 'Connect MT5'}
-        </button>
+        {connectedCount < accountLimit || accountLimit === -1 ? (
+          <button
+            onClick={() => setShowConnectForm(true)}
+            className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+          >
+            {connectedCount > 0 ? 'Add Account' : 'Connect MT5'}
+          </button>
+        ) : (
+          <div className="text-xs text-gray-500">
+            Limit reached
+          </div>
+        )}
       </div>
     );
   }
@@ -188,6 +255,23 @@ export default function MT5IntegrationWizard({
   // Full view
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Plan Loading State */}
+      {planLoading && (
+        <div className="flex items-center justify-center p-8">
+          <RefreshCw className="w-6 h-6 animate-spin text-blue-500 mr-2" />
+          <span className="text-gray-600">Loading your plan...</span>
+        </div>
+      )}
+
+      {/* Upgrade Prompt for Free Users */}
+      {!planLoading && userPlan && !canAccessMT5({ type: userPlan, isActive: true, features: [] }) && (
+        <CompactUpgradePrompt
+          currentPlan={userPlan}
+          feature="MT5 account connections and trade synchronization"
+          onUpgrade={(plan) => setShowUpgradePrompt(true)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -196,6 +280,14 @@ export default function MT5IntegrationWizard({
             <h2 className="text-xl font-semibold text-white">MT5 Integration</h2>
             <p className="text-sm text-gray-400">
               Connect your MetaTrader 5 accounts and sync trade history
+              {userPlan && (
+                <span className="block text-xs mt-1">
+                  Current Plan: <span className="font-medium capitalize">{userPlan}</span>
+                  {canAccessMT5({ type: userPlan, isActive: true, features: [] }) && (
+                    <span className="text-green-400 ml-2">✓ Premium Feature</span>
+                  )}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -226,14 +318,33 @@ export default function MT5IntegrationWizard({
           </button>
 
           {/* Add Account Button */}
-          <button
-            onClick={() => setShowConnectForm(true)}
-            disabled={accountLimits ? !accountLimits.canAdd : false}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4" />
-            Add MT5 Account
-          </button>
+          {userPlan && canAccessMT5({ type: userPlan, isActive: true, features: [] }) ? (
+            <button
+              onClick={() => {
+                const accountLimit = getMT5AccountLimit({ type: userPlan, isActive: true, features: [] });
+                const currentCount = accounts.length;
+
+                if (accountLimit !== -1 && currentCount >= accountLimit) {
+                  setShowUpgradePrompt(true);
+                } else {
+                  setShowConnectForm(true);
+                }
+              }}
+              disabled={accountLimits ? !accountLimits.canAdd : false}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4" />
+              Add MT5 Account
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowUpgradePrompt(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700"
+            >
+              <Crown className="w-4 h-4" />
+              Upgrade for MT5 Access
+            </button>
+          )}
         </div>
       </div>
 
@@ -386,6 +497,21 @@ export default function MT5IntegrationWizard({
             />
           </div>
         </div>
+      )}
+
+      {/* Upgrade Prompt Modal */}
+      {showUpgradePrompt && userPlan && (
+        <UpgradePrompt
+          currentPlan={userPlan}
+          feature="MT5 account connections"
+          onUpgrade={(plan) => {
+            // TODO: Implement actual upgrade logic
+            console.log('Upgrading to:', plan);
+            setShowUpgradePrompt(false);
+            // Here you would typically redirect to payment or show success message
+          }}
+          onClose={() => setShowUpgradePrompt(false)}
+        />
       )}
     </div>
   );

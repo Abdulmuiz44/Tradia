@@ -5,6 +5,20 @@ import React, { useState, useRef, useEffect } from "react";
 import { TradeContext } from "@/context/TradeContext";
 import { useContext } from "react";
 import {
+  analyzeTradingPerformance,
+  generatePersonalizedGreeting,
+  generateTradingSnapshot,
+  generateAdvancedPerformanceAnalysis,
+  generateStrategyRecommendations,
+  generateRiskManagementAnalysis,
+  generateMarketTimingRecommendations,
+  generateEmotionalSupportWithInsights,
+  generateWinningCelebrationWithGrowth,
+  generatePersonalizedMotivation,
+  generateAdvancedScreenshotAnalysis,
+  generateDefaultIntelligentResponse
+} from "@/lib/ai/advancedAnalysis";
+import {
   Send,
   Bot,
   User,
