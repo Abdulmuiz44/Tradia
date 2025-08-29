@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
 import {
@@ -1124,20 +1124,18 @@ export default function TradeJournal(): React.ReactElement {
       {Toolbar}
 
       {/* Subtabs */}
-      <Tabs
-        items={[
-          { value: "journal", label: "Journal" },
-          { value: "insights", label: "Insights" },
-          { value: "patterns", label: "Patterns" },
-          { value: "psychology", label: "Psychology" },
-          { value: "calendar", label: "Calendar" },
-          { value: "forecast", label: "Forecast" },
-          { value: "optimizer", label: "Optimizer" },
-          { value: "prop", label: "Prop-Firm" },
-        ]}
-        activeTab={subTab}
-        setActiveTab={(v)=> setSubTab(v as SubTab)}
-      />
+      <Tabs value={subTab} onValueChange={(v) => setSubTab(v as SubTab)} className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsTrigger value="journal">Journal</TabsTrigger>
+          <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsTrigger value="patterns">Patterns</TabsTrigger>
+          <TabsTrigger value="psychology">Psychology</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          <TabsTrigger value="forecast">Forecast</TabsTrigger>
+          <TabsTrigger value="optimizer">Optimizer</TabsTrigger>
+          <TabsTrigger value="prop">Prop-Firm</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Journal */}
       {subTab === "journal" && (

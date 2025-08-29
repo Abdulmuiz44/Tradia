@@ -102,7 +102,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const [showPremium, setShowPremium] = useState(false);
 
   // Mock subscription tier - in real app, get from user data
-  const userTier = session?.user?.subscription || 'free';
+  const userTier = (session?.user as any)?.subscription || 'free';
 
   // Filter trades based on timeframe
   const filteredTrades = useMemo(() => {
@@ -559,7 +559,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${(percent! * 100).toFixed(0)}%`}
                   >
                     <Cell fill="#10b981" />
                     <Cell fill="#ef4444" />

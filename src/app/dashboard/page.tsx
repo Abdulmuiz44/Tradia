@@ -47,6 +47,13 @@ import AIChatInterface from "@/components/ai/AIChatInterface";
 // Dashboard Sidebar
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 
+// Chart Components
+import ProfitLossChart from "@/components/charts/ProfitLossChart";
+import DrawdownChart from "@/components/charts/DrawdownChart";
+import PerformanceTimeline from "@/components/charts/PerformanceTimeline";
+import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
+import TradePatternChart from "@/components/charts/TradePatternChart";
+
 // Tabs
 const TAB_DEFS = [
   { value: "overview", label: "Overview", icon: "BarChart3" },

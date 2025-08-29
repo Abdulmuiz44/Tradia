@@ -39,7 +39,9 @@ import {
   Target,
   TrendingUp,
   Award,
-  Zap
+  Zap,
+  Crown,
+  Lock
 } from "lucide-react";
 
 // Web Speech API type declarations
