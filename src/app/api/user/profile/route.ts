@@ -1,109 +1,106 @@
-// app/api/user/profile/route.ts
+// src/app/api/user/profile/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin =
-  SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-        auth: { persistSession: false },
-      })
-    : null;
-
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json(
-        { error: "Supabase not configured correctly" },
-        { status: 500 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const url = new URL(req.url);
-    const email = url.searchParams.get("email")?.trim();
+    const supabase = createClient();
 
-    if (!email) {
-      return NextResponse.json(
-        { error: "Missing email query param" },
-        { status: 400 }
-      );
+    const { data: profile, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("email", session.user.email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error("Error fetching profile:", error);
+      return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
     }
 
-    // Try to read from `profiles` table
-    try {
-      const { data: profile, error: profileErr } = await supabaseAdmin
-        .from("profiles")
-        .select("*")
-        .eq("email", email)
-        .maybeSingle();
+    return NextResponse.json({ profile: profile || null });
+  } catch (error) {
+    console.error("Profile API error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
 
-      if (profileErr && profileErr.code !== "42P01") {
-        console.error("profiles table query error:", profileErr);
-        return NextResponse.json(
-          { error: "Database error reading profile", details: profileErr.message },
-          { status: 500 }
-        );
-      }
-
-      if (profile) {
-        return NextResponse.json({
-          email,
-          name: profile.name ?? null,
-          image: profile.image ?? null,
-          phone: profile.phone ?? null,
-          country: profile.country ?? null,
-          tradingStyle:
-            profile.trading_style ?? profile.tradingStyle ?? null,
-          tradingExperience:
-            profile.trading_experience ?? profile.tradingExperience ?? null,
-          bio: profile.bio ?? null,
-          raw: profile,
-        });
-      }
-    } catch (err: any) {
-      console.warn("profiles fetch attempt failed:", err);
-      // fall through to auth user fetch
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fallback: query auth user
-    try {
-      const { data: userResult, error: userErr } =
-        await supabaseAdmin.auth.admin.getUserByEmail(email);
+    const body = await req.json();
+    const {
+      name,
+      country,
+      phone,
+      bio,
+      tradingStyle,
+      tradingExperience
+    } = body;
 
-      if (userErr) {
-        console.error("auth.admin.getUserByEmail error:", userErr);
-        return NextResponse.json(
-          { error: "Unable to fetch user info", details: userErr.message },
-          { status: 500 }
-        );
-      }
+    const supabase = createClient();
 
-      const user = userResult?.user ?? null;
-      if (!user)
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Check if profile exists
+    const { data: existingProfile } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("email", session.user.email)
+      .single();
 
-      const metadata = (user.user_metadata as any) || {};
-      return NextResponse.json({
-        email: user.email ?? null,
-        name: metadata?.full_name ?? metadata?.name ?? user.email,
-        image: metadata?.avatar_url ?? metadata?.image ?? null,
-        bio: metadata?.bio ?? null,
-        rawAuthUser: user,
-      });
-    } catch (err: any) {
-      console.error("auth fallback failed:", err);
-      return NextResponse.json(
-        { error: "Internal server error", details: String(err) },
-        { status: 500 }
-      );
+    const profileData = {
+      email: session.user.email,
+      name: name || null,
+      country: country || null,
+      phone: phone || null,
+      bio: bio || null,
+      tradingStyle: tradingStyle || null,
+      tradingExperience: tradingExperience || null,
+      updated_at: new Date().toISOString()
+    };
+
+    let result;
+    if (existingProfile) {
+      // Update existing profile
+      result = await supabase
+        .from("user_profiles")
+        .update(profileData)
+        .eq("email", session.user.email)
+        .select()
+        .single();
+    } else {
+      // Create new profile
+      result = await supabase
+        .from("user_profiles")
+        .insert({
+          ...profileData,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
     }
-  } catch (err: any) {
-    console.error("profile GET error:", err);
-    return NextResponse.json(
-      { error: "Unexpected error", details: String(err) },
-      { status: 500 }
-    );
+
+    if (result.error) {
+      console.error("Error saving profile:", result.error);
+      return NextResponse.json({ error: "Failed to save profile" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      profile: result.data,
+      message: "Profile updated successfully"
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

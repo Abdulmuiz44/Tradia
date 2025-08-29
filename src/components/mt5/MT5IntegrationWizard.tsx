@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { mt5Integration, MT5Credentials, MT5ConnectionResult, MT5SyncResult } from "@/lib/mt5-integration";
 import SyncProgressComponent from "./SyncProgress";
-import MonitoringWidget from "./MonitoringWidget";
+import { default as MonitoringWidget } from "./MonitoringWidget";
 import RequirementsGuide from "./RequirementsGuide";
 import {
   CheckCircle,

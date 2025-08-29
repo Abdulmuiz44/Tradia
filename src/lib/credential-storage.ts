@@ -81,7 +81,7 @@ export class CredentialStorageService {
     const userKey = encryptionService.deriveKey(this.masterKey, userId);
 
     // Encrypt the password
-    const encryptedPassword = encryptionService.encrypt(credentials.investorPassword, userKey);
+    const encryptedPassword = encryptionService.encrypt(credentials.investorPassword || '', userKey);
 
     // Check for existing credential with same server/login
     const { data: existing } = await supabase

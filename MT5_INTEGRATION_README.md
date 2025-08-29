@@ -82,7 +82,7 @@ I've completely resolved all the "Failed to fetch" errors and created a **produc
 ### 4. **Start Tradia Services**
 ```bash
 # Install dependencies
-npm install
+pnpm install
 pip3 install -r tradia-backend/requirements.txt
 
 # Start backend (new terminal)

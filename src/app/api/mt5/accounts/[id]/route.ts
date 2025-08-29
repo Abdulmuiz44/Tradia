@@ -1,6 +1,7 @@
 // src/app/api/mt5/accounts/[id]/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 

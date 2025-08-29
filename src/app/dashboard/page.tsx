@@ -6,6 +6,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import { Tabs } from "@/components/ui/tabs";
 import OverviewCards from "@/components/dashboard/OverviewCards";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
@@ -17,7 +18,7 @@ import Spinner from "@/components/ui/spinner";
 import LayoutClient from "@/components/LayoutClient";
 import ClientOnly from "@/components/ClientOnly";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { Menu, X, RefreshCw, Filter } from "lucide-react";
+import { Menu, X, RefreshCw, Filter, User, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -47,19 +48,22 @@ import MT5IntegrationWizard from "@/components/mt5/MT5IntegrationWizard";
 // AI Chat Interface
 import AIChatInterface from "@/components/ai/AIChatInterface";
 
+// Dashboard Sidebar
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+
 // Tabs
 const TAB_DEFS = [
-  { value: "overview", label: "Overview" },
-  { value: "history", label: "Trade History" },
-  { value: "mt5", label: "MT5 Integration" },
-  { value: "journal", label: "Trade Journal" },
-  { value: "insights", label: "AI Insights" },
-  { value: "analytics", label: "Trade Analytics" },
-  { value: "risk", label: "Risk Metrics" },
-  { value: "planner", label: "Trade Planner" },
-  { value: "position-sizing", label: "Position Sizing" },
-  { value: "education", label: "Trade Education" },
-  { value: "upgrade", label: "Upgrade" },
+  { value: "overview", label: "Overview", icon: "BarChart3" },
+  { value: "history", label: "Trade History", icon: "History" },
+  { value: "mt5", label: "MT5 Integration", icon: "Database" },
+  { value: "journal", label: "Trade Journal", icon: "BookOpen" },
+  { value: "tradia-ai", label: "Tradia AI", icon: "Bot" },
+  { value: "analytics", label: "Trade Analytics", icon: "TrendingUp" },
+  { value: "risk", label: "Risk Metrics", icon: "Shield" },
+  { value: "planner", label: "Trade Planner", icon: "Target" },
+  { value: "position-sizing", label: "Position Sizing", icon: "Calculator" },
+  { value: "education", label: "Trade Education", icon: "GraduationCap" },
+  { value: "upgrade", label: "Upgrade", icon: "Crown" },
 ];
 
 // type casting hack
@@ -410,211 +414,287 @@ function DashboardContent() {
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
-    <main className="min-h-screen w-full flex justify-center bg-[#0D1117] transition-colors duration-300">
-      <div className="w-full max-w-[1600px] p-4 md:p-6 text-white">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            {/* mobile hamburger */}
-            <button className="md:hidden p-1" onClick={() => setMobileMenuOpen((s) => !s)} aria-label="Toggle Menu">
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <h1 className="text-xl font-semibold">{currentTabLabel}</h1>
-            <div className="ml-3 text-sm text-gray-300 hidden sm:flex items-center px-2 py-1 rounded bg-white/2">
-              {filterLabel}
+    <main className="min-h-screen w-full bg-[#0D1117] transition-colors duration-300">
+      <div className="flex h-screen">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:bg-[#161B22] lg:border-r lg:border-[#2a2f3a]">
+          <div className="flex flex-col h-full">
+            {/* Logo/Brand */}
+            <div className="flex items-center gap-3 p-6 border-b border-[#2a2f3a]">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">T</span>
+              </div>
+              <div>
+                <h1 className="text-white font-bold text-lg">Tradia</h1>
+                <p className="text-gray-400 text-xs">Trading Dashboard</p>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              <DashboardSidebar
+                tabs={TAB_DEFS}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+            </div>
+
+            {/* User Profile Section */}
+            <div className="p-4 border-t border-[#2a2f3a]">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
+                    <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 text-left">
+                    <p className="text-white text-sm font-medium truncate">
+                      {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
+                    </p>
+                    <p className="text-gray-400 text-xs truncate">
+                      {session?.user?.email || ''}
+                    </p>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-zinc-800 text-white border border-zinc-700">
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Sidebar Overlay */}
+        <div
+          className={`fixed inset-0 z-40 lg:hidden ${
+            mobileMenuOpen ? 'block' : 'hidden'
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a] transform transition-transform duration-300">
+            <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">T</span>
+                </div>
+                <h1 className="text-white font-bold text-lg">Tradia</h1>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4">
+              <DashboardSidebar
+                tabs={TAB_DEFS}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isMobile={true}
+                onClose={() => setMobileMenuOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
+            <div className="flex items-center gap-3">
+              {/* Mobile menu button */}
+              <button
+                className="lg:hidden p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open Menu"
+              >
+                <Menu size={20} className="text-white" />
+              </button>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">{currentTabLabel}</h1>
+                <p className="text-gray-400 text-sm hidden sm:block">
+                  {activeTab === 'tradia-ai' ? 'Your personal trading coach with voice support' :
+                   activeTab === 'overview' ? 'Comprehensive trading overview and key metrics' :
+                   activeTab === 'analytics' ? 'Detailed performance analytics and insights' :
+                   `Manage your ${currentTabLabel.toLowerCase()}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Filter - Only show for relevant tabs */}
+              {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Filter trades">
+                    <Filter size={18} className="text-gray-300" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-64 bg-zinc-800 text-white border border-zinc-700">
+                    <div className="p-2">
+                      {FILTERS.slice(0, FILTERS.length - 1).map((f) => (
+                        <DropdownMenuItem
+                          key={f.value}
+                          onClick={() => {
+                            setFilter(f.value);
+                            setCustomRange({ from: "", to: "" });
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {f.label}
+                        </DropdownMenuItem>
+                      ))}
+
+                      <DropdownMenuItem
+                        key="custom"
+                        onClick={() => setFilter("custom")}
+                        className="cursor-pointer"
+                      >
+                        Custom range
+                      </DropdownMenuItem>
+
+                      <div className="border-t border-white/6 my-2" />
+
+                      {/* Custom inputs */}
+                      <div className="space-y-2">
+                        <div className="text-xs text-gray-400">Custom range</div>
+                        <div>
+                          <label className="text-xs text-gray-300">From</label>
+                          <input
+                            type="date"
+                            value={customRange.from}
+                            onChange={(e) => setCustomRange((r) => ({ ...r, from: e.target.value }))}
+                            className="w-full mt-1 p-2 rounded bg-zinc-700 border border-zinc-600 text-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-300">To</label>
+                          <input
+                            type="date"
+                            value={customRange.to}
+                            onChange={(e) => setCustomRange((r) => ({ ...r, to: e.target.value }))}
+                            className="w-full mt-1 p-2 rounded bg-zinc-700 border border-zinc-600 text-white text-sm"
+                          />
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            onClick={() => {
+                              if (customRange.from && customRange.to) {
+                                setFilter("custom");
+                              } else {
+                                setFilter("24h");
+                                setCustomRange({ from: "", to: "" });
+                              }
+                            }}
+                            className="flex-1 px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-sm transition-colors"
+                          >
+                            Apply
+                          </button>
+                          <button
+                            onClick={() => {
+                              setFilter("24h");
+                              setCustomRange({ from: "", to: "" });
+                            }}
+                            className="px-3 py-1 rounded bg-transparent border border-white/6 text-sm hover:bg-white/5 transition-colors"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* Refresh button - Only show for relevant tabs */}
+              {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'mt5') && (
+                <button
+                  className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                  onClick={handleSyncNow}
+                  title="Refresh data"
+                >
+                  <RefreshCw size={18} className="text-gray-300" />
+                </button>
+              )}
+
+              {/* Current filter indicator */}
+              {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
+                <div className="hidden sm:flex items-center px-3 py-1 rounded-lg bg-gray-800 text-gray-300 text-sm">
+                  {filterLabel}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Spinner />
+              </div>
+            ) : (
+              <>
+                {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
 
-            {/* Filter */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="p-2 rounded-full bg-transparent hover:bg-zinc-600" title="Filter trades">
-                <Filter size={20} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700 p-2 min-w-[220px]">
-                <div className="px-1 py-1">
-                  {FILTERS.slice(0, FILTERS.length - 1).map((f) => (
-                    <DropdownMenuItem
-                      key={f.value}
-                      onClick={() => {
-                        setFilter(f.value);
-                        setCustomRange({ from: "", to: "" });
-                      }}
-                    >
-                      {f.label}
-                    </DropdownMenuItem>
-                  ))}
+                {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
 
-                  <DropdownMenuItem
-                    key="custom"
-                    onClick={() => {
-                      setFilter("custom");
-                    }}
-                  >
-                    Custom range
-                  </DropdownMenuItem>
+                {activeTab === "mt5" && (
+                  <div className="max-w-4xl mx-auto">
+                    <MT5IntegrationWizard userId={session?.user?.id} />
+                  </div>
+                )}
 
-                  <div className="border-t border-white/6 my-2" />
+                {activeTab === "journal" && <TradeJournalAny />}
 
-                  {/* Custom inputs — remain visible after "Custom range" selected */}
-                  <div className="px-2 py-1">
-                    <div className="text-xs text-gray-400 mb-1">Custom range</div>
-                    <label className="text-xs text-gray-300">From</label>
-                    <input
-                      type="date"
-                      value={customRange.from}
-                      onChange={(e) => setCustomRange((r) => ({ ...r, from: e.target.value }))}
-                      className="w-full mt-1 mb-2 p-2 rounded bg-zinc-800 border border-zinc-700 text-sm"
-                    />
-                    <label className="text-xs text-gray-300">To</label>
-                    <input
-                      type="date"
-                      value={customRange.to}
-                      onChange={(e) => setCustomRange((r) => ({ ...r, to: e.target.value }))}
-                      className="w-full mt-1 mb-3 p-2 rounded bg-zinc-800 border border-zinc-700 text-sm"
-                    />
+                {activeTab === "tradia-ai" && (
+                  <div className="h-[calc(100vh-200px)]">
+                    <AIChatInterface />
+                  </div>
+                )}
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          if (customRange.from && customRange.to) {
-                            setFilter("custom");
-                          } else {
-                            setFilter("24h");
-                            setCustomRange({ from: "", to: "" });
-                          }
-                        }}
-                        className="flex-1 px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-sm"
-                      >
-                        Apply
-                      </button>
-                      <button
-                        onClick={() => {
-                          setFilter("24h");
-                          setCustomRange({ from: "", to: "" });
-                        }}
-                        className="px-3 py-1 rounded bg-transparent border border-white/6 text-sm"
-                      >
-                        Reset
-                      </button>
+                {activeTab === "analytics" && (
+                  <div className="grid gap-6">
+                    <ProfitLossChartAny trades={filteredTrades} />
+                    <DrawdownChartAny trades={filteredTrades} />
+                    <PerformanceTimelineAny trades={filteredTrades} />
+                    <TradeBehavioralChartAny trades={filteredTrades} />
+                    <TradePatternChartAny trades={filteredTrades} />
+                  </div>
+                )}
+
+                {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
+
+                {activeTab === "planner" && (
+                  <TradePlanProvider>
+                    <div className="grid gap-6 bg-transparent">
+                      <TradePlannerTableAny />
                     </div>
+                  </TradePlanProvider>
+                )}
+
+                {activeTab === "position-sizing" && <PositionSizingAny />}
+
+                {activeTab === "education" && <TraderEducationAny />}
+
+                {activeTab === "upgrade" && (
+                  <div className="max-w-4xl mx-auto">
+                    <PricingPlansAny />
                   </div>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <button className="p-2 rounded-full bg-transparent hover:bg-zinc-600" onClick={handleSyncNow} title="Refresh Trades">
-              <RefreshCw size={20} />
-            </button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger className="focus:outline-none">
-                <Avatar className="w-9 h-9">
-                  <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
-                  <AvatarFallback>{userInitial}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="mt-2 bg-zinc-800 text-white border border-zinc-700">
-                <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                )}
+              </>
+            )}
           </div>
-        </div>
-
-        {/* Mobile Sidebar */}
-        <div
-          className={`fixed inset-y-0 left-0 w-64 z-50 transform transition-transform duration-300 ease-in-out bg-[#161B22] border-r border-[#2a2f3a] p-5 md:hidden overflow-y-auto ${
-            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-white text-lg font-semibold">Menu</h2>
-            <button onClick={() => setMobileMenuOpen(false)} aria-label="Close Menu">
-              <X size={20} className="text-white" />
-            </button>
-          </div>
-          <nav className="flex flex-col gap-4">
-            {TAB_DEFS.map((tab) => (
-              <button
-                key={tab.value}
-                className={`text-left text-sm font-medium px-2 py-1 rounded ${
-                  activeTab === tab.value ? "bg-green-600 text-white" : "text-white hover:bg-zinc-700"
-                }`}
-                onClick={() => {
-                  setActiveTab(tab.value);
-                  setMobileMenuOpen(false);
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Desktop Tabs */}
-        <div className="hidden md:block">
-          <Tabs items={TAB_DEFS} activeTab={activeTab} setActiveTab={setActiveTab} />
-        </div>
-
-        {/* Tab Content */}
-        <div className="mt-8 text-sm">
-          {isLoading ? (
-            <Spinner />
-          ) : (
-            <>
-              {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
-
-              {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
-
-              {activeTab === "mt5" && (
-                <div className="max-w-4xl mx-auto">
-                  <MT5IntegrationWizard userId={session?.user?.id} />
-                </div>
-              )}
-
-              {activeTab === "journal" && <TradeJournalAny />}
-
-              {activeTab === "insights" && (
-                <div className="h-[calc(100vh-200px)]">
-                  <AIChatInterface />
-                </div>
-              )}
-
-              {activeTab === "analytics" && (
-                <div className="grid gap-6">
-                  <ProfitLossChartAny trades={filteredTrades} />
-                  <DrawdownChartAny trades={filteredTrades} />
-                  <PerformanceTimelineAny trades={filteredTrades} />
-                  <TradeBehavioralChartAny trades={filteredTrades} />
-                  <TradePatternChartAny trades={filteredTrades} />
-                </div>
-              )}
-
-              {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
-
-              {activeTab === "planner" && (
-                <TradePlanProvider>
-                  <div className="grid gap-6 bg-transparent">
-                    <TradePlannerTableAny />
-                  </div>
-                </TradePlanProvider>
-              )}
-
-              {activeTab === "position-sizing" && <PositionSizingAny />}
-
-              {activeTab === "education" && <TraderEducationAny />}
-
-
-              {activeTab === "upgrade" && (
-                <div className="max-w-4xl mx-auto">
-                  <PricingPlansAny />
-                </div>
-              )}
-            </>
-          )}
         </div>
       </div>
     </main>

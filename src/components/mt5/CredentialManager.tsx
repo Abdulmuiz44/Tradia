@@ -399,7 +399,7 @@ export default function CredentialManager({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    {getSecurityIcon(credential.securityLevel)}
+                    {getSecurityIcon(credential.securityLevel || 'low')}
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-gray-900">{credential.name}</h4>
