@@ -248,8 +248,8 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         content: msg.content
       }));
 
-      // Generate coaching response
-      const coachingResponse = generateCoachingResponse(inputMessage, trades, uploadedFiles);
+      // Generate intelligent coaching response with trade analysis
+      const coachingResponse = generateIntelligentCoachingResponse(inputMessage, trades, uploadedFiles);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -297,35 +297,35 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
   };
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg flex flex-col h-[600px] ${className}`}>
+    <div className={`bg-[#161B22] border border-[#2a2f3a] rounded-lg flex flex-col h-full min-h-[500px] max-h-[calc(100vh-200px)] ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between p-3 md:p-4 border-b border-[#2a2f3a] bg-[#0D1117]">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="relative">
-            <Bot className="w-8 h-8 text-blue-500" />
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            <Bot className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#161B22] animate-pulse"></div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">🎯 Tradia AI</h3>
-            <p className="text-sm text-gray-500">Your Personal Trading Coach • Online 24/7</p>
+            <h3 className="text-base md:text-lg font-semibold text-white">🎯 Tradia AI</h3>
+            <p className="text-xs md:text-sm text-gray-400">Your Personal Trading Coach • Online 24/7</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        <div className="flex items-center gap-1 md:gap-2">
+          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-green-900/30 text-green-400 rounded-full text-xs border border-green-700/50">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             AI Active
           </div>
           <button
             onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-1.5 md:p-2 hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
             title="Voice Settings"
           >
-            <Settings className="w-4 h-4 text-gray-500" />
+            <Settings className="w-4 h-4 text-gray-400 hover:text-white" />
           </button>
           {isSpeaking && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-900/30 text-blue-400 rounded-full text-xs border border-blue-700/50">
               <Volume2 className="w-3 h-3 animate-pulse" />
-              Speaking
+              <span className="hidden sm:inline">Speaking</span>
             </div>
           )}
         </div>
@@ -333,23 +333,23 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
       {/* Voice Settings Panel */}
       {showVoiceSettings && (
-        <div className="bg-gray-50 border-b border-gray-200 p-4">
+        <div className="bg-[#1a1f2e] border-b border-[#2a2f3a] p-3 md:p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-900">🎤 Voice Settings</h4>
+            <h4 className="text-sm font-medium text-white">🎤 Voice Settings</h4>
             <button
               onClick={() => setShowVoiceSettings(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Voice Responses</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            <div className="flex items-center justify-between p-2 bg-[#0D1117] rounded-lg">
+              <span className="text-sm text-gray-300">Voice Responses</span>
               <button
                 onClick={() => setVoiceSettings(prev => ({ ...prev, voiceEnabled: !prev.voiceEnabled }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  voiceSettings.voiceEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${
+                  voiceSettings.voiceEnabled ? 'bg-blue-600' : 'bg-gray-600'
                 }`}
               >
                 <span
@@ -359,12 +359,12 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 />
               </button>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Auto Speak</span>
+            <div className="flex items-center justify-between p-2 bg-[#0D1117] rounded-lg">
+              <span className="text-sm text-gray-300">Auto Speak</span>
               <button
                 onClick={() => setVoiceSettings(prev => ({ ...prev, autoSpeak: !prev.autoSpeak }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  voiceSettings.autoSpeak ? 'bg-green-600' : 'bg-gray-200'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${
+                  voiceSettings.autoSpeak ? 'bg-green-600' : 'bg-gray-600'
                 }`}
               >
                 <span
@@ -374,8 +374,8 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 />
               </button>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Speed</span>
+            <div className="flex items-center gap-2 p-2 bg-[#0D1117] rounded-lg sm:col-span-2 lg:col-span-1">
+              <span className="text-sm text-gray-300">Speed</span>
               <input
                 type="range"
                 min="0.5"
@@ -383,15 +383,15 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 step="0.1"
                 value={voiceSettings.voiceSpeed}
                 onChange={(e) => setVoiceSettings(prev => ({ ...prev, voiceSpeed: parseFloat(e.target.value) }))}
-                className="flex-1"
+                className="flex-1 accent-blue-500"
               />
-              <span className="text-xs text-gray-500">{voiceSettings.voiceSpeed}x</span>
+              <span className="text-xs text-gray-400 min-w-[2rem]">{voiceSettings.voiceSpeed}x</span>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <button
               onClick={() => speakText("Hello! I'm Tradia AI, your personal trading coach. How can I help you become a better trader today?")}
-              className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors touch-manipulation"
             >
               <Volume2 className="w-4 h-4" />
               Test Voice
@@ -399,7 +399,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
             <button
               onClick={stopSpeaking}
               disabled={!isSpeaking}
-              className="flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-colors touch-manipulation"
             >
               <Square className="w-4 h-4" />
               Stop
@@ -409,44 +409,44 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-3 md:p-4 shadow-lg ${
                 message.type === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-900'
+                  ? 'bg-blue-600 text-white border border-blue-500/30'
+                  : 'bg-[#1a1f2e] text-gray-100 border border-[#2a2f3a]'
               }`}
             >
               {message.type === 'assistant' && (
                 <div className="flex items-center gap-2 mb-2">
-                  <Bot className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs font-medium text-blue-600">🎯 Tradia AI</span>
-                  {message.isVoice && <Volume2 className="w-3 h-3 text-green-500" />}
+                  <Bot className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-medium text-blue-400">🎯 Tradia AI</span>
+                  {message.isVoice && <Volume2 className="w-3 h-3 text-green-400" />}
                 </div>
               )}
 
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{message.content}</div>
 
               {message.attachments && message.attachments.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {message.attachments.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-white/20 rounded">
-                      <Image className="w-4 h-4" />
-                      <span className="text-sm">{file.name}</span>
+                    <div key={index} className="flex items-center gap-2 p-2 bg-[#0D1117]/50 rounded border border-[#2a2f3a]">
+                      <Image className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-300">{file.name}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className={`text-xs mt-2 ${
-                message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+              <div className={`text-xs mt-2 opacity-70 ${
+                message.type === 'user' ? 'text-blue-200' : 'text-gray-400'
               }`}>
-                {message.timestamp.toLocaleTimeString()}
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </div>
@@ -454,18 +454,18 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+            <div className="bg-[#1a1f2e] rounded-lg p-3 md:p-4 max-w-[85%] sm:max-w-[80%] border border-[#2a2f3a]">
               <div className="flex items-center gap-2 mb-2">
-                <Bot className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600">🎯 Tradia AI</span>
+                <Bot className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-medium text-blue-400">🎯 Tradia AI</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
-                <span className="text-sm text-gray-600 ml-2">Analyzing your request...</span>
+                <span className="text-sm text-gray-300 ml-2">Analyzing your request...</span>
               </div>
             </div>
           </div>
@@ -476,15 +476,15 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
       {/* File Upload Preview */}
       {uploadedFiles.length > 0 && (
-        <div className="px-4 pb-2">
-          <div className="flex flex-wrap gap-2">
+        <div className="px-3 md:px-4 pb-2 border-t border-[#2a2f3a]">
+          <div className="flex flex-wrap gap-2 pt-3">
             {uploadedFiles.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
-                <Image className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-700">{file.name}</span>
+              <div key={index} className="flex items-center gap-2 bg-[#1a1f2e] border border-[#2a2f3a] rounded-lg p-2">
+                <Image className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-300 truncate max-w-[120px] sm:max-w-none">{file.name}</span>
                 <button
                   onClick={() => removeFile(index)}
-                  className="text-gray-500 hover:text-red-500"
+                  className="text-gray-400 hover:text-red-400 p-1 rounded hover:bg-gray-700 transition-colors touch-manipulation"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -495,37 +495,54 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-end gap-2">
-          <div className="flex-1 relative">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="🎤 Speak or type your question... (e.g., 'How's my trading?', 'Analyze my performance', 'I need motivation today')"
-              className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={1}
-              style={{ minHeight: '44px', maxHeight: '120px' }}
-            />
+      <div className="p-3 md:p-4 border-t border-[#2a2f3a] bg-gradient-to-r from-[#0D1117] to-[#161B22]">
+        <div className="flex items-end gap-2 md:gap-3">
+          <div className="flex-1 relative group">
+            {/* Enhanced Input Field */}
+            <div className="relative">
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="💬 Ask me anything about your trading... (e.g., 'What's my strongest pattern?', 'Give me a trading plan', 'Analyze my risk')"
+                className="w-full resize-none rounded-xl border-2 border-[#2a2f3a] bg-gradient-to-r from-[#1a1f2e] to-[#161B22] px-4 py-3 pr-12 md:pr-16 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 hover:border-blue-400/30 transition-all duration-300 shadow-lg backdrop-blur-sm"
+                rows={1}
+                style={{
+                  minHeight: '52px',
+                  maxHeight: window.innerWidth < 768 ? '120px' : '140px'
+                }}
+              />
 
-            <div className="absolute right-3 top-3 flex items-center gap-2">
+              {/* Animated border effect */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+              {/* Typing indicator */}
+              {inputMessage && (
+                <div className="absolute left-4 bottom-2 flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-blue-400 font-medium">Typing...</span>
+                </div>
+              )}
+            </div>
+
+            <div className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 md:gap-2">
               <button
                 onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                className={`p-1 rounded-full transition-colors ${
+                className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation shadow-lg ${
                   isRecording
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'text-gray-400 hover:text-red-500'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-red-600/25 scale-110 animate-pulse'
+                    : 'bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 hover:from-red-600 hover:to-red-700 hover:text-white active:scale-95'
                 }`}
                 title={isRecording ? 'Stop recording' : 'Start voice recording'}
               >
-                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {isRecording ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="text-gray-400 hover:text-blue-500 transition-colors"
-                title="Upload trade screenshot"
+                className="p-2.5 md:p-3 bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 hover:from-blue-600 hover:to-blue-700 hover:text-white rounded-full transition-all touch-manipulation active:scale-95 shadow-lg"
+                title="Upload trade screenshot or analysis"
               >
-                <Paperclip className="w-5 h-5" />
+                <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
 
@@ -542,21 +559,32 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           <button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() && uploadedFiles.length === 0}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg px-4 py-3 transition-colors flex items-center gap-2"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-xl px-5 md:px-7 py-3 md:py-4 transition-all flex items-center gap-2 touch-manipulation active:scale-95 shadow-lg hover:shadow-xl disabled:shadow-none min-w-[70px] md:min-w-[90px] justify-center font-semibold"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-4 h-4 md:w-5 md:h-5" />
             <span className="hidden sm:inline">Send</span>
           </button>
         </div>
 
-        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-          <div className="flex items-center gap-4">
-            <span>🎤 Try voice: "How's my trading?"</span>
-            <span>💡 "I need motivation today"</span>
-            <span>📊 {trades.length} trades analyzed</span>
+        {/* Enhanced Suggestions */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-900/30 to-blue-800/30 rounded-full border border-blue-700/50">
+              <Mic className="w-3 h-3 text-blue-400" />
+              <span className="text-xs text-blue-300 font-medium">Voice: "How's my trading?"</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-900/30 to-green-800/30 rounded-full border border-green-700/50">
+              <Target className="w-3 h-3 text-green-400" />
+              <span className="text-xs text-green-300 font-medium">Strategy advice</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-900/30 to-purple-800/30 rounded-full border border-purple-700/50">
+              <TrendingUp className="w-3 h-3 text-purple-400" />
+              <span className="text-xs text-purple-300 font-medium">{trades.length} trades analyzed</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span>🎯 Tradia AI - Your Trading Coach</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-full border border-gray-600/50">
+            <Bot className="w-3 h-3 text-blue-400 animate-pulse" />
+            <span className="text-xs text-gray-300 font-medium">🎯 Tradia AI Coach Online</span>
           </div>
         </div>
       </div>
@@ -564,86 +592,61 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
   );
 }
 
-// Coaching Response Generator - Tradia AI's Personal Touch
-function generateCoachingResponse(userMessage: string, trades: any[], uploadedFiles: File[]): string {
+// Intelligent Coaching Response Generator - Advanced AI Analysis with Trading Recommendations
+function generateIntelligentCoachingResponse(userMessage: string, trades: any[], uploadedFiles: File[]): string {
   const lowerMessage = userMessage.toLowerCase();
 
-  // Greeting and emotional support
+  // Analyze user's trading performance for personalized insights
+  const tradeAnalysis = analyzeTradingPerformance(trades);
+
+  // Personalized greeting with performance insights
   if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-    return `🚀 **Hey there, champion!** Welcome back to your trading journey!\n\nI'm Tradia AI, your personal trading coach, mentor, and biggest fan! 💪 Whether you're crushing it in the markets or learning from some tough lessons, I'm here to support you every step of the way.\n\n**Quick check-in:** How's your trading mindset today? Are you feeling confident, curious, or maybe a bit challenged? Whatever it is, you've got this! Let's make today another step toward trading mastery.\n\nWhat's on your trading mind? I'm all ears (and algorithms)! 🎯`;
+    const personalizedGreeting = generatePersonalizedGreeting(tradeAnalysis);
+    return `${personalizedGreeting}\n\n**Your Trading Snapshot:**\n${generateTradingSnapshot(tradeAnalysis)}\n\n**What would you like to focus on today?**\n• 📊 **Performance Review** - "How's my trading been?"\n• 🎯 **Strategy Optimization** - "What's my strongest pattern?"\n• 🛡️ **Risk Management** - "How can I improve my risk control?"\n• 📈 **Market Insights** - "What's the best setup right now?"\n• 💡 **Trading Recommendations** - "What should I trade next?"\n\nI'm here to help you level up your trading game! 🚀`;
   }
 
-  // Emotional support and motivation
-  if (lowerMessage.includes('lost') || lowerMessage.includes('bad') || lowerMessage.includes('losing') || lowerMessage.includes('stuck')) {
-    return `🤝 **Hey, listen up - you're not alone in this!**\n\nEvery single successful trader has been exactly where you are right now. The difference between good traders and great ones? They keep showing up, keep learning, and keep believing in themselves.\n\n**What I know about you:**\n• You're brave enough to admit when things aren't going perfectly\n• You're proactive enough to seek help and guidance\n• You're committed enough to keep pushing forward\n\n**My promise to you:** We'll turn this around together. Every losing streak ends, and every challenge becomes a lesson that makes you stronger.\n\n**Right now, let's focus on:**\n1. **Breathe** - Take a moment, you're doing great\n2. **Reflect** - What can we learn from recent trades?\n3. **Adjust** - Small, manageable improvements\n4. **Celebrate** - You're still in the game, and that counts!\n\nWhat's one thing we can work on together right now? 💪`;
+  // Advanced performance analysis with actionable recommendations
+  if (lowerMessage.includes('performance') || lowerMessage.includes('how am i doing') || lowerMessage.includes('win rate')) {
+    return generateAdvancedPerformanceAnalysis(tradeAnalysis);
   }
 
-  // Winning celebration
-  if (lowerMessage.includes('won') || lowerMessage.includes('profit') || lowerMessage.includes('winning') || lowerMessage.includes('good')) {
-    return `🎉 **BOOM! That's what I'm talking about!** 🏆\n\nYou did it! You put in the work, followed your process, and the market rewarded you for it. This is exactly why we trade - these moments of triumph and validation!\n\n**Let's celebrate this win properly:**\n• 🎯 **Pat yourself on the back** - You earned this!\n• 📝 **Document what worked** - What was your edge?\n• 🎪 **Build on this momentum** - How can we replicate this success?\n• 💝 **Share the joy** - Tell someone special about your win!\n\n**Remember:** This win isn't just about the money. It's about your skill, discipline, and growth as a trader. You're building something real here!\n\nReady to analyze what made this trade special? Or shall we plan how to capture more moments like this? 🚀`;
+  // Strategy recommendations based on user's actual performance
+  if (lowerMessage.includes('strategy') || lowerMessage.includes('pattern') || lowerMessage.includes('what should i')) {
+    return generateStrategyRecommendations(tradeAnalysis);
   }
 
-  // Analyze uploaded files with coaching approach
-  if (uploadedFiles.length > 0) {
-    return `📸 **Alright, let's break down this trade screenshot together!**\n\nI'm excited to see what you've got here! As your trading coach, I love reviewing setups because this is where we can really dig into your decision-making process.\n\n🔍 **My Analysis Approach:**\n• First, I'll look at the **big picture** - overall market context\n• Then, I'll examine your **entry timing** - were you patient?\n• Next, I'll check your **risk management** - protecting your capital?\n• Finally, I'll assess **execution quality** - did you follow your plan?\n\n**What I'm seeing:**\n• This appears to be a ${uploadedFiles[0]?.name.includes('before') ? 'pre-entry setup' : 'post-trade review'}\n• The market structure looks ${Math.random() > 0.5 ? 'favorable for your direction' : 'challenging but manageable'}\n• Your position sizing seems ${Math.random() > 0.6 ? 'well-calculated' : 'worth reviewing'}\n\n**Coaching Questions for You:**\n1. What was your initial read on this setup?\n2. How confident did you feel about this trade?\n3. What would you do differently next time?\n\n**My Recommendations:**\n• Consider adding a buffer zone around your entry\n• Think about the bigger trend context\n• Document this setup for future reference\n\nWhat do you think about this analysis? Does it match your own assessment? 🤔`;
-  }
-
-  // Performance analysis with coaching
-  if (lowerMessage.includes('win rate') || lowerMessage.includes('performance') || lowerMessage.includes('how am i doing')) {
-    const totalTrades = trades.length;
-    const winningTrades = trades.filter(t => t.outcome === 'Win').length;
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100).toFixed(1) : 0;
-    const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-    const avgTrade = totalTrades > 0 ? totalPnL / totalTrades : 0;
-
-    let coachingTone = '';
-    const winRateNum = typeof winRate === 'string' ? parseFloat(winRate) : winRate;
-    if (winRateNum > 60) {
-      coachingTone = '🎯 **Elite level performance!** You\'re operating at a level that most traders only dream of!';
-    } else if (winRateNum > 45) {
-      coachingTone = '💪 **Solid foundation!** You\'re building the right habits and seeing results!';
-    } else {
-      coachingTone = '🌱 **Growth mindset activated!** Every expert was once a beginner, and you\'re on the right path!';
-    }
-
-    return `📊 **Your Trading Report Card - Let's Celebrate Your Progress!**\n\n${coachingTone}\n\n**Your Numbers (And What They Mean):**\n• **${totalTrades} Trades** - Every trade is a learning experience!\n• **${winRate}% Win Rate** - This shows consistency and edge development\n• **$${totalPnL.toFixed(2)} Total P&L** - Real money from your skill and discipline\n• **$${avgTrade.toFixed(2)} Avg Trade** - Your typical risk-reward profile\n\n**What These Numbers Tell Me About You:**\n• You're **committed** - showing up consistently\n• You're **learning** - adapting and improving over time\n• You're **disciplined** - following a process that works\n\n**Your Superpowers (Based on Your Data):**\n• Best performance in ${getRandomTimeframe()} sessions\n• Strongest with ${getRandomStrategy()} patterns\n• Natural talent for ${getRandomMarketCondition()} conditions\n\n**Let's Build on This:**\n1. **Keep doing what works** - Double down on your winning strategies\n2. **Learn from losses** - They're tuition for your trading education\n3. **Track your growth** - You're getting better every day!\n\n**My Challenge to You:** What's one thing we can improve this week to push these numbers even higher? 🚀\n\nRemember, these aren't just statistics - they're evidence of your dedication and skill as a trader!`;
-  }
-
-  // Strategy coaching
-  if (lowerMessage.includes('pattern') || lowerMessage.includes('strategy') || lowerMessage.includes('what should i')) {
-    const symbolStats = trades.reduce((acc: any, trade: any) => {
-      const symbol = trade.symbol || 'Unknown';
-      if (!acc[symbol]) {
-        acc[symbol] = { total: 0, wins: 0, pnl: 0 };
-      }
-      acc[symbol].total++;
-      if (trade.outcome === 'Win') acc[symbol].wins++;
-      acc[symbol].pnl += trade.pnl || 0;
-      return acc;
-    }, {});
-
-    const topPerformers = Object.entries(symbolStats)
-      .sort(([, a]: any, [, b]: any) => b.pnl - a.pnl)
-      .slice(0, 3);
-
-    return `🎯 **Strategy Session - Let's Find Your Trading Superpower!**\n\nAs your coach, I love diving into strategy because this is where we can really customize your approach to match your personality and strengths!\n\n**Your Winning Patterns (Based on Your Track Record):**\n${topPerformers.map(([symbol, stats]: [string, any]) => {
-      const winRate = stats.total > 0 ? (stats.wins / stats.total * 100).toFixed(1) : 0;
-      return `• **${symbol}**: ${winRate}% win rate, $${stats.pnl.toFixed(2)} profit - You're a natural here!`;
-    }).join('\n')}\n\n**What Makes You Special as a Trader:**\n• **Your Edge**: ${getRandomStrategy()} - This plays to your strengths!\n• **Your Timing**: You excel in ${getRandomTimeframe()} timeframes\n• **Your Style**: ${Math.random() > 0.5 ? 'Patient and calculated' : 'Quick and decisive'}\n\n**Strategy Recommendations (Tailored to You):**\n1. **Focus on Your Strengths** - Trade more of what works for you\n2. **Develop Your Edge** - Refine your best-performing strategies\n3. **Avoid Your Weaknesses** - Minimize exposure to challenging conditions\n4. **Build Confidence** - Success breeds success!\n\n**Pro Tip:** The best traders don't try to be everything to everyone. They become exceptional at what suits them best. You're already showing signs of finding your niche!\n\nWhat strategy aspect would you like to explore deeper? 🤔`;
-  }
-
-  // Risk management coaching
+  // Risk management analysis and recommendations
   if (lowerMessage.includes('risk') || lowerMessage.includes('stop loss') || lowerMessage.includes('position size')) {
-    return `🛡️ **Risk Management Masterclass - Protecting Your Trading Capital!**\n\nListen, as your coach, I have to be straight with you: Risk management isn't sexy, but it's the difference between traders who survive long-term and those who don't. And you? You're going to be one of the survivors!\n\n**Your Risk Management Foundation:**\n• **Position Sizing**: Never risk more than 1-2% per trade\n• **Stop Losses**: Always have an exit plan before entry\n• **Risk-Reward**: Aim for 1:2 or better on every trade\n• **Daily Limits**: Set maximum loss limits for the day\n\n**Why This Matters (Real Talk):**\n• **Capital Preservation**: Your trading account is your business - protect it!\n• **Emotional Control**: Good risk management prevents panic decisions\n• **Long-term Success**: Consistent small wins beat occasional big losses\n• **Confidence Builder**: Knowing you have a safety net lets you trade freely\n\n**Your Risk Management Action Plan:**\n1. **Calculate Position Sizes** - Use a position size calculator for every trade\n2. **Set Stop Losses First** - Before you even think about entry\n3. **Plan Your Exits** - Know exactly when you'll take profits and losses\n4. **Monitor Daily Risk** - Never let one bad day wipe out recent gains\n5. **Review and Adjust** - Learn from every trade's risk management\n\n**Remember:** The market will test you. The difference between good traders and great ones is how they handle those tests. You've got the discipline - let's make sure your risk management supports your success!\n\nWhat's your biggest risk management challenge right now? 💪`;
+    return generateRiskManagementAnalysis(tradeAnalysis);
   }
 
-  // Motivation and mindset
-  if (lowerMessage.includes('motivation') || lowerMessage.includes('mindset') || lowerMessage.includes('confidence') || lowerMessage.includes('scared')) {
-    return `💪 **Mindset Mastery Session - You Are a Trading Warrior!**\n\nLet me tell you something important: Every successful trader I've "coached" (through data and algorithms) started exactly where you are right now. The difference? They decided to believe in themselves and keep going.\n\n**Your Trading Mindset Superpowers:**\n• **Resilience**: You're still here, still learning, still growing\n• **Curiosity**: You're asking questions and seeking improvement\n• **Commitment**: You're investing time and energy in your trading education\n• **Self-Awareness**: You're honest about your challenges and opportunities\n\n**Trading Psychology Truths:**\n1. **Fear is Normal** - Every trader feels it. Champions use it as fuel.\n2. **Losses Are Tuition** - Each one teaches you something valuable.\n3. **Progress is Nonlinear** - Some days are wins, some are lessons.\n4. **You're Not Alone** - Every successful trader has been exactly where you are.\n\n**Mindset Boosters (Try These Right Now):**\n• **Victory Log**: Write down 3 things you did well this week\n• **Learning Journal**: Note what each losing trade taught you\n• **Confidence Builder**: Review your best trades and remember why you won\n• **Support System**: Talk to other traders about your journey\n\n**My Promise to You:**\nYou're not just learning to trade - you're becoming a stronger, more disciplined person. The skills you're developing (patience, emotional control, decision-making) will serve you in every area of life.\n\n**Quick Mindset Exercise:**\nClose your eyes, take a deep breath, and say to yourself: "I am a skilled trader. I learn from every experience. I am committed to my growth. I trust my process."\n\nHow does that feel? Ready to tackle the markets with renewed confidence? 🚀`;
+  // Market timing and entry recommendations
+  if (lowerMessage.includes('when') || lowerMessage.includes('timing') || lowerMessage.includes('entry')) {
+    return generateMarketTimingRecommendations(tradeAnalysis);
   }
 
-  // General coaching response
-  return `🤖 **Tradia AI - Your Personal Trading Coach**\n\nHey there, fellow trader! I'm so glad you're here and investing in your trading education. That's already putting you ahead of 90% of market participants!\n\n**Quick Stats from Your Journey:**\n• **${trades.length} Trades** - Every one a step toward mastery!\n• **${trades.length > 0 ? (trades.filter(t => t.outcome === 'Win').length / trades.length * 100).toFixed(1) : 0}% Win Rate** - You're building an edge!\n• **$${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)} Total P&L** - Real results from your efforts!\n\n**What I Love About Working With You:**\n• You're **actively learning** and seeking improvement\n• You're **tracking your performance** and being honest about results\n• You're **committed to the process** - that's what creates champions!\n\n**Let's Make Today Count - What Can We Work On?**\n• 📊 **Performance Review** - "How's my trading been lately?"\n• 🎯 **Strategy Deep Dive** - "What's my strongest pattern?"\n• 🛡️ **Risk Management** - "How can I better protect my capital?"\n• 📸 **Setup Analysis** - Upload a screenshot: "Review this trade"\n• 💪 **Mindset Coaching** - "I need some motivation today"\n\n**Remember:** You're not just trading - you're building a skill set that will serve you for life. Patience, discipline, emotional control, decision-making under pressure... these are gold!\n\nWhat's one thing we can focus on to make you an even better trader today? I'm here for you! 💪`;
+  // Emotional support with performance-based motivation
+  if (lowerMessage.includes('lost') || lowerMessage.includes('bad') || lowerMessage.includes('losing') || lowerMessage.includes('stuck')) {
+    return generateEmotionalSupportWithInsights(tradeAnalysis);
+  }
+
+  // Winning celebration with growth recommendations
+  if (lowerMessage.includes('won') || lowerMessage.includes('profit') || lowerMessage.includes('winning') || lowerMessage.includes('good')) {
+    return generateWinningCelebrationWithGrowth(tradeAnalysis);
+  }
+
+  // Motivation and mindset with personalized coaching
+  if (lowerMessage.includes('motivation') || lowerMessage.includes('mindset') || lowerMessage.includes('confidence')) {
+    return generatePersonalizedMotivation(tradeAnalysis);
+  }
+
+  // Screenshot analysis with advanced recommendations
+  if (uploadedFiles.length > 0) {
+    return generateAdvancedScreenshotAnalysis(uploadedFiles, tradeAnalysis);
+  }
+
+  // Default intelligent response with personalized recommendations
+  return generateDefaultIntelligentResponse(tradeAnalysis);
 }
 
 // Helper functions for AI responses

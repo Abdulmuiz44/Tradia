@@ -658,7 +658,7 @@ function DashboardContent() {
                 {activeTab === "journal" && <TradeJournalAny />}
 
                 {activeTab === "tradia-ai" && (
-                  <div className="h-[calc(100vh-200px)]">
+                  <div className="h-full">
                     <AIChatInterface />
                   </div>
                 )}
