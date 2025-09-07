@@ -59,24 +59,37 @@ export interface AIReasoningProcess {
 }
 
 export class AIService {
-  private static instance: AIService;
-  private userPlan: UserPlan;
+   private static instance: AIService;
+   private userPlan: UserPlan;
 
-  private constructor() {
-    // Default to starter plan - in real implementation, this would be fetched from user context
-    this.userPlan = {
-      id: 'starter',
-      name: 'Starter',
-      limits: {
-        maxHistoryDays: 30,
-        maxAccounts: 1,
-        aiFeatures: ['basic_analytics', 'performance_overview'],
-        advancedAnalytics: false,
-        strategyBuilder: false,
-        propFirmDashboard: false
+   private constructor() {
+     // Default to starter plan - in real implementation, this would be fetched from user context
+     this.userPlan = {
+       id: 'starter',
+       name: 'Starter',
+       limits: {
+         maxHistoryDays: 30,
+         maxAccounts: 0,
+         aiFeatures: ['basic_analytics', 'performance_overview'],
+         advancedAnalytics: false,
+         strategyBuilder: false,
+         propFirmDashboard: false
+       }
+     };
+   }
+
+   /**
+    * Get the appropriate AI model based on user plan and request type
+    */
+   private getAIModel(modelType: 'chat' | 'analysis' = 'chat') {
+      // Simple model selection based on plan
+      if (this.userPlan.id === 'pro' || this.userPlan.id === 'plus' || this.userPlan.id === 'elite') {
+         return modelType === 'analysis' ? 'advanced' : 'standard';
       }
-    };
-  }
+ 
+      // For starter users, use basic model
+      return 'basic';
+   }
 
   static getInstance(): AIService {
     if (!AIService.instance) {
@@ -334,86 +347,201 @@ export class AIService {
       uploadedImages?: File[];
     }
   ): Promise<string> {
-    // Step 1: Analyze the user's question with enhanced reasoning
-    const reasoning = this.analyzeQuestion(query);
+    try {
+      // Step 1: Analyze the user's question with enhanced reasoning
+      const reasoning = this.analyzeQuestion(query);
 
-    // Step 2: Check plan limits and feature access
-    const hasAdvancedFeatures = this.hasFeatureAccess('advanced_analytics');
-    const hasAISuggestions = this.hasFeatureAccess('ai_trade_reviews');
-    const hasStrategyBuilder = this.userPlan.limits.strategyBuilder;
+      // Step 2: Check plan limits and feature access
+      const hasAdvancedFeatures = this.hasFeatureAccess('advanced_analytics');
+      const hasAISuggestions = this.hasFeatureAccess('ai_trade_reviews');
+      const hasStrategyBuilder = this.userPlan.limits.strategyBuilder;
 
-    // Step 3: Filter trades based on plan limits
-    const filteredTrades = this.filterTradesByPlanLimits(trades);
+      // Step 3: Filter trades based on plan limits
+      const filteredTrades = this.filterTradesByPlanLimits(trades);
 
-    // Step 4: Create ML analysis with plan-aware processing
-    const analysis = await this.createMLAnalysis(filteredTrades);
+      // Step 4: Create ML analysis with plan-aware processing
+      const analysis = await this.createMLAnalysis(filteredTrades);
 
-    // Step 5: Analyze uploaded images if any
-    let imageAnalysis = '';
+      // Step 5: Prepare trade data summary for AI context
+      const tradeSummary = this.prepareTradeSummary(filteredTrades);
+
+      // Step 6: Generate AI response using Vercel AI SDK
+      const aiResponse = await this.generateAIResponse(query, tradeSummary, analysis, reasoning, context);
+
+      // Step 7: Add plan-specific footer
+      const finalResponse = aiResponse + this.generatePlanFooter();
+
+      return finalResponse;
+    } catch (error) {
+      console.error('AI Response Generation Error:', error);
+      return this.generateFallbackResponse(query, trades);
+    }
+  }
+
+  /**
+   * Generate AI response using simple text generation
+   */
+  private async generateAIResponse(
+    query: string,
+    tradeSummary: any,
+    analysis: MLTradeAnalysis,
+    reasoning: AIReasoningProcess,
+    context?: any
+  ): Promise<string> {
+    // Simple AI response generation without external SDK
+    const response = this.generateSimpleResponse(query, tradeSummary, analysis);
+    return this.formatAIResponse(response, analysis);
+  }
+
+  /**
+   * Simple response generation without AI SDK
+   */
+  private generateSimpleResponse(query: string, tradeSummary: any, analysis: MLTradeAnalysis): string {
+    const lowerQuery = query.toLowerCase();
+
+    if (lowerQuery.includes('performance') || lowerQuery.includes('how am i doing')) {
+      return `📊 **Performance Analysis:**\n\nYour current win rate is ${tradeSummary.winRate}%. You've completed ${tradeSummary.totalTrades} trades with a total P&L of $${tradeSummary.totalPnL}.\n\n**Key Insights:**\n${analysis.insights.slice(0, 2).map(i => `• ${i.insight}`).join('\n')}\n\nKeep up the good work and focus on your strongest patterns!`;
+    }
+
+    if (lowerQuery.includes('mistake') || lowerQuery.includes('problem')) {
+      return `🔍 **Mistake Analysis:**\n\nBased on your trading data, here are the main areas to focus on:\n\n${analysis.insights.filter(i => i.priority === 'high').map(i => `• ${i.insight}\n  💡 ${i.recommendation}`).join('\n\n')}\n\nRemember, every trader makes mistakes - the key is learning from them!`;
+    }
+
+    if (lowerQuery.includes('improve') || lowerQuery.includes('better')) {
+      return `🚀 **Improvement Plan:**\n\nHere are your top improvement opportunities:\n\n${analysis.insights.slice(0, 3).map(i => `• ${i.recommendation}`).join('\n')}\n\nStart with one improvement at a time for the best results!`;
+    }
+
+    return `🤖 **Tradia AI Assistant:**\n\nThanks for your question! Based on your ${tradeSummary.totalTrades} trades, I can see you're doing well with a ${tradeSummary.winRate}% win rate.\n\n${analysis.insights.slice(0, 1).map(i => `💡 ${i.recommendation}`).join('')}\n\nWhat specific aspect of your trading would you like to explore?`;
+  }
+
+  /**
+   * Build system prompt for AI model
+   */
+  private buildSystemPrompt(tradeSummary: any, analysis: MLTradeAnalysis, reasoning: AIReasoningProcess): string {
+    return `You are Tradia AI, an expert trading assistant specializing in forex and financial markets analysis.
+
+USER CONTEXT:
+- Plan: ${this.userPlan.name} (${this.userPlan.id})
+- Trade History: ${tradeSummary.totalTrades} trades
+- Win Rate: ${tradeSummary.winRate}%
+- Best Performing Symbol: ${analysis.marketAnalysis.bestPerformingSymbols[0] || 'N/A'}
+- Risk Profile: ${analysis.riskProfile.riskTolerance}
+
+TRADE ANALYSIS:
+- Patterns: ${analysis.patterns.map(p => p.description).join(', ')}
+- Key Insights: ${analysis.insights.slice(0, 3).map(i => i.insight).join('; ')}
+- Expected Win Rate: ${(analysis.predictiveMetrics.expectedWinRate * 100).toFixed(1)}%
+
+INSTRUCTIONS:
+1. Provide actionable, specific advice based on the user's trade data
+2. Be encouraging but realistic about performance
+3. Focus on ${reasoning.questionAnalysis.toLowerCase()}
+4. Consider data: ${reasoning.dataConsidered.join(', ')}
+5. Keep responses conversational but professional
+6. Include specific numbers and examples from their trading history
+7. End with 1-2 concrete next steps they can take
+
+RESPONSE STYLE:
+- Use markdown formatting for clarity
+- Include relevant emojis for visual appeal
+- Structure responses with clear sections
+- Be concise but comprehensive
+- Always provide value, even for basic plan users`;
+  }
+
+  /**
+   * Build user prompt for AI model
+   */
+  private buildUserPrompt(query: string, context?: any): string {
+    let prompt = `User Query: "${query}"
+
+Please analyze this query in the context of their trading performance and provide a helpful, personalized response.`;
+
+    if (context?.marketCondition) {
+      prompt += `\n\nCurrent Market Condition: ${context.marketCondition}`;
+    }
+
     if (context?.uploadedImages && context.uploadedImages.length > 0) {
-      if (this.hasFeatureAccess('screenshot_analysis')) {
-        imageAnalysis = await this.analyzeUploadedImages(context.uploadedImages, filteredTrades);
-      } else {
-        imageAnalysis = '\n\n📸 *Screenshot analysis is available on Pro plan and above. Upgrade to get AI-powered visual trade analysis!*';
+      prompt += `\n\nUser has uploaded ${context.uploadedImages.length} trade screenshot(s) for analysis.`;
+    }
+
+    return prompt;
+  }
+
+  /**
+   * Format AI response with proper structure
+   */
+  private formatAIResponse(aiText: string, analysis: MLTradeAnalysis): string {
+    // Add analysis insights if user has advanced features
+    if (this.hasFeatureAccess('advanced_analytics')) {
+      const insights = analysis.insights.slice(0, 2);
+      if (insights.length > 0) {
+        return aiText + '\n\n**📊 Key Insights from Your Data:**\n' +
+          insights.map(i => `• ${i.insight}\n  💡 ${i.recommendation}`).join('\n\n');
       }
     }
 
-    // Step 6: Generate response with plan-aware content
-    const query_lower = query.toLowerCase();
-    let response = '';
+    return aiText;
+  }
 
-    // Add reasoning transparency for Pro+ users
-    const showReasoning = hasAdvancedFeatures;
-
-    if (showReasoning) {
-      response += `🤔 **Tradia AI's Analysis Process:**\n`;
-      response += `• Question Type: ${reasoning.questionAnalysis}\n`;
-      response += `• Data Considered: ${reasoning.dataConsidered.join(', ')}\n`;
-      response += `• Confidence: ${(reasoning.confidence * 100).toFixed(0)}%\n\n`;
+  /**
+   * Prepare trade summary for AI context
+   */
+  private prepareTradeSummary(trades: Trade[]): any {
+    if (trades.length === 0) {
+      return {
+        totalTrades: 0,
+        winRate: 0,
+        totalPnL: 0,
+        avgTrade: 0,
+        bestSymbol: 'N/A'
+      };
     }
 
-    // Generate response based on query type with plan limits
-    if (query_lower.includes('performance') || query_lower.includes('how am i doing')) {
-      response += this.generatePerformanceResponse(analysis, filteredTrades, hasAdvancedFeatures);
-    }
+    const wins = trades.filter(t => t.outcome === 'Win').length;
+    const winRate = (wins / trades.length) * 100;
+    const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+    const avgTrade = totalPnL / trades.length;
 
-    else if (query_lower.includes('mistake') || query_lower.includes('problem') || query_lower.includes('wrong')) {
-      response += this.generateMistakesResponse(analysis, filteredTrades, hasAISuggestions);
-    }
+    // Find best performing symbol
+    const symbolStats = this.groupTradesBySymbol(trades);
+    const bestSymbol = Object.entries(symbolStats)
+      .sort(([,a]: any, [,b]: any) => b.winRate - a.winRate)[0]?.[0] || 'N/A';
 
-    else if (query_lower.includes('improve') || query_lower.includes('better') || query_lower.includes('win rate')) {
-      response += this.generateImprovementResponse(analysis, filteredTrades, hasStrategyBuilder);
-    }
+    return {
+      totalTrades: trades.length,
+      winRate: winRate.toFixed(1),
+      totalPnL: totalPnL.toFixed(2),
+      avgTrade: avgTrade.toFixed(2),
+      bestSymbol
+    };
+  }
 
-    else if (query_lower.includes('risk') || query_lower.includes('position size')) {
-      response += this.generateRiskResponse(analysis, filteredTrades, hasAdvancedFeatures);
-    }
+  /**
+   * Generate fallback response in case of AI errors
+   */
+  private generateFallbackResponse(query: string, trades: Trade[]): string {
+    const totalTrades = trades.length;
+    const wins = trades.filter(t => t.outcome === 'Win').length;
+    const winRate = totalTrades > 0 ? (wins / totalTrades * 100).toFixed(1) : '0';
 
-    else if (query_lower.includes('market') || query_lower.includes('trend') || query_lower.includes('timing')) {
-      response += this.generateMarketResponse(analysis, filteredTrades, hasAdvancedFeatures);
-    }
+    return `🤖 **Tradia AI Assistant**
 
-    else if (query_lower.includes('predict') || query_lower.includes('future') || query_lower.includes('expect')) {
-      if (hasAdvancedFeatures) {
-        response += this.generatePredictionResponse(analysis, filteredTrades);
-      } else {
-        response += `🔮 **Future Performance Predictions**\n\n`;
-        response += `Predictive analytics are available on Pro plan and above. Here's what I can tell you based on your current data:\n\n`;
-        response += `**Current Trajectory:** ${analysis.predictiveMetrics.expectedWinRate > 0.5 ? 'Positive' : 'Needs improvement'}\n`;
-        response += `**Key Factors:** Focus on consistency and risk management\n\n`;
-        response += `💡 *Upgrade to Pro for detailed performance predictions and AI-powered forecasting!*`;
-      }
-    }
+I apologize, but I'm having trouble processing your request right now. Here's what I can tell you from your trading data:
 
-    else {
-      // Default comprehensive response
-      response += this.generateComprehensiveResponse(analysis, filteredTrades, query, imageAnalysis, hasAdvancedFeatures);
-    }
+**Your Performance Summary:**
+• Total Trades: ${totalTrades}
+• Win Rate: ${winRate}%
+• Total P&L: $${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)}
 
-    // Add plan-specific footer
-    response += this.generatePlanFooter();
+**General Trading Tips:**
+• Focus on maintaining consistent risk management
+• Consider your win rate when adjusting position sizes
+• Review both winning and losing trades for patterns
 
-    return response;
+Please try your question again in a moment, or ask me about your performance, risk management, or trading strategies.
+
+${this.generatePlanFooter()}`;
   }
 
   /**

@@ -2,107 +2,44 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 import {
   User,
   Mail,
-  Camera,
-  Save,
-  Key,
-  CreditCard,
-  Settings,
+  MapPin,
+  Calendar,
   Shield,
-  Bell,
-  Moon,
-  Sun,
-  Globe,
-  Upload,
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  Edit3,
+  Save,
   X
 } from "lucide-react";
 
-interface UserProfile {
-  id: string;
-  name: string | null;
-  email: string;
-  image: string | null;
-  role: string;
-  createdAt: string;
-  lastLogin: string;
-}
-
 export default function ProfilePage() {
-  const { data: session, update } = useSession();
   const router = useRouter();
-
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, refreshUser } = useUser();
+  const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'billing' | 'settings'>('profile');
 
-  // Form states
   const [formData, setFormData] = useState({
     name: '',
-    email: ''
-  });
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  // Settings states
-  const [settings, setSettings] = useState({
-    theme: 'dark',
-    language: 'en',
-    notifications: true,
-    emailUpdates: true,
-    tradeAlerts: true
+    country: ''
   });
 
   useEffect(() => {
-    if (session?.user) {
-      loadUserProfile();
-      loadUserSettings();
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        country: user.country || ''
+      });
     }
-  }, [session]);
+  }, [user]);
 
-  const loadUserProfile = async () => {
-    if (!session?.user?.id) return;
-
-    try {
-      const response = await fetch('/api/user/profile');
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data.profile);
-        setFormData({
-          name: data.profile.name || '',
-          email: data.profile.email
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUserSettings = () => {
-    // Load user settings from localStorage or default values
-    const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings) {
-      try {
-        setSettings(JSON.parse(savedSettings));
-      } catch (error) {
-        console.error('Failed to parse settings:', error);
-      }
-    }
-  };
-
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session?.user?.id) return;
+  const handleSave = async () => {
+    if (!user?.id) return;
 
     setSaving(true);
     try {
@@ -113,20 +50,9 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        // Update session
-        if (session && update) {
-          await update({
-            ...session,
-            user: {
-              ...session.user,
-              name: formData.name,
-              email: formData.email
-            }
-          });
-        }
-
+        await refreshUser();
+        setIsEditing(false);
         alert('Profile updated successfully!');
-        loadUserProfile();
       } else {
         alert('Failed to update profile');
       }
@@ -138,93 +64,14 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match');
-      return;
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const response = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        country: user.country || ''
       });
-
-      if (response.ok) {
-        alert('Password changed successfully!');
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to change password');
-      }
-    } catch (error) {
-      console.error('Password change error:', error);
-      alert('Failed to change password');
-    } finally {
-      setSaving(false);
     }
-  };
-
-  const handleSettingsUpdate = (newSettings: Partial<typeof settings>) => {
-    const updatedSettings = { ...settings, ...newSettings };
-    setSettings(updatedSettings);
-    localStorage.setItem('userSettings', JSON.stringify(updatedSettings));
-
-    // Apply theme immediately
-    if (newSettings.theme) {
-      document.documentElement.classList.toggle('dark', newSettings.theme === 'dark');
-    }
-  };
-
-  const handleAvatarUpload = async (file: File) => {
-    if (!file) return;
-
-    const formDataUpload = new FormData();
-    formDataUpload.append('avatar', file);
-
-    try {
-      const response = await fetch('/api/user/upload-avatar', {
-        method: 'POST',
-        body: formDataUpload
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Update session with new avatar
-        if (session && update) {
-          await update({
-            ...session,
-            user: {
-              ...session.user,
-              image: data.avatarUrl
-            }
-          });
-        }
-        alert('Avatar updated successfully!');
-        loadUserProfile();
-      } else {
-        alert('Failed to upload avatar');
-      }
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-      alert('Failed to upload avatar');
-    }
+    setIsEditing(false);
   };
 
   if (loading) {
@@ -235,341 +82,213 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session?.user) {
+  if (!user) {
     router.push('/login');
     return null;
   }
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'settings', label: 'Settings', icon: Settings }
-  ];
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
-          <p className="text-gray-400">Manage your account information and preferences</p>
+          <h1 className="text-3xl font-bold mb-2">Profile</h1>
+          <p className="text-gray-400">Manage your account information</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-gray-800 rounded-lg p-4">
-              <nav className="space-y-2">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Overview */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Account Information</h2>
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Full Name</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your full name"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                      <User className="w-5 h-5 text-gray-400" />
+                      <span>{user.name || 'Not provided'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email Address</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                    <Mail className="w-5 h-5 text-gray-400" />
+                    <span>{user.email}</span>
+                    {user.emailVerified ? (
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {user.emailVerified ? 'Email verified' : 'Email not verified'}
+                  </p>
+                </div>
+
+                {/* Country */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Country</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.country}
+                      onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter your country"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                      <MapPin className="w-5 h-5 text-gray-400" />
+                      <span>{user.country || 'Not provided'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Current Plan */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Current Plan</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-gray-400" />
+                    <span className="capitalize">{user.plan} Plan</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      user.plan === 'free' ? 'bg-gray-600' :
+                      user.plan === 'pro' ? 'bg-blue-600' :
+                      user.plan === 'plus' ? 'bg-purple-600' :
+                      'bg-yellow-600'
+                    }`}>
+                      {user.plan.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Account Created */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Account Created</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                    <Calendar className="w-5 h-5 text-gray-400" />
+                    <span>{formatDate(user.createdAt)}</span>
+                  </div>
+                </div>
+
+                {/* Last Login */}
+                {user.lastLogin && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Last Login</label>
+                    <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                      <Shield className="w-5 h-5 text-gray-400" />
+                      <span>{formatDate(user.lastLogin)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Actions */}
+                {isEditing && (
+                  <div className="flex gap-3 pt-4">
                     <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                        activeTab === tab.id
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-700'
-                      }`}
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
                     >
-                      <Icon className="w-5 h-5" />
-                      {tab.label}
+                      {saving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          Save Changes
+                        </>
+                      )}
                     </button>
-                  );
-                })}
-              </nav>
+                    <button
+                      onClick={handleCancel}
+                      className="flex items-center gap-2 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
+          {/* Quick Actions */}
+          <div className="space-y-6">
+            {/* Plan Upgrade */}
             <div className="bg-gray-800 rounded-lg p-6">
-              {activeTab === 'profile' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Profile Information</h2>
+              <h3 className="text-lg font-semibold mb-4">Plan Management</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.push('/pricing')}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  View Plans & Upgrade
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard/billing')}
+                  className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                >
+                  Billing History
+                </button>
+              </div>
+            </div>
 
-                  {/* Avatar Section */}
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-4">Profile Picture</h3>
-                    <div className="flex items-center gap-6">
-                      <div className="relative">
-                        <img
-                          src={profile?.image || '/default-avatar.png'}
-                          alt="Profile"
-                          className="w-24 h-24 rounded-full object-cover"
-                        />
-                        <label className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full cursor-pointer hover:bg-blue-700">
-                          <Camera className="w-4 h-4" />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleAvatarUpload(file);
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-400 mb-2">
-                          Upload a new profile picture. Max size: 5MB
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Supported formats: JPG, PNG, GIF
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Profile Form */}
-                  <form onSubmit={handleProfileUpdate} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Full Name</label>
-                        <input
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Enter your full name"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Email Address</label>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Enter your email"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      >
-                        {saving ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="w-4 h-4" />
-                            Save Changes
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </form>
+            {/* Account Status */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4">Account Status</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Email Verification</span>
+                  {user.emailVerified ? (
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  )}
                 </div>
-              )}
-
-              {activeTab === 'security' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Security Settings</h2>
-
-                  {/* Password Change Form */}
-                  <div className="bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Key className="w-5 h-5" />
-                      Change Password
-                    </h3>
-
-                    <form onSubmit={handlePasswordChange} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Current Password</label>
-                        <input
-                          type="password"
-                          value={passwordData.currentPassword}
-                          onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">New Password</label>
-                        <input
-                          type="password"
-                          value={passwordData.newPassword}
-                          onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          required
-                          minLength={8}
-                        />
-                        <p className="text-xs text-gray-400 mt-1">
-                          Must be at least 8 characters long
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-                        <input
-                          type="password"
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      >
-                        {saving ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <Key className="w-4 h-4" />
-                            Update Password
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Account Active</span>
+                  <CheckCircle className="w-5 h-5 text-green-400" />
                 </div>
-              )}
-
-              {activeTab === 'billing' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Billing & Subscription</h2>
-
-                  {/* Current Plan */}
-                  <div className="bg-gray-700 rounded-lg p-6 mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Current Plan</h3>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold text-blue-400">Free Plan</p>
-                        <p className="text-gray-400">Basic features included</p>
-                      </div>
-                      <button
-                        onClick={() => router.push('/pricing')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                      >
-                        Upgrade Plan
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Usage Stats */}
-                  <div className="bg-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4">Usage This Month</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-green-400">0/5</p>
-                        <p className="text-sm text-gray-400">AI Chats</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-400">0</p>
-                        <p className="text-sm text-gray-400">MT5 Accounts</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-purple-400">0</p>
-                        <p className="text-sm text-gray-400">Trades Stored</p>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Trader Status</span>
+                  <CheckCircle className="w-5 h-5 text-green-400" />
                 </div>
-              )}
-
-              {activeTab === 'settings' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Preferences</h2>
-
-                  <div className="space-y-6">
-                    {/* Theme Setting */}
-                    <div className="bg-gray-700 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Settings className="w-5 h-5" />
-                        Appearance
-                      </h3>
-
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Theme</label>
-                          <div className="flex gap-4">
-                            <button
-                              onClick={() => handleSettingsUpdate({ theme: 'light' })}
-                              className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                                settings.theme === 'light'
-                                  ? 'border-blue-500 bg-blue-600'
-                                  : 'border-gray-600 hover:border-gray-500'
-                              }`}
-                            >
-                              <Sun className="w-4 h-4" />
-                              Light
-                            </button>
-                            <button
-                              onClick={() => handleSettingsUpdate({ theme: 'dark' })}
-                              className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                                settings.theme === 'dark'
-                                  ? 'border-blue-500 bg-blue-600'
-                                  : 'border-gray-600 hover:border-gray-500'
-                              }`}
-                            >
-                              <Moon className="w-4 h-4" />
-                              Dark
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Notification Settings */}
-                    <div className="bg-gray-700 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Bell className="w-5 h-5" />
-                        Notifications
-                      </h3>
-
-                      <div className="space-y-4">
-                        <label className="flex items-center justify-between">
-                          <span>Email Updates</span>
-                          <input
-                            type="checkbox"
-                            checked={settings.emailUpdates}
-                            onChange={(e) => handleSettingsUpdate({ emailUpdates: e.target.checked })}
-                            className="rounded"
-                          />
-                        </label>
-
-                        <label className="flex items-center justify-between">
-                          <span>Trade Alerts</span>
-                          <input
-                            type="checkbox"
-                            checked={settings.tradeAlerts}
-                            onChange={(e) => handleSettingsUpdate({ tradeAlerts: e.target.checked })}
-                            className="rounded"
-                          />
-                        </label>
-
-                        <label className="flex items-center justify-between">
-                          <span>Push Notifications</span>
-                          <input
-                            type="checkbox"
-                            checked={settings.notifications}
-                            onChange={(e) => handleSettingsUpdate({ notifications: e.target.checked })}
-                            className="rounded"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

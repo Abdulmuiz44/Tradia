@@ -27,7 +27,7 @@ export function RequirementsGuide({ requirements, onClose, className = "" }: Req
 
   const getRequirementIcon = (title: string) => {
     switch (title) {
-      case 'MT5 Terminal':
+      case 'MT5 Android App':
         return <Monitor className="w-5 h-5 text-blue-500" />;
       case 'Server Address':
         return <Globe className="w-5 h-5 text-green-500" />;
@@ -46,16 +46,16 @@ export function RequirementsGuide({ requirements, onClose, className = "" }: Req
 
   const getDetailedInstructions = (title: string) => {
     switch (title) {
-      case 'MT5 Terminal':
+      case 'MT5 Android App':
         return {
           steps: [
-            "Download MetaTrader 5 from your broker's website",
-            "Install the terminal on your computer",
-            "Launch MT5 and log in to your account",
-            "Keep MT5 running during sync operations"
+            "Download MetaTrader 5 Android app from Google Play Store",
+            "Install the app on your Android device",
+            "Open MT5 Android and log in to your account",
+            "Keep MT5 Android running during sync operations"
           ],
           links: [
-            { text: "MetaTrader 5 Download", url: "https://www.metatrader5.com/en/download" }
+            { text: "MetaTrader 5 Android Download", url: "https://play.google.com/store/apps/details?id=net.metaquotes.metatrader5" }
           ]
         };
       case 'Server Address':
@@ -261,11 +261,11 @@ export function RequirementsGuide({ requirements, onClose, className = "" }: Req
       {/* Action Buttons */}
       <div className="mt-6 flex gap-3">
         <button
-          onClick={() => window.open('https://www.metatrader5.com/en/download', '_blank')}
+          onClick={() => window.open('https://play.google.com/store/apps/details?id=net.metaquotes.metatrader5', '_blank')}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Download className="w-4 h-4" />
-          Download MT5
+          Download MT5 Android
         </button>
 
         <button

@@ -1,4 +1,4 @@
-# 🎯 Tradia MT5 Integration - Complete Setup Guide
+# 🎯 Tradia MT5 Android Integration - Complete Setup Guide
 
 ## ✅ **ALL ERRORS FIXED** - MT5 Integration Now Works!
 
@@ -36,7 +36,7 @@ I've completely resolved all the "Failed to fetch" errors and created a **produc
 
 | Requirement | Status | Details |
 |-------------|--------|---------|
-| **MT5 Terminal** | 🔴 **REQUIRED** | Must be installed and running |
+| **MT5 Android App** | 🔴 **REQUIRED** | Must be installed and running |
 | **Server Address** | 🔴 **REQUIRED** | Valid broker server (e.g., ICMarketsSC-MT5) |
 | **Account Login** | 🔴 **REQUIRED** | Your MT5 account number (5-10 digits) |
 | **Password** | 🔴 **REQUIRED** | Investor password (not broker password) |
@@ -56,23 +56,23 @@ I've completely resolved all the "Failed to fetch" errors and created a **produc
 
 ## 🔧 **Detailed Setup Instructions**
 
-### 1. **Install MetaTrader 5**
+### 1. **Install MetaTrader 5 Android App**
 ```bash
-# Download from your broker or:
-# https://www.metatrader5.com/en/download
+# Download from Google Play Store:
+# https://play.google.com/store/apps/details?id=net.metaquotes.metatrader5
 
-# Install and launch MT5
+# Install and open MT5 Android app
 # Log in to your trading account
 ```
 
 ### 2. **Enable Automated Trading (CRITICAL)**
-1. Open MT5 Terminal
-2. Go to **Tools → Options**
-3. Click **Expert Advisors** tab
+1. Open MT5 Android App
+2. Tap the **Menu** (three lines) → **Settings**
+3. Go to **Expert Advisors** section
 4. ✅ **Check "Allow automated trading"**
 5. ✅ **Check "Allow DLL imports"**
 6. ❌ **Uncheck "Disable automated trading when..."**
-7. Click **OK** to save
+7. Save the settings
 
 ### 3. **Get Your Credentials**
 - **Server**: Ask your broker or check MT5 login screen
@@ -123,7 +123,7 @@ npm run dev
 **Solutions:**
 1. Ensure both frontend (port 3000) and backend (port 5000) are running
 2. Check `.env` file has correct `NEXT_PUBLIC_MT5_BACKEND_URL`
-3. Verify MT5 terminal is running and accessible
+3. Verify MT5 Android app is running and accessible
 
 ### ❌ **"Invalid server" Error**
 **Cause**: Wrong server address format
@@ -135,7 +135,7 @@ npm run dev
 
 ### ❌ **"API disabled" Error**
 **Cause**: Automated trading not enabled
-**Solution**: Enable in MT5 → Tools → Options → Expert Advisors
+**Solution**: Enable in MT5 Android → Menu → Settings → Expert Advisors
 
 ### ❌ **"Account limit reached" Error**
 **Cause**: Exceeded plan limits
@@ -159,7 +159,7 @@ npm run dev
 
 ### **Data Flow**
 ```
-MT5 Terminal → FastAPI Backend → Next.js Frontend → Database → Dashboard
+MT5 Android App → FastAPI Backend → Next.js Frontend → Database → Dashboard
 ```
 
 ### **Security Features**
@@ -174,7 +174,7 @@ MT5 Terminal → FastAPI Backend → Next.js Frontend → Database → Dashboard
 ## 🎯 **Account Connection Process**
 
 ### **Step 1: Prerequisites Check**
-- MT5 terminal running
+- MT5 Android app running
 - Valid server address
 - Correct credentials
 - Network connectivity
@@ -239,7 +239,7 @@ MT5 Terminal → FastAPI Backend → Next.js Frontend → Database → Dashboard
 curl http://127.0.0.1:5000/health
 curl http://localhost:3000/api/health
 
-# Test MT5 connection
+# Test MT5 Android connection
 curl -X POST http://127.0.0.1:5000/requirements
 ```
 
@@ -251,7 +251,7 @@ curl -X POST http://127.0.0.1:5000/requirements
 
 ### **Common Debug Steps**
 1. **Restart Services**: Stop and restart both frontend/backend
-2. **Check MT5**: Ensure terminal is running and logged in
+2. **Check MT5 Android**: Ensure app is running and logged in
 3. **Verify Credentials**: Double-check server, login, password
 4. **Network Test**: Ensure no firewall blocking connections
 5. **Clear Cache**: Browser cache and local storage

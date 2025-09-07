@@ -37,6 +37,17 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
     const userId = (user as any).id as string;
 
+    // Check user's plan access for MT5
+    const { getUserPlan, canAccessMT5 } = await import("@/lib/planAccess");
+    const userPlan = await getUserPlan(userId);
+    if (!canAccessMT5(userPlan)) {
+      return NextResponse.json({
+        error: "MT5 integration requires a Pro, Plus, or Elite plan",
+        upgradeRequired: true,
+        currentPlan: userPlan.type
+      }, { status: 403 });
+    }
+
     const body = (await req.json()) as ReqBody;
     const account = body?.account;
     const trades = Array.isArray(body?.trades) ? body!.trades! : null;
@@ -59,7 +70,7 @@ export async function POST(req: Request) {
         balance: info?.balance ? asNumberOrNull(info.balance) : null,
         state: "connected",
       },
-      { onConflict: ["user_id", "login", "server"] }
+      { onConflict: "user_id,login,server" }
     );
     if (accErr) console.error("Failed to upsert mt5 account:", accErr);
 
@@ -98,7 +109,7 @@ export async function POST(req: Request) {
             comment,
             close_time: closeTime,
           },
-          { onConflict: ["deal_id"] }
+          { onConflict: "deal_id" }
         );
         if (upErr) console.error("Failed to insert trade:", upErr, d);
         imported++;

@@ -27,11 +27,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get user from database
     const supabase = createClient();
     const { data: user, error: userErr } = await supabase
       .from("users")
-      .select("id")
+      .select("id, plan")
       .eq("email", userEmail)
       .maybeSingle();
 
@@ -42,14 +41,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = (await req.json()) as ConnectBody;
+    // Plan access enforcement (only pro/plus/elite allowed)
+    const { canAccessMT5 } = await import("@/lib/planAccess");
+    if (!canAccessMT5((user.plan as any) || "free")) {
+      return NextResponse.json(
+        {
+          error: "UPGRADE_REQUIRED",
+          message: "MT5 integration requires Pro, Plus or Elite plan"
+        },
+        { status: 403 }
+      );
+    }
 
+    const body = (await req.json()) as ConnectBody;
     const server = asString(body.server);
     const login = asString(body.login);
     const investorPassword = asString(body.investorPassword);
     const name = asString(body.name);
 
-    // Validate required fields
     if (!server || !login || !investorPassword) {
       return NextResponse.json(
         {
@@ -65,7 +74,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate login is numeric
     if (!/^\d+$/.test(login)) {
       return NextResponse.json(
         { error: "INVALID_LOGIN", message: "Login must be a valid number" },
@@ -73,7 +81,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // First validate the connection using our validation endpoint
+    // Validate the connection using our validation endpoint
     try {
       const validationResponse = await fetch(
         `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/mt5/validate`,
@@ -119,7 +127,7 @@ export async function POST(req: NextRequest) {
       const { data: account, error: accountErr } = await supabase
         .from("mt5_accounts")
         .upsert(accountData, {
-          onConflict: ["user_id", "server", "login"]
+          onConflict: "user_id,server,login"
         })
         .select()
         .single();
@@ -132,7 +140,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Log successful connection
       console.log(`MT5 account connected for user ${user.id}: ${login}@${server}`);
 
       return NextResponse.json({

@@ -108,7 +108,7 @@ export async function PATCH(req: NextRequest) {
     // Ensure row exists (insert if not)
     const { error: insErr } = await supabase.from("user_settings").upsert(
       { user_id: userId, settings: body.settings, updated_at: new Date().toISOString() },
-      { onConflict: ["user_id"] }
+      { onConflict: "user_id" }
     );
     if (insErr) throw insErr;
 

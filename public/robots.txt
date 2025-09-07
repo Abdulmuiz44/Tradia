@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Block access to admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /dashboard/
+
+# Allow access to main content
+Allow: /
+Allow: /pricing
+Allow: /signup
+Allow: /login
+
+# Sitemap
+Sitemap: https://tradia-app.vercel.app/sitemap.xml

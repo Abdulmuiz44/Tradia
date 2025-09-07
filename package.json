@@ -6,7 +6,12 @@
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "deploy": "bash deploy-vercel.sh",
+    "deploy:vercel": "vercel --prod",
+    "deploy:win": "deploy-vercel.bat",
+    "deploy:ps": "powershell -ExecutionPolicy Bypass -File deploy-vercel.ps1"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -24,7 +29,6 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/themes": "^3.2.1",
     "@sentry/nextjs": "^10.5.0",
-    "@stripe/stripe-js": "^7.8.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.56.0",
@@ -33,6 +37,7 @@
     "@types/react-plotly.js": "^2.6.3",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
+    "ai": "^5.0.28",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.5.0",

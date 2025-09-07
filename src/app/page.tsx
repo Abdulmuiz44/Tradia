@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -62,7 +62,7 @@ const PLANS = [
     id: "starter",
     name: "Starter",
     monthly: 0,
-    highlights: ["Basic trade analytics", "30 days trade history", "1 account connection (MT5)"],
+    highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
     cta: "Get started (Free)",
     tag: "Free forever",
   },
@@ -97,6 +97,13 @@ const TESTIMONIALS = [
   { name: "Sam R.", role: "Swing Trader", text: "Tagging strategies changed everything — now I trade the winners.", initials: "S" },
   { name: "Noah P.", role: "Risk Manager", text: "Audit-ready exports and clear risk charts saved our team hours.", initials: "N" },
 ];
+
+/* Loading component for lazy loading */
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+  </div>
+);
 
 /* small animated counter hook (kept but not displayed) */
 function useCountTo(target: number, duration = 1200) {
@@ -176,8 +183,12 @@ export default function Home(): React.ReactElement {
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
-                  Track performance, discover edge, and scale with confidence. Connect MT5 or upload CSV — get instant AI trade reviews, risk checks, and portfolio-level insights built for real traders.
+                  Transform your trading performance with AI-powered analysis. Track every trade, discover your edge, and scale with confidence. Connect your MT5 account or upload CSV files to get instant AI trade reviews, comprehensive risk analysis, and actionable insights that help serious traders improve their win rates and profitability.
                 </motion.p>
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-400 max-w-2xl">
+                  Join thousands of traders who use Tradia to analyze their trading performance, identify patterns, optimize strategies, and make data-driven decisions that lead to consistent profits in the financial markets.
+                </motion.div>
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
                   <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
@@ -202,7 +213,7 @@ export default function Home(): React.ReactElement {
                   transition={{ delay: 0.12 }}
                   className="rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-black/20 to-white/5 backdrop-blur-sm"
                 >
-                  <img src="/TradiaDashboard.png" alt="Tradia dashboard screenshot" className="w-full h-auto object-cover" />
+                  <img src="/TradiaDashboard.png" alt="Tradia trading dashboard showing performance analytics, trade charts, and AI insights for forex and financial market traders" className="w-full h-auto object-cover" />
                 </motion.div>
 
                 <div className="mt-3 text-xs text-gray-400">Live dashboard preview (Upload trade history to see interactive charts).</div>
@@ -216,8 +227,8 @@ export default function Home(): React.ReactElement {
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold">Key features</h2>
-              <p className="mt-2 text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze, improve and scale — built around real workflows.</p>
+              <h2 className="text-3xl font-bold">Advanced Trading Analytics Platform</h2>
+              <p className="mt-2 text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze performance, improve strategies and scale profits — built around real trading workflows and powered by artificial intelligence.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -228,6 +239,11 @@ export default function Home(): React.ReactElement {
                     <div>
                       <h3 className="font-semibold text-lg">{f.title}</h3>
                       <p className="mt-2 text-sm text-gray-400">{f.description}</p>
+                      {/* Add feature examples */}
+                      {i === 0 && <p className="mt-2 text-xs text-gray-500">Example: Track your EUR/USD win rate from 45% to 62% after optimizing entries.</p>}
+                      {i === 1 && <p className="mt-2 text-xs text-gray-500">Example: End-to-end encryption ensures your trade data stays private.</p>}
+                      {i === 2 && <p className="mt-2 text-xs text-gray-500">Example: Get AI feedback on your last 10 trades in under 30 seconds.</p>}
+                      {i === 3 && <p className="mt-2 text-xs text-gray-500">Example: Access your analytics on mobile while traveling.</p>}
                     </div>
                   </div>
                 </motion.div>
@@ -236,7 +252,131 @@ export default function Home(): React.ReactElement {
 
             <div className="mt-8 text-center">
               <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow">
-                Try Tradia free <AiOutlineArrowRight />
+                Start Trading Analysis Free <AiOutlineArrowRight />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* VIDEO DEMO */}
+        <section className="py-16 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">See Tradia in Action</h2>
+            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+              Watch how traders use Tradia to analyze their performance, get AI insights, and improve their strategies.
+              From uploading trades to seeing actionable recommendations.
+            </p>
+
+            <div className="relative w-full max-w-4xl mx-auto">
+              <div className="aspect-video rounded-xl overflow-hidden shadow-2xl">
+                <iframe
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                  title="Tradia Trading Analytics Demo"
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+
+            <div className="mt-6 text-sm text-gray-400">
+              Demo video showing dashboard features, trade analysis, and AI recommendations.
+            </div>
+          </div>
+        </section>
+
+        {/* WHY CHOOSE TRADIA */}
+        <section className="py-16 px-6 bg-gradient-to-r from-indigo-900/20 to-purple-900/20">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">Why Professional Traders Choose Tradia</h2>
+              <p className="text-gray-300 max-w-3xl mx-auto text-lg">
+                Join thousands of successful traders who have transformed their trading performance using our comprehensive analytics platform.
+                From day traders to swing traders, Tradia provides the insights and tools needed to trade with confidence.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AiOutlineBarChart className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Data-Driven Trading Decisions</h3>
+                <p className="text-gray-400">
+                  Make informed trading decisions based on comprehensive performance analytics. Track your win rate,
+                  risk-reward ratios, and identify patterns that lead to profitable trades. Our platform helps you
+                  understand what works in your trading strategy.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AiOutlineThunderbolt className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">AI-Powered Trade Analysis</h3>
+                <p className="text-gray-400">
+                  Leverage artificial intelligence to analyze your trading performance. Get automated insights,
+                  trade reviews, and recommendations for improving your entry and exit strategies. Our AI
+                  identifies mistakes and suggests optimizations for better trading results.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AiOutlineGlobal className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Multi-Platform Trading Support</h3>
+                <p className="text-gray-400">
+                  Connect multiple trading accounts and analyze your performance across different brokers and platforms.
+                  Whether you trade forex, stocks, commodities, or cryptocurrencies, Tradia supports various
+                  data formats and provides unified analytics for your entire trading portfolio.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AiOutlineLock className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Secure & Private Trading Data</h3>
+                <p className="text-gray-400">
+                  Your trading data is encrypted and stored securely. We prioritize your privacy and never share
+                  your personal trading information. Focus on improving your trading performance without worrying
+                  about data security or privacy concerns.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AiOutlineCheck className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Real-Time Performance Tracking</h3>
+                <p className="text-gray-400">
+                  Monitor your trading performance in real-time with comprehensive metrics and visualizations.
+                  Track your progress, identify trends, and make adjustments to your trading strategy based on
+                  current market conditions and historical performance data.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AiOutlineGlobal className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Mobile Trading Analytics</h3>
+                <p className="text-gray-400">
+                  Access your trading analytics anywhere with our mobile-responsive platform. Review your
+                  performance, analyze trades, and get AI insights on your smartphone or tablet. Stay connected
+                  to your trading data no matter where you are in the world.
+                </p>
+              </div>
+            </div>
+
+            <div className="text-center mt-12">
+              <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
+                Ready to take your trading to the next level? Join successful traders worldwide who use Tradia
+                to analyze, improve, and scale their trading performance.
+              </p>
+              <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg text-lg">
+                Start Your Trading Journey <AiOutlineArrowRight />
               </button>
             </div>
           </div>
@@ -261,7 +401,7 @@ export default function Home(): React.ReactElement {
 
             <div>
               <div className="rounded-xl border border-white/10 overflow-hidden">
-                <img src="/TradiaInsights.png" alt="Tradia insights preview" className="w-full h-auto object-cover" />
+                <img src="/TradiaInsights.png" alt="Tradia AI trading insights showing performance analysis, risk metrics, and actionable recommendations for traders" className="w-full h-auto object-cover" />
               </div>
               <div className="mt-3 text-sm text-gray-400">Insights preview — automated, actionable, and tailored to your account history.</div>
             </div>
@@ -381,7 +521,7 @@ export default function Home(): React.ReactElement {
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             <div className="col-span-2 rounded-xl border border-white/10 overflow-hidden">
-              <img src="/TradiaCalendar.png" alt="Tradia journal calendar" className="w-full h-auto object-cover" />
+              <img src="/TradiaCalendar.png" alt="Tradia trading journal calendar showing trade history, performance timeline, and trading patterns visualization" className="w-full h-auto object-cover" />
             </div>
 
             <div className="rounded-xl border border-white/10 p-6 flex flex-col justify-between">
@@ -391,7 +531,7 @@ export default function Home(): React.ReactElement {
               </div>
 
               <div className="mt-4 rounded-md overflow-hidden border border-white/10">
-                <img src="/TradiaPattern.png" alt="Pattern preview" className="w-full h-auto object-cover" />
+                <img src="/TradiaPattern.png" alt="Tradia trading pattern analysis showing recurring trade setups, entry signals, and performance metrics for pattern-based trading strategies" className="w-full h-auto object-cover" />
               </div>
 
               <div className="mt-4">

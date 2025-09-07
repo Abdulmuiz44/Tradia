@@ -26,6 +26,17 @@ const EMOTIONS = [
   { value: "neutral", label: "Neutral" },
 ];
 
+// Predefined trading strategies
+const PREDEFINED_STRATEGIES = [
+  "SMC",
+  "Breakout",
+  "Trend Following",
+  "HORC",
+  "ORDER BLOCK",
+  "BREAKER BLOCK",
+  "RECLAIMED BLOCK"
+];
+
 function toLocalDatetimeInputValue(iso?: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -61,12 +72,47 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
   const [takeProfitPrice, setTakeProfitPrice] = useState<string>("");
   const [pnl, setPnl] = useState<string>("0");
   const [outcome, setOutcome] = useState<Trade["outcome"]>("Breakeven");
-  const [reasonForTrade, setReasonForTrade] = useState<string>("");
+  const [strategy, setStrategy] = useState<string>("");
+  const [customStrategies, setCustomStrategies] = useState<string[]>([]);
+  const [showCustomStrategyInput, setShowCustomStrategyInput] = useState<boolean>(false);
+  const [customStrategyInput, setCustomStrategyInput] = useState<string>("");
   const [emotion, setEmotion] = useState<string>("neutral");
+  const [reasonForTrade, setReasonForTrade] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
 
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load custom strategies from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('customStrategies');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setCustomStrategies(parsed);
+      } catch (e) {
+        console.warn('Failed to parse custom strategies:', e);
+      }
+    }
+  }, []);
+
+  // Function to add custom strategy
+  const addCustomStrategy = (strategy: string) => {
+    if (!strategy.trim()) return;
+
+    const trimmed = strategy.trim();
+    if (!PREDEFINED_STRATEGIES.includes(trimmed) && !customStrategies.includes(trimmed)) {
+      const updated = [...customStrategies, trimmed];
+      setCustomStrategies(updated);
+      localStorage.setItem('customStrategies', JSON.stringify(updated));
+    }
+    setStrategy(trimmed);
+    setCustomStrategyInput('');
+    setShowCustomStrategyInput(false);
+  };
+
+  // All available strategies (predefined + custom)
+  const allStrategies = [...PREDEFINED_STRATEGIES, ...customStrategies];
 
   useEffect(() => {
     if (!isOpen || !trade) {
@@ -83,7 +129,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
       setTakeProfitPrice("");
       setPnl("0");
       setOutcome("Breakeven");
-      setReasonForTrade("");
+      setStrategy("");
       setEmotion("neutral");
       setNotes("");
       setError(null);
@@ -423,15 +469,75 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             />
           </div>
 
-          {/* Reason For Trade (span two columns) */}
+          {/* Strategy Selection */}
           <div className="sm:col-span-2">
-            <label className="block text-sm text-zinc-300 mb-1">Reason for trade</label>
-            <input
-              type="text"
-              value={reasonForTrade}
-              onChange={(e) => setReasonForTrade(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
-            />
+            <label className="block text-sm text-zinc-300 mb-1">Strategy</label>
+            {!showCustomStrategyInput ? (
+              <div className="flex gap-2">
+                <select
+                  value={strategy}
+                  onChange={(e) => setStrategy(e.target.value)}
+                  className="flex-1 p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+                >
+                  <option value="">Select a strategy...</option>
+                  {allStrategies.map((strategy) => (
+                    <option key={strategy} value={strategy}>
+                      {strategy}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomStrategyInput(true)}
+                  className="px-3 py-2 bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600 text-sm"
+                  title="Add custom strategy"
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customStrategyInput}
+                  onChange={(e) => setCustomStrategyInput(e.target.value)}
+                  placeholder="Enter custom strategy..."
+                  className="flex-1 p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomStrategy(customStrategyInput);
+                    } else if (e.key === 'Escape') {
+                      setShowCustomStrategyInput(false);
+                      setCustomStrategyInput('');
+                    }
+                  }}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => addCustomStrategy(customStrategyInput)}
+                  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomStrategyInput(false);
+                    setCustomStrategyInput('');
+                  }}
+                  className="px-3 py-2 bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600 text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {customStrategies.length > 0 && (
+              <div className="mt-2 text-xs text-zinc-400">
+                Custom strategies: {customStrategies.join(', ')}
+              </div>
+            )}
           </div>
 
           {/* Emotion */}

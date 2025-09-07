@@ -6,17 +6,9 @@ import type { Trade } from "@/types/trade";
 type UploadCsvModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  /**
-   * Callback invoked with an array of parsed trades.
-   * The parent will typically insert them into the store/context.
-   */
   onImport: (trades: Trade[]) => void;
 };
 
-/**
- * Lightweight CSV parser that supports quoted values and commas inside quotes.
- * Returns array of rows, each row is an array of cell strings.
- */
 function parseCsvRows(text: string): string[][] {
   const rows: string[][] = [];
   let cur: string[] = [];
@@ -30,7 +22,6 @@ function parseCsvRows(text: string): string[][] {
     if (inQuotes) {
       if (ch === '"') {
         if (text[i + 1] === '"') {
-          // escaped quote
           curCell += '"';
           i += 2;
           continue;
@@ -58,7 +49,6 @@ function parseCsvRows(text: string): string[][] {
     }
 
     if (ch === "\r") {
-      // ignore CR, handle CRLF via LF logic
       i += 1;
       continue;
     }
@@ -66,7 +56,6 @@ function parseCsvRows(text: string): string[][] {
     if (ch === "\n") {
       cur.push(curCell);
       rows.push(cur);
-      // reset
       cur = [];
       curCell = "";
       i += 1;
@@ -77,7 +66,6 @@ function parseCsvRows(text: string): string[][] {
     i += 1;
   }
 
-  // trailing cell
   if (curCell !== "" || cur.length > 0) {
     cur.push(curCell);
     rows.push(cur);
@@ -86,13 +74,10 @@ function parseCsvRows(text: string): string[][] {
   return rows;
 }
 
-/**
- * Attempts to map a CSV row object to a Trade object.
- * Uses permissive coercion of common column names.
- */
 function rowToTradeObject(row: Record<string, string>, idx: number): Trade {
   const get = (keys: string[], fallback = ""): string =>
-    keys.reduce<string>((acc, k) => acc || (row[k]?.trim() ?? ""), "").trim() || fallback;
+    keys.reduce<string>((acc, k) => acc || (row[k]?.trim() ?? ""), "").trim() ||
+    fallback;
 
   const parseNumber = (v: string): number => {
     if (!v) return 0;
@@ -105,36 +90,49 @@ function rowToTradeObject(row: Record<string, string>, idx: number): Trade {
     if (!v) return "";
     const d = new Date(v);
     if (!isNaN(d.getTime())) return d.toISOString();
-    // try numeric epoch seconds or ms
     if (/^\d{10}$/.test(v)) return new Date(Number(v) * 1000).toISOString();
     if (/^\d{13}$/.test(v)) return new Date(Number(v)).toISOString();
     return v;
   };
 
+  const outcomeRaw = get(["outcome", "result"], "Breakeven");
+  const validOutcomes: Trade["outcome"][] = ["Win", "Loss", "Breakeven"];
+  const outcome = (validOutcomes.includes(
+    outcomeRaw as Trade["outcome"]
+  )
+    ? (outcomeRaw as Trade["outcome"])
+    : "Breakeven") as Trade["outcome"];
+
   const trade: Trade = {
     id: get(["id", "deal_id", "ticket", "trade_id"], `imported-${idx}-${Date.now()}`),
     symbol: get(["symbol", "pair", "instrument"], "UNKNOWN"),
-    entryPrice: get(["entryPrice", "entry_price", "openPrice", "open_price", "price_open"], ""),
-    exitPrice: get(["exitPrice", "exit_price", "closePrice", "close_price", "price_close"], ""),
-    lotSize: get(["lotSize", "lots", "volume", "size"], "1"),
+    entryPrice: parseNumber(get(["entryPrice", "entry_price", "openPrice", "open_price", "price_open"], "0")),
+    exitPrice: parseNumber(get(["exitPrice", "exit_price", "closePrice", "close_price", "price_close"], "0")),
+    lotSize: parseNumber(get(["lotSize", "lots", "volume", "size"], "1")),
     pnl: parseNumber(get(["pnl", "profit", "netpl", "profit_loss"], "0")),
     profitLoss: get(["profitLoss", "profit_loss", "profit_formatted"], ""),
     openTime: toISO(get(["openTime", "open_time", "time", "entry_time"], "")),
     closeTime: toISO(get(["closeTime", "close_time", "time_close", "exit_time"], "")),
-    outcome: (get(["outcome", "result"], "Breakeven") as Trade["outcome"]) ?? "Breakeven",
+    outcome,
     notes: get(["notes", "comment", "journalNotes", "client_comment"], ""),
     reasonForTrade: get(["reason", "reasonForTrade", "strategy"], ""),
     strategy: get(["strategy", "strategyName"], ""),
     emotion: get(["emotion"], ""),
-    // keep timestamps for server if present (optional fields on your Trade type)
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  } as Trade;
+  };
 
   return trade;
 }
 
-export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvModalProps) {
+// type guard for parsed row values
+function isTradeArray(arr: Array<Trade | null | undefined | false>): arr is Trade[] {
+  return arr.every(Boolean);
+}
+
+export default function UploadCsvModal({
+  isOpen,
+  onClose,
+  onImport,
+}: UploadCsvModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState<boolean>(false);
@@ -166,21 +164,27 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
         return;
       }
 
-      const header = rows[0].map((h) => h.trim());
+      const header = rows[0].map((h) => (h ?? "").toString().trim());
       const dataRows = rows.slice(1);
 
-      const parsed: Trade[] = dataRows
-        .map((r, i) => {
-          const obj: Record<string, string> = {};
-          for (let j = 0; j < header.length; j += 1) {
-            const key = header[j] ?? `col${j}`;
-            obj[key] = r[j] ?? "";
-          }
+      const parsedMaybe = dataRows.map((r, i) => {
+        const obj: Record<string, string> = {};
+        for (let j = 0; j < header.length; j += 1) {
+          const key = header[j] && header[j].length > 0 ? header[j] : `col${j}`;
+          obj[key] = r[j] ?? "";
+        }
+        try {
           return rowToTradeObject(obj, i);
-        })
-        .filter(Boolean);
+        } catch (err) {
+          console.error("Row parse error", { row: r, err });
+          return null;
+        }
+      });
 
-      if (parsed.length === 0) {
+      // filter using a proper type guard
+      const parsed: Trade[] = parsedMaybe.filter((t): t is Trade => !!t);
+
+      if (!parsed || parsed.length === 0) {
         setError("No data rows found in CSV.");
         setParsing(false);
         return;
@@ -199,14 +203,12 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => onClose()}
         aria-hidden
       />
 
-      {/* Modal */}
       <div
         role="dialog"
         aria-modal="true"
@@ -215,9 +217,12 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
       >
         <header className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-100">Import trades from CSV</h3>
+            <h3 className="text-lg font-semibold text-gray-100">
+              Import trades from CSV
+            </h3>
             <p className="mt-1 text-sm text-zinc-400 max-w-xl">
-              Upload a CSV where the first row is the header (e.g. id,symbol,openTime,closeTime,pnl,entryPrice,exitPrice,lotSize,notes).
+              Upload a CSV where the first row is the header (e.g.
+              id,symbol,openTime,closeTime,pnl,entryPrice,exitPrice,lotSize,notes).
               The importer will attempt to map common column names.
             </p>
           </div>
@@ -234,21 +239,49 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
         </header>
 
         <div className="space-y-4">
-          {/* File input area styled like other modals */}
           <label
             htmlFor="csv-file"
             className="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-white/6 p-3 bg-transparent hover:bg-white/2"
           >
             <div className="flex items-center gap-3">
-              <svg className="w-6 h-6 text-indigo-400" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M12 3v12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M8 7l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <rect x="3" y="14" width="18" height="6" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <svg
+                className="w-6 h-6 text-indigo-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden
+              >
+                <path
+                  d="M12 3v12"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 7l4-4 4 4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <rect
+                  x="3"
+                  y="14"
+                  width="18"
+                  height="6"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
               </svg>
 
               <div>
-                <div className="text-sm text-gray-100 font-medium">Choose CSV file</div>
-                <div className="text-xs text-zinc-400">CSV file (first row must be header)</div>
+                <div className="text-sm text-gray-100 font-medium">
+                  Choose CSV file
+                </div>
+                <div className="text-xs text-zinc-400">
+                  CSV file (first row must be header)
+                </div>
               </div>
             </div>
 
@@ -266,12 +299,13 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
             </div>
           </label>
 
-          {/* Selected file info */}
           {file ? (
             <div className="flex items-center justify-between rounded-md p-3 bg-white/3 border border-white/6">
               <div className="text-sm text-zinc-100">
                 <div className="font-medium">{file.name}</div>
-                <div className="text-xs text-zinc-400">{(file.size / 1024).toFixed(1)} KB</div>
+                <div className="text-xs text-zinc-400">
+                  {(file.size / 1024).toFixed(1)} KB
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -294,7 +328,9 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
               </div>
             </div>
           ) : (
-            <div className="text-sm text-zinc-400">No file selected yet. Use "Browse" to choose a CSV file.</div>
+            <div className="text-sm text-zinc-400">
+              No file selected yet. Use "Browse" to choose a CSV file.
+            </div>
           )}
 
           {error && (
@@ -303,7 +339,6 @@ export default function UploadCsvModal({ isOpen, onClose, onImport }: UploadCsvM
             </div>
           )}
 
-          {/* Footer actions for keyboard users and secondary cancel */}
           {!file && (
             <div className="flex justify-end gap-2">
               <button

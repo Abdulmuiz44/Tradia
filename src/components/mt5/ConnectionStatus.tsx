@@ -1,8 +1,9 @@
 // src/components/mt5/ConnectionStatus.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { mt5Integration, MT5Credentials } from "@/lib/mt5-integration";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { mt5Integration } from "@/lib/mt5-integration";
+import type { MT5Credentials, MT5ConnectionResult } from "@/types/mt5";
 import {
   Wifi,
   WifiOff,
@@ -10,8 +11,10 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  Clock
+  Clock,
 } from "lucide-react";
+
+type ConnectionStatusType = "checking" | "connected" | "error" | "disconnected";
 
 interface ConnectionStatusProps {
   credentials: MT5Credentials;
@@ -21,111 +24,106 @@ interface ConnectionStatusProps {
 }
 
 export function useConnectionStatus(credentials: MT5Credentials) {
-  const [status, setStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking');
+  const [status, setStatus] = useState<ConnectionStatusType>("checking");
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const checkConnection = async () => {
-    setStatus('checking');
+  const checkConnection = useCallback(async () => {
+    setStatus("checking");
     setError(null);
 
     try {
-      const result = await mt5Integration.testConnection(credentials);
+      const result: MT5ConnectionResult = await mt5Integration.testConnection(
+        credentials
+      );
 
-      if (result.success) {
-        setStatus('connected');
+      if (result && result.success) {
+        setStatus("connected");
         setLastChecked(new Date());
       } else {
-        setStatus('error');
-        setError(result.error || 'Connection failed');
+        setStatus("error");
+        setError(result?.error || result?.message || "Connection failed");
       }
     } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Connection test failed');
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Connection test failed");
     }
-  };
+  }, [credentials]);
 
   useEffect(() => {
     checkConnection();
-
-    // Set up periodic checks every 5 minutes
-    const interval = setInterval(() => {
+    const intervalId: ReturnType<typeof setInterval> = setInterval(() => {
       checkConnection();
     }, 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, [credentials]);
+    return () => clearInterval(intervalId);
+  }, [credentials, checkConnection]);
 
-  return {
-    status,
-    lastChecked,
-    error,
-    checkConnection
-  };
+  return { status, lastChecked, error, checkConnection };
 }
 
 export default function ConnectionStatusComponent({
   credentials,
   showDetails = false,
   compact = false,
-  onStatusChange
+  onStatusChange,
 }: ConnectionStatusProps) {
-  const [status, setStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking');
+  const [status, setStatus] = useState<ConnectionStatusType>("checking");
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
 
-  const checkConnection = async () => {
+  const isTestingRef = useRef(isTesting);
+  useEffect(() => {
+    isTestingRef.current = isTesting;
+  }, [isTesting]);
+
+  const checkConnection = useCallback(async () => {
     setIsTesting(true);
-    setStatus('checking');
+    setStatus("checking");
     setError(null);
 
     try {
-      const result = await mt5Integration.testConnection(credentials);
+      const result: MT5ConnectionResult = await mt5Integration.testConnection(
+        credentials
+      );
 
-      if (result.success) {
-        setStatus('connected');
+      if (result && result.success) {
+        setStatus("connected");
         setLastChecked(new Date());
+        onStatusChange?.(true);
       } else {
-        setStatus('error');
-        setError(result.error || 'Connection failed');
-      }
-
-      if (onStatusChange) {
-        onStatusChange(result.success);
+        setStatus("error");
+        setError(result?.error || result?.message || "Connection failed");
+        onStatusChange?.(false);
       }
     } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Connection test failed');
-      if (onStatusChange) {
-        onStatusChange(false);
-      }
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Connection test failed");
+      onStatusChange?.(false);
     } finally {
       setIsTesting(false);
     }
-  };
+  }, [credentials, onStatusChange]);
 
   useEffect(() => {
-    // Auto-check connection on mount
     checkConnection();
-
-    // Set up periodic checks every 5 minutes
-    const interval = setInterval(() => {
-      if (!isTesting) {
+    const intervalId: ReturnType<typeof setInterval> = setInterval(() => {
+      if (!isTestingRef.current) {
         checkConnection();
       }
     }, 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, [credentials]);
+    return () => clearInterval(intervalId);
+  }, [credentials, checkConnection]);
 
   const getStatusIcon = () => {
     switch (status) {
-      case 'checking':
+      case "checking":
         return <Loader2 className="w-4 h-4 animate-spin text-blue-500" />;
-      case 'connected':
+      case "connected":
         return <Wifi className="w-4 h-4 text-green-500" />;
-      case 'error':
+      case "error":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
         return <WifiOff className="w-4 h-4 text-gray-400" />;
@@ -134,27 +132,27 @@ export default function ConnectionStatusComponent({
 
   const getStatusText = () => {
     switch (status) {
-      case 'checking':
-        return 'Checking connection...';
-      case 'connected':
-        return 'Connected';
-      case 'error':
-        return 'Connection failed';
+      case "checking":
+        return "Checking connection...";
+      case "connected":
+        return "Connected";
+      case "error":
+        return "Connection failed";
       default:
-        return 'Disconnected';
+        return "Disconnected";
     }
   };
 
   const getStatusColor = () => {
     switch (status) {
-      case 'checking':
-        return 'text-blue-600';
-      case 'connected':
-        return 'text-green-600';
-      case 'error':
-        return 'text-red-600';
+      case "checking":
+        return "text-blue-600";
+      case "connected":
+        return "text-green-600";
+      case "error":
+        return "text-red-600";
       default:
-        return 'text-gray-600';
+        return "text-gray-600";
     }
   };
 
@@ -171,7 +169,9 @@ export default function ConnectionStatusComponent({
           className="p-1 hover:bg-gray-100 rounded"
           title="Refresh connection status"
         >
-          <RefreshCw className={`w-3 h-3 ${isTesting ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-3 h-3 ${isTesting ? "animate-spin" : ""}`}
+          />
         </button>
       </div>
     );
@@ -187,9 +187,7 @@ export default function ConnectionStatusComponent({
               {getStatusText()}
             </div>
             {showDetails && credentials.name && (
-              <div className="text-xs text-gray-500">
-                {credentials.name}
-              </div>
+              <div className="text-xs text-gray-500">{credentials.name}</div>
             )}
           </div>
         </div>
@@ -199,12 +197,13 @@ export default function ConnectionStatusComponent({
           disabled={isTesting}
           className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs"
         >
-          <RefreshCw className={`w-3 h-3 ${isTesting ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-3 h-3 ${isTesting ? "animate-spin" : ""}`}
+          />
           Refresh
         </button>
       </div>
 
-      {/* Connection Details */}
       {showDetails && (
         <div className="space-y-2 text-xs text-gray-600">
           <div className="flex justify-between">
@@ -218,7 +217,6 @@ export default function ConnectionStatusComponent({
         </div>
       )}
 
-      {/* Last Checked */}
       {lastChecked && (
         <div className="flex items-center gap-1 mt-3 text-xs text-gray-500">
           <Clock className="w-3 h-3" />
@@ -226,15 +224,13 @@ export default function ConnectionStatusComponent({
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
           {error}
         </div>
       )}
 
-      {/* Success Message */}
-      {status === 'connected' && (
+      {status === "connected" && (
         <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
           <div className="flex items-center gap-2 text-xs text-green-700">
             <CheckCircle className="w-3 h-3" />

@@ -16,6 +16,7 @@ import {
   Crown,
   Home,
   User,
+  Users,
   Settings
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ const iconMap = {
   Crown,
   Home,
   User,
+  Users,
   Settings
 };
 

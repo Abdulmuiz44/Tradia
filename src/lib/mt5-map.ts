@@ -4,10 +4,10 @@ import { Trade } from "@/types/trade";
 /** Small helpers with strict types (no `any`) */
 function toNumber(v: unknown): number {
   if (v === undefined || v === null || v === "") return 0;
-  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
-  if (typeof v === "bigint") return Number(v);
+  if (typeof v === "number") return Number.isFinite(v) ? (v as number) : 0;
+  if (typeof v === "bigint") return Number(v as bigint);
   if (typeof v === "string") {
-    const cleaned = v.replace(/[^0-9\.\-eE]/g, "");
+    const cleaned = (v as string).replace(/[^0-9\.\-eE]/g, "");
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : 0;
   }
@@ -32,9 +32,9 @@ function toISOStringSafe(v: unknown): string {
   if (v instanceof Date) return isNaN(v.getTime()) ? "" : v.toISOString();
   if (typeof v === "number") {
     const s = String(v);
-    if (/^\d{10}$/.test(s)) return new Date(v * 1000).toISOString();
-    if (/^\d{13}$/.test(s)) return new Date(v).toISOString();
-    const d = new Date(v);
+    if (/^\d{10}$/.test(s)) return new Date((v as number) * 1000).toISOString();
+    if (/^\d{13}$/.test(s)) return new Date(v as number).toISOString();
+    const d = new Date(v as number);
     return isNaN(d.getTime()) ? "" : d.toISOString();
   }
   if (typeof v === "string") {
@@ -140,12 +140,13 @@ export function mapMt5DealToTrade(deal: unknown): Partial<Trade> {
 
   const profitNum = toNumber(profitRaw);
 
-  const normalized: Partial<Trade> = {
+  // allow 'raw' field in the local normalized variable so object literal is accepted
+  const normalized: Partial<Trade> & { raw?: unknown } = {
     id: idCandidate ? toString(idCandidate) : undefined,
     symbol: toString(symbol),
-    entryPrice: entryPrice !== undefined ? toString(entryPrice) : "",
-    exitPrice: exitPrice !== undefined ? toString(exitPrice) : "",
-    lotSize: lotSize !== undefined ? toString(lotSize) : "1",
+    entryPrice: entryPrice !== undefined ? toNumber(entryPrice) : undefined,
+    exitPrice: exitPrice !== undefined ? toNumber(exitPrice) : undefined,
+    lotSize: lotSize !== undefined ? toNumber(lotSize) : undefined,
     pnl: profitNum,
     profitLoss: `$${profitNum.toFixed(2)}`,
     openTime: toISOStringSafe(openTime),
@@ -155,6 +156,7 @@ export function mapMt5DealToTrade(deal: unknown): Partial<Trade> {
     reasonForTrade: toString(d["reason"] ?? d["strategy"] ?? ""),
     strategy: toString(strategy),
     emotion: toString(d["emotion"] ?? ""),
+    // debug / audit: keep original raw deal for troubleshooting (optional)
     raw: deal,
   };
 

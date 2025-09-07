@@ -1,13 +1,13 @@
-# 🚀 Tradia MT5 Integration Setup Guide
+# 🚀 Tradia MT5 Android Integration Setup Guide
 
 ## Prerequisites Checklist
 
 Before connecting your MT5 account to Tradia, ensure all these requirements are met:
 
-### ✅ 1. MetaTrader 5 Terminal
-- [ ] **Download & Install**: Get MT5 from your broker or [official site](https://www.metatrader5.com/en/download)
-- [ ] **Launch MT5**: Start the terminal on your computer
-- [ ] **Login to Account**: Log in to your trading account in MT5
+### ✅ 1. MetaTrader 5 Android App
+- [ ] **Download & Install**: Get MT5 Android app from [Google Play Store](https://play.google.com/store/apps/details?id=net.metaquotes.metatrader5)
+- [ ] **Launch MT5**: Open the app on your Android device
+- [ ] **Login to Account**: Log in to your trading account in MT5 Android
 
 ### ✅ 2. Server Address
 - [ ] **Find Server**: Check your broker's website or MT5 login screen
@@ -24,16 +24,16 @@ Before connecting your MT5 account to Tradia, ensure all these requirements are 
 - [ ] **Firewall**: Allow MT5 connections (ports 443, 1950)
 - [ ] **VPN**: If using VPN, ensure it allows MT5 traffic
 
-### ✅ 5. MT5 API Settings
+### ✅ 5. MT5 Android API Settings
 **Critical - Must be enabled for sync to work:**
 
-1. Open MT5 Terminal
-2. Go to **Tools → Options**
-3. Click **Expert Advisors** tab
+1. Open MT5 Android App
+2. Tap the **Menu** (three lines) → **Settings**
+3. Go to **Expert Advisors** section
 4. ✅ Check **"Allow automated trading"**
 5. ✅ Check **"Allow DLL imports"**
 6. ❌ Uncheck **"Disable automated trading when..."** options
-7. Click **OK** to save
+7. Save the settings
 
 ### ✅ 6. Tradia Account
 - [ ] **Sign up**: Create account at [tradia.app](https://tradia.app)
@@ -72,7 +72,7 @@ Name: Live Account (optional)
 4. Common issues:
    - Wrong server address
    - Wrong password type
-   - MT5 not running
+   - MT5 Android app not running
    - Network/firewall issues
 
 ### Step 4: Connect Account
@@ -123,13 +123,13 @@ Name: Live Account (optional)
 
 ### ❌ "API disabled" Error
 **Causes:**
-- Automated trading not enabled in MT5
+- Automated trading not enabled in MT5 Android
 - DLL imports not allowed
 
 **Solutions:**
-1. Enable automated trading in MT5 settings
+1. Enable automated trading in MT5 Android settings
 2. Allow DLL imports
-3. Restart MT5 terminal
+3. Restart MT5 Android app
 
 ### ❌ "Network error" Error
 **Causes:**

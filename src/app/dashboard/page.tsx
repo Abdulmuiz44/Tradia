@@ -47,6 +47,9 @@ import AIChatInterface from "@/components/ai/AIChatInterface";
 // Dashboard Sidebar
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 
+// User Analytics
+import UserAnalyticsDashboard from "@/components/analytics/UserAnalyticsDashboard";
+
 // Chart Components
 import ProfitLossChart from "@/components/charts/ProfitLossChart";
 import DrawdownChart from "@/components/charts/DrawdownChart";
@@ -54,8 +57,8 @@ import PerformanceTimeline from "@/components/charts/PerformanceTimeline";
 import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
 import TradePatternChart from "@/components/charts/TradePatternChart";
 
-// Tabs
-const TAB_DEFS = [
+// Base tabs available to all users
+const BASE_TAB_DEFS = [
   { value: "overview", label: "Overview", icon: "BarChart3" },
   { value: "history", label: "Trade History", icon: "History" },
   { value: "mt5", label: "MT5 Integration", icon: "Database" },
@@ -67,6 +70,11 @@ const TAB_DEFS = [
   { value: "position-sizing", label: "Position Sizing", icon: "Calculator" },
   { value: "education", label: "Trade Education", icon: "GraduationCap" },
   { value: "upgrade", label: "Upgrade", icon: "Crown" },
+];
+
+// Admin-only tabs
+const ADMIN_TAB_DEFS = [
+  { value: "user-analytics", label: "User Analytics", icon: "Users" },
 ];
 
 // type casting hack
@@ -192,6 +200,8 @@ function DashboardContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
 
   const { trades, refreshTrades } = useTrade();
 
@@ -204,10 +214,37 @@ function DashboardContent() {
 
   const [userInitial, setUserInitial] = useState("U");
 
-  // Fetch username initial from Supabase
+  // Check admin status synchronously and fetch user data - only run once
   useEffect(() => {
+    if (!session?.user?.email || adminChecked) {
+      console.log('Skipping admin check:', { hasSession: !!session, hasEmail: !!session?.user?.email, adminChecked });
+      return;
+    }
+
+    // Check if user is admin immediately (synchronous)
+    const userEmail = session.user.email || session.user.name || '';
+    const isAdminUser = userEmail === "abdulmuizproject@gmail.com" ||
+                       userEmail.includes("abdulmuizproject@gmail.com");
+
+    console.log('🔍 Admin check result:', {
+      email: session.user.email,
+      name: session.user.name,
+      userEmail,
+      expectedEmail: "abdulmuizproject@gmail.com",
+      isAdmin: isAdminUser,
+      sessionKeys: Object.keys(session.user)
+    });
+
+    // Show alert for debugging (remove this later)
+    if (typeof window !== 'undefined') {
+      console.log(`Admin status: ${isAdminUser ? '✅ ADMIN' : '❌ NOT ADMIN'}`);
+    }
+
+    setIsAdmin(isAdminUser);
+    setAdminChecked(true);
+
+    // Fetch username initial from Supabase
     const fetchUser = async () => {
-      if (!session?.user?.email) return;
       try {
         const { data } = await supabase
           .from("users")
@@ -220,7 +257,9 @@ function DashboardContent() {
           setUserInitial(session.user.email.trim()[0].toUpperCase());
         }
       } catch {
-        if (session?.user?.email) setUserInitial(session.user.email.trim()[0].toUpperCase());
+        if (session?.user?.email) {
+          setUserInitial(session.user.email.trim()[0].toUpperCase());
+        }
       }
     };
     fetchUser();
@@ -414,6 +453,26 @@ function DashboardContent() {
     return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
   }
 
+  // Dynamic tab definitions based on user role - simple computation without useMemo to avoid hooks issues
+  const getTabDefinitions = () => {
+    if (!adminChecked) {
+      console.log('Admin check not complete, using base tabs');
+      return BASE_TAB_DEFS;
+    }
+
+    const tabs = isAdmin ? [...BASE_TAB_DEFS, ...ADMIN_TAB_DEFS] : BASE_TAB_DEFS;
+    console.log('Tab definitions computed:', {
+      isAdmin,
+      adminChecked,
+      tabCount: tabs.length,
+      tabs: tabs.map(t => ({ value: t.value, label: t.label })),
+      hasUserAnalytics: tabs.some(t => t.value === 'user-analytics')
+    });
+    return tabs;
+  };
+
+  const TAB_DEFS = getTabDefinitions();
+
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
@@ -531,12 +590,57 @@ function DashboardContent() {
                   {activeTab === 'tradia-ai' ? 'Your personal trading coach with voice support' :
                    activeTab === 'overview' ? 'Comprehensive trading overview and key metrics' :
                    activeTab === 'analytics' ? 'Detailed performance analytics and insights' :
+                   activeTab === 'user-analytics' ? 'Admin-only user analytics and backend metrics' :
                    `Manage your ${currentTabLabel.toLowerCase()}`}
                 </p>
+                {/* Admin Status Indicator */}
+                <div className="flex items-center gap-2 mt-1">
+                  <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                  <span className="text-xs text-gray-500">
+                    {isAdmin ? 'Admin Access' : 'Standard Access'}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Mobile Profile Avatar - NEW */}
+              <div className="lg:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage
+                        src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || session?.user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=fff&size=32`}
+                        alt={session?.user?.name || session?.user?.email?.split('@')[0] || 'Profile'}
+                      />
+                      <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">{userInitial}</AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-zinc-800 text-white border border-zinc-700 shadow-lg">
+                    <DropdownMenuItem
+                      onClick={() => router.push("/dashboard/profile")}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                    >
+                      <User className="w-4 h-4" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => router.push("/dashboard/settings")}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 cursor-pointer text-red-400 hover:text-red-300"
+                    >
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               {/* Filter - Only show for relevant tabs */}
               {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
                 <DropdownMenu>
@@ -631,6 +735,18 @@ function DashboardContent() {
                 </button>
               )}
 
+              {/* Admin Debug Button */}
+              <button
+                onClick={() => {
+                  console.log('Manual admin check:', { isAdmin, session: session?.user });
+                  window.location.reload();
+                }}
+                className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+                title="Debug admin status"
+              >
+                🔄
+              </button>
+
               {/* Current filter indicator */}
               {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
                 <div className="hidden sm:flex items-center px-3 py-1 rounded-lg bg-gray-800 text-gray-300 text-sm">
@@ -654,7 +770,7 @@ function DashboardContent() {
 
                 {activeTab === "mt5" && (
                   <div className="max-w-4xl mx-auto">
-                    <MT5IntegrationWizard userId={session?.user?.id} />
+                    <MT5IntegrationWizard userId={(session?.user as any)?.id} />
                   </div>
                 )}
 
@@ -668,6 +784,10 @@ function DashboardContent() {
 
                 {activeTab === "analytics" && (
                   <TradeAnalytics />
+                )}
+
+                {activeTab === "user-analytics" && (
+                  <UserAnalyticsDashboard />
                 )}
 
                 {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}

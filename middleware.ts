@@ -1,7 +1,9 @@
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
+import { createClient } from "@/utils/supabase/server";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // must match backend signing secret
 
@@ -9,48 +11,65 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const res = NextResponse.next();
 
-  // 1️⃣ Grab JWT from cookie or Authorization header
-  const authHeader = req.headers.get("authorization");
-  const rawToken =
-    authHeader?.replace("Bearer ", "") ||
-    req.cookies.get("session")?.value ||   // primary cookie from login route
-    req.cookies.get("app_token")?.value || // fallback
-    null;
-
-  let payload: any = null;
-
-  if (rawToken) {
-    try {
-      payload = jwt.verify(rawToken, JWT_SECRET);
-    } catch (err) {
-      console.warn("middleware: invalid JWT", (err as any).message);
-      payload = null;
-    }
+  // Skip middleware for NextAuth routes and API routes
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/")) {
+    return res;
   }
 
-  // 2️⃣ Determine auth state
-  const isAuth = Boolean(payload);
-  const isEmailVerified = Boolean(payload?.email_verified);
-
-  // 3️⃣ Path checks
+  // For dashboard routes, be more permissive
   const isDashboard = pathname.startsWith("/dashboard");
-  const isLoginOrSignup = ["/login", "/signup"].includes(pathname);
 
-  // 4️⃣ Redirect flows
+  if (isDashboard) {
+    // Try to get user from NextAuth
+    const nextAuthToken = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
 
-  // Not logged in → redirect to /login if accessing dashboard
-  if (!isAuth && isDashboard) {
+    if (nextAuthToken?.email) {
+      console.log("middleware: NextAuth user accessing dashboard:", nextAuthToken.email);
+      return res; // Allow access
+    }
+
+    // Try custom JWT
+    const authHeader = req.headers.get("authorization");
+    const rawToken =
+      authHeader?.replace("Bearer ", "") ||
+      req.cookies.get("session")?.value ||
+      req.cookies.get("app_token")?.value ||
+      null;
+
+    if (rawToken) {
+      try {
+        const payload = jwt.verify(rawToken, JWT_SECRET);
+        const userEmail = typeof payload === 'object' && payload !== null ? (payload as any).email : null;
+        if (userEmail) {
+          console.log("middleware: Custom JWT user accessing dashboard:", userEmail);
+          return res; // Allow access
+        }
+      } catch (err) {
+        console.warn("middleware: invalid JWT", (err as any).message);
+      }
+    }
+
+    // If no valid auth found, redirect to login
+    console.log("middleware: no valid auth found, redirecting to login");
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Logged in but email not verified → redirect to /verify-email
-  if (isAuth && !isEmailVerified && isDashboard) {
-    return NextResponse.redirect(new URL("/verify-email", req.url));
-  }
+  // For login/signup pages, redirect if already authenticated
+  const isLoginOrSignup = ["/login", "/signup"].includes(pathname);
 
-  // Logged in + verified → prevent /login or /signup
-  if (isAuth && isEmailVerified && isLoginOrSignup) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (isLoginOrSignup) {
+    const nextAuthToken = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    if (nextAuthToken?.email) {
+      console.log("middleware: authenticated user trying to access login, redirecting to dashboard");
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
   }
 
   return res;

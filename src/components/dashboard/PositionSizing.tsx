@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Calculator,
   Target,
@@ -27,6 +27,7 @@ import {
   Copy,
   Share2
 } from "lucide-react";
+import { calculatePositionSize, validatePositionSizingParams } from "@/utils/positionSizing";
 
 interface PositionSizeResult {
   positionSize: number;
@@ -64,40 +65,51 @@ export default function PositionSizing() {
 
   // Basic Calculator Results
   const basicResults = useMemo((): PositionSizeResult => {
-    const riskAmount = (accountSize * riskPercent) / 100;
-    const positionSize = stopLossPips !== 0 ? riskAmount / (stopLossPips * pipValue) : 0;
-    const potentialLoss = riskAmount;
-    const potentialProfit = positionSize * (takeProfitPips * pipValue);
-    const riskRewardRatio = potentialLoss > 0 ? potentialProfit / potentialLoss : 0;
+    try {
+      // Validate parameters first
+      const validationErrors = validatePositionSizingParams({
+        accountBalance: accountSize,
+        riskPercentage: riskPercent,
+        stopLoss: stopLossPips,
+        entryPrice: 1, // Dummy value for basic calculator
+        pipValue: pipValue,
+        takeProfit: takeProfitPips
+      });
 
-    let confidence: 'low' | 'medium' | 'high' = 'medium';
-    let recommendation = 'Standard position size calculated.';
+      if (validationErrors.length > 0) {
+        return {
+          positionSize: 0,
+          riskAmount: 0,
+          potentialLoss: 0,
+          potentialProfit: 0,
+          riskRewardRatio: 0,
+          confidence: 'low',
+          recommendation: `Validation errors: ${validationErrors.join(', ')}`
+        };
+      }
 
-    if (riskRewardRatio >= 3) {
-      confidence = 'high';
-      recommendation = 'Excellent risk-reward ratio! Consider increasing position size slightly.';
-    } else if (riskRewardRatio >= 1.5) {
-      confidence = 'medium';
-      recommendation = 'Good risk-reward ratio. Position size looks reasonable.';
-    } else {
-      confidence = 'low';
-      recommendation = 'Poor risk-reward ratio. Consider adjusting take profit or reducing position size.';
+      // Use the utility function for calculation
+      const result = calculatePositionSize({
+        accountBalance: accountSize,
+        riskPercentage: riskPercent,
+        stopLoss: stopLossPips,
+        entryPrice: 1, // Dummy value for basic calculator
+        pipValue: pipValue,
+        takeProfit: takeProfitPips
+      });
+
+      return result;
+    } catch (error) {
+      return {
+        positionSize: 0,
+        riskAmount: 0,
+        potentialLoss: 0,
+        potentialProfit: 0,
+        riskRewardRatio: 0,
+        confidence: 'low',
+        recommendation: `Calculation error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
     }
-
-    if (positionSize > accountSize * 0.1) {
-      recommendation += ' Warning: Position size exceeds 10% of account.';
-      confidence = 'low';
-    }
-
-    return {
-      positionSize,
-      riskAmount,
-      potentialLoss,
-      potentialProfit,
-      riskRewardRatio,
-      confidence,
-      recommendation
-    };
   }, [accountSize, riskPercent, stopLossPips, takeProfitPips, pipValue]);
 
   // Advanced Calculator Results
@@ -271,7 +283,7 @@ ${results.recommendation}`;
 
                 {/* Results */}
                 <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="p-4 bg-gray-800 rounded-lg">
                     <h3 className="font-semibold mb-3 flex items-center gap-2">
                       <Target className="w-4 h-4" />
                       Calculation Results
@@ -378,7 +390,7 @@ ${results.recommendation}`;
                       id="positionType"
                       value={positionType}
                       onChange={(e) => setPositionType(e.target.value as 'buy' | 'sell')}
-                      className="w-full mt-1 p-2 rounded border bg-white dark:bg-gray-800"
+                      className="w-full mt-1 p-2 rounded border bg-gray-800"
                     >
                       <option value="buy">Buy</option>
                       <option value="sell">Sell</option>
@@ -388,7 +400,7 @@ ${results.recommendation}`;
 
                 {/* Advanced Results */}
                 <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="p-4 bg-gray-800 rounded-lg">
                     <h3 className="font-semibold mb-3 flex items-center gap-2">
                       <Zap className="w-4 h-4" />
                       Advanced Results
@@ -523,7 +535,7 @@ ${results.recommendation}`;
           <CardContent>
             <div className="space-y-2">
               {savedCalculations.map((calc, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                   <div>
                     <span className="font-medium">{calc.positionSize.toFixed(2)} lots</span>
                     <span className="text-sm text-muted-foreground ml-2">

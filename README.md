@@ -29,7 +29,71 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## 🚀 Deploy on Vercel
+
+### Quick Deployment (Recommended)
+
+#### **For Windows:**
+1. **Install Vercel CLI**:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Use the automated deployment script**:
+   ```bash
+   pnpm run deploy:win
+   ```
+   This will build, commit, push, and deploy your app automatically!
+
+#### **For Linux/Mac:**
+1. **Install Vercel CLI**:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Use the automated deployment script**:
+   ```bash
+   ./git-auto.sh "Deploy to production"
+   ```
+   This will build, commit, push, and deploy your app automatically!
+
+### Alternative Methods
+
+#### Option 1: Use the dedicated deployment script
+```bash
+./deploy-vercel.sh
+```
+
+#### Option 2: Manual deployment
+```bash
+# Login to Vercel
+vercel login
+
+# Link your project
+vercel link
+
+# Set environment variables (see VERCEL_DEPLOYMENT_README.md)
+./setup-vercel-env.sh
+
+# Deploy to production
+vercel --prod
+```
+
+### Environment Variables
+
+Make sure to set these environment variables in your Vercel dashboard:
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `DATABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `JWT_SECRET`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+
+📖 **Detailed instructions**: See [VERCEL_DEPLOYMENT_README.md](./VERCEL_DEPLOYMENT_README.md) for comprehensive deployment guide.
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 

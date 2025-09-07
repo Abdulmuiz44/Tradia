@@ -349,3 +349,88 @@ async def sync_mt5(body: SyncRequest):
     except Exception as e:
         logging.exception("MT5 sync error")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/test_connection")
+async def test_connection(body: ValidateRequest):
+    """
+    POST /test_connection
+    Body: { login, password, server }
+    Returns: { success: True } or error details
+    """
+    try:
+        # Import & initialize MT5 at runtime (will raise RuntimeError if import fails)
+        mt5 = ensure_mt5_initialized()
+
+        # Attempt login with timeout
+        ok = False
+        login_error = None
+
+        try:
+            ok = mt5.login(int(body.login), password=body.password, server=body.server)
+        except TypeError as te:
+            # Some MT5 builds accept different signature; try best-effort
+            try:
+                ok = mt5.login(int(body.login))
+            except Exception as e2:
+                login_error = f"Login signature error: {e2}"
+        except Exception as le:
+            login_error = str(le)
+
+        if not ok:
+            # Get detailed error information
+            mt5_error = mt5.last_error() if hasattr(mt5, "last_error") else None
+            error_msg = login_error or (mt5_error if mt5_error else "Login failed")
+
+            # Cleanup before returning error
+            try:
+                mt5.shutdown()
+            except Exception:
+                pass
+
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "CONNECTION_FAILED",
+                    "message": error_msg,
+                    "details": {
+                        "login": body.login,
+                        "server": body.server,
+                        "mt5_error": mt5_error
+                    }
+                }
+            )
+
+        # Login successful, cleanup
+        try:
+            mt5.shutdown()
+        except Exception:
+            pass
+
+        return {
+            "success": True,
+            "message": "Connection test successful"
+        }
+
+    except HTTPException as he:
+        raise he
+    except RuntimeError as re:
+        logging.exception("MT5 runtime error during connection test")
+        error_type = "TERMINAL_NOT_FOUND" if "import" in str(re).lower() else "UNKNOWN_ERROR"
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": error_type,
+                "message": str(re),
+                "details": {"stage": "initialization"}
+            }
+        )
+    except Exception as e:
+        logging.exception("MT5 connection test error")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "UNKNOWN_ERROR",
+                "message": str(e),
+                "details": {"stage": "connection_test"}
+            }
+        )

@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { getUserSubscriptions, cancelUserSubscription, updateUserSubscription } from "@/lib/polar";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
   try {
@@ -12,8 +12,18 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user's subscriptions
-    const subscriptions = await getUserSubscriptions(session.user.id);
+    const supabase = createClient();
+
+    // Get user's subscriptions from database
+    const { data: subscriptions, error } = await supabase
+      .from('user_plans')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json({ subscriptions });
   } catch (error) {
@@ -40,21 +50,46 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Subscription ID is required" }, { status: 400 });
     }
 
-    let result;
+    const supabase = createClient();
 
     if (action === 'cancel') {
-      result = await cancelUserSubscription(subscriptionId);
+      const { data, error } = await supabase
+        .from('user_plans')
+        .update({
+          status: 'cancelled',
+          updated_at: new Date().toISOString()
+        })
+        .eq('flutterwave_subscription_id', subscriptionId)
+        .eq('user_id', session.user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return NextResponse.json({ subscription: data });
     } else if (action === 'update' && newPlanType) {
       const validPlans = ['pro', 'plus', 'elite'];
       if (!validPlans.includes(newPlanType)) {
         return NextResponse.json({ error: "Invalid plan type" }, { status: 400 });
       }
-      result = await updateUserSubscription(subscriptionId, newPlanType);
+
+      const { data, error } = await supabase
+        .from('user_plans')
+        .update({
+          plan_type: newPlanType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('flutterwave_subscription_id', subscriptionId)
+        .eq('user_id', session.user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return NextResponse.json({ subscription: data });
     } else {
       return NextResponse.json({ error: "Invalid action or missing parameters" }, { status: 400 });
     }
-
-    return NextResponse.json({ subscription: result });
   } catch (error) {
     console.error("Subscription update error:", error);
     return NextResponse.json(

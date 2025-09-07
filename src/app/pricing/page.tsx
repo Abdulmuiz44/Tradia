@@ -24,7 +24,7 @@ const PLANS = [
     id: "starter",
     name: "Starter",
     monthly: 0,
-    highlights: ["Basic trade analytics", "30 days trade history", "1 account connection (CSV/MT5 soon)"],
+    highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
     cta: "Get started (Free)",
     tag: "Free forever",
   },

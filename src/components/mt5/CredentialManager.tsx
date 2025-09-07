@@ -20,7 +20,8 @@ import {
   User,
   MoreVertical,
   Copy,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -70,8 +71,8 @@ export default function CredentialManager({
   const loadCredentials = async () => {
     try {
       setLoading(true);
-      // In a real implementation, this would call the API
-      // For now, we'll show a placeholder
+      // In a real implementation, this would call your API to list credentials.
+      // Leave as an empty list placeholder for now.
       setCredentials([]);
     } catch (err) {
       console.error("Failed to load credentials:", err);
@@ -112,7 +113,7 @@ export default function CredentialManager({
         });
 
         if (!response.ok) {
-          const data = await response.json();
+          const data = await response.json().catch(() => ({}));
           throw new Error(data.message || "Failed to update credential");
         }
 
@@ -126,7 +127,7 @@ export default function CredentialManager({
         });
 
         if (!response.ok) {
-          const data = await response.json();
+          const data = await response.json().catch(() => ({}));
           throw new Error(data.message || "Failed to create credential");
         }
 
@@ -164,7 +165,7 @@ export default function CredentialManager({
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.message || "Failed to delete credential");
       }
 
@@ -177,12 +178,17 @@ export default function CredentialManager({
   };
 
   const handleCopyLogin = (login: string) => {
-    navigator.clipboard.writeText(login);
-    setSuccess("Login copied to clipboard");
-    setTimeout(() => setSuccess(null), 2000);
+    try {
+      navigator.clipboard.writeText(login);
+      setSuccess("Login copied to clipboard");
+      setTimeout(() => setSuccess(null), 2000);
+    } catch {
+      setError("Failed to copy to clipboard");
+      setTimeout(() => setError(null), 2000);
+    }
   };
 
-  const getSecurityIcon = (level: string) => {
+  const getSecurityIcon = (level: string | undefined) => {
     switch (level) {
       case 'high':
         return <Shield className="w-4 h-4 text-green-500" />;
@@ -195,7 +201,7 @@ export default function CredentialManager({
     }
   };
 
-  const getSecurityColor = (level: string) => {
+  const getSecurityColor = (level: string | undefined) => {
     switch (level) {
       case 'high':
         return 'border-green-200 bg-green-50';
@@ -240,7 +246,7 @@ export default function CredentialManager({
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
+            <AlertCircle className="w-5 h-5 text-red-500" />
             <span className="text-sm text-red-700">{error}</span>
           </div>
         </div>
@@ -265,6 +271,7 @@ export default function CredentialManager({
             <button
               onClick={resetForm}
               className="text-gray-400 hover:text-gray-600"
+              aria-label="Close form"
             >
               ×
             </button>
@@ -320,6 +327,7 @@ export default function CredentialManager({
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -386,87 +394,109 @@ export default function CredentialManager({
         </div>
       ) : (
         <div className="grid gap-4">
-          {credentials.map((credential) => (
-            <div
-              key={credential.id}
-              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                selectedCredentialId === credential.id
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : `${getSecurityColor(credential.securityLevel || 'low')} hover:shadow-md`
-              }`}
-              onClick={() => onCredentialSelect?.(credential)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    {getSecurityIcon(credential.securityLevel || 'low')}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-gray-900">{credential.name}</h4>
-                        {credential.rotationRequired && (
-                          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                            Rotation Required
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                        <div className="flex items-center gap-1">
-                          <Server className="w-3 h-3" />
-                          {credential.server}
+          {credentials.map((credential) => {
+            // Normalize lastUsedAt to a display string safely
+            let lastUsedDisplay = "Never used";
+            if (credential.lastUsedAt) {
+              try {
+                if (typeof credential.lastUsedAt === "string") {
+                  const parsed = new Date(credential.lastUsedAt);
+                  if (!isNaN(parsed.getTime())) {
+                    lastUsedDisplay = `Last used ${parsed.toLocaleDateString()}`;
+                  } else {
+                    lastUsedDisplay = `Last used ${credential.lastUsedAt}`;
+                  }
+                } else if (credential.lastUsedAt instanceof Date) {
+                  lastUsedDisplay = `Last used ${credential.lastUsedAt.toLocaleDateString()}`;
+                } else {
+                  // fallback stringify
+                  lastUsedDisplay = `Last used ${String(credential.lastUsedAt)}`;
+                }
+              } catch (e) {
+                lastUsedDisplay = "Last used (unknown)";
+              }
+            }
+
+            return (
+              <div
+                key={credential.id}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedCredentialId === credential.id ? 'border-indigo-500 bg-indigo-50' : `${getSecurityColor(credential.securityLevel)} hover:shadow-md`}`}
+                onClick={() => onCredentialSelect?.(credential)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onCredentialSelect?.(credential); }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      {getSecurityIcon(credential.securityLevel)}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-gray-900">{credential.name || `${credential.server}`}</h4>
+                          {credential.rotationRequired && (
+                            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                              Rotation Required
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          {credential.login}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {credential.lastUsedAt
-                            ? `Last used ${credential.lastUsedAt.toLocaleDateString()}`
-                            : 'Never used'
-                          }
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                          <div className="flex items-center gap-1">
+                            <Server className="w-3 h-3" />
+                            {credential.server}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            {credential.login}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{lastUsedDisplay}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyLogin(credential.login);
-                    }}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                    title="Copy login"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      onClick={(e) => e.stopPropagation()}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyLogin(credential.login);
+                      }}
                       className="p-2 text-gray-400 hover:text-gray-600"
+                      title="Copy login"
+                      aria-label="Copy login"
                     >
-                      <MoreVertical className="w-4 h-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleEdit(credential)}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDelete(credential)}
-                        className="text-red-600"
+                      <Copy className="w-4 h-4" />
+                    </button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 text-gray-400 hover:text-gray-600"
+                        aria-label="Open actions"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <MoreVertical className="w-4 h-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleEdit(credential)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(credential)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

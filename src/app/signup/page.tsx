@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { signIn } from "next-auth/react";
+import { analytics } from "@/lib/analytics";
 
 // Client-only Navbar/Footer
 const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
@@ -122,6 +124,9 @@ export default function SignupPage(): React.ReactElement {
         setLoading(false);
         return;
       }
+
+      // Track successful signup
+      analytics.trackSignup(email, 'email');
 
       setNotice(data?.message || "Account created. Check your email for a verification link.");
       router.push(`/check-email?email=${encodeURIComponent(email)}`);

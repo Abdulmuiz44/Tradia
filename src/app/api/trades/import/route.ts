@@ -67,7 +67,7 @@ export async function POST(req: Request) {
             skippedTrades++;
           } else {
             updatedTrades++;
-            importedTrades.push({ ...existingTrade, ...normalizedTrade });
+            importedTrades.push({ ...existingTrade, ...normalizedTrade } as Trade);
           }
         } else {
           // Insert new trade
@@ -95,8 +95,10 @@ export async function POST(req: Request) {
               id: tradeId,
               symbol: normalizedTrade.symbol || 'UNKNOWN',
               openTime: normalizedTrade.openTime || new Date().toISOString(),
-              pnl: normalizedTrade.pnl || 0
-            });
+              pnl: normalizedTrade.pnl || 0,
+              lotSize: normalizedTrade.lotSize || 0.01,
+              entryPrice: normalizedTrade.entryPrice || 0
+            } as Trade);
           }
         }
       } catch (err) {

@@ -13,7 +13,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { name, email } = body;
+    const { name, email, country } = body;
 
     // Validate input
     if (!name?.trim() || !email?.trim()) {
@@ -33,7 +33,7 @@ export async function PUT(req: Request) {
       .from("users")
       .select("id")
       .eq("email", email.toLowerCase())
-      .neq("id", session.user.id)
+      .neq("id", session.user.id as string)
       .single();
 
     if (existingUser) {
@@ -46,10 +46,11 @@ export async function PUT(req: Request) {
       .update({
         name: name.trim(),
         email: email.toLowerCase().trim(),
+        country: country?.trim() || null,
         updated_at: new Date().toISOString()
       })
-      .eq("id", session.user.id)
-      .select("id, name, email, image, role, updated_at")
+      .eq("id", session.user.id as string)
+      .select("id, name, email, country, image, role, updated_at")
       .single();
 
     if (error) {

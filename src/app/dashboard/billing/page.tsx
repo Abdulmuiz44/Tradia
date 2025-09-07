@@ -17,7 +17,7 @@ import {
   Shield,
   Zap
 } from "lucide-react";
-import { getUserPlan, getPlanDisplayName, getPlanColor, PlanType } from "@/lib/planAccess";
+import { getPlanDisplayName, getPlanColor, PlanType } from "@/lib/planAccess";
 
 interface Subscription {
   id: string;
@@ -71,9 +71,14 @@ export default function BillingPage() {
     try {
       setLoading(true);
 
-      // Load current plan
-      const plan = await getUserPlan(session.user.id);
-      setCurrentPlan(plan.type);
+      // Load current plan via API
+      const planResponse = await fetch('/api/user/plan');
+      if (planResponse.ok) {
+        const planData = await planResponse.json();
+        setCurrentPlan(planData.plan);
+      } else {
+        setCurrentPlan('free'); // Default to free if error
+      }
 
       // Load subscription data
       const subscriptionResponse = await fetch('/api/payments/subscriptions');

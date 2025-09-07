@@ -1,20 +1,37 @@
+// src/types/tradePlan.ts
 export interface TradePlan {
   id: string;
-  symbol: string; // trading pair
+  user_id?: string;
+  symbol: string;
   setupType: string;
-  plannedEntry?: number;
-  stopLoss?: number;
-  takeProfit?: number;
-  riskReward?: number;
-  lotSize?: number;
-  reason?: string;
-  confidence?: number;
-  preChecklist?: string[];
-  emotion?: string;
-  date?: string;
-  // timestamp when the plan was created (optional)
-  createdAt?: string;
-  screenshotUrl?: string;
-  // use lowercase statuses to match context and avoid mismatches
-  status: "planned" | "executed" | "canceled" | "missed";
+  plannedEntry: number;
+  stopLoss: number;
+  takeProfit: number;
+  lotSize: number;
+  riskReward: number;
+  notes?: string;
+  status: 'planned' | 'executed' | 'cancelled';
+  tier?: 'free' | 'plus' | 'pro' | 'elite';
+  createdAt: string;
+  updated_at?: Date;
+}
+
+export interface TradePlanForm {
+  name: string;
+  description?: string;
+  symbol: string;
+  entry_price: number;
+  stop_loss: number;
+  take_profit: number;
+  quantity: number;
+  risk_percentage: number;
+}
+
+export interface TradePlanStats {
+  totalPlans: number;
+  activePlans: number;
+  completedPlans: number;
+  successRate: number;
+  totalProfit: number;
+  totalLoss: number;
 }

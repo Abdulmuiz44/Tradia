@@ -48,18 +48,16 @@ type LocalPlan = TradePlan & {
 };
 
 export default function TradePlannerTable() {
-  const ctx = useContext(TradePlanContext) as any;
+  const ctx = useContext(TradePlanContext);
 
   // context (with graceful fallbacks)
   const { plans = [], deletePlan, updatePlan, markExecuted, addPlan, loading = false } =
     ctx ?? {};
 
-  // detect user's plan/tier (ctx.user?.plan or localStorage)
+  // detect user's plan/tier (localStorage only since context doesn't have user)
   const userPlan: Tier = (() => {
     try {
-      const candidate =
-        ctx?.user?.plan ??
-        (typeof window !== "undefined" ? window.localStorage.getItem?.("userPlan") : null);
+      const candidate = typeof window !== "undefined" ? window.localStorage.getItem?.("userPlan") : null;
       if (!candidate) return "free";
       const c = String(candidate).toLowerCase();
       return (TIERS as readonly string[]).includes(c) ? (c as Tier) : "free";

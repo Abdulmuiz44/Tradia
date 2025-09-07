@@ -153,7 +153,7 @@ function normalizeBrokerTrade(t: unknown): Trade {
   const normalized: Partial<Trade> = {
     id: idCandidate ? toStringSafe(idCandidate) : undefined,
     symbol: toStringSafe(rec["symbol"] ?? rec["instrument"] ?? rec["ticker"] ?? "UNKNOWN"),
-    direction: toStringSafe(rec["direction"] ?? rec["side"] ?? ""),
+    direction: (toStringSafe(rec["direction"] ?? rec["side"] ?? "") as "Buy" | "Sell" | undefined) || undefined,
     orderType: toStringSafe(rec["orderType"] ?? rec["type"] ?? ""),
     openTime: toISOStringSafe(openTimeRaw),
     closeTime: toISOStringSafe(closeTimeRaw),

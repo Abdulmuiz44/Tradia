@@ -50,7 +50,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
     }
   }, [isOpen]);
 
-  const handleChange = <K extends keyof Trade>(field: K, value: Trade[K] | undefined) => {
+  const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...(prev ?? {}), [field]: value }));
   };
 
@@ -171,7 +171,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
     const newTrade: Trade = {
       id: `${String(form.symbol ?? "TRD")}-${Date.now()}`,
       symbol: String(form.symbol ?? ""),
-      direction: String(form.direction ?? ""),
+      direction: (String(form.direction ?? "Buy") as "Buy" | "Sell"),
       orderType: String(form.orderType ?? ""),
       openTime: openIso,
       closeTime: closeIso,
@@ -182,7 +182,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       takeProfitPrice: Number(form.takeProfitPrice ?? 0),
       pnl: Number(form.pnl ?? 0),
       resultRR: resultRRNumeric,
-      outcome,
+      outcome: (outcome as "Win" | "Loss" | "Breakeven"),
       duration: calculateDuration(String(form.openTime ?? ""), String(form.closeTime ?? "")),
       reasonForTrade: String(form.reasonForTrade ?? ""),
       emotion: String(form.emotion ?? "neutral"),
@@ -212,7 +212,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             <input
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={form.symbol ?? ""}
-              onChange={(e) => handleChange("symbol", e.target.value as Trade["symbol"])}
+              onChange={(e) => handleChange("symbol", e.target.value)}
               placeholder="e.g. EURUSD"
             />
           </div>
@@ -223,7 +223,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             <select
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.direction ?? "Buy")}
-              onChange={(e) => handleChange("direction", e.target.value as Trade["direction"])}
+              onChange={(e) => handleChange("direction", e.target.value)}
             >
               <option>Buy</option>
               <option>Sell</option>
@@ -236,7 +236,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             <select
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.orderType ?? orderTypes[0])}
-              onChange={(e) => handleChange("orderType", e.target.value as Trade["orderType"])}
+              onChange={(e) => handleChange("orderType", e.target.value)}
             >
               {orderTypes.map((ot) => (
                 <option key={ot} value={ot}>
@@ -252,7 +252,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             <select
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.session ?? sessions[0])}
-              onChange={(e) => handleChange("session", e.target.value as Trade["session"])}
+              onChange={(e) => handleChange("session", e.target.value)}
             >
               {sessions.map((s) => (
                 <option key={s} value={s}>
@@ -269,7 +269,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
               type="datetime-local"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.openTime ?? "").slice(0, 16)}
-              onChange={(e) => handleChange("openTime", e.target.value as Trade["openTime"])}
+              onChange={(e) => handleChange("openTime", e.target.value)}
             />
           </div>
 
@@ -280,7 +280,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
               type="datetime-local"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.closeTime ?? "").slice(0, 16)}
-              onChange={(e) => handleChange("closeTime", e.target.value as Trade["closeTime"])}
+              onChange={(e) => handleChange("closeTime", e.target.value)}
             />
           </div>
 

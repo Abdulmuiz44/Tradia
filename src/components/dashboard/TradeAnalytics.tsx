@@ -100,9 +100,58 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   const [showPremium, setShowPremium] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showQuickActions, setShowQuickActions] = useState(false);
 
   // Mock subscription tier - in real app, get from user data
   const userTier = (session?.user as any)?.subscription || 'free';
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Touch gesture handling for mobile navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast'];
+    const currentIndex = views.indexOf(activeView);
+
+    if (isLeftSwipe && currentIndex < views.length - 1) {
+      setActiveView(views[currentIndex + 1]);
+    } else if (isRightSwipe && currentIndex > 0) {
+      setActiveView(views[currentIndex - 1]);
+    }
+  };
+
+  // Quick actions for mobile
+  const quickActions = [
+    { label: 'Export PDF', icon: Download, action: () => console.log('Export PDF') },
+    { label: 'Share Report', icon: Share2, action: () => console.log('Share Report') },
+    { label: 'Set Alerts', icon: Settings, action: () => console.log('Set Alerts') },
+  ];
 
   // Filter trades based on timeframe
   const filteredTrades = useMemo(() => {
@@ -622,15 +671,15 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="text-center p-4 bg-green-900/20 rounded-lg">
                 <div className="text-2xl font-bold text-green-600 mb-1">68%</div>
                 <div className="text-sm text-muted-foreground">Win Probability</div>
               </div>
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="text-center p-4 bg-blue-900/20 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600 mb-1">$245</div>
                 <div className="text-sm text-muted-foreground">Expected P&L</div>
               </div>
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <div className="text-center p-4 bg-purple-900/20 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600 mb-1">2.1R</div>
                 <div className="text-sm text-muted-foreground">Risk/Reward</div>
               </div>
@@ -640,15 +689,15 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
               <div>
                 <h4 className="font-medium mb-2">Recommended Actions</h4>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-gray-800 rounded-lg">
                     <CheckCircle className="w-4 h-4 text-green-500" />
                     <span className="text-sm">Consider EUR/USD long position</span>
                   </div>
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-gray-800 rounded-lg">
                     <AlertTriangle className="w-4 h-4 text-yellow-500" />
                     <span className="text-sm">Monitor GBP/USD for breakout signals</span>
                   </div>
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-gray-800 rounded-lg">
                     <Target className="w-4 h-4 text-blue-500" />
                     <span className="text-sm">Set stop loss at 1.0850 for EUR/USD</span>
                   </div>
@@ -662,7 +711,28 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div
+      className={`space-y-6 ${className}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Mobile Header with Swipe Indicator */}
+      {isMobile && (
+        <div className="text-center mb-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span>Swipe left/right to navigate</span>
+            <div className="flex gap-1">
+              <div className={`w-2 h-2 rounded-full ${activeView === 'overview' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${activeView === 'performance' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${activeView === 'risk' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${activeView === 'patterns' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${activeView === 'forecast' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
@@ -670,6 +740,11 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           <p className="text-muted-foreground">
             Comprehensive analysis of your trading performance
           </p>
+          {isMobile && (
+            <div className="mt-2 text-sm text-blue-400 font-medium">
+              Current View: {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -688,6 +763,19 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             ))}
           </div>
 
+          {/* Mobile Quick Actions */}
+          {isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowQuickActions(!showQuickActions)}
+              className="text-xs"
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              Actions
+            </Button>
+          )}
+
           {/* Premium Toggle */}
           {userTier !== 'free' && (
             <Button
@@ -702,6 +790,28 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           )}
         </div>
       </div>
+
+      {/* Mobile Quick Actions Panel */}
+      {isMobile && showQuickActions && (
+        <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-800">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-3 gap-3">
+              {quickActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={action.action}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
+                >
+                  <action.icon className="w-4 h-4" />
+                  <span className="text-xs text-center">{action.label}</span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* View Tabs */}
       <div className="flex flex-wrap gap-2 border-b">

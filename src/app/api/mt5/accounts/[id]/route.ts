@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +17,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const accountId = params.id;
+    const resolvedParams = await params;
+    const accountId = resolvedParams.id;
     if (!accountId) {
       return NextResponse.json({ error: "Account ID required" }, { status: 400 });
     }
@@ -49,7 +50,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -59,7 +60,8 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const accountId = params.id;
+    const resolvedParams = await params;
+    const accountId = resolvedParams.id;
     if (!accountId) {
       return NextResponse.json({ error: "Account ID required" }, { status: 400 });
     }
@@ -91,7 +93,7 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -101,7 +103,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const accountId = params.id;
+    const resolvedParams = await params;
+    const accountId = resolvedParams.id;
     if (!accountId) {
       return NextResponse.json({ error: "Account ID required" }, { status: 400 });
     }

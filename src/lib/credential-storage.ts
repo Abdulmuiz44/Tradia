@@ -1,4 +1,4 @@
-// src/lib/credential-storage.ts
+ // src/lib/credential-storage.ts
 import { MT5Credentials, ConnectionError } from '@/types/mt5';
 import { encryptionService, EncryptedData } from '@/lib/encryption';
 import { createClient } from '@/utils/supabase/server';

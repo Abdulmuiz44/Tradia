@@ -40,7 +40,7 @@ export default function MT5ConnectPage() {
     server: form.server,
     login: form.login,
     password: form.investorPassword,
-    name: form.name || undefined
+    name: form.name || `MT5 ${form.login}`
   });
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +73,7 @@ export default function MT5ConnectPage() {
         server: form.server.trim(),
         login: form.login.trim(),
         investorPassword: form.investorPassword,
-        name: form.name.trim() || undefined,
+        name: form.name.trim() || `MT5 ${form.login.trim()}`,
         password: form.investorPassword
       };
 
@@ -117,7 +117,8 @@ export default function MT5ConnectPage() {
       mt5ConnectionManager.clearValidationTimeout({
         server: form.server,
         login: form.login,
-        password: form.investorPassword
+        password: form.investorPassword,
+        name: form.name.trim() || `MT5 ${form.login.trim()}`
       });
     }
   };
@@ -458,7 +459,7 @@ export default function MT5ConnectPage() {
                     server: form.server,
                     login: form.login,
                     password: form.investorPassword,
-                    name: form.name || undefined
+                    name: form.name || `MT5 ${form.login}`
                   }}
                   showDetails={true}
                 />

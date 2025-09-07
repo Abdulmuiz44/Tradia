@@ -1,5 +1,5 @@
 // src/app/api/ai/chat/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
@@ -15,10 +15,16 @@ interface ChatRequest {
   }>;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    // Get user ID from session - NextAuth stores it in token.userId
+    const token = await import("next-auth/jwt").then(({ getToken }) =>
+      getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+    );
+    const userId = token?.userId || (session?.user as any)?.id;
+
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -33,11 +39,11 @@ export async function POST(req: Request) {
 
     // Get user's trade history if not provided
     let userTrades = tradeHistory;
-    if (!userTrades) {
+    if (!userTrades && userId) {
       const { data: trades, error } = await supabase
         .from("trades")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .order("open_time", { ascending: false })
         .limit(100);
 
@@ -56,12 +62,16 @@ export async function POST(req: Request) {
 
     // Generate AI response using the AI service
     const aiAnalysis = await aiService.createMLAnalysis(userTrades || []);
-    const aiResponse = await generateAIResponse(
+
+    // Use the new AI-powered response generation
+    const aiResponse = await aiService.generatePersonalizedResponse(
       message,
       userTrades || [],
-      imageAnalysis,
-      conversationHistory || [],
-      aiAnalysis
+      {
+        recentTrades: userTrades?.slice(-10), // Last 10 trades for context
+        uploadedImages: attachments,
+        marketCondition: 'General market analysis' // Could be enhanced with real market data
+      }
     );
 
     return NextResponse.json({

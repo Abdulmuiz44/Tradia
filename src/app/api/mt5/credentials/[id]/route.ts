@@ -14,7 +14,7 @@ function asString(value: unknown): string {
  */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate user
@@ -42,7 +42,8 @@ export async function GET(
       );
     }
 
-    const credentialId = params.id;
+    const resolvedParams = await params;
+    const credentialId = resolvedParams.id;
 
     // Get the specific credential
     const credential = await credentialStorage.getCredentials(user.id, credentialId);
@@ -97,7 +98,7 @@ export async function GET(
  */
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate user
@@ -125,7 +126,8 @@ export async function PUT(
       );
     }
 
-    const credentialId = params.id;
+    const resolvedParams = await params;
+    const credentialId = resolvedParams.id;
     const body = await req.json() as {
       name?: string;
       investorPassword?: string;
@@ -196,7 +198,7 @@ export async function PUT(
  */
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate user
@@ -224,7 +226,8 @@ export async function DELETE(
       );
     }
 
-    const credentialId = params.id;
+    const resolvedParams = await params;
+    const credentialId = resolvedParams.id;
 
     // Get credential info before deletion for audit
     const credential = await credentialStorage.getCredentials(user.id, credentialId);

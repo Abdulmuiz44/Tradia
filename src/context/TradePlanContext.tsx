@@ -6,10 +6,14 @@ import type { TradePlan } from "@/types/tradePlan";
 
 interface TradePlanContextType {
   plans: TradePlan[];
+  loading?: boolean;
   addPlan: (plan: Omit<TradePlan, "id" | "createdAt">) => void;
   updatePlan: (id: string, updatedPlan: Partial<TradePlan>) => void;
   deletePlan: (id: string) => void;
   markExecuted: (id: string) => void;
+  createPlan?: (plan: Omit<TradePlan, "id" | "createdAt">) => void;
+  setPlans?: (plans: TradePlan[] | ((prev: TradePlan[]) => TradePlan[])) => void;
+  openUpgrade?: () => void;
 }
 
 export const TradePlanContext = createContext<TradePlanContextType | undefined>(undefined);

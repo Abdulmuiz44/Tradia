@@ -1,3 +1,4 @@
+// src/types/next-auth.d.ts
 import NextAuth from "next-auth";
 
 declare module "next-auth" {
@@ -8,7 +9,6 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
       role?: string;
-      subscription?: string;
     };
   }
 
@@ -18,16 +18,12 @@ declare module "next-auth" {
     email?: string | null;
     image?: string | null;
     role?: string;
-    subscription?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    userId: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
+    userId?: string;
     role?: string;
   }
 }

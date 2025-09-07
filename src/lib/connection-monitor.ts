@@ -11,7 +11,8 @@ export interface ConnectionHealth {
   lastChecked: Date;
   consecutiveFailures: number;
   uptimePercentage: number;
-  errorMessage?: string;
+  // allow explicit null when clearing errors coming from validation results
+  errorMessage?: string | null;
   metadata?: Record<string, any>;
 }
 
@@ -19,6 +20,7 @@ export interface MonitoringConfig {
   checkInterval: number; // milliseconds
   timeout: number; // milliseconds
   maxConsecutiveFailures: number;
+  // use boolean (remove non-existent `bool` alias)
   enableRealTimeUpdates: boolean;
   alertThresholds: {
     responseTime: number; // ms
@@ -59,10 +61,10 @@ export class ConnectionMonitor {
    */
   async startMonitoring(userId: string, config?: Partial<MonitoringConfig>): Promise<void> {
     if (this.isMonitoring) {
-      return; // Already monitoring
+      return; // Already monitoring (simple guard)
     }
 
-    const monitoringConfig = { ...this.defaultConfig, ...config };
+    const monitoringConfig = { ...this.defaultConfig, ...config } as MonitoringConfig;
     this.monitoringConfigs.set(userId, monitoringConfig);
 
     // Load existing credentials
@@ -91,7 +93,7 @@ export class ConnectionMonitor {
     }
 
     // Clean up health status
-    for (const [key, health] of this.healthStatus.entries()) {
+    for (const [key] of this.healthStatus.entries()) {
       if (key.startsWith(`${userId}:`)) {
         this.healthStatus.delete(key);
       }
@@ -163,16 +165,16 @@ export class ConnectionMonitor {
     const key = `${userId}:${credentialId}`;
 
     if (existing) {
-      // Load existing status
+      // Load existing status (defensive read)
       this.healthStatus.set(key, {
         credentialId,
-        status: existing.status as ConnectionStatus,
-        responseTime: existing.response_time_ms || 0,
-        lastChecked: new Date(existing.last_check_at),
-        consecutiveFailures: existing.consecutive_failures || 0,
-        uptimePercentage: parseFloat(existing.uptime_percentage?.toString() || '100'),
-        errorMessage: existing.error_message || undefined,
-        metadata: existing.metadata || {}
+        status: (existing.status as ConnectionStatus) ?? 'unknown',
+        responseTime: existing.response_time_ms ?? 0,
+        lastChecked: existing.last_check_at ? new Date(existing.last_check_at) : new Date(),
+        consecutiveFailures: existing.consecutive_failures ?? 0,
+        uptimePercentage: parseFloat((existing.uptime_percentage ?? 100).toString()),
+        errorMessage: existing.error_message ?? null,
+        metadata: existing.metadata ?? {}
       });
     } else {
       // Create initial status
@@ -212,7 +214,7 @@ export class ConnectionMonitor {
 
     this.checkIntervals.set(userId, interval);
 
-    // Perform initial check
+    // Perform initial check shortly after starting
     setTimeout(() => this.performHealthCheck(userId), 1000);
   }
 
@@ -243,7 +245,7 @@ export class ConnectionMonitor {
 
     try {
       // Get credentials for health check
-      const credentials = await credentialStorage.getCredentials(userId, credentialId);
+      const credentials: MT5Credentials | null = await credentialStorage.getCredentials(userId, credentialId);
       if (!credentials) {
         await this.updateHealthStatus(userId, credentialId, {
           status: 'error',
@@ -253,7 +255,7 @@ export class ConnectionMonitor {
         return;
       }
 
-      // Perform connection test
+      // Perform connection test (single attempt monitoring)
       const result = await mt5ConnectionManager.validateConnection(credentials, {
         maxAttempts: 1, // Single attempt for monitoring
         initialDelay: 0,
@@ -268,11 +270,12 @@ export class ConnectionMonitor {
           status: 'connected',
           responseTime,
           consecutiveFailures: 0,
-          errorMessage: undefined
+          // clear error explicitly
+          errorMessage: null
         });
       } else {
         const currentHealth = this.healthStatus.get(key);
-        const newConsecutiveFailures = (currentHealth?.consecutiveFailures || 0) + 1;
+        const newConsecutiveFailures = (currentHealth?.consecutiveFailures ?? 0) + 1;
 
         const status: ConnectionStatus =
           newConsecutiveFailures >= config.maxConsecutiveFailures ? 'error' : 'degraded';
@@ -281,14 +284,15 @@ export class ConnectionMonitor {
           status,
           responseTime,
           consecutiveFailures: newConsecutiveFailures,
-          errorMessage: result.errorMessage
+          // allow value to be string | null | undefined from validation result
+          errorMessage: (result as any).errorMessage ?? null
         });
       }
 
     } catch (error) {
       const responseTime = Date.now() - startTime;
       const currentHealth = this.healthStatus.get(key);
-      const newConsecutiveFailures = (currentHealth?.consecutiveFailures || 0) + 1;
+      const newConsecutiveFailures = (currentHealth?.consecutiveFailures ?? 0) + 1;
 
       await this.updateHealthStatus(userId, credentialId, {
         status: newConsecutiveFailures >= config.maxConsecutiveFailures ? 'error' : 'degraded',
@@ -313,8 +317,8 @@ export class ConnectionMonitor {
     if (!currentHealth) return;
 
     // Calculate new uptime percentage
-    const totalChecks = (currentHealth.metadata?.totalChecks || 0) + 1;
-    const successfulChecks = totalChecks - (updates.consecutiveFailures || currentHealth.consecutiveFailures || 0);
+    const totalChecks = (currentHealth.metadata?.totalChecks ?? 0) + 1;
+    const successfulChecks = totalChecks - (updates.consecutiveFailures ?? currentHealth.consecutiveFailures ?? 0);
     const uptimePercentage = totalChecks > 0 ? (successfulChecks / totalChecks) * 100 : 100;
 
     const newHealth: ConnectionHealth = {
@@ -325,7 +329,7 @@ export class ConnectionMonitor {
       metadata: {
         ...currentHealth.metadata,
         totalChecks,
-        lastResponseTime: updates.responseTime || currentHealth.responseTime
+        lastResponseTime: updates.responseTime ?? currentHealth.responseTime
       }
     };
 
@@ -344,8 +348,9 @@ export class ConnectionMonitor {
         last_check_at: newHealth.lastChecked.toISOString(),
         consecutive_failures: newHealth.consecutiveFailures,
         uptime_percentage: newHealth.uptimePercentage,
-        error_message: newHealth.errorMessage,
-        metadata: newHealth.metadata,
+        // store null explicitly where appropriate
+        error_message: newHealth.errorMessage ?? null,
+        metadata: newHealth.metadata ?? {},
         total_checks: totalChecks
       });
 

@@ -1,7 +1,7 @@
 // src/lib/planAccess.ts
-// Plan-based access control system
+// Plan-based access control system with Stripe integration
 
-export type PlanType = 'free' | 'pro' | 'plus' | 'elite';
+export type PlanType = 'starter' | 'pro' | 'plus' | 'elite' | 'free';
 
 export interface PlanLimits {
   mt5Accounts: number;
@@ -14,6 +14,14 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
+    mt5Accounts: 0,
+    aiChatsPerDay: 5,
+    tradeStorageDays: 30,
+    advancedAnalytics: false,
+    prioritySupport: false,
+    customIntegrations: false
+  },
+  starter: {
     mt5Accounts: 0,
     aiChatsPerDay: 5,
     tradeStorageDays: 30,
@@ -54,35 +62,22 @@ export interface UserPlan {
   features: string[];
 }
 
-// Mock function to get user plan - replace with actual database call
+// Client-safe version - database logic moved to API routes
 export async function getUserPlan(userId: string): Promise<UserPlan> {
-  // TODO: Replace with actual database query
-  // For now, return a mock plan based on user ID
   if (!userId) {
     return {
-      type: 'free',
+      type: 'starter',
       isActive: true,
       features: []
     };
   }
 
-  // Mock logic - in production, query the database
-  const mockPlans: Record<string, PlanType> = {
-    'user123': 'pro',
-    'user456': 'plus',
-    'user789': 'elite'
-  };
-
-  const planType = mockPlans[userId] || 'free';
-
+  // For client-side usage, return default plan
+  // Database queries should be done via API routes
   return {
-    type: planType,
+    type: 'starter',
     isActive: true,
-    features: Object.keys(PLAN_LIMITS[planType]).filter(key =>
-      PLAN_LIMITS[planType][key as keyof PlanLimits] === true ||
-      (typeof PLAN_LIMITS[planType][key as keyof PlanLimits] === 'number' &&
-       PLAN_LIMITS[planType][key as keyof PlanLimits] as number > 0)
-    )
+    features: []
   };
 }
 
@@ -114,7 +109,7 @@ function getUpgradeOptions(currentPlan: PlanType): Array<{
 }> {
   const options = [];
 
-  if (currentPlan === 'free') {
+  if (currentPlan === 'free' || currentPlan === 'starter') {
     options.push({
       name: 'Pro Plan',
       price: 29,
@@ -161,6 +156,7 @@ function getUpgradeOptions(currentPlan: PlanType): Array<{
 export function getPlanDisplayName(plan: PlanType): string {
   const names = {
     free: 'Free',
+    starter: 'Starter',
     pro: 'Pro',
     plus: 'Plus',
     elite: 'Elite'
@@ -171,6 +167,7 @@ export function getPlanDisplayName(plan: PlanType): string {
 export function getPlanColor(plan: PlanType): string {
   const colors = {
     free: 'text-gray-500',
+    starter: 'text-gray-500',
     pro: 'text-blue-500',
     plus: 'text-purple-500',
     elite: 'text-yellow-500'

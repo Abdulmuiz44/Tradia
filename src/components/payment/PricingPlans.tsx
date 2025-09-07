@@ -4,11 +4,30 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { CheckCircle, X, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 type BillingType = "monthly" | "yearly";
 type PlanName = "free" | "plus" | "pro" | "elite";
+
+// Plan hierarchy for upgrade logic (free -> pro -> plus -> elite)
+const PLAN_HIERARCHY: Record<PlanName, number> = {
+  free: 0,
+  pro: 1,
+  plus: 2,
+  elite: 3,
+};
+
+// Helper function to check if a plan is an upgrade from current
+const isUpgrade = (currentPlan: PlanName, targetPlan: PlanName): boolean => {
+  return PLAN_HIERARCHY[targetPlan] > PLAN_HIERARCHY[currentPlan];
+};
+
+// Helper function to check if plans are the same
+const isSamePlan = (currentPlan: PlanName, targetPlan: PlanName): boolean => {
+  return currentPlan === targetPlan;
+};
 
 type Plan = {
   name: PlanName;
@@ -39,8 +58,8 @@ const plansData: Plan[] = [
     ],
   },
   {
-    name: "plus",
-    label: "Plus",
+    name: "pro",
+    label: "Pro",
     priceMonthly: 9,
     priceYearly: 90, // monthly * 10 (2 months free)
     tagline: "Daily analysis & faster improvement",
@@ -55,8 +74,8 @@ const plansData: Plan[] = [
     highlight: true,
   },
   {
-    name: "pro",
-    label: "Pro",
+    name: "plus",
+    label: "Plus",
     priceMonthly: 19,
     priceYearly: 190,
     tagline: "For serious, scaling traders",
@@ -107,6 +126,7 @@ export default function PricingPlans(): React.ReactElement {
   const { plan, setPlan } = useUser();
   const [billingType, setBillingType] = useState<BillingType>("monthly");
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (!plan) {
@@ -131,10 +151,32 @@ export default function PricingPlans(): React.ReactElement {
   };
 
   const handleUpgrade = (selectedPlan: PlanName) => {
-  // setPlan expects PlanType from UserContext — cast to PlanType (no runtime change)
-  setPlan(selectedPlan as unknown as import("@/context/UserContext").PlanType);
-    const trialDays = selectedPlan === "free" ? 0 : 7; // keep 7-day trial consistent with app/page.tsx
-    router.push(`/checkout?plan=${selectedPlan}&billing=${billingType}&trial=${trialDays}`);
+    // Check if this is a valid action (upgrade or same plan)
+    if (!isUpgrade(plan, selectedPlan) && !isSamePlan(plan, selectedPlan)) {
+      // This is a downgrade, don't allow
+      return;
+    }
+
+    const trialDays = selectedPlan === "free" ? 0 : 3; // 3-day trial for paid plans
+    const checkoutUrl = `/checkout?plan=${selectedPlan}&billing=${billingType}&trial=${trialDays}`;
+
+    // If session is still loading, allow navigation to proceed (checkout will handle redirect if needed)
+    if (status === "loading") {
+      setPlan(selectedPlan as unknown as import("@/context/UserContext").PlanType);
+      router.push(checkoutUrl);
+      return;
+    }
+
+    // If user is not authenticated, send them to login preserving intended checkout target
+    if (!session) {
+      const loginUrl = `/login?redirect=${encodeURIComponent(checkoutUrl)}`;
+      router.push(loginUrl);
+      return;
+    }
+
+    // Authenticated: set the plan locally and go to checkout
+    setPlan(selectedPlan as unknown as import("@/context/UserContext").PlanType);
+    router.push(checkoutUrl);
   };
 
   // Build derived view where each tier shows "Everything in previous tier" + its own additions
@@ -180,17 +222,27 @@ export default function PricingPlans(): React.ReactElement {
             <div className="mt-5 flex items-center gap-3">
               <button
                 onClick={() => handleUpgrade("plus")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                disabled={!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")}
+                className={`font-semibold py-2 px-4 rounded-lg transition ${
+                  !isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
                 aria-label="Start Plus free trial"
               >
-                Start Plus &mdash; 7-Day Trial
+                {isSamePlan(plan, "plus") ? "Current Plan" : "Start Plus — 3-Day Trial"}
               </button>
 
               <button
                 onClick={() => handleUpgrade("free")}
-                className="bg-transparent border border-gray-700 text-gray-200 py-2 px-4 rounded-lg font-medium hover:border-blue-600 transition"
+                disabled={!isUpgrade(plan, "free") && !isSamePlan(plan, "free")}
+                className={`py-2 px-4 rounded-lg font-medium transition ${
+                  !isUpgrade(plan, "free") && !isSamePlan(plan, "free")
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
+                    : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-600"
+                }`}
               >
-                Start Free — Always Free
+                {isSamePlan(plan, "free") ? "Current Plan" : "Start Free — Always Free"}
               </button>
 
               <span className="ml-4 inline-flex items-center text-sm text-gray-400 gap-2">
@@ -226,19 +278,22 @@ export default function PricingPlans(): React.ReactElement {
       {/* PRICING CARDS */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 gap-6 lg:grid-cols-4">
         {allPlansView.map((p) => {
-          const isSelected = plan === p.name;
-          const displayPrice = getDisplayPrice(
-            plansData.find((x) => x.name === p.name) ?? p,
-            billingType
-          );
+           const isSelected = plan === p.name;
+           const isUpgradePlan = isUpgrade(plan, p.name);
+           const isSame = isSamePlan(plan, p.name);
+           const canSelect = isUpgradePlan || isSame;
+           const displayPrice = getDisplayPrice(
+             plansData.find((x) => x.name === p.name) ?? p,
+             billingType
+           );
 
-          return (
-            <motion.div
-              key={p.name}
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 220 }}
-              className={`rounded-2xl p-5 flex flex-col justify-between border ${p.highlight ? "border-blue-500 bg-[#0f1724]/70 shadow-2xl" : "border-gray-700 bg-[#0b1220]/60"}`}
-            >
+           return (
+             <motion.div
+               key={p.name}
+               whileHover={canSelect ? { scale: 1.02 } : {}}
+               transition={{ type: "spring", stiffness: 220 }}
+               className={`rounded-2xl p-5 flex flex-col justify-between border ${p.highlight ? "border-blue-500 bg-[#0f1724]/70 shadow-2xl" : "border-gray-700 bg-[#0b1220]/60"} ${!canSelect ? "opacity-60" : ""}`}
+             >
               <div>
                 <div className="flex items-start justify-between">
                   <div>
@@ -291,17 +346,36 @@ export default function PricingPlans(): React.ReactElement {
                 </div>
 
                 {isSelected && (
-                  <div className="mt-4 inline-block text-sm font-semibold text-blue-300">✓ Currently Selected</div>
+                  <div className="mt-4 inline-block text-sm font-semibold text-blue-300">✓ Current Plan</div>
+                )}
+                {!canSelect && !isSelected && (
+                  <div className="mt-4 inline-block text-sm font-semibold text-gray-500">Downgrade Not Available</div>
                 )}
               </div>
 
               <div className="mt-6">
                 <button
                   onClick={() => handleUpgrade(p.name)}
-                  className={`w-full py-2 rounded-lg font-semibold transition ${p.name === "free" ? "bg-transparent border border-gray-600 text-gray-200 hover:border-blue-500" : p.highlight ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-white"}`}
+                  disabled={!canSelect}
+                  className={`w-full py-2 rounded-lg font-semibold transition ${
+                    !canSelect
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : p.name === "free"
+                      ? "bg-transparent border border-gray-600 text-gray-200 hover:border-blue-500"
+                      : p.highlight
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-gray-800 hover:bg-gray-700 text-white"
+                  }`}
                 >
-                  {p.name === "free" ? "Continue with Free" : `Start ${p.label}`}
-                  {p.name !== "free" && <span className="text-xs ml-2">7-day trial</span>}
+                  {isSelected
+                    ? "Current Plan"
+                    : isUpgradePlan
+                    ? `Upgrade to ${p.label}`
+                    : p.name === "free"
+                    ? "Continue with Free"
+                    : `Start ${p.label}`
+                  }
+                  {p.name !== "free" && !isSelected && <span className="text-xs ml-2">3-day trial</span>}
                 </button>
 
                 <div className="mt-3 text-xs text-gray-400">
@@ -401,11 +475,27 @@ export default function PricingPlans(): React.ReactElement {
           </div>
 
           <div className="flex gap-3">
-            <button onClick={() => handleUpgrade("plus")} className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold">
-              Start Plus Trial
+            <button
+              onClick={() => handleUpgrade("plus")}
+              disabled={!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")}
+              className={`py-2 px-4 rounded-lg font-semibold ${
+                !isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
+            >
+              {isSamePlan(plan, "plus") ? "Current Plan" : "Start Plus Trial"}
             </button>
-            <button onClick={() => handleUpgrade("pro")} className="bg-transparent border border-gray-700 text-gray-200 py-2 px-4 rounded-lg">
-              Talk to Sales (Elite)
+            <button
+              onClick={() => handleUpgrade("pro")}
+              disabled={!isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")}
+              className={`py-2 px-4 rounded-lg ${
+                !isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
+                  : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-500"
+              }`}
+            >
+              {isSamePlan(plan, "pro") ? "Current Plan" : "Talk to Sales (Pro)"}
             </button>
           </div>
         </div>

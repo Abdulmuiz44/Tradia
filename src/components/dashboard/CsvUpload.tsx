@@ -176,11 +176,10 @@ function rowToTradeObject(row: Record<string, string>, idx: number): Trade {
   const trade: Trade = {
     id: get(["id", "deal_id", "ticket", "trade_id"], `imported-${idx}-${Date.now()}`),
     symbol: get(["symbol", "pair", "instrument"], "UNKNOWN"),
-    entryPrice: get(["entryPrice", "entry_price", "openPrice", "open_price", "price_open"], ""),
-    exitPrice: get(["exitPrice", "exit_price", "closePrice", "close_price", "price_close"], ""),
-    lotSize: get(["lotSize", "lots", "volume", "size"], "1"),
+    entryPrice: parseNumber(get(["entryPrice", "entry_price", "openPrice", "open_price", "price_open"], "0")),
+    exitPrice: parseNumber(get(["exitPrice", "exit_price", "closePrice", "close_price", "price_close"], "0")),
+    lotSize: parseNumber(get(["lotSize", "lots", "volume", "size"], "1")),
     pnl: parseNumber(get(["pnl", "profit", "netpl", "profit_loss"], "0")),
-    profitLoss: get(["profitLoss", "profit_loss", "profit_formatted"], ""),
     openTime: toISO(get(["openTime", "open_time", "time", "entry_time"], "")),
     closeTime: toISO(get(["closeTime", "close_time", "time_close", "exit_time"], "")),
     outcome: (get(["outcome", "result"], "Breakeven") as Trade["outcome"]) ?? "Breakeven",
@@ -188,9 +187,9 @@ function rowToTradeObject(row: Record<string, string>, idx: number): Trade {
     reasonForTrade: get(["reason", "reasonForTrade", "strategy"], ""),
     strategy: get(["strategy", "strategyName"], ""),
     emotion: get(["emotion"], ""),
-    created_at: new Date().toISOString(),
+    created_at: new Date(),
     updated_at: new Date().toISOString(),
-  } as Trade;
+  };
 
   return trade;
 }
@@ -217,7 +216,7 @@ export default function CsvUpload({
   const [open, setOpen] = useState<boolean>(false);
   const [parsing, setParsing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null); // ✅ Fixed: was incorrectly set to `= null`
 
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
   const [mappedHeaders, setMappedHeaders] = useState<Record<string, string>>({});

@@ -38,6 +38,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check user's plan access for MT5
+    const { getUserPlan, canAccessMT5 } = await import("@/lib/planAccess");
+    const userPlan = await getUserPlan(userId);
+    if (!canAccessMT5(userPlan)) {
+      return NextResponse.json({
+        error: "MT5 integration requires a Pro, Plus, or Elite plan",
+        upgradeRequired: true,
+        currentPlan: userPlan.type
+      }, { status: 403 });
+    }
+
     const bodyRaw = (await req.json()) as unknown;
     const parsed = bodySchema.safeParse(bodyRaw);
     if (!parsed.success) {
@@ -75,12 +86,9 @@ export async function POST(req: Request) {
     });
   }
 
-  // initialize MetaApi client (lazy import to avoid browser/global eval at module load)
-  const metaApi = await getMetaApi();
-  const mtAccountApi = metaApi.metatraderAccountApi;
-  const account = await mtAccountApi.getAccount(metaapiAccountId);
-    const rpc = await account.getRPCConnection();
-    if (!rpc.isConnected()) await rpc.connect();
+  // Connect to MTAPI .NET service
+  const mtapiUrl = process.env.MTAPI_SERVICE_URL || 'http://localhost:5000';
+  const syncEndpoint = `${mtapiUrl}/api/mt5/sync`;
 
   // Update progress: Authenticating
   if (syncId) {
@@ -105,8 +113,30 @@ export async function POST(req: Request) {
       });
     }
 
-    // get deals via RPC
-    const dealsRaw = await rpc.getDealsByTimeRange(fromTs, toTs);
+    // Call MTAPI service to get deals
+    const syncResponse = await fetch(syncEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        from: fromTs.toISOString(),
+        to: toTs.toISOString()
+      })
+    });
+
+    if (!syncResponse.ok) {
+      throw new Error(`MTAPI service error: ${syncResponse.statusText}`);
+    }
+
+    const syncData = await syncResponse.json();
+    if (!syncData.success) {
+      throw new Error(syncData.error || 'Failed to sync with MTAPI');
+    }
+
+    const dealsRaw = syncData.trades || [];
+    const accountInfo = syncData.accountInfo;
 
     // Update progress: Analyzing Trade History
     if (syncId) {
@@ -119,7 +149,18 @@ export async function POST(req: Request) {
       });
     }
 
-    const normalized = mapMt5Deals(Array.isArray(dealsRaw) ? dealsRaw : []);
+    // Map MTAPI deals to our format
+    const normalized = dealsRaw.map((deal: any) => ({
+      id: deal.id,
+      ticket: deal.ticket,
+      symbol: deal.symbol,
+      volume: deal.volume,
+      profit: deal.profit,
+      price: deal.priceClose,
+      time: new Date(deal.timeClose),
+      type: deal.type,
+      comment: deal.comment
+    }));
 
     // Update progress: Processing Data
     if (syncId) {
@@ -199,7 +240,7 @@ export async function POST(req: Request) {
 
       const { error: upErr } = await supabase
         .from("mt5_trades")
-        .upsert(row, { onConflict: ["mt5_account_id", "deal_id"] });
+        .upsert(row, { onConflict: "mt5_account_id,deal_id" });
       if (upErr) {
         console.error("Failed to upsert mt5 trade:", upErr, row);
       } else {

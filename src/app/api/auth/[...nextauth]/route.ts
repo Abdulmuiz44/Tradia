@@ -1,6 +1,7 @@
 // src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import TwitterProvider from "next-auth/providers/twitter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { createClient } from "@/utils/supabase/server";
@@ -10,6 +11,11 @@ const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    }),
+
+    TwitterProvider({
+      clientId: process.env.TWITTER_CLIENT_ID ?? "",
+      clientSecret: process.env.TWITTER_CLIENT_SECRET ?? "",
     }),
 
     CredentialsProvider({
