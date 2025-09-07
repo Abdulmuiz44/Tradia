@@ -1,20 +1,16 @@
-// src/app/api/mt5/accounts/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { fetchAndSyncAccountInfo } from "@/lib/mtapi";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const supabase = createClient();
-
     const { data: accounts, error } = await supabase
       .from("mt5_accounts")
       .select("*")
@@ -22,12 +18,10 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-
     return NextResponse.json({ accounts: accounts || [] });
   } catch (err) {
-    console.error("Failed to get MT5 accounts:", err);
-    const message = err instanceof Error ? err.message : "Failed to get accounts";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Get accounts error:", err);
+    return NextResponse.json({ error: "Failed to fetch accounts" }, { status: 500 });
   }
 }
 
@@ -35,49 +29,40 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { id, server, login, password, name, accountInfo, state } = body;
+    const { id, server, login, password, name } = body;
 
     if (!server || !login || !password) {
-      return NextResponse.json(
-        { error: "Server, login, and password are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Server, login, and password required" }, { status: 400 });
     }
 
-    const supabase = createClient();
+    // Fetch latest account info before saving
+    const { account_info } = await fetchAndSyncAccountInfo(userId, { server, login, password });
 
+    const supabase = createClient();
     const { data, error } = await supabase
       .from("mt5_accounts")
-      .upsert(
-        {
-          id,
-          user_id: userId,
-          server,
-          login,
-          password, // ⚠️ TODO: Encrypt in production
-          name: name || `MT5 ${login}`,
-          state: state || "connected",
-          account_info: accountInfo || {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,login,server" }
-      )
+      .upsert({
+        id,
+        user_id: userId,
+        server,
+        login,
+        password, // TODO: encrypt in prod
+        name: name || `MT5 ${login}`,
+        state: "connected",
+        account_info,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id,login,server" })
       .select()
       .single();
 
     if (error) throw error;
-
     return NextResponse.json({ account: data });
   } catch (err) {
-    console.error("Failed to create MT5 account:", err);
-    const message = err instanceof Error ? err.message : "Failed to create account";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Create account error:", err);
+    return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
   }
 }
