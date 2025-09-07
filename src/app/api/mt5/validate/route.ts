@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     }
 
     // Parse and validate request body
-    const body = await req.json() as ValidationRequest;
+    const body = (await req.json()) as ValidationRequest;
     const validation = validateCredentials(body);
 
     if (!validation.isValid) {
@@ -70,22 +70,23 @@ export async function POST(req: Request) {
         {
           error: "INVALID_REQUEST",
           message: "Invalid request parameters",
-          details: validation.errors
+          details: validation.errors,
         },
         { status: 400 }
       );
     }
 
-    // Call MT5 backend for validation
-    const backendUrl = process.env.MT5_BACKEND_URL || "http://127.0.0.1:5000";
+    // Default backend URL (ensure trailing slash)
+    const backendUrl =
+      (process.env.MT5_BACKEND_URL || "https://mt5-api.tradiaai.app/").replace(/\/+$/, "");
 
     try {
-      const mt5Response = await fetch(`${backendUrl}/validate_mt5`, {
+      const mt5Response = await fetch(`${backendUrl}/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           server: body.server,
-          login: parseInt(body.login),
+          login: parseInt(body.login, 10),
           password: body.investorPassword,
         }),
         signal: AbortSignal.timeout(30000), // 30 second timeout
@@ -99,7 +100,7 @@ export async function POST(req: Request) {
           {
             error: errorType,
             message: errorData.message || "MT5 validation failed",
-            details: errorData.details
+            details: errorData.details,
           },
           { status: mt5Response.status }
         );
@@ -108,14 +109,15 @@ export async function POST(req: Request) {
       const mt5Data = await mt5Response.json();
 
       // Log successful validation
-      console.log(`MT5 validation successful for user ${user.id}, account ${body.login}@${body.server}`);
+      console.log(
+        `MT5 validation successful for user ${user.id}, account ${body.login}@${body.server}`
+      );
 
       return NextResponse.json({
         success: true,
-        accountInfo: mt5Data.account_info,
-        message: "MT5 connection validated successfully"
+        accountInfo: mt5Data.account_info || mt5Data,
+        message: "MT5 connection validated successfully",
       });
-
     } catch (fetchError) {
       console.error("MT5 backend connection error:", fetchError);
 
@@ -123,7 +125,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
           {
             error: "TIMEOUT",
-            message: "MT5 validation timed out. Please try again."
+            message: "MT5 validation timed out. Please try again.",
           },
           { status: 408 }
         );
@@ -132,19 +134,19 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "BACKEND_UNREACHABLE",
-          message: "Cannot connect to MT5 backend service. Please ensure the service is running."
+          message:
+            "Cannot connect to MT5 backend service. Please ensure the service is running.",
         },
         { status: 503 }
       );
     }
-
   } catch (error) {
     console.error("MT5 validation API error:", error);
 
     return NextResponse.json(
       {
         error: "INTERNAL_ERROR",
-        message: "An internal error occurred during validation"
+        message: "An internal error occurred during validation",
       },
       { status: 500 }
     );
