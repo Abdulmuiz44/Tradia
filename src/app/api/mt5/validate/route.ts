@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import { MT5Credentials, ConnectionError } from "@/types/mt5";
 
 interface ValidationRequest {
   server: string;
@@ -16,37 +15,21 @@ function asString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function validateCredentials(body: ValidationRequest): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  if (!body.server || body.server.length < 3) {
-    errors.push("Server name is required and must be at least 3 characters");
-  }
-
-  if (!body.login || !/^\d+$/.test(body.login)) {
-    errors.push("Login must be a valid number");
-  }
-
-  if (!body.investorPassword || body.investorPassword.length < 4) {
-    errors.push("Investor password is required and must be at least 4 characters");
-  }
-
-  return { isValid: errors.length === 0, errors };
-}
-
 export async function POST(req: Request) {
   try {
     // Authenticate user
     const session = await getServerSession(authOptions);
     const userEmail = asString(session?.user?.email);
-    if (!userEmail) {
+    const userId = (session?.user as any)?.id;
+
+    if (!userEmail || !userId) {
       return NextResponse.json(
         { error: "UNAUTHORIZED", message: "User not authenticated" },
         { status: 401 }
       );
     }
 
-    // Get user from database
+    // Ensure user exists
     const supabase = createClient();
     const { data: user, error: userErr } = await supabase
       .from("users")
@@ -61,85 +44,61 @@ export async function POST(req: Request) {
       );
     }
 
-    // Parse and validate request body
     const body = (await req.json()) as ValidationRequest;
-    const validation = validateCredentials(body);
 
-    if (!validation.isValid) {
+    // Forward request to mtapi.io
+    const mtapiUrl = "https://mtapi.io/v1/validate";
+    const mt5Response = await fetch(mtapiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server: body.server,
+        login: body.login,
+        password: body.investorPassword,
+      }),
+    });
+
+    const mt5Data = await mt5Response.json();
+
+    if (!mt5Response.ok) {
       return NextResponse.json(
         {
-          error: "INVALID_REQUEST",
-          message: "Invalid request parameters",
-          details: validation.errors,
+          error: mt5Data.error || "VALIDATION_FAILED",
+          message: mt5Data.message || "MT5 validation failed",
         },
-        { status: 400 }
+        { status: mt5Response.status }
       );
     }
 
-    // Default backend URL (ensure trailing slash)
-    const backendUrl =
-      (process.env.MT5_BACKEND_URL || "https://mt5-api.tradiaai.app/").replace(/\/+$/, "");
-
-    try {
-      const mt5Response = await fetch(`${backendUrl}/validate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    // ✅ Save / update validated account in Supabase
+    const { data: account, error: accErr } = await supabase
+      .from("mt5_accounts")
+      .upsert(
+        {
+          user_id: userId,
           server: body.server,
-          login: parseInt(body.login, 10),
-          password: body.investorPassword,
-        }),
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      });
-
-      if (!mt5Response.ok) {
-        const errorData = await mt5Response.json().catch(() => ({}));
-        const errorType = mapMT5ErrorToConnectionError(errorData.error);
-
-        return NextResponse.json(
-          {
-            error: errorType,
-            message: errorData.message || "MT5 validation failed",
-            details: errorData.details,
-          },
-          { status: mt5Response.status }
-        );
-      }
-
-      const mt5Data = await mt5Response.json();
-
-      // Log successful validation
-      console.log(
-        `MT5 validation successful for user ${user.id}, account ${body.login}@${body.server}`
-      );
-
-      return NextResponse.json({
-        success: true,
-        accountInfo: mt5Data.account_info || mt5Data,
-        message: "MT5 connection validated successfully",
-      });
-    } catch (fetchError) {
-      console.error("MT5 backend connection error:", fetchError);
-
-      if (fetchError instanceof Error && fetchError.name === "AbortError") {
-        return NextResponse.json(
-          {
-            error: "TIMEOUT",
-            message: "MT5 validation timed out. Please try again.",
-          },
-          { status: 408 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          error: "BACKEND_UNREACHABLE",
-          message:
-            "Cannot connect to MT5 backend service. Please ensure the service is running.",
+          login: body.login,
+          password: body.investorPassword, // ⚠️ TODO: Encrypt in production
+          name: body.name || `MT5 ${body.login}`,
+          state: "connected",
+          account_info: mt5Data.account_info || {},
+          updated_at: new Date().toISOString(),
         },
-        { status: 503 }
-      );
+        { onConflict: "user_id,login,server" }
+      )
+      .select()
+      .single();
+
+    if (accErr) {
+      console.error("Failed to save MT5 account:", accErr);
     }
+
+    return NextResponse.json({
+      success: true,
+      accountInfo: mt5Data.account_info,
+      account,
+      message: "MT5 connection validated and saved successfully",
+    });
   } catch (error) {
     console.error("MT5 validation API error:", error);
 
@@ -150,26 +109,5 @@ export async function POST(req: Request) {
       },
       { status: 500 }
     );
-  }
-}
-
-function mapMT5ErrorToConnectionError(mt5Error: string): ConnectionError {
-  switch (mt5Error?.toUpperCase()) {
-    case "INVALID_CREDENTIALS":
-    case "WRONG_PASSWORD":
-      return "invalid_credentials";
-    case "SERVER_UNREACHABLE":
-    case "CONNECTION_FAILED":
-      return "server_unreachable";
-    case "TERMINAL_NOT_FOUND":
-    case "MT5_NOT_INSTALLED":
-      return "terminal_not_found";
-    case "LOGIN_FAILED":
-    case "ACCOUNT_DISABLED":
-      return "login_failed";
-    case "TIMEOUT":
-      return "timeout";
-    default:
-      return "unknown";
   }
 }

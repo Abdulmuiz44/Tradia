@@ -1,14 +1,13 @@
 // src/app/api/mt5/accounts/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
+    const userId = (session?.user as any)?.id;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,7 +15,6 @@ export async function GET(req: Request) {
 
     const supabase = createClient();
 
-    // Get user's MT5 accounts
     const { data: accounts, error } = await supabase
       .from("mt5_accounts")
       .select("*")
@@ -36,7 +34,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
+    const userId = (session?.user as any)?.id;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -54,21 +52,23 @@ export async function POST(req: Request) {
 
     const supabase = createClient();
 
-    // Store MT5 account (in production, encrypt the password)
     const { data, error } = await supabase
       .from("mt5_accounts")
-      .upsert({
-        id,
-        user_id: userId,
-        server,
-        login,
-        password, // TODO: Encrypt this in production
-        name: name || `MT5 ${login}`,
-        state: state || "connected",
-        account_info: accountInfo || {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, { onConflict: "user_id,login,server" })
+      .upsert(
+        {
+          id,
+          user_id: userId,
+          server,
+          login,
+          password, // ⚠️ TODO: Encrypt in production
+          name: name || `MT5 ${login}`,
+          state: state || "connected",
+          account_info: accountInfo || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,login,server" }
+      )
       .select()
       .single();
 
