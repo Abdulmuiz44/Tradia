@@ -714,9 +714,6 @@ export default function TradeHistoryTable() {
                       <td className="px-3 py-2">
                         {formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}
                       </td>
-                      <td className="px-3 py-2">
-                        {toStringSafe(getField(t, "reasonForTrade"))}
-                      </td>
                       <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
                       <td className="px-3 py-2">
                         {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}

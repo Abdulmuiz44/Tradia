@@ -595,13 +595,16 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
                 if (!file) return;
                 try {
                   setSaving(true);
-                  const path = `${user?.id || 'unknown'}/trades/${trade?.id || 'new'}/before_${Date.now()}_${file.name}`;
-                  const { data, error } = await supabase.storage.from('user-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
-                  if (error) throw error;
-                  const { data: pub } = supabase.storage.from('user-uploads').getPublicUrl(data.path);
-                  setBeforeUrl(pub.publicUrl);
+                  const toDataUrl = (f: File) => new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result || ''));
+                    reader.onerror = () => reject(new Error('Failed to read file'));
+                    reader.readAsDataURL(f);
+                  });
+                  const url = await toDataUrl(file);
+                  setBeforeUrl(url);
                 } catch (err) {
-                  setError('Failed to upload before image');
+                  setError('Failed to process before image');
                 } finally {
                   setSaving(false);
                 }
@@ -622,13 +625,16 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
                 if (!file) return;
                 try {
                   setSaving(true);
-                  const path = `${user?.id || 'unknown'}/trades/${trade?.id || 'new'}/after_${Date.now()}_${file.name}`;
-                  const { data, error } = await supabase.storage.from('user-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
-                  if (error) throw error;
-                  const { data: pub } = supabase.storage.from('user-uploads').getPublicUrl(data.path);
-                  setAfterUrl(pub.publicUrl);
+                  const toDataUrl = (f: File) => new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result || ''));
+                    reader.onerror = () => reject(new Error('Failed to read file'));
+                    reader.readAsDataURL(f);
+                  });
+                  const url = await toDataUrl(file);
+                  setAfterUrl(url);
                 } catch (err) {
-                  setError('Failed to upload after image');
+                  setError('Failed to process after image');
                 } finally {
                   setSaving(false);
                 }

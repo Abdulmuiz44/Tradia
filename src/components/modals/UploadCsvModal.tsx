@@ -202,7 +202,7 @@ export default function UploadCsvModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => onClose()}
@@ -213,35 +213,29 @@ export default function UploadCsvModal({
         role="dialog"
         aria-modal="true"
         aria-label="Import trades from CSV"
-        className="relative z-10 w-full max-w-2xl rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 backdrop-blur-sm p-6"
+        className="relative z-10 w-full max-w-3xl bg-gray-900 text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]"
       >
-        <header className="flex items-start justify-between gap-4 mb-4">
+        <header className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-100">
-              Import trades from CSV
-            </h3>
-            <p className="mt-1 text-sm text-zinc-400 max-w-xl">
-              Upload a CSV where the first row is the header (e.g.
-              id,symbol,openTime,closeTime,pnl,entryPrice,exitPrice,lotSize,notes).
-              The importer will attempt to map common column names.
+            <h3 className="text-2xl font-semibold">Import Trades (CSV)</h3>
+            <p className="mt-1 text-sm text-zinc-400 max-w-2xl">
+              Upload a CSV where the first row is the header (e.g. id,symbol,openTime,closeTime,pnl,entryPrice,exitPrice,lotSize,notes). The importer will attempt to map common column names.
             </p>
           </div>
 
-          <div className="flex items-start gap-2">
-            <button
-              onClick={() => onClose()}
-              className="text-sm text-zinc-400 hover:text-zinc-200"
-              aria-label="Close import modal"
-            >
-              Close
-            </button>
-          </div>
+          <button
+            onClick={() => onClose()}
+            className="text-sm text-zinc-300 hover:text-white px-2 py-1 rounded"
+            aria-label="Close import modal"
+          >
+            Close
+          </button>
         </header>
 
         <div className="space-y-4">
           <label
             htmlFor="csv-file"
-            className="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-white/6 p-3 bg-transparent hover:bg-white/2"
+            className="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-zinc-700 p-3 bg-zinc-900 hover:bg-zinc-800"
           >
             <div className="flex items-center gap-3">
               <svg
@@ -300,7 +294,7 @@ export default function UploadCsvModal({
           </label>
 
           {file ? (
-            <div className="flex items-center justify-between rounded-md p-3 bg-white/3 border border-white/6">
+            <div className="flex items-center justify-between rounded-md p-3 bg-zinc-900 border border-zinc-700">
               <div className="text-sm text-zinc-100">
                 <div className="font-medium">{file.name}</div>
                 <div className="text-xs text-zinc-400">
@@ -314,7 +308,7 @@ export default function UploadCsvModal({
                     setFile(null);
                     setError(null);
                   }}
-                  className="text-sm px-3 py-1 rounded bg-transparent border border-white/6"
+                  className="text-sm px-3 py-1 rounded bg-transparent border border-zinc-700"
                 >
                   Remove
                 </button>
@@ -334,7 +328,7 @@ export default function UploadCsvModal({
           )}
 
           {error && (
-            <div className="px-3 py-2 rounded bg-red-50 text-sm text-red-600 border border-red-200">
+            <div className="px-3 py-2 rounded bg-red-900/20 text-sm text-red-300 border border-red-800/40">
               {error}
             </div>
           )}
@@ -343,7 +337,7 @@ export default function UploadCsvModal({
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => onClose()}
-                className="px-4 py-2 rounded-lg bg-transparent border border-white/6 text-sm"
+                className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-200 hover:bg-zinc-700 text-sm"
                 disabled={parsing}
               >
                 Cancel
