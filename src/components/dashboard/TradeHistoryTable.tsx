@@ -9,6 +9,7 @@ import type { Trade } from "@/types/trade";
 import AddTradeModal from "@/components/modals/AddTradeModal";
 import CsvUpload from "@/components/dashboard/CsvUpload";
 import JournalModal from "@/components/modals/JournalModal";
+import { useUser } from "@/context/UserContext";
 
 /* ---------------- helpers ---------------- */
 const toNumber = (v: unknown): number => {
@@ -47,8 +48,13 @@ const calcDuration = (openIso?: string, closeIso?: string): string => {
   const a = new Date(openIso);
   const b = new Date(closeIso);
   if (isNaN(a.getTime()) || isNaN(b.getTime())) return "";
-  const mins = Math.round(Math.abs(b.getTime() - a.getTime()) / 60000);
-  return `${mins} min`;
+  let secs = Math.max(0, Math.round(Math.abs(b.getTime() - a.getTime()) / 1000));
+  const days = Math.floor(secs / 86400); secs -= days * 86400;
+  const hours = Math.floor(secs / 3600); secs -= hours * 3600;
+  const mins = Math.floor(secs / 60);
+  if (days > 0) return `${days}d ${hours}h ${mins}m`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
 };
 
 /** Compute planned/realized RR using price levels.
@@ -154,6 +160,7 @@ export default function TradeHistoryTable() {
     setTradesFromCsv,
     importTrades,
   } = useContext(TradeContext);
+  const { plan } = useUser();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -225,10 +232,28 @@ export default function TradeHistoryTable() {
   }, [trades]);
 
   /* processed data (filters + search + sort) */
+  // Plan-limited trades window
+  const planLimitedTrades = useMemo(() => {
+    const now = new Date();
+    let cutoff: Date | null = null;
+    if (plan === 'free') {
+      cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
+    } else if (plan === 'pro') {
+      cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 6);
+    }
+    if (!cutoff) return trades;
+    return trades.filter((t) => {
+      const o = toDateOrNull(getField(t, 'openTime'));
+      const c = toDateOrNull(getField(t, 'closeTime'));
+      const d = c || o;
+      return d ? d >= cutoff! : true;
+    });
+  }, [trades, plan]);
+
   const processed = useMemo(() => {
     const { symbol, outcome, fromDate, toDate, minPNL, maxPNL } = filters;
     const q = query.trim().toLowerCase();
-    let filtered = trades.slice();
+    let filtered = planLimitedTrades.slice();
 
     filtered = filtered.filter((t) => {
       const pnl = toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
@@ -282,16 +307,16 @@ export default function TradeHistoryTable() {
     });
 
     return filtered;
-  }, [trades, filters, query, sortField, sortDir]);
+  }, [planLimitedTrades, filters, query, sortField, sortDir]);
 
   /* summary stats */
   const stats = useMemo(() => {
-    const total = trades.length;
+    const total = planLimitedTrades.length;
     let wins = 0;
     let totalPnl = 0;
     let rrSum = 0;
     let rrCount = 0;
-    for (const t of trades) {
+    for (const t of planLimitedTrades) {
       const pnl = toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
       totalPnl += pnl;
       const outcome = toStringSafe(getField(t, "outcome")).toLowerCase();
@@ -305,7 +330,7 @@ export default function TradeHistoryTable() {
     const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
     const avgRR = rrCount > 0 ? rrSum / rrCount : 0;
     return { total, wins, winRate, totalPnl, avgRR };
-  }, [trades]);
+  }, [planLimitedTrades]);
 
   if (!mounted) return null;
 
@@ -637,7 +662,7 @@ export default function TradeHistoryTable() {
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Duration</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Outcome</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">RR</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Reason</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Strategy</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
@@ -681,7 +706,8 @@ export default function TradeHistoryTable() {
                       <td className={`px-3 py-2 ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
                         ${pnl.toFixed(2)}
                       </td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "duration"))}</td>
+                      <td className="px-3 py-2">{(() => { const o=toDateOrNull(getField(t,"openTime")); const c=toDateOrNull(getField(t,"closeTime")); return (o&&c)? calcDuration(o.toISOString(), c.toISOString()) : toStringSafe(getField(t,"duration")); })()}</td>
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "strategy") || getField(t, "reasonForTrade"))}</td>
                       <td className="px-3 py-2">{toStringSafe(getField(t, "outcome"))}</td>
                       <td className="px-3 py-2">
                         {formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}

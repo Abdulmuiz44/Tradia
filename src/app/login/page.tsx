@@ -2,12 +2,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { signIn } from "next-auth/react";
+// Client-only Navbar/Footer to prevent SSR hydration issues
+const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 
 /**
  * app/login/page.tsx
@@ -18,7 +21,7 @@ import Footer from "@/components/Footer";
  * - Do NOT add any leading/trailing non-code text when pasting this file into your project.
  */
 
-export default function LoginPage(): React.ReactElement {
+function LoginPage(): React.ReactElement {
   const router = useRouter();
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -259,7 +262,7 @@ export default function LoginPage(): React.ReactElement {
               </div>
 
               <button
-                onClick={handleGoogle}
+                onClick={async () => { try { await signIn("google", { callbackUrl: "/dashboard" }); } catch (e) { setError(e instanceof Error ? e.message : "Google sign-in failed"); } }}
                 className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition text-gray-100"
                 aria-label="Continue with Google"
               >
@@ -282,3 +285,6 @@ export default function LoginPage(): React.ReactElement {
     </>
   );
 }
+
+// Export as client-only to eliminate SSR/CSR DOM mismatches on this page
+export default dynamic(() => Promise.resolve(LoginPage), { ssr: false });

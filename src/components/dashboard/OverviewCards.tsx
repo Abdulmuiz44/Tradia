@@ -228,9 +228,9 @@ const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
 
 const getGreeting = (name = "Trader") => {
   const hr = new Date().getHours();
-  if (hr < 12) return `Good morning, ${name}`;
-  if (hr < 18) return `Good afternoon, ${name}`;
-  return `Good evening, ${name}`;
+  if (hr < 12) return `Good Morning ${name}`;
+  if (hr < 18) return `Good Afternoon ${name}`;
+  return `Good Evening ${name}`;
 };
 
 export default function OverviewCards({ trades: propTrades, fromDate, toDate }: OverviewCardsProps) {
@@ -311,10 +311,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
             null;
         }
 
-        // finally set the first name only
+        // set the full name from DB (fall back to Trader)
         if (name) {
-          const first = String(name).trim().split(/\s+/)[0];
-          setUserName(first || "Trader");
+          setUserName(String(name).trim() || "Trader");
         } else {
           setUserName("Trader");
         }
@@ -600,8 +599,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
   const neutralClass = "text-white";
 
   // show only first name and prefix with "Trader "
-  const first = (userName ?? "Trader").trim().split(/\s+/)[0] ?? "Trader";
-  const greeting = getGreeting(`Trader ${first}`);
+  const displayName = (userName ?? "Trader").trim() || "Trader";
+  const greeting = getGreeting(displayName);
   const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 
   const ExplanationModal: React.FC<{ k: string; onClose: () => void }> = ({ k, onClose }) => {
@@ -624,6 +623,19 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
       </div>
     );
   };
+
+  // Greeting header
+  const GreetingHeader = () => (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="rounded-full bg-slate-800 p-2">
+          <Award size={16} className="text-yellow-400" />
+        </div>
+        <h2 className="text-lg sm:text-xl font-bold">{greeting}</h2>
+      </div>
+      <p className="sr-only">Here’s a quick snapshot of your trading performance</p>
+    </div>
+  );
 
   // render metric card: responsive (stack on mobile, horizontal on >=sm), tighter gap between icon & text
   const renderMetricCard = (opts: {
@@ -864,15 +876,12 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
 
   return (
     <div className={containerClass}>
+      <GreetingHeader />
       {/* header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-start gap-3">
-            <div className="rounded-full bg-slate-800 p-3">
-              <Award size={20} className="text-yellow-400" />
-            </div>
             <div>
-              <h2 className="text-xl font-semibold break-words">{greeting}</h2>
               <div className="text-xs text-zinc-400">Overview for the selected date range</div>
             </div>
           </div>

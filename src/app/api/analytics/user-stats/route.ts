@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminSupabase } from '@/utils/supabase/admin';
 
 export async function GET() {
   try {
@@ -23,69 +23,92 @@ export async function GET() {
       );
     }
 
-    const supabase = createClient();
+    // Use service role to bypass RLS and access auth admin endpoints
+    const supabase = createAdminSupabase();
 
-    // Get total users from auth.users (Supabase Auth table)
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-    const totalUsers = authUsers?.users?.length || 0;
+    // Primary user metrics from application users table (more relevant for app)
+    const now = new Date();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+    const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth()-1);
+    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
 
-    if (authError) {
-      console.error('Error fetching auth users:', authError);
+    // Treat a user as verified if email_verified is not null
+    // This covers both boolean true and timestamp-based verification values
+    const [{ count: totalUsers }, { count: verifiedUsers }] = await Promise.all([
+      supabase.from('users').select('*', { count: 'exact', head: true }),
+      supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .not('email_verified', 'is', null),
+    ]);
+    const unverifiedUsers = (totalUsers || 0) - (verifiedUsers || 0);
+
+    // New users windows
+    const [todayUsers, weekUsers, monthUsers] = await Promise.all([
+      supabase.from('users').select('id,created_at').gte('created_at', today.toISOString()).lt('created_at', tomorrow.toISOString()),
+      supabase.from('users').select('id,created_at').gte('created_at', weekAgo.toISOString()),
+      supabase.from('users').select('id,created_at').gte('created_at', monthAgo.toISOString()),
+    ]);
+    const newUsersToday = todayUsers.data?.length || 0;
+    const newUsersThisWeek = weekUsers.data?.length || 0;
+    const newUsersThisMonth = monthUsers.data?.length || 0;
+
+    // Active users in last 30d via sessions table (unique user_ids)
+    let activeUsers = 0;
+    try {
+      const { data: recentSessions } = await supabase
+        .from('sessions')
+        .select('user_id, expires_at')
+        .gte('expires_at', thirtyDaysAgo.toISOString());
+      const set = new Set<string>();
+      (recentSessions || []).forEach((s: any) => { if (s?.user_id) set.add(String(s.user_id)); });
+      activeUsers = set.size;
+    } catch {
+      activeUsers = 0;
     }
 
-    // Get verified vs unverified users
-    const verifiedUsers = authUsers?.users?.filter(user => user.email_confirmed_at)?.length || 0;
-    const unverifiedUsers = totalUsers - verifiedUsers;
-
-    // Get active users (users who have signed in within the last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const activeUsers = authUsers?.users?.filter(user =>
-      user.last_sign_in_at && new Date(user.last_sign_in_at) > thirtyDaysAgo
-    )?.length || 0;
-
-    // Get new users today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const newUsersToday = authUsers?.users?.filter(user =>
-      user.created_at && new Date(user.created_at) >= today && new Date(user.created_at) < tomorrow
-    )?.length || 0;
-
-    // Get new users this week
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const newUsersThisWeek = authUsers?.users?.filter(user =>
-      user.created_at && new Date(user.created_at) >= weekAgo
-    )?.length || 0;
-
-    // Get new users this month
-    const monthAgo = new Date();
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-    const newUsersThisMonth = authUsers?.users?.filter(user =>
-      user.created_at && new Date(user.created_at) >= monthAgo
-    )?.length || 0;
-
     // Get user plan distribution from user_subscriptions
-    const { data: subscriptionData, error: subError } = await supabase
-      .from('user_subscriptions')
-      .select('plan, status')
-      .eq('status', 'active');
+    // Primary: from user_subscriptions (active)
+    let planStats: Record<string, number> = {};
+    try {
+      const { data: subscriptionData } = await supabase
+        .from('user_subscriptions')
+        .select('plan, status')
+        .eq('status', 'active');
+      if (subscriptionData && subscriptionData.length > 0) {
+        planStats = subscriptionData.reduce((acc: Record<string, number>, sub: any) => {
+          const key = String(sub.plan || 'unknown');
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+      }
+    } catch {}
 
-    const planStats = subscriptionData?.reduce((acc: Record<string, number>, sub) => {
-      acc[sub.plan] = (acc[sub.plan] || 0) + 1;
-      return acc;
-    }, {}) || {};
+    // Fallback: aggregate from users.plan if subscription data is empty
+    if (Object.keys(planStats).length === 0) {
+      try {
+        const { data: users } = await supabase
+          .from('users')
+          .select('plan');
+        if (users && users.length > 0) {
+          planStats = users.reduce((acc: Record<string, number>, u: any) => {
+            const key = String(u.plan || 'free');
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+        }
+      } catch {}
+    }
 
     // Get trade statistics
-    const { count: totalTrades, error: tradeError } = await supabase
+    const { count: totalTrades } = await supabase
       .from('trades')
       .select('*', { count: 'exact', head: true });
 
     // Get total PNL
-    const { data: pnlData, error: pnlError } = await supabase
+    const { data: pnlData } = await supabase
       .from('trades')
       .select('pnl')
       .not('pnl', 'is', null);

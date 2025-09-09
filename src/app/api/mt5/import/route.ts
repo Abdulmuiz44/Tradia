@@ -20,6 +20,9 @@ function asNumberOrNull(u: unknown): number | null {
 }
 
 export async function POST(req: Request) {
+  if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+    return NextResponse.json({ error: 'MT5 integration temporarily disabled' }, { status: 503 });
+  }
   try {
     const session = await getServerSession(authOptions);
     const userEmail = asString(session?.user?.email);

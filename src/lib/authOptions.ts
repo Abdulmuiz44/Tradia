@@ -146,7 +146,21 @@ export const authOptions: NextAuthOptions = {
               `SELECT user_id FROM accounts WHERE provider=$1 AND provider_account_id=$2 LIMIT 1`,
               [provider, providerAccountId]
             );
-            if (getFirstRow<{ user_id?: string }>(acc)) return true;
+            if (getFirstRow<{ user_id?: string }>(acc)) {
+              // Ensure admin privileges/plan on every sign-in
+              if (email === "abdulmuizproject@gmail.com") {
+                await safeQuery(
+                  `UPDATE users SET plan='elite', role='admin', email_verified=true, updated_at=NOW() WHERE email=$1`,
+                  [email]
+                );
+              } else {
+                await safeQuery(
+                  `UPDATE users SET email_verified=COALESCE(email_verified,true), plan=COALESCE(plan,'free'), updated_at=NOW() WHERE email=$1`,
+                  [email]
+                );
+              }
+              return true;
+            }
 
             const ures = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [email]);
             let userId: string | null = getFirstRow<{ id: string }>(ures)?.id ?? null;
@@ -165,6 +179,7 @@ export const authOptions: NextAuthOptions = {
               return true;
             }
 
+            // Upsert account mapping
             await safeQuery(
               `INSERT INTO accounts (
                  user_id, type, provider, provider_account_id,
@@ -194,6 +209,19 @@ export const authOptions: NextAuthOptions = {
               ]
             );
 
+            // Set email_verified and plan/role after linking account
+            if (email === "abdulmuizproject@gmail.com") {
+              await safeQuery(
+                `UPDATE users SET plan='elite', role='admin', email_verified=true, updated_at=NOW() WHERE id=$1`,
+                [userId]
+              );
+            } else {
+              await safeQuery(
+                `UPDATE users SET plan=COALESCE(plan,'free'), email_verified=true, updated_at=NOW() WHERE id=$1`,
+                [userId]
+              );
+            }
+
             return true;
           } catch (dbErr: unknown) {
             console.error("Google signIn DB error (continuing OAuth):", dbErr instanceof Error ? dbErr.message : String(dbErr));
@@ -216,6 +244,8 @@ export const authOptions: NextAuthOptions = {
           token.userId = incomingUserId;
           if (getString(user, "email")) token.email = getString(user, "email");
           if (getString(user, "name")) token.name = getString(user, "name");
+          if (getString(user, "plan")) (token as any).plan = getString(user, "plan");
+          if (getString(user, "role")) (token as any).role = getString(user, "role");
         } else if (!("userId" in token) && typeof token.email === "string") {
           try {
             const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(token.email)], 2000);
@@ -228,17 +258,18 @@ export const authOptions: NextAuthOptions = {
 
         if (typeof token.userId === "string") {
           try {
-            const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(
-              `SELECT id, name, email, image, role FROM users WHERE id=$1 LIMIT 1`,
+            const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null; plan?: string | null }>(
+              `SELECT id, name, email, image, role, plan FROM users WHERE id=$1 LIMIT 1`,
               [String(token.userId)],
               2000
             );
-            const u = getFirstRow<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null }>(r2);
+            const u = getFirstRow<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null; plan?: string | null }>(r2);
             if (u) {
               token.name = u.name ?? token.name;
               token.email = u.email ?? token.email;
               token.image = u.image ?? token.image;
               token.role = u.role ?? token.role ?? "trader";
+              (token as any).plan = u.plan ?? (token as any).plan ?? "free";
             }
           } catch (err) {
             console.error("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
@@ -260,6 +291,7 @@ export const authOptions: NextAuthOptions = {
         if (typeof token.email === "string") su.email = token.email;
         if (typeof token.image === "string") su.image = token.image;
         su.role = typeof token.role === "string" ? token.role : "trader";
+        su.plan = typeof (token as any).plan === "string" ? (token as any).plan : "free";
       } catch (err: unknown) {
         console.error("session callback error:", err instanceof Error ? err.message : String(err));
       }

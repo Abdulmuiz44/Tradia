@@ -25,6 +25,8 @@ export interface Trade {
   journalNotes?: string;
   notes?: string;
   strategy?: string;
+  beforeScreenshotUrl?: string;
+  afterScreenshotUrl?: string;
   commission?: number;
   swap?: number;
   pinned?: boolean;

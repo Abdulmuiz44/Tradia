@@ -14,6 +14,9 @@ function asString(value: unknown): string {
  * Get monitoring status for all user credentials
  */
 export async function GET() {
+  if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+    return NextResponse.json({ error: 'MT5 integration temporarily disabled' }, { status: 503 });
+  }
   try {
     // Authenticate user
     const session = await getServerSession(authOptions);
@@ -76,6 +79,9 @@ export async function GET() {
  * Control monitoring (start/stop/force check)
  */
 export async function POST(req: Request) {
+  if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+    return NextResponse.json({ error: 'MT5 integration temporarily disabled' }, { status: 503 });
+  }
   try {
     // Authenticate user
     const session = await getServerSession(authOptions);

@@ -5,6 +5,12 @@ import { fetchAndSyncAccountInfo } from "@/lib/mtapi";
 
 export async function POST(req: Request) {
   try {
+    if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+      return new Response(
+        JSON.stringify({ error: 'MT5 integration temporarily disabled' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

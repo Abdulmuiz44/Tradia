@@ -95,14 +95,14 @@ export default function UserAnalyticsDashboard() {
     }
   };
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toString();
+  const formatNumber = (value: number | null | undefined) => {
+    const num = Number(value ?? 0);
+    if (!Number.isFinite(num)) return '0';
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
+    if (num >= 1_000) return (num / 1_000).toFixed(1) + 'K';
+    if (num <= -1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
+    if (num <= -1_000) return (num / 1_000).toFixed(1) + 'K';
+    return String(num);
   };
 
   const getActiveUserPercentage = () => {

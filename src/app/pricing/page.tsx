@@ -33,7 +33,7 @@ const PLANS = [
     name: "Pro",
     monthly: 9,
     highlights: ["All Starter features", "6 months trade history", "3 account connections", "AI weekly summary"],
-    cta: "Start 7-day trial",
+    cta: "Start 3-day trial",
     tag: "Popular",
   },
   {
@@ -41,7 +41,7 @@ const PLANS = [
     name: "Plus",
     monthly: 19,
     highlights: ["All Pro features", "Unlimited history", "5 account connections", "AI trade reviews & suggestions"],
-    cta: "Start 7-day trial",
+    cta: "Start 3-day trial",
     tag: "For active traders",
   },
   {
@@ -278,7 +278,7 @@ export default function PricingPage(): React.ReactElement {
                 {[
                   { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
                   { q: "Which integrations are supported?", a: "CSV imports are supported today; MT5 & direct broker links coming soon." },
-                  { q: "How does the trial work?", a: "Start Pro/Plus with a 7-day trial. Cancel anytime before the trial ends to avoid charges." },
+                  { q: "How does the trial work?", a: "Start Pro/Plus with a 3-day trial. Cancel anytime before the trial ends to avoid charges." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-white/10">
                     <summary className="font-medium text-gray-100">{fq.q}</summary>

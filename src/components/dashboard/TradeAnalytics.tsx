@@ -97,6 +97,7 @@ interface TradeAnalyticsProps {
 export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) {
   const { data: session } = useSession();
   const { trades = [] } = useTrade();
+  const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   const [showPremium, setShowPremium] = useState(false);
@@ -117,6 +118,27 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Fetch MT5 account balance (sum of connected accounts)
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await fetch('/api/mt5/accounts');
+        if (!res.ok) return;
+        const data = await res.json();
+        const accounts = Array.isArray(data?.accounts) ? data.accounts : [];
+        const total = accounts.reduce((sum: number, acc: any) => {
+          const info = acc?.account_info || {};
+          const bal = Number(info.balance ?? info.equity ?? 0);
+          return Number.isFinite(bal) ? sum + bal : sum;
+        }, 0);
+        setAccountBalance(Number.isFinite(total) ? total : 0);
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchAccounts();
   }, []);
 
   // Touch gesture handling for mobile navigation
@@ -185,7 +207,13 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
     const profitFactor = losingPnL > 0 ? winningPnL / losingPnL : winningPnL > 0 ? Infinity : 0;
 
-    return [
+    const metrics: AnalyticsMetric[] = [
+      {
+        label: "Account Balance",
+        value: accountBalance == null ? '—' : `$${accountBalance.toFixed(2)}`,
+        icon: <DollarSign className="w-4 h-4" />,
+        color: "text-emerald-400"
+      },
       {
         label: "Total Trades",
         value: totalTrades,
@@ -229,7 +257,8 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         premium: true
       }
     ];
-  }, [filteredTrades]);
+    return metrics;
+  }, [filteredTrades, accountBalance]);
 
   // Risk metrics (Premium feature)
   const riskMetrics = useMemo((): RiskMetrics => {

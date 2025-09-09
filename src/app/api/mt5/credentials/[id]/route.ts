@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { credentialStorage } from "@/lib/credential-storage";
+import { createClient } from "@/utils/supabase/server";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -14,9 +15,15 @@ function asString(value: unknown): string {
  */
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
+    if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+      return new Response(
+        JSON.stringify({ error: 'MT5 integration temporarily disabled' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     // Authenticate user
     const session = await getServerSession(authOptions);
     const userEmail = asString(session?.user?.email);
@@ -28,7 +35,7 @@ export async function GET(
     }
 
     // Get user from database
-    const supabase = (await import("@/utils/supabase/server")).createClient();
+    const supabase = createClient();
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")
@@ -42,8 +49,7 @@ export async function GET(
       );
     }
 
-    const resolvedParams = await params;
-    const credentialId = resolvedParams.id;
+    const credentialId = params.id;
 
     // Get the specific credential
     const credential = await credentialStorage.getCredentials(user.id, credentialId);
@@ -98,9 +104,15 @@ export async function GET(
  */
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
+    if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+      return new Response(
+        JSON.stringify({ error: 'MT5 integration temporarily disabled' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     // Authenticate user
     const session = await getServerSession(authOptions);
     const userEmail = asString(session?.user?.email);
@@ -112,7 +124,7 @@ export async function PUT(
     }
 
     // Get user from database
-    const supabase = (await import("@/utils/supabase/server")).createClient();
+    const supabase = createClient();
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")
@@ -126,8 +138,7 @@ export async function PUT(
       );
     }
 
-    const resolvedParams = await params;
-    const credentialId = resolvedParams.id;
+    const credentialId = params.id;
     const body = await req.json() as {
       name?: string;
       investorPassword?: string;
@@ -198,9 +209,15 @@ export async function PUT(
  */
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
+    if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+      return new Response(
+        JSON.stringify({ error: 'MT5 integration temporarily disabled' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     // Authenticate user
     const session = await getServerSession(authOptions);
     const userEmail = asString(session?.user?.email);
@@ -212,7 +229,7 @@ export async function DELETE(
     }
 
     // Get user from database
-    const supabase = (await import("@/utils/supabase/server")).createClient();
+    const supabase = createClient();
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")
@@ -226,8 +243,7 @@ export async function DELETE(
       );
     }
 
-    const resolvedParams = await params;
-    const credentialId = resolvedParams.id;
+    const credentialId = params.id;
 
     // Get credential info before deletion for audit
     const credential = await credentialStorage.getCredentials(user.id, credentialId);

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     // --- Fetch user record ---
     const { data: user, error: userErr } = await supabase
       .from("users")
-      .select("id, password, email_verified, name, email")
+      .select("id, password, email_verified, name, email, plan, role")
       .eq("email", normalizedEmail)
       .maybeSingle();
 
@@ -47,6 +47,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email not verified. Please check your email." }, { status: 403 });
     }
 
+    // Ensure plan/role based on business rules
+    let plan = (user as any).plan || "free";
+    let role = (user as any).role || "trader";
+
+    if (normalizedEmail === "abdulmuizproject@gmail.com") {
+      plan = "elite";
+      role = "admin";
+      // persist admin upgrade
+      await supabase
+        .from("users")
+        .update({ plan: plan, role: role, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+    } else if (!(user as any).plan) {
+      // default free plan for regular users without a plan
+      await supabase
+        .from("users")
+        .update({ plan: plan, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+    }
+
     // Create access JWT (12h) - align with refresh route
     const accessToken = jwt.sign(
       {
@@ -54,6 +74,8 @@ export async function POST(req: Request) {
         email: user.email,
         name: user.name,
         email_verified: Boolean(user.email_verified),
+        plan,
+        role,
       },
       JWT_SECRET,
       { expiresIn: "12h" }

@@ -1,11 +1,11 @@
 // src/lib/encryption.ts
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 export interface EncryptedData {
   encrypted: string;
-  iv: string;
-  tag?: string;
-  algorithm: string;
+  iv: string; // hex-encoded IV used during encryption
+  tag: string; // hex-encoded auth tag (GCM)
+  algorithm: string; // e.g. 'aes-256-gcm'
 }
 
 /**
@@ -15,8 +15,8 @@ export interface EncryptedData {
 export class EncryptionService {
   private static instance: EncryptionService;
   private algorithm = 'aes-256-gcm';
-  private keyLength = 32; // 256 bits
-  private ivLength = 16; // 128 bits
+  private keyLength = 32; // 256 bits (bytes)
+  private ivLength = 12; // 96 bits recommended for GCM
 
   private constructor() {}
 
@@ -39,19 +39,25 @@ export class EncryptionService {
    */
   encrypt(data: string, key: string): EncryptedData {
     const keyBuffer = Buffer.from(key, 'hex');
-    const iv = crypto.randomBytes(this.ivLength);
-    const cipher = crypto.createCipher(this.algorithm, keyBuffer);
+    if (keyBuffer.length !== this.keyLength) {
+      throw new Error('Invalid key length for AES-256-GCM');
+    }
 
-    // For GCM mode, we need to handle IV differently
-    // In older Node.js versions, we use the legacy API
-    let encrypted = cipher.update(data, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
+    const iv = crypto.randomBytes(this.ivLength);
+    const cipher = crypto.createCipheriv(this.algorithm, keyBuffer, iv) as crypto.CipherGCM;
+
+    const encryptedBuffer = Buffer.concat([
+      cipher.update(Buffer.from(data, 'utf8')),
+      cipher.final(),
+    ]);
+
+    const tag = cipher.getAuthTag();
 
     return {
-      encrypted,
+      encrypted: encryptedBuffer.toString('hex'),
       iv: iv.toString('hex'),
-      tag: '', // Not available in legacy API
-      algorithm: this.algorithm
+      tag: tag.toString('hex'),
+      algorithm: this.algorithm,
     };
   }
 
@@ -60,14 +66,27 @@ export class EncryptionService {
    */
   decrypt(encryptedData: EncryptedData, key: string): string {
     const keyBuffer = Buffer.from(key, 'hex');
+    if (keyBuffer.length !== this.keyLength) {
+      throw new Error('Invalid key length for AES-256-GCM');
+    }
+
+    const iv = Buffer.from(encryptedData.iv, 'hex');
+    const tag = Buffer.from(encryptedData.tag, 'hex');
     const encrypted = Buffer.from(encryptedData.encrypted, 'hex');
 
-    const decipher = crypto.createDecipher(encryptedData.algorithm, keyBuffer);
+    const decipher = crypto.createDecipheriv(
+      (encryptedData.algorithm || this.algorithm) as crypto.CipherGCMTypes,
+      keyBuffer,
+      iv
+    ) as crypto.DecipherGCM;
+    decipher.setAuthTag(tag);
 
-    let decrypted = decipher.update(encrypted, undefined, 'utf8');
-    decrypted += decipher.final('utf8');
+    const decryptedBuffer = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]);
 
-    return decrypted;
+    return decryptedBuffer.toString('utf8');
   }
 
   /**
@@ -109,9 +128,13 @@ export class EncryptionService {
    * Create a key derivation function for user-specific keys
    */
   deriveKey(masterKey: string, userId: string, context = 'mt5-credentials'): string {
-    const hmac = crypto.createHmac('sha256', masterKey);
+    // HKDF-like derivation using HMAC-SHA256 to create a 32-byte key
+    const hmac = crypto.createHmac('sha256', Buffer.from(masterKey, 'hex'));
     hmac.update(`${userId}:${context}`);
-    return hmac.digest('hex').substring(0, this.keyLength * 2); // 64 characters for 256-bit key
+    const digest = hmac.digest();
+    // Ensure 32 bytes (256 bits)
+    const key = digest.length >= this.keyLength ? digest.subarray(0, this.keyLength) : Buffer.concat([digest, Buffer.alloc(this.keyLength - digest.length)]);
+    return key.toString('hex');
   }
 
   /**

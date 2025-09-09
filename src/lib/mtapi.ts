@@ -1,7 +1,10 @@
 // src/lib/mtapi.ts
 import { createClient } from "@/utils/supabase/server";
 
-const BASE_URL = "https://mtapi.io/v1";
+const BASE_URL =
+  process.env.MT5_WEB_API_URL ||
+  process.env.NEXT_PUBLIC_MT5_WEB_API_URL ||
+  "https://mtapi.io/v1";
 
 export interface MT5Credentials {
   server: string;
@@ -11,18 +14,26 @@ export interface MT5Credentials {
 
 async function callMtapi<T>(
   endpoint: string,
-  credentials: MT5Credentials
+  credentials: MT5Credentials,
+  payload?: Record<string, any>
 ): Promise<T> {
-  const response = await fetch(`${BASE_URL}/${endpoint}`, {
+  const url = `${BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  const body = { ...credentials, ...(payload || {}) };
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const apiKey = process.env.MT5_API_KEY || process.env.NEXT_PUBLIC_MT5_API_KEY;
+  if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+
+  const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
+    headers,
+    body: JSON.stringify(body),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || `MTAPI request failed: ${endpoint}`);
+    const message = (data && (data.error || data.message)) || `MTAPI request failed: ${endpoint}`;
+    throw new Error(message);
   }
 
   return data as T;
@@ -96,4 +107,21 @@ export async function fetchOrdersAndSync(
   await fetchAndSyncAccountInfo(userId, credentials);
 
   return data;
+}
+
+/**
+ * Fetch closed trade history (deals) in a time window.
+ * Endpoint name can be overridden via MT5_HISTORY_ENDPOINT (default: 'deals').
+ */
+export async function fetchDeals(
+  credentials: MT5Credentials,
+  from?: Date | string,
+  to?: Date | string
+) {
+  const endpoint = process.env.MT5_HISTORY_ENDPOINT || "deals";
+  const payload: Record<string, any> = {};
+  if (from) payload.from = typeof from === "string" ? from : from.toISOString();
+  if (to) payload.to = typeof to === "string" ? to : to.toISOString();
+
+  return callMtapi<{ deals: any[]; account_info?: any }>(endpoint, credentials, payload);
 }

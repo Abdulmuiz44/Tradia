@@ -43,18 +43,14 @@ type Plan = {
 const plansData: Plan[] = [
   {
     name: "free",
-    label: "Free",
+    label: "Starter",
     priceMonthly: 0,
     priceYearly: 0,
-    tagline: "Forever free — get started",
+    tagline: "Free forever",
     baseFeatures: [
-      "User Dashboard & Account Sync",
-      "Performance Metrics Engine",
-      "Interactive Analytics",
-      "Basic risk metrics",
-      "Weekly AI summaries",
-      "Manual trade journaling",
-      "CSV / PDF export (limited)",
+      "Basic trade analytics",
+      "30 days trade history",
+      "CSV trade import",
     ],
   },
   {
@@ -62,14 +58,12 @@ const plansData: Plan[] = [
     label: "Pro",
     priceMonthly: 9,
     priceYearly: 90, // monthly * 10 (2 months free)
-    tagline: "Daily analysis & faster improvement",
+    tagline: "Popular",
     baseFeatures: [], // will inherit Free
     additionalFeatures: [
-      "Unlimited charts & saved views",
-      "Daily AI insights & trade tips",
-      "Advanced filters & exports",
-      "Behavioral & pattern analytics",
-      "Smart timeline & calendar view",
+      "6 months trade history",
+      "3 account connections",
+      "AI weekly summary",
     ],
     highlight: true,
   },
@@ -78,14 +72,12 @@ const plansData: Plan[] = [
     label: "Plus",
     priceMonthly: 19,
     priceYearly: 190,
-    tagline: "For serious, scaling traders",
+    tagline: "For active traders",
     baseFeatures: [],
     additionalFeatures: [
-      "AI forecasting & pattern prediction",
-      "SL/TP optimization engine",
-      "Advanced risk metrics (drawdown, VaR, Sharpe)",
-      "Strategy tagging & success tracking",
-      "Prop-firm & milestone tracker",
+      "Unlimited history",
+      "5 account connections",
+      "AI trade reviews & SL/TP suggestions",
     ],
   },
   {
@@ -93,13 +85,12 @@ const plansData: Plan[] = [
     label: "Elite",
     priceMonthly: 39,
     priceYearly: 390,
-    tagline: "White-glove coaching & enterprise",
+    tagline: "Advanced",
     baseFeatures: [],
     additionalFeatures: [
-      "Custom AI coaching sessions",
-      "Private strategy repository",
-      "Priority support & onboarding",
-      "Custom integrations & prop-firm mentoring",
+      "Unlimited connections",
+      "AI strategy builder",
+      "Prop-firm dashboard",
     ],
   },
 ];
@@ -517,7 +508,7 @@ export default function PricingPlans(): React.ReactElement {
           <div>
             <h5 className="text-lg font-bold">Risk-free trial & guarantee</h5>
             <p className="text-gray-400 mt-2">
-              Start Plus or Pro with a 7-day free trial. Cancel within the trial &mdash; no charges. We&rsquo;re confident Tradia will reveal meaningful insights in the first 7 days.
+              Start Plus or Pro with a 3-day free trial. Cancel within the trial &mdash; no charges. We&rsquo;re confident Tradia will reveal meaningful insights within 3 days.
             </p>
           </div>
 
@@ -531,9 +522,9 @@ export default function PricingPlans(): React.ReactElement {
       {/* tiny FAQ */}
       <div className="max-w-6xl mx-auto mt-6 text-sm text-gray-400">
         <details className="mb-2">
-          <summary className="cursor-pointer font-semibold">How does the 7-day trial work?</summary>
+          <summary className="cursor-pointer font-semibold">How does the 3-day trial work?</summary>
           <div className="mt-2 text-gray-300">
-            Explore Plus/Pro features during the trial. Cancel anytime in the trial period to avoid billing.
+            Explore Plus/Pro features during the 3-day trial. Cancel anytime in the trial period to avoid billing.
           </div>
         </details>
 

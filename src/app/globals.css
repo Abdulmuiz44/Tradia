@@ -26,6 +26,11 @@ html {
   height: 100%;
 }
 
+/* Hide leftover debug admin button if present */
+button[title="Debug admin status"] {
+  display: none !important;
+}
+
 /* Scrollbar styling (optional) */
 ::-webkit-scrollbar {
   width: 8px;

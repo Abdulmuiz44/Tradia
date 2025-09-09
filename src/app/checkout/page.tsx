@@ -30,36 +30,33 @@ export default function CheckoutPage() {
 
   const plan = (searchParams?.get("plan") as keyof typeof planDetails) || "plus";
   const billing = searchParams?.get("billing") || "monthly";
-  const trialDays = parseInt(searchParams?.get("trial") || "7", 10);
+  const trialDays = parseInt(searchParams?.get("trial") || "3", 10);
 
   const planDetails: Record<string, PlanDetails> = {
-    plus: {
-      name: "plus",
-      displayName: "Plus",
+    pro: {
+      name: "pro",
+      displayName: "Pro",
       price: billing === "yearly" ? 90 : 9,
       billing: billing === "yearly" ? "year" : "month",
       trialDays,
       features: [
-        "Unlimited charts & saved views",
-        "Daily AI insights & trade tips",
-        "Advanced filters & exports",
-        "Behavioral & pattern analytics",
-        "Smart timeline & calendar view",
+        "All Starter features",
+        "6 months trade history",
+        "3 account connections",
+        "AI weekly summary",
       ],
     },
-    pro: {
-      name: "pro",
-      displayName: "Pro",
+    plus: {
+      name: "plus",
+      displayName: "Plus",
       price: billing === "yearly" ? 190 : 19,
       billing: billing === "yearly" ? "year" : "month",
       trialDays,
       features: [
-        "Everything in Plus, plus:",
-        "AI forecasting & pattern prediction",
-        "SL/TP optimization engine",
-        "Advanced risk metrics (VaR, Sharpe)",
-        "Strategy tagging & success tracking",
-        "Prop-firm & milestone tracker",
+        "All Pro features",
+        "Unlimited history",
+        "5 account connections",
+        "AI trade reviews & SL/TP suggestions",
       ],
     },
     elite: {
@@ -69,11 +66,10 @@ export default function CheckoutPage() {
       billing: billing === "yearly" ? "year" : "month",
       trialDays,
       features: [
-        "Everything in Pro, plus:",
-        "Custom AI coaching sessions",
-        "Private strategy repository",
-        "Priority support & onboarding",
-        "Custom integrations & prop-firm mentoring",
+        "Everything in Plus",
+        "Unlimited connections",
+        "AI strategy builder",
+        "Prop-firm dashboard",
       ],
     },
   };

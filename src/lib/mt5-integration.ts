@@ -247,21 +247,43 @@ export class MT5IntegrationService {
         }
       }
 
-      const response = await fetch(`${this.backendUrl}/validate_mt5`, {
+      const response = await fetch(`/api/mt5/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ server: credentials.server, login: credentials.login, password: credentials.password }),
+        body: JSON.stringify({
+          server: credentials.server,
+          login: credentials.login,
+          investorPassword: (credentials as any).investorPassword || credentials.password,
+          name: credentials.name,
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        return { success: false, error: error.detail || "Connection validation failed" };
+        const error = await response.json().catch(() => ({} as any));
+        const message = (error && (error.message || error.error || error.detail)) || "Connection validation failed";
+        return { success: false, error: message };
       }
 
       const result = await response.json();
-      const accountId = await this.storeCredentials(credentials, result.account_info);
+      // Store securely via credentials API
+      const storeRes = await fetch(`/api/mt5/credentials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          server: credentials.server,
+          login: credentials.login,
+          investorPassword: (credentials as any).investorPassword || credentials.password,
+          name: credentials.name,
+        }),
+      });
+      if (!storeRes.ok) {
+        const err = await storeRes.json().catch(() => ({}));
+        return { success: false, error: err?.message || "Failed to store credentials" };
+      }
+      const storeData = await storeRes.json().catch(() => ({}));
+      const accountId = storeData?.credential?.id;
 
-      return { success: true, accountId, accountInfo: result.account_info };
+      return { success: true, accountId, accountInfo: result.accountInfo || result.account_info };
     } catch (err) {
       console.error("connectAccount error:", err);
       return { success: false, error: err instanceof Error ? err.message : "Connection failed" };
@@ -273,9 +295,6 @@ export class MT5IntegrationService {
     options: { fromDate?: Date; toDate?: Date; userId: string }
   ): Promise<MT5SyncResult> {
     try {
-      const credentials = await this.getStoredCredentials(accountId);
-      if (!credentials) return { success: false, error: "Account credentials not found" };
-
       const syncSteps = [
         { name: "Connecting to MT5", description: "Establishing connection to MetaTrader 5", weight: 15 },
         { name: "Authenticating", description: "Verifying account credentials", weight: 10 },
@@ -288,7 +307,7 @@ export class MT5IntegrationService {
 
       const syncId = await syncProgressTracker.startSync(options.userId, accountId, syncSteps, {
         canCancel: true,
-        metadata: { accountName: credentials.name },
+        metadata: { accountId },
       });
 
       await syncProgressTracker.updateProgress(syncId, {
@@ -299,15 +318,12 @@ export class MT5IntegrationService {
       });
 
       const payload = {
-        server: credentials.server,
-        login: credentials.login,
-        password: credentials.password,
-        from_ts: options.fromDate ? new Date(options.fromDate).toISOString() : undefined,
-        to_ts: options.toDate ? new Date(options.toDate).toISOString() : undefined,
-        sync_id: syncId,
-      };
+        credentialId: accountId,
+        from: options.fromDate ? new Date(options.fromDate).toISOString() : undefined,
+        to: options.toDate ? new Date(options.toDate).toISOString() : undefined,
+      } as any;
 
-      const response = await fetch(`${this.backendUrl}/sync_mt5`, {
+      const response = await fetch(`/api/mt5/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -315,28 +331,31 @@ export class MT5IntegrationService {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        await syncProgressTracker.completeSync(syncId, { errorMessage: error.detail || "Sync failed" });
-        return { success: false, error: error.detail || "Sync failed" };
+        const msg =
+          (typeof error?.message === "string" && error.message) ||
+          (typeof error?.detail === "string" && error.detail) ||
+          (error?.detail && typeof error.detail?.message === "string" && error.detail.message) ||
+          "Sync failed";
+        await syncProgressTracker.completeSync(syncId, { errorMessage: msg });
+        return { success: false, error: msg };
       }
 
       const result = await response.json();
 
-      const importResult = await this.importTradesToTradia(result.trades || [], result.account || {}, syncId, options.userId);
-
       await syncProgressTracker.completeSync(syncId, {
-        totalTrades: importResult.totalTrades,
-        newTrades: importResult.newTrades,
-        updatedTrades: importResult.updatedTrades,
-        skippedTrades: importResult.skippedTrades,
+        totalTrades: result.totalTrades || 0,
+        newTrades: result.newTrades || 0,
+        updatedTrades: result.updatedTrades || 0,
+        skippedTrades: result.skippedTrades || 0,
       });
 
       return {
         success: true,
         syncId,
-        totalTrades: importResult.totalTrades,
-        newTrades: importResult.newTrades,
-        updatedTrades: importResult.updatedTrades,
-        skippedTrades: importResult.skippedTrades,
+        totalTrades: result.totalTrades || 0,
+        newTrades: result.newTrades || 0,
+        updatedTrades: result.updatedTrades || 0,
+        skippedTrades: result.skippedTrades || 0,
       };
     } catch (err) {
       console.error("syncTradeHistory error:", err);
@@ -446,53 +465,30 @@ export class MT5IntegrationService {
     return { totalTrades: mt5Trades.length, newTrades, updatedTrades, skippedTrades };
   }
 
-  private async storeCredentials(credentials: _MT5Credentials, accountInfo: any): Promise<string> {
-    const accountId = `mt5_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-
-    const response = await fetch("/api/mt5/accounts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: accountId, ...credentials, accountInfo, state: "connected" }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to store account credentials");
-    }
-
-    const result = await response.json().catch(() => ({}));
-    return result.account?.id || accountId;
+  // Deprecated: client no longer stores credentials directly
+  private async storeCredentials(_credentials: _MT5Credentials, _accountInfo: any): Promise<string> {
+    throw new Error("storeCredentials is not supported; use /api/mt5/credentials");
   }
 
-  private async getStoredCredentials(accountId: string): Promise<_MT5Credentials | null> {
-    try {
-      const response = await fetch(`/api/mt5/accounts/${encodeURIComponent(accountId)}`);
-      if (!response.ok) {
-        console.error("Failed to retrieve account:", response.status);
-        return null;
-      }
-      const data = await response.json().catch(() => ({}));
-      const account = data.account || data;
-      if (!account || !account.server || !account.login) {
-        console.error("Invalid account data:", account);
-        return null;
-      }
-      return { server: account.server, login: account.login, password: account.password, name: account.name };
-    } catch (err) {
-      console.error("getStoredCredentials error:", err);
-      return null;
-    }
-  }
+  private async getStoredCredentials(_accountId: string): Promise<_MT5Credentials | null> { return null; }
 
   async getUserAccounts(userId?: string): Promise<any[]> {
     try {
-      const response = await fetch("/api/mt5/accounts");
+      const response = await fetch("/api/mt5/credentials");
       if (!response.ok) {
         console.error("Failed to get accounts:", response.status);
         return [];
       }
       const data = await response.json().catch(() => ({}));
-      return data.accounts || [];
+      const creds = data.credentials || [];
+      // Map into expected shape for UI wizard
+      return creds.map((c: any) => ({
+        id: c.id,
+        server: c.server,
+        login: c.login,
+        name: c.name || `MT5 ${c.login}`,
+        state: "connected",
+      }));
     } catch (err) {
       console.error("getUserAccounts error:", err);
       return [];

@@ -12,6 +12,7 @@ import React, {
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { TradeContext } from "@/context/TradeContext";
+import { useUser } from "@/context/UserContext";
 import type { Trade } from "@/types/trade";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
@@ -209,9 +210,8 @@ export default function CsvUpload({
   onClose: controlledOnClose,
   onImport: controlledOnImport,
 }: CsvUploadProps): React.ReactElement {
-  const { setTradesFromCsv } = useContext(TradeContext) as {
-    setTradesFromCsv: (arr: unknown[]) => void;
-  };
+  const { setTradesFromCsv } = useContext(TradeContext) as { setTradesFromCsv: (arr: unknown[]) => void };
+  const { plan } = useUser();
 
   const [open, setOpen] = useState<boolean>(false);
   const [parsing, setParsing] = useState<boolean>(false);
@@ -417,17 +417,43 @@ export default function CsvUpload({
       return;
     }
     try {
+      // Enforce plan-based time-window limits
+      const now = new Date();
+      let cutoff: Date | null = null;
+      if (plan === 'free') {
+        cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
+      } else if (plan === 'pro') {
+        cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 6);
+      }
+
+      let limited = mappedForImport;
+      if (cutoff) {
+        limited = mappedForImport.filter((row) => {
+          const r = row as Record<string, unknown>;
+          const ot = r.openTime ?? (r as any).open_time ?? r.time ?? null;
+          const ct = r.closeTime ?? (r as any).close_time ?? null;
+          const raw = (ct as string) || (ot as string) || "";
+          if (!raw) return true;
+          const d = new Date(String(raw));
+          return !Number.isNaN(d.getTime()) && d >= cutoff!;
+        });
+      }
+
       setParsing(true);
       setProgress(60);
-      setTradesFromCsv(mappedForImport as unknown[]);
+      setTradesFromCsv(limited as unknown[]);
       setProgress(100);
-      toast.success(`Imported ${mappedForImport.length} rows`);
+      if (cutoff && limited.length !== mappedForImport.length) {
+        toast.success(`Imported ${limited.length} rows (filtered ${mappedForImport.length - limited.length} not within plan window)`);
+      } else {
+        toast.success(`Imported ${limited.length} rows`);
+      }
       setTimeout(() => {
         setOpen(false);
         setParsing(false);
         if (typeof controlledOnImport === "function") {
           try {
-            controlledOnImport(mappedForImport as Partial<Trade>[]);
+            controlledOnImport(limited as Partial<Trade>[]);
           } catch (e) {
             // continue
             // eslint-disable-next-line no-console
@@ -449,7 +475,7 @@ export default function CsvUpload({
       setParsing(false);
       setProgress(0);
     }
-  }, [mappedForImport, setTradesFromCsv, controlledOnImport, controlledOnClose]);
+  }, [mappedForImport, setTradesFromCsv, controlledOnImport, controlledOnClose, plan]);
 
   const PreviewTable = useMemo(() => {
     if (!rows || rows.length === 0) {

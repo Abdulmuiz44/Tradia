@@ -223,6 +223,20 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     }
   };
 
+  // Clean text for better speech (strip markdown/artefacts)
+  const cleanForSpeech = (raw: string): string => {
+    try {
+      let t = raw;
+      t = t.replace(/\*\*|\*|__|_/g, '');
+      t = t.replace(/`{1,3}[^`]*`{1,3}/g, '');
+      t = t.replace(/<[^>]+>/g, '');
+      t = t.replace(/[\u{1F300}-\u{1FAD6}\u{1F900}-\u{1F9FF}\u{2600}-\u{27BF}]/gu, '');
+      t = t.replace(/^[^a-zA-Z0-9]+/g, '').replace(/[^a-zA-Z0-9\.!?,;:'"\-\s]/g, '');
+      t = t.replace(/\s{2,}/g, ' ').trim();
+      return t;
+    } catch { return raw; }
+  };
+
   // Text-to-speech function
   const speakText = (text: string) => {
     if (!voiceSettings.voiceEnabled || !synthRef.current) return;
@@ -230,7 +244,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     // Cancel any ongoing speech
     synthRef.current.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const utterance = new SpeechSynthesisUtterance(cleanForSpeech(text));
     utterance.rate = voiceSettings.voiceSpeed;
     utterance.pitch = voiceSettings.voicePitch;
     utterance.volume = 1;

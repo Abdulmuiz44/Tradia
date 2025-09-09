@@ -99,12 +99,24 @@ export default function SettingsPage() {
   };
 
   const updateSetting = (section: keyof UserSettings, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: typeof prev[section] === 'object' && prev[section] !== null
-        ? { ...(prev[section] as Record<string, any>), [key]: value }
-        : value
-    }));
+    setSettings(prev => {
+      const next: UserSettings = {
+        ...prev,
+        [section]: typeof prev[section] === 'object' && prev[section] !== null
+          ? { ...(prev[section] as Record<string, any>), [key]: value } as any
+          : (value as any)
+      } as UserSettings;
+
+      // Persist immediately so other components reflect changes
+      try { localStorage.setItem('userSettings', JSON.stringify(next)); } catch {}
+
+      // Apply theme instantly when changed
+      if (section === 'theme' && key === 'theme') {
+        applyTheme(value as string);
+      }
+
+      return next;
+    });
   };
 
   if (loading) {

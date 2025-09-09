@@ -7,6 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { analytics } from "@/lib/analytics";
+import { FcGoogle } from "react-icons/fc";
 
 // Client-only Navbar/Footer
 const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
@@ -24,7 +25,7 @@ const COUNTRIES = [
   "Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States of America","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
 ];
 
-export default function SignupPage(): React.ReactElement {
+function SignupPage(): React.ReactElement {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement | null>(null);
 
@@ -59,6 +60,9 @@ export default function SignupPage(): React.ReactElement {
       // ignore
     }
   }, []);
+
+  // Avoid hydration mismatch: render nothing until first client paint
+  if (!hydrated) return <div />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +138,14 @@ export default function SignupPage(): React.ReactElement {
       setError(err?.message ?? "Something went wrong; try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Google sign-in failed");
     }
   };
 
@@ -299,6 +311,22 @@ export default function SignupPage(): React.ReactElement {
                 >
                   {loading ? "Creating Account..." : "Sign Up"}
                 </button>
+
+                <div className="my-4 flex items-center">
+                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="px-3 text-xs text-gray-400">OR</div>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogle}
+                  className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition text-gray-100"
+                  aria-label="Continue with Google"
+                >
+                  <FcGoogle size={20} />
+                  <span>Continue with Google</span>
+                </button>
               </form>
 
               <div className="text-center text-gray-400 mt-4">OR</div>
@@ -316,3 +344,5 @@ export default function SignupPage(): React.ReactElement {
     </>
   );
 }
+
+export default dynamic(() => Promise.resolve(SignupPage), { ssr: false });

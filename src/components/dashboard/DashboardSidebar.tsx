@@ -97,7 +97,7 @@ export default function DashboardSidebar({
               }`}
             />
             <span className={`font-medium ${
-              isMobile ? "text-base" : "text-sm"
+              isMobile ? "text-xs" : "text-sm"
             }`}>
               {tab.label}
             </span>

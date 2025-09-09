@@ -3,6 +3,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Trade } from "@/types/trade";
+import { useUser } from "@/context/UserContext";
+import { supabase } from "@/lib/supabaseClient";
 
 type Props = {
   isOpen: boolean;
@@ -12,6 +14,24 @@ type Props = {
 
 export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
   const [form, setForm] = useState<Partial<Trade>>({});
+  const [beforeUrl, setBeforeUrl] = useState<string>("");
+  const [afterUrl, setAfterUrl] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
+
+  const PREDEFINED_STRATEGIES = [
+    "SMC",
+    "Breakout",
+    "Trend Following",
+    "HORC",
+    "ORDER BLOCK",
+    "BREAKER BLOCK",
+    "RECLAIMED BLOCK",
+  ];
+  const [customStrategies, setCustomStrategies] = useState<string[]>([]);
+  const [showCustomStrategyInput, setShowCustomStrategyInput] = useState(false);
+  const [customStrategyInput, setCustomStrategyInput] = useState("");
 
   // Create a datetime-local string from a Date
   const toLocalInput = (d: Date) => {
@@ -40,13 +60,23 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
         duration: "",
         outcome: "Win",
         resultRR: 0,
-        reasonForTrade: "",
+        strategy: "",
         emotion: "Confident",
         journalNotes: "",
       });
+      setBeforeUrl("");
+      setAfterUrl("");
+      setError(null);
+      setSaving(false);
+      try {
+        const saved = localStorage.getItem('customStrategies');
+        if (saved) setCustomStrategies(JSON.parse(saved));
+      } catch {}
     } else {
       // clear form when closing
       setForm({});
+      setBeforeUrl("");
+      setAfterUrl("");
     }
   }, [isOpen]);
 
@@ -119,6 +149,28 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
     return `${minutes} min`;
   };
 
+  const uploadImage = async (file: File, kind: "before" | "after") => {
+    if (!user?.id) throw new Error("Not authenticated");
+    const path = `${user.id}/trades/new/${kind}_${Date.now()}_${file.name}`;
+    const { data, error } = await supabase.storage.from('user-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
+    if (error) throw error;
+    const { data: pub } = supabase.storage.from('user-uploads').getPublicUrl(data.path);
+    return pub.publicUrl;
+  };
+
+  const addCustomStrategy = (strategy: string) => {
+    const s = strategy.trim();
+    if (!s) return;
+    if (!PREDEFINED_STRATEGIES.includes(s) && !customStrategies.includes(s)) {
+      const next = [...customStrategies, s];
+      setCustomStrategies(next);
+      try { localStorage.setItem('customStrategies', JSON.stringify(next)); } catch {}
+    }
+    setForm((p) => ({ ...(p ?? {}), strategy: s }));
+    setCustomStrategyInput("");
+    setShowCustomStrategyInput(false);
+  };
+
   // when outcome changes ensure pnl sign follows outcome
   const handleOutcomeChange = (val: Trade["outcome"]) => {
     const currentPnl = Number(form.pnl ?? 0);
@@ -143,7 +195,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       "takeProfitPrice",
       "outcome",
       "pnl",
-      "reasonForTrade",
+      "strategy",
       "emotion",
       "journalNotes",
     ];
@@ -184,9 +236,11 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       resultRR: resultRRNumeric,
       outcome: (outcome as "Win" | "Loss" | "Breakeven"),
       duration: calculateDuration(String(form.openTime ?? ""), String(form.closeTime ?? "")),
-      reasonForTrade: String(form.reasonForTrade ?? ""),
+      strategy: String(form.strategy ?? ""),
       emotion: String(form.emotion ?? "neutral"),
       journalNotes: String(form.journalNotes ?? ""),
+      beforeScreenshotUrl: beforeUrl || undefined,
+      afterScreenshotUrl: afterUrl || undefined,
     };
 
     onSave(newTrade);
@@ -367,14 +421,57 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             </div>
           </div>
 
-          {/* Reason For Trade */}
+          {/* Strategy */}
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-300 mb-1">Reason For Trade</label>
-            <input
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
-              value={form.reasonForTrade ?? ""}
-              onChange={(e) => handleChange("reasonForTrade", e.target.value as Trade["reasonForTrade"])}
-            />
+            <label className="block text-sm font-medium text-gray-300 mb-1">Strategy</label>
+            {!showCustomStrategyInput ? (
+              <div className="flex gap-2">
+                <select
+                  className="flex-1 p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+                  value={String(form.strategy ?? "")}
+                  onChange={(e) => handleChange("strategy", e.target.value)}
+                >
+                  <option value="">Select a strategy...</option>
+                  {[...PREDEFINED_STRATEGIES, ...customStrategies].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomStrategyInput(true)}
+                  className="px-3 py-2 bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600 text-sm"
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+                  placeholder="Enter custom strategy..."
+                  value={customStrategyInput}
+                  onChange={(e) => setCustomStrategyInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); addCustomStrategy(customStrategyInput); }
+                    if (e.key === 'Escape') { setShowCustomStrategyInput(false); setCustomStrategyInput(''); }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => addCustomStrategy(customStrategyInput)}
+                  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowCustomStrategyInput(false); setCustomStrategyInput(''); }}
+                  className="px-3 py-2 bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Emotion */}

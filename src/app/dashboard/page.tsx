@@ -447,11 +447,15 @@ function DashboardContent() {
   }, [filter, customRange]);
 
   // Now it's safe to early-return UI that avoids calling more hooks conditionally
-  if (!authChecked) return <Spinner />;
+  // Auto-redirect unauthenticated users to login (declare effect before any early returns)
+  useEffect(() => {
+    if (authChecked && !isAuthed) {
+      router.replace('/login');
+    }
+  }, [authChecked, isAuthed, router]);
 
-  if (!isAuthed) {
-    return <div className="text-white text-center mt-20">Access Denied. Please sign in.</div>;
-  }
+  if (!authChecked) return <Spinner />;
+  if (!isAuthed) return <Spinner />;
 
   // Dynamic tab definitions based on user role - simple computation without useMemo to avoid hooks issues
   const getTabDefinitions = () => {
@@ -460,7 +464,10 @@ function DashboardContent() {
       return BASE_TAB_DEFS;
     }
 
-    const tabs = isAdmin ? [...BASE_TAB_DEFS, ...ADMIN_TAB_DEFS] : BASE_TAB_DEFS;
+    // Hide upgrade tab for elite users
+    const userPlan = (session?.user as any)?.plan || 'free';
+    const base = userPlan === 'elite' ? BASE_TAB_DEFS.filter(t => t.value !== 'upgrade') : BASE_TAB_DEFS;
+    const tabs = isAdmin ? [...base, ...ADMIN_TAB_DEFS] : base;
     console.log('Tab definitions computed:', {
       isAdmin,
       adminChecked,
@@ -746,6 +753,21 @@ function DashboardContent() {
               >
                 🔄
               </button>
+
+              {/* Notifications */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Notifications">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80 bg-zinc-800 text-white border border-zinc-700">
+                  <div className="p-3 text-sm font-semibold">Latest Updates</div>
+                  <div className="px-3 pb-2 space-y-2 text-sm">
+                    <div className="p-2 rounded bg-zinc-700/40">New: 3-day trials for Pro and Plus plans</div>
+                    <div className="p-2 rounded bg-zinc-700/40">MT5 Account Balance metric added to Analytics</div>
+                    <div className="p-2 rounded bg-zinc-700/40">Mobile layout and sidebar improvements</div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Current filter indicator */}
               {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (

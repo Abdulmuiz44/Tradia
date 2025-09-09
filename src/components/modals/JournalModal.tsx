@@ -3,6 +3,8 @@
 
 import React, { useEffect, useState } from "react";
 import type { Trade } from "@/types/trade";
+import { useUser } from "@/context/UserContext";
+import { supabase } from "@/lib/supabaseClient";
 
 type JournalModalProps = {
   isOpen: boolean;
@@ -79,9 +81,12 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
   const [emotion, setEmotion] = useState<string>("neutral");
   const [reasonForTrade, setReasonForTrade] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+  const [beforeUrl, setBeforeUrl] = useState<string>("");
+  const [afterUrl, setAfterUrl] = useState<string>("");
 
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
 
   // Load custom strategies from localStorage
   useEffect(() => {
@@ -132,6 +137,8 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
       setStrategy("");
       setEmotion("neutral");
       setNotes("");
+      setBeforeUrl("");
+      setAfterUrl("");
       setError(null);
       setSaving(false);
       return;
@@ -153,6 +160,8 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
     setReasonForTrade(String(trade.reasonForTrade ?? ""));
     setEmotion(String(trade.emotion ?? "neutral"));
     setNotes(String(trade.journalNotes ?? trade.notes ?? ""));
+    setBeforeUrl(String((trade as any).beforeScreenshotUrl ?? ""));
+    setAfterUrl(String((trade as any).afterScreenshotUrl ?? ""));
     setError(null);
     setSaving(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -267,7 +276,11 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
       updated.emotion = String(emotion ?? "neutral");
       updated.journalNotes = String(notes ?? "");
       updated.notes = String(notes ?? "");
+      (updated as any).beforeScreenshotUrl = beforeUrl || (trade as any)?.beforeScreenshotUrl;
+      (updated as any).afterScreenshotUrl = afterUrl || (trade as any)?.afterScreenshotUrl;
       updated.updated_at = new Date().toISOString();
+      // ensure strategy persists
+      (updated as any).strategy = String(strategy || (trade as any)?.strategy || "");
 
       await Promise.resolve(onSave(updated));
       setSaving(false);
@@ -565,6 +578,62 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Write your trade hindsight, what went well, what you can improve..."
               className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+            />
+          </div>
+
+          {/* Screenshots */}
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">Before Screenshot</label>
+            {beforeUrl && (
+              <img src={beforeUrl} alt="Before" className="mb-2 max-h-32 rounded border border-zinc-800" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  setSaving(true);
+                  const path = `${user?.id || 'unknown'}/trades/${trade?.id || 'new'}/before_${Date.now()}_${file.name}`;
+                  const { data, error } = await supabase.storage.from('user-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
+                  if (error) throw error;
+                  const { data: pub } = supabase.storage.from('user-uploads').getPublicUrl(data.path);
+                  setBeforeUrl(pub.publicUrl);
+                } catch (err) {
+                  setError('Failed to upload before image');
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              className="w-full text-xs"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-300 mb-1">After Screenshot</label>
+            {afterUrl && (
+              <img src={afterUrl} alt="After" className="mb-2 max-h-32 rounded border border-zinc-800" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  setSaving(true);
+                  const path = `${user?.id || 'unknown'}/trades/${trade?.id || 'new'}/after_${Date.now()}_${file.name}`;
+                  const { data, error } = await supabase.storage.from('user-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
+                  if (error) throw error;
+                  const { data: pub } = supabase.storage.from('user-uploads').getPublicUrl(data.path);
+                  setAfterUrl(pub.publicUrl);
+                } catch (err) {
+                  setError('Failed to upload after image');
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              className="w-full text-xs"
             />
           </div>
         </div>

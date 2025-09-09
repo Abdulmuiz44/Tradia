@@ -71,7 +71,7 @@ const PLANS = [
     name: "Pro",
     monthly: 9,
     highlights: ["All Starter features", "6 months trade history", "3 account connections", "AI weekly summary"],
-    cta: "Start 7-day trial",
+    cta: "Start 3-day trial",
     tag: "Popular",
   },
   {
@@ -79,7 +79,7 @@ const PLANS = [
     name: "Plus",
     monthly: 19,
     highlights: ["All Pro features", "Unlimited history", "5 account connections", "AI trade reviews & SL/TP suggestions"],
-    cta: "Start 7-day trial",
+    cta: "Start 3-day trial",
     tag: "For active traders",
   },
   {
@@ -481,7 +481,7 @@ export default function Home(): React.ReactElement {
             </div>
 
             <div className="mt-6 text-sm text-gray-400">
-              Need a custom plan or prop-firm support? <Link href="/signup" className="text-indigo-300 hover:underline">Contact us</Link>.
+              Need a custom plan or prop-firm support? <Link href="/contact" className="text-indigo-300 hover:underline">Contact us</Link>.
             </div>
           </div>
         </section>

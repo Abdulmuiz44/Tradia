@@ -16,6 +16,9 @@ function asString(value: unknown): string {
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.FREEZE_MT5_INTEGRATION === '1') {
+    return NextResponse.json({ error: 'MT5 integration temporarily disabled' }, { status: 503 });
+  }
   try {
     // Authenticate user
     const session = await getServerSession(authOptions);
