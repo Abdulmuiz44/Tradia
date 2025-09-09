@@ -150,12 +150,39 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
   };
 
   const uploadImage = async (file: File, kind: "before" | "after") => {
-    if (!user?.id) throw new Error("Not authenticated");
-    const path = `${user.id}/trades/new/${kind}_${Date.now()}_${file.name}`;
-    const { data, error } = await supabase.storage.from('user-uploads').upload(path, file, { cacheControl: '3600', upsert: false });
-    if (error) throw error;
-    const { data: pub } = supabase.storage.from('user-uploads').getPublicUrl(data.path);
-    return pub.publicUrl;
+    // Default to local data URL storage for simplicity and privacy
+    const toDataUrl = (f: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(f);
+      });
+    return await toDataUrl(file);
+  };
+
+  const handleBeforeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      const url = await uploadImage(f, 'before');
+      setBeforeUrl(url);
+    } catch (err) {
+      console.error('Before image error:', err);
+      setError('Failed to process before screenshot.');
+    }
+  };
+
+  const handleAfterFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      const url = await uploadImage(f, 'after');
+      setAfterUrl(url);
+    } catch (err) {
+      console.error('After image error:', err);
+      setError('Failed to process after screenshot.');
+    }
   };
 
   const addCustomStrategy = (strategy: string) => {
@@ -500,6 +527,39 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
               value={form.journalNotes ?? ""}
               onChange={(e) => handleChange("journalNotes", e.target.value as Trade["journalNotes"])}
             />
+          </div>
+
+          {/* Before/After Screenshots */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Before Screenshot</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:bg-zinc-800 file:text-gray-200 hover:file:bg-zinc-700"
+              onChange={handleBeforeFile}
+            />
+            {beforeUrl && (
+              <div className="mt-2 flex items-center gap-2">
+                <img src={beforeUrl} alt="Before" className="h-16 w-24 object-cover rounded border border-zinc-800" />
+                <button type="button" onClick={() => setBeforeUrl("")} className="px-2 py-1 text-xs bg-zinc-800 rounded hover:bg-zinc-700">Remove</button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">After Screenshot</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:bg-zinc-800 file:text-gray-200 hover:file:bg-zinc-700"
+              onChange={handleAfterFile}
+            />
+            {afterUrl && (
+              <div className="mt-2 flex items-center gap-2">
+                <img src={afterUrl} alt="After" className="h-16 w-24 object-cover rounded border border-zinc-800" />
+                <button type="button" onClick={() => setAfterUrl("")} className="px-2 py-1 text-xs bg-zinc-800 rounded hover:bg-zinc-700">Remove</button>
+              </div>
+            )}
           </div>
         </div>
 

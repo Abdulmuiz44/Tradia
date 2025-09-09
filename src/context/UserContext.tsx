@@ -70,7 +70,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           emailVerified: false,
           createdAt: new Date().toISOString(),
         });
-        setPlanState("free");
+        // Admin override even if DB lookup failed
+        if (session.user.email === 'abdulmuizproject@gmail.com') {
+          setPlanState('elite');
+        } else {
+          setPlanState("free");
+        }
       } else {
         const userInfo: UserData = {
           id: userData.id,
@@ -83,13 +88,32 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           lastLogin: userData.last_login,
         };
 
-        setUser(userInfo);
-        setPlanState(userInfo.plan);
+        // Admin hard-elevation: ensure admin is always Elite in state and DB
+        if (userInfo.email === 'abdulmuizproject@gmail.com') {
+          setUser({ ...userInfo, plan: 'elite' });
+          setPlanState('elite');
+          // Best-effort DB sync (non-blocking)
+          try {
+            if (userInfo.plan !== 'elite') {
+              await supabase.from('users').update({ plan: 'elite', role: 'admin' }).eq('id', userInfo.id);
+            }
+          } catch (e) {
+            console.warn('Admin plan sync skipped:', e);
+          }
+        } else {
+          setUser(userInfo);
+          setPlanState(userInfo.plan);
+        }
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
       setUser(null);
-      setPlanState("free");
+      // Admin override even on exception
+      if (session.user.email === 'abdulmuizproject@gmail.com') {
+        setPlanState('elite');
+      } else {
+        setPlanState("free");
+      }
     } finally {
       setLoading(false);
     }

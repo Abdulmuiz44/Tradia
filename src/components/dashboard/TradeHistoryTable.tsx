@@ -665,6 +665,8 @@ export default function TradeHistoryTable() {
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Strategy</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">Before</th>
+                <th className="px-3 py-2 font-medium border-b border-gray-600">After</th>
                 <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
               </tr>
             </thead>
@@ -718,6 +720,32 @@ export default function TradeHistoryTable() {
                       <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
                       <td className="px-3 py-2">
                         {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}
+                      </td>
+                      <td className="px-3 py-2">
+                        {toStringSafe(getField(t, "beforeScreenshotUrl")) ? (
+                          <a href={toStringSafe(getField(t, "beforeScreenshotUrl"))} target="_blank" rel="noreferrer">
+                            <img
+                              src={toStringSafe(getField(t, "beforeScreenshotUrl"))}
+                              alt="Before"
+                              className="h-10 w-16 object-cover rounded border border-zinc-800"
+                            />
+                          </a>
+                        ) : (
+                          <span className="text-zinc-500">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {toStringSafe(getField(t, "afterScreenshotUrl")) ? (
+                          <a href={toStringSafe(getField(t, "afterScreenshotUrl"))} target="_blank" rel="noreferrer">
+                            <img
+                              src={toStringSafe(getField(t, "afterScreenshotUrl"))}
+                              alt="After"
+                              className="h-10 w-16 object-cover rounded border border-zinc-800"
+                            />
+                          </a>
+                        ) : (
+                          <span className="text-zinc-500">—</span>
+                        )}
                       </td>
                       <td className="px-3 py-2 flex items-center gap-2">
                         <button

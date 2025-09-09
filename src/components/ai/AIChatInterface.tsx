@@ -300,6 +300,20 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         finalResponse += '\n\n' + analyticsSummary;
       }
 
+      // Ensure plain text without markdown/asterisks or emojis
+      const sanitize = (raw: string) => {
+        try {
+          let t = raw;
+          t = t.replace(/\*\*|\*|__|_/g, ''); // remove markdown bold/italic
+          t = t.replace(/`{1,3}[^`]*`{1,3}/g, ''); // remove inline code
+          t = t.replace(/[•▪︎·\u2022\u25C6\u25CF\u25A0\u25CB\u25E6]/g, '-'); // replace bullets with dash
+          t = t.replace(/[\u{1F300}-\u{1FAD6}\u{1F900}-\u{1F9FF}\u{2600}-\u{27BF}]/gu, ''); // remove emojis/symbols
+          t = t.replace(/\s{2,}/g, ' ').trim();
+          return t;
+        } catch { return raw; }
+      };
+      finalResponse = sanitize(finalResponse);
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
