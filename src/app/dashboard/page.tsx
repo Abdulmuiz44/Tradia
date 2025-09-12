@@ -372,7 +372,9 @@ function DashboardContent() {
     const arr: any[] = Array.isArray(trades) ? trades : [];
     const now = Date.now();
     const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
-    const allowedDays = plan === 'free' ? 30 : plan === 'pro' ? 182 : plan === 'plus' ? Infinity : plan === 'elite' ? Infinity : 30;
+    const allowedDays = isAdmin
+      ? Infinity
+      : (plan === 'free' ? 30 : plan === 'pro' ? 182 : plan === 'plus' ? Infinity : plan === 'elite' ? Infinity : 30);
     let fromMs = now - 24 * 60 * 60 * 1000; // default 24h
     let toMs = now;
 
@@ -415,8 +417,8 @@ function DashboardContent() {
         fromMs = now - 24 * 60 * 60 * 1000;
     }
 
-    // Enforce plan limit clamp on fromMs
-    if (Number.isFinite(allowedDays)) {
+    // Enforce plan limit clamp on fromMs (skip for admins)
+    if (!isAdmin && Number.isFinite(allowedDays)) {
       const minAllowed = now - (allowedDays as number) * 24 * 60 * 60 * 1000;
       if (fromMs < minAllowed) fromMs = minAllowed;
     }
@@ -428,7 +430,7 @@ function DashboardContent() {
         return false;
       }
     });
-  }, [trades, filter, customRange]);
+  }, [trades, filter, customRange, isAdmin, session]);
 
   // Label for UI showing selected filter
   const filterLabel = useMemo(() => {
@@ -474,7 +476,7 @@ function DashboardContent() {
 
     // Hide upgrade tab for elite users
     const userPlan = (session?.user as any)?.plan || 'free';
-    const base = userPlan === 'elite' ? BASE_TAB_DEFS.filter(t => t.value !== 'upgrade') : BASE_TAB_DEFS;
+    const base = (userPlan === 'elite' || isAdmin) ? BASE_TAB_DEFS.filter(t => t.value !== 'upgrade') : BASE_TAB_DEFS;
     const tabs = isAdmin ? [...base, ...ADMIN_TAB_DEFS] : base;
     console.log('Tab definitions computed:', {
       isAdmin,
@@ -667,8 +669,12 @@ function DashboardContent() {
                       {(() => {
                         const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
                         const allowed = new Set<string>(['24h','7d','30d']);
-                        if (plan === 'pro') { ['60d','3m','6m'].forEach(v => allowed.add(v)); }
-                        if (plan === 'plus' || plan === 'elite') { ['60d','3m','6m','1y'].forEach(v => allowed.add(v)); }
+                        if (isAdmin) {
+                          ['60d','3m','6m','1y'].forEach(v => allowed.add(v));
+                        } else {
+                          if (plan === 'pro') { ['60d','3m','6m'].forEach(v => allowed.add(v)); }
+                          if (plan === 'plus' || plan === 'elite') { ['60d','3m','6m','1y'].forEach(v => allowed.add(v)); }
+                        }
                         return FILTERS.filter(f => f.value !== 'custom').map((f) => {
                           const isAllowed = allowed.has(f.value);
                           return (
@@ -736,8 +742,8 @@ function DashboardContent() {
                                   const t = new Date(customRange.to + 'T23:59:59.999').getTime();
                                   const days = Math.ceil((t - f) / (24*60*60*1000));
                                   const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
-                                  const allowedDays = plan === 'free' ? 30 : plan === 'pro' ? 182 : plan === 'plus' ? Infinity : plan === 'elite' ? Infinity : 30;
-                                  if (Number.isFinite(allowedDays) && days > (allowedDays as number)) {
+                                  const allowedDays = isAdmin ? Infinity : (plan === 'free' ? 30 : plan === 'pro' ? 182 : plan === 'plus' ? Infinity : plan === 'elite' ? Infinity : 30);
+                                  if (!isAdmin && Number.isFinite(allowedDays) && days > (allowedDays as number)) {
                                     alert(`Your plan allows up to ${allowedDays} days. Please narrow the range or upgrade.`);
                                     return;
                                   }

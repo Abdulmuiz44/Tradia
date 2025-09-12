@@ -4,21 +4,16 @@ import { cn } from "@/lib/utils";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 
 const notificationVariants = cva(
-  // Glassy card that blends with dark UI and Overview
-  "relative w-full rounded-xl border border-white/10 bg-white/6 backdrop-blur-sm text-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-4\n   [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4",
+  // Solid dark card to match Add/Edit modal style
+  "relative w-full rounded-lg border border-zinc-800 bg-gray-900 text-white shadow-2xl p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-white/80",
   {
     variants: {
       variant: {
         default: "",
-        destructive:
-          // Subtle red tint that fits dark backgrounds
-          "border-red-400/30 bg-red-500/10 text-red-100 [&>svg]:text-red-300",
-        success:
-          "border-emerald-400/30 bg-emerald-500/10 text-emerald-100 [&>svg]:text-emerald-300",
-        warning:
-          "border-amber-400/30 bg-amber-500/10 text-amber-100 [&>svg]:text-amber-300",
-        info:
-          "border-sky-400/30 bg-sky-500/10 text-sky-100 [&>svg]:text-sky-300",
+        destructive: "border-red-500/60",
+        success: "border-emerald-500/60",
+        warning: "border-amber-500/60",
+        info: "border-sky-500/60",
       },
     },
     defaultVariants: {
