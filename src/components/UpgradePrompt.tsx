@@ -96,14 +96,12 @@ export default function UpgradePrompt({
 
       if (response.ok) {
         const data = await response.json();
-        // Redirect to Flutterwave checkout
         window.location.href = data.checkoutUrl;
       } else {
-        alert('Failed to create checkout session. Please try again.');
+        console.warn('Failed to create checkout session.');
       }
     } catch (error) {
       console.error('Upgrade error:', error);
-      alert('Failed to process upgrade. Please try again.');
     } finally {
       setUpgrading(false);
     }

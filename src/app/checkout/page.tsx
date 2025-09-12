@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useNotification } from "@/context/NotificationContext";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,8 @@ export default function CheckoutPage() {
           planType: plan,
           paymentMethod: selectedPaymentMethod,
           billingCycle: billing === 'yearly' ? 'yearly' : 'monthly',
+          userEmail: session?.user?.email,
+          userId: (session?.user as any)?.id,
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),
@@ -99,6 +102,7 @@ export default function CheckoutPage() {
 
       if (response.status === 401) {
         const currentUrl = window.location.pathname + window.location.search;
+        notify({ variant: "warning", title: "Sign in required", description: "Please sign in to continue to payment." });
         router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
         return;
       }
@@ -114,10 +118,10 @@ export default function CheckoutPage() {
 
       const serverMsg = data?.error || `HTTP ${response.status}`;
       console.error("Create checkout failed:", serverMsg);
-      alert(`Failed to create checkout: ${serverMsg}`);
+      notify({ variant: "destructive", title: "Checkout failed", description: String(serverMsg) });
     } catch (error) {
       console.error("Checkout error:", error);
-      alert(`Failed to create checkout. ${error instanceof Error ? error.message : ""}`);
+      notify({ variant: "destructive", title: "Checkout error", description: error instanceof Error ? error.message : "Unexpected error" });
     } finally {
       setIsLoading(false);
     }
@@ -208,4 +212,5 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
+  const { notify } = useNotification();
 }

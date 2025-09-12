@@ -8,7 +8,7 @@ import { cookies, headers as nextHeaders } from "next/headers";
 import jwt from "jsonwebtoken";
 import { createClient } from "@/utils/supabase/server";
 
-async function resolveUserFromRequest() {
+async function resolveUserFromRequest(body?: any) {
   // 1) Try NextAuth session
   const session = await getServerSession(authOptions);
   if (session?.user?.id && session.user.email) {
@@ -43,18 +43,36 @@ async function resolveUserFromRequest() {
     // ignore and continue
   }
 
+  // 3) Fallback: accept body-provided identifiers and validate against DB
+  try {
+    const email = typeof body?.userEmail === 'string' ? body.userEmail : undefined;
+    const userId = typeof body?.userId === 'string' ? body.userId : undefined;
+    if (email || userId) {
+      const supabase = createClient();
+      const query = supabase.from('users').select('id,email').limit(1);
+      const { data } = await (email ? query.eq('email', email) : query.eq('id', userId as string));
+      if (data && data.length > 0) {
+        return { id: String(data[0].id), email: String(data[0].email) };
+      }
+    }
+  } catch {}
+
   return null;
 }
 
 export async function POST(req: Request) {
+  // make request body visible in catch scope too
+  let body: any = {};
   try {
     if (!process.env.FLUTTERWAVE_SECRET_KEY) {
       console.error("FLUTTERWAVE_SECRET_KEY is not set in environment");
     }
-    const resolved = await resolveUserFromRequest();
+    // Parse body once
+    try { body = await req.json(); } catch { body = {}; }
+
+    const resolved = await resolveUserFromRequest(body);
     if (!resolved) {
       try {
-        const body = await req.json().catch(() => ({}));
         await (await import("@/lib/payment-logging.server")).logPayment(
           "checkout",
           "warn",
@@ -65,8 +83,6 @@ export async function POST(req: Request) {
       } catch {}
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const body = await req.json();
     const {
       planType,
       paymentMethod,
@@ -117,7 +133,6 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Checkout creation error:", error);
     try {
-      const body = await req.json().catch(() => ({}));
       const { planType, billingCycle } = body || {};
       await logPayment(
         "checkout",

@@ -169,10 +169,11 @@ export default function BillingPage() {
       });
 
       if (response.ok) {
-        alert('Subscription cancelled successfully');
+        // in-app notice handled in dashboard header via NotificationProvider (optional)
+        console.log('Subscription cancelled successfully');
         loadBillingData();
       } else {
-        alert('Failed to cancel subscription');
+        console.warn('Failed to cancel subscription');
       }
     } catch (error) {
       console.error('Cancel subscription error:', error);

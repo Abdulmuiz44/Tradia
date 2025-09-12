@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import ShareButtons from "@/components/ShareButtons";
 import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,8 +107,8 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [showQuickActions, setShowQuickActions] = useState(false);
 
-  // Mock subscription tier - in real app, get from user data
-  const userTier = (session?.user as any)?.subscription || 'free';
+  // Plan from session (free/pro/plus/elite)
+  const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
 
   // Mobile detection
   useEffect(() => {
@@ -175,12 +176,15 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     { label: 'Set Alerts', icon: Settings, action: () => console.log('Set Alerts') },
   ];
 
-  // Filter trades based on timeframe
+  // Filter trades based on timeframe with plan clamp
   const filteredTrades = useMemo(() => {
-    if (timeframe === 'all') return trades;
-
-    const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : timeframe === '90d' ? 90 : 365;
-    const cutoffDate = subDays(new Date(), days);
+    let days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : timeframe === '90d' ? 90 : timeframe === '1y' ? 365 : Infinity;
+    const allowedDays = plan === 'free' ? 30 : plan === 'pro' ? 182 : (plan === 'plus' || plan === 'elite') ? Infinity : 30;
+    if (Number.isFinite(allowedDays)) {
+      days = Math.min(days, allowedDays as number);
+    }
+    if (!Number.isFinite(days)) return trades;
+    const cutoffDate = subDays(new Date(), days as number);
 
     return trades.filter(trade => {
       const tradeDate = new Date(trade.openTime || trade.closeTime || '');
@@ -262,7 +266,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
   // Risk metrics (Premium feature)
   const riskMetrics = useMemo((): RiskMetrics => {
-    if (userTier === 'free') {
+    if (plan === 'free') {
       return {
         sharpeRatio: 0,
         maxDrawdown: 0,
@@ -298,7 +302,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
       sortinoRatio: volatility > 0 ? avgReturn / volatility : 0, // Simplified
       informationRatio: volatility > 0 ? avgReturn / volatility : 0 // Simplified
     };
-  }, [filteredTrades, userTier]);
+  }, [filteredTrades, plan]);
 
   // Performance data for charts
   const performanceData = useMemo((): PerformanceData[] => {
@@ -367,7 +371,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
   const renderMetricCard = (metric: AnalyticsMetric) => (
     <Card key={metric.label} className="relative overflow-hidden">
-      {metric.premium && userTier === 'free' && (
+      {metric.premium && plan === 'free' && (
         <div className="absolute top-2 right-2 z-10">
           <Badge variant="secondary" className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs">
             <Crown className="w-3 h-3 mr-1" />
@@ -527,7 +531,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   );
 
   const renderRisk = () => {
-    if (userTier === 'free') {
+    if (plan === 'free') {
       return (
         <Card>
           <CardContent className="p-8 text-center">
@@ -672,7 +676,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   );
 
   const renderForecast = () => {
-    if (userTier === 'free') {
+    if (plan === 'free') {
       return (
         <Card>
           <CardContent className="p-8 text-center">
@@ -779,17 +783,28 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         <div className="flex flex-wrap gap-2">
           {/* Timeframe Selector */}
           <div className="flex bg-muted rounded-lg p-1">
-            {(['7d', '30d', '90d', '1y', 'all'] as const).map((period) => (
+            {(['7d', '30d', '90d', '1y', 'all'] as const).map((period) => {
+              const allowed = new Set(['7d','30d']);
+              if (plan === 'pro') ['90d'].forEach(v=>allowed.add(v));
+              if (plan === 'plus' || plan === 'elite') ['90d','1y','all'].forEach(v=>allowed.add(v));
+              const isAllowed = allowed.has(period);
+              return (
               <Button
                 key={period}
                 variant={timeframe === period ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setTimeframe(period)}
-                className="text-xs"
+                onClick={() => {
+                  if (isAllowed) setTimeframe(period);
+                  else {
+                    // redirect to upgrade within dashboard
+                    try { (window as any).location.hash = '#upgrade'; } catch {}
+                  }
+                }}
+                className={`text-xs ${isAllowed ? '' : 'opacity-70'}`}
               >
-                {period.toUpperCase()}
+                {period.toUpperCase()} {!isAllowed && (<span className="ml-1 text-yellow-400"><Lock className="w-3 h-3 inline" /></span>)}
               </Button>
-            ))}
+            )})}
           </div>
 
           {/* Mobile Quick Actions */}
@@ -806,7 +821,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           )}
 
           {/* Premium Toggle */}
-          {userTier !== 'free' && (
+          {(plan !== 'free') && (
             <Button
               variant="outline"
               size="sm"
@@ -851,7 +866,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           { id: 'patterns', label: 'Patterns', icon: <PieChartIcon className="w-4 h-4" /> },
           { id: 'forecast', label: 'AI Forecast', icon: <Zap className="w-4 h-4" />, premium: true },
         ].map((tab) => {
-          const isPremium = tab.premium && userTier === 'free';
+          const isPremium = tab.premium && plan === 'free';
           return (
             <Button
               key={tab.id}
@@ -861,12 +876,12 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
               disabled={isPremium}
               className={`flex items-center gap-2 ${isPremium ? 'opacity-50' : ''}`}
             >
-              {tab.icon}
-              {tab.label}
-              {isPremium && <Crown className="w-3 h-3 text-yellow-500" />}
-            </Button>
-          );
-        })}
+          {tab.icon}
+          {tab.label}
+          {isPremium && <Crown className="w-3 h-3 text-yellow-500" />}
+        </Button>
+      );
+    })}
       </div>
 
       {/* Content */}
@@ -883,16 +898,11 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-2 justify-center">
             <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export Report
+              <Download className="w-4 h-4 mr-2" /> Export Report
             </Button>
+            <ShareButtons title="My Trading Analytics" text="Check out my trading performance on Tradia" />
             <Button variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share Analytics
-            </Button>
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Customize View
+              <Settings className="w-4 h-4 mr-2" /> Customize View
             </Button>
           </div>
         </CardContent>

@@ -3,7 +3,8 @@
 
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
-import { Trash2, Pencil, Filter, DownloadCloud, FilePlus } from "lucide-react";
+import { Trash2, Pencil, Filter, DownloadCloud, FilePlus, Trash } from "lucide-react";
+import { useNotification } from "@/context/NotificationContext";
 import { TradeContext } from "@/context/TradeContext";
 import type { Trade } from "@/types/trade";
 import AddTradeModal from "@/components/modals/AddTradeModal";
@@ -159,8 +160,10 @@ export default function TradeHistoryTable() {
     deleteTrade,
     setTradesFromCsv,
     importTrades,
+    clearTrades,
   } = useContext(TradeContext);
   const { plan } = useUser();
+  const { notify } = useNotification();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -859,10 +862,16 @@ export default function TradeHistoryTable() {
                 CSV
               </button>
               <button
-                onClick={() => alert("PDF export not implemented yet.")}
+                onClick={() => console.warn("PDF export not implemented yet.")}
                 className="flex-1 px-4 py-2 bg-purple-600 rounded hover:bg-purple-500"
               >
                 PDF
+              </button>
+              <button
+                onClick={() => { try { clearTrades(); notify({ variant: 'warning', title: 'Trade history cleared', description: 'All local trades have been removed.'}); } catch (e) { notify({ variant: 'destructive', title: 'Failed to clear history' }); } finally { setExportOpen(false); } }}
+                className="flex-1 px-4 py-2 bg-red-700 rounded hover:bg-red-600"
+              >
+                Clear All
               </button>
             </div>
             <button
