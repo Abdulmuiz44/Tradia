@@ -18,7 +18,7 @@ import Spinner from "@/components/ui/spinner";
 import LayoutClient from "@/components/LayoutClient";
 import ClientOnly from "@/components/ClientOnly";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { Menu, X, RefreshCw, Filter, User, Settings } from "lucide-react";
+import { Menu, X, RefreshCw, Filter, User, Settings, Lock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -669,19 +669,30 @@ function DashboardContent() {
                         const allowed = new Set<string>(['24h','7d','30d']);
                         if (plan === 'pro') { ['60d','3m','6m'].forEach(v => allowed.add(v)); }
                         if (plan === 'plus' || plan === 'elite') { ['60d','3m','6m','1y'].forEach(v => allowed.add(v)); }
-                        const options = FILTERS.filter(f => f.value !== 'custom' && allowed.has(f.value));
-                        return options.map((f) => (
-                          <DropdownMenuItem
-                            key={f.value}
-                            onClick={() => {
-                              setFilter(f.value);
-                              setCustomRange({ from: "", to: "" });
-                            }}
-                            className="cursor-pointer"
-                          >
-                            {f.label}
-                          </DropdownMenuItem>
-                        ));
+                        return FILTERS.filter(f => f.value !== 'custom').map((f) => {
+                          const isAllowed = allowed.has(f.value);
+                          return (
+                            <DropdownMenuItem
+                              key={f.value}
+                              onClick={() => {
+                                if (isAllowed) {
+                                  setFilter(f.value);
+                                  setCustomRange({ from: "", to: "" });
+                                } else {
+                                  setActiveTab('upgrade');
+                                }
+                              }}
+                              className={`cursor-pointer flex items-center justify-between ${isAllowed ? '' : 'opacity-70'}`}
+                            >
+                              <span>{f.label}</span>
+                              {!isAllowed && (
+                                <span className="inline-flex items-center gap-1 text-xs text-yellow-400">
+                                  <Lock className="w-3.5 h-3.5" /> Upgrade
+                                </span>
+                              )}
+                            </DropdownMenuItem>
+                          );
+                        });
                       })()}
 
                       <DropdownMenuItem
