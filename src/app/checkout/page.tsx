@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle, CreditCard, Shield, Clock, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import PaymentMethodSelector from "@/components/payment/PaymentMethodSelector";
+import { useUnifiedAuth } from "@/lib/unifiedAuth";
 
 interface PlanDetails {
   name: string;
@@ -25,6 +26,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+  const unified = useUnifiedAuth();
   const { notify } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export default function CheckoutPage() {
   // Do not auto-redirect; show an inline sign-in CTA instead (handled below)
 
   const handleCreateCheckout = async () => {
-    if (!session?.user?.email) {
+    if (!unified.isAuthenticated || !unified.email) {
       const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
       notify({ variant: 'warning', title: 'Sign in required', description: 'Please sign in to continue to payment.' });
       router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
@@ -102,8 +104,8 @@ export default function CheckoutPage() {
           planType: plan,
           paymentMethod: selectedPaymentMethod,
           billingCycle: billing === 'yearly' ? 'yearly' : 'monthly',
-          userEmail: session?.user?.email,
-          userId: (session?.user as any)?.id,
+          userEmail: unified.email,
+          userId: unified.id,
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),
@@ -146,7 +148,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (status === "unauthenticated") {
+  if (!unified.isAuthenticated) {
     const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
     return (
       <div className="min-h-screen bg-[#0D1117] text-white flex items-center justify-center p-6">
@@ -224,3 +226,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

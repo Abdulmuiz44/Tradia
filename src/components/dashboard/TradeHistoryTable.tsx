@@ -11,6 +11,7 @@ import AddTradeModal from "@/components/modals/AddTradeModal";
 import CsvUpload from "@/components/dashboard/CsvUpload";
 import JournalModal from "@/components/modals/JournalModal";
 import { useUser } from "@/context/UserContext";
+import Modal from "@/components/ui/Modal";
 
 /* ---------------- helpers ---------------- */
 const toNumber = (v: unknown): number => {
@@ -173,6 +174,7 @@ export default function TradeHistoryTable() {
 
   // CSV modal state (now opens a modal directly)
   const [csvOpen, setCsvOpen] = useState<boolean>(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState<boolean>(false);
 
   const hasLoaded = useRef<boolean>(false);
 
@@ -354,6 +356,7 @@ export default function TradeHistoryTable() {
     const normalized = imported.map(normalizeTrade);
     importTrades(normalized as unknown[]);
     setCsvOpen(false);
+    try { notify({ variant: 'success', title: 'Trades imported', description: `${normalized.length} trades added.` }); } catch {}
   };
 
   const exportCsv = () => {
@@ -571,10 +574,9 @@ export default function TradeHistoryTable() {
 
           <button
             className="p-2 bg-red-900/50 rounded-full hover:bg-red-800/70"
-            onClick={() => {
-              try { clearTrades(); } catch {}
-            }}
+            onClick={() => setConfirmClearOpen(true)}
             title="Clear History"
+            aria-haspopup="dialog"
           >
             <Trash size={18} className="text-red-300" />
           </button>
@@ -766,7 +768,7 @@ export default function TradeHistoryTable() {
                           <Pencil size={16} />
                         </button>
                         <button
-                          onClick={() => deleteTrade(String(getField(t, "id")))}
+                          onClick={() => { deleteTrade(String(getField(t, "id"))); try { notify({ variant: 'warning', title: 'Trade deleted' }); } catch {} }}
                           className="p-1 hover:text-red-400"
                           aria-label="Delete trade"
                         >
@@ -819,6 +821,7 @@ export default function TradeHistoryTable() {
           const normalized = normalizeTrade(t);
           updateTrade(normalized);
           setEditingTrade(null);
+          try { notify({ variant: 'info', title: 'Trade updated' }); } catch {}
         }}
       />
 
@@ -831,6 +834,7 @@ export default function TradeHistoryTable() {
           const id = normalized.id || `${normalized.symbol}-${Date.now()}`;
           addTrade({ ...normalized, id });
           setIsAddOpen(false);
+          try { notify({ variant: 'success', title: 'Trade added' }); } catch {}
         }}
       />
 
@@ -878,7 +882,7 @@ export default function TradeHistoryTable() {
                 PDF
               </button>
               <button
-                onClick={() => { try { clearTrades(); notify({ variant: 'warning', title: 'Trade history cleared', description: 'All local trades have been removed.'}); } catch (e) { notify({ variant: 'destructive', title: 'Failed to clear history' }); } finally { setExportOpen(false); } }}
+                onClick={() => { setExportOpen(false); setConfirmClearOpen(true); }}
                 className="flex-1 px-4 py-2 bg-red-700 rounded hover:bg-red-600"
               >
                 Clear All
@@ -893,6 +897,38 @@ export default function TradeHistoryTable() {
           </div>
         </div>
       )}
+      {/* Confirm clear history modal */}
+      <Modal
+        isOpen={confirmClearOpen}
+        onClose={() => setConfirmClearOpen(false)}
+        title="Clear Trade History"
+        description="This will remove all local trades from your history. This action cannot be undone."
+        size="sm"
+      >
+        <div className="flex items-center justify-end gap-3 mt-4">
+          <button
+            onClick={() => setConfirmClearOpen(false)}
+            className="px-4 py-2 rounded bg-white/10 hover:bg-white/15"
+          >
+            No, keep trades
+          </button>
+          <button
+            onClick={() => {
+              try {
+                clearTrades();
+                notify({ variant: 'warning', title: 'Trade history cleared', description: 'All local trades have been removed.'});
+              } catch (e) {
+                notify({ variant: 'destructive', title: 'Failed to clear history' });
+              } finally {
+                setConfirmClearOpen(false);
+              }
+            }}
+            className="px-4 py-2 rounded bg-red-600 hover:bg-red-500"
+          >
+            Yes, clear
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

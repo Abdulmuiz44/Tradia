@@ -4,19 +4,21 @@ import { cn } from "@/lib/utils";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 
 const notificationVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  // Glassy card that blends with dark UI and Overview
+  "relative w-full rounded-xl border border-white/10 bg-white/6 backdrop-blur-sm text-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-4\n   [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "",
         destructive:
-          "destructive border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+          // Subtle red tint that fits dark backgrounds
+          "border-red-400/30 bg-red-500/10 text-red-100 [&>svg]:text-red-300",
         success:
-          "border-green-500/50 bg-green-50 text-green-900 dark:bg-green-900/10 dark:text-green-100 [&>svg]:text-green-600",
+          "border-emerald-400/30 bg-emerald-500/10 text-emerald-100 [&>svg]:text-emerald-300",
         warning:
-          "border-yellow-500/50 bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-100 [&>svg]:text-yellow-600",
+          "border-amber-400/30 bg-amber-500/10 text-amber-100 [&>svg]:text-amber-300",
         info:
-          "border-blue-500/50 bg-blue-50 text-blue-900 dark:bg-blue-900/10 dark:text-blue-100 [&>svg]:text-blue-600",
+          "border-sky-400/30 bg-sky-500/10 text-sky-100 [&>svg]:text-sky-300",
       },
     },
     defaultVariants: {
@@ -52,16 +54,16 @@ const Notification = React.forwardRef<HTMLDivElement, NotificationProps>(
         {...props}
       >
         {Icon && <Icon className="h-4 w-4" />}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            {title && <h4 className="font-semibold">{title}</h4>}
-            {description && <p className="text-sm opacity-90">{description}</p>}
+            {title && <h4 className="font-semibold leading-tight drop-shadow-sm">{title}</h4>}
+            {description && <p className="text-sm opacity-90 mt-0.5 leading-snug">{description}</p>}
             {children}
           </div>
           {onClose && (
             <button
               onClick={onClose}
-              className="ml-4 text-muted-foreground hover:text-foreground transition-colors"
+              className="ml-4 text-white/60 hover:text-white transition-colors"
             >
               <X className="h-4 w-4" />
             </button>

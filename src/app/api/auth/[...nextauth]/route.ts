@@ -55,7 +55,7 @@ const authOptions: NextAuthOptions = {
       const email = user.email?.toLowerCase();
       if (!email) return false;
 
-      // Ensure profile row exists
+      // Ensure profile row exists (legacy profile table)
       const { data: profile } = await supabase
         .from("profile")
         .select("id")
@@ -76,6 +76,26 @@ const authOptions: NextAuthOptions = {
         });
       }
 
+      // Ensure primary users row exists (merge manual + OAuth by email)
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id, email")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (!existingUser) {
+        await supabase.from("users").insert({
+          email,
+          name: user.name ?? "",
+          email_verified: true,
+          plan: "free",
+          role: "trader",
+          image: (user as any).image ?? null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+
       return true;
     },
 
@@ -84,24 +104,22 @@ const authOptions: NextAuthOptions = {
       const email = token.email as string;
       if (!email) return token;
 
-      const { data: profile } = await supabase
-        .from("profile")
-        .select("id, name, email, country, phone, tradingStyle, tradingExperience, bio, image")
+      // Prefer users table as the canonical identity
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("id, name, email, plan, role, image")
         .eq("email", email)
-        .single();
+        .maybeSingle();
 
-      if (profile) {
+      if (userRow) {
         token.profile = {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          country: profile.country,
-          phone: profile.phone,
-          tradingStyle: profile.tradingStyle,
-          tradingExperience: profile.tradingExperience,
-          bio: profile.bio,
-          image: profile.image,
-        };
+          id: userRow.id,
+          name: userRow.name,
+          email: userRow.email,
+          plan: (userRow as any).plan,
+          role: (userRow as any).role,
+          image: userRow.image,
+        } as any;
       }
 
       return token;
@@ -112,7 +130,7 @@ const authOptions: NextAuthOptions = {
         session.user = {
           ...(session.user as any),
           ...(token.profile as any),
-        };
+        } as any;
       }
       return session;
     },
