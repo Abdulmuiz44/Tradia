@@ -627,7 +627,7 @@ export default function TradePlannerTable() {
                         >
                           Upgrade
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => alert("Preview disabled — upgrade to view")}>
+                        <Button size="sm" variant="ghost" onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch {} }}>
                           Learn more
                         </Button>
                       </div>

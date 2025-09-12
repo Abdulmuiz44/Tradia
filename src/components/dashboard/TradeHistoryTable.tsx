@@ -570,6 +570,16 @@ export default function TradeHistoryTable() {
           </button>
 
           <button
+            className="p-2 bg-red-900/50 rounded-full hover:bg-red-800/70"
+            onClick={() => {
+              try { clearTrades(); } catch {}
+            }}
+            title="Clear History"
+          >
+            <Trash size={18} className="text-red-300" />
+          </button>
+
+          <button
             className="px-3 py-1 bg-green-600 rounded hover:bg-green-500 text-sm"
             onClick={() => setIsAddOpen(true)}
           >

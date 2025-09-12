@@ -41,6 +41,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [dismiss]);
 
+  // Override window.alert to route to in-app banner
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const original = window.alert;
+    window.alert = (msg?: any) => {
+      try {
+        notify({ variant: 'info', title: 'Notice', description: String(msg ?? '') });
+      } catch {
+        original(String(msg ?? ''));
+      }
+    };
+    return () => { window.alert = original; };
+  }, [notify]);
+
   const value = useMemo(() => ({ notify }), [notify]);
 
   return (
@@ -60,4 +74,3 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     </NotificationContext.Provider>
   );
 }
-

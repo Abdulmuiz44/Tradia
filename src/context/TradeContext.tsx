@@ -9,6 +9,7 @@ import React, {
   useContext,
 } from "react";
 import { Trade } from "@/types/trade";
+import { useNotification } from "@/context/NotificationContext";
 
 /**
  * Types
@@ -204,21 +205,24 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   // --- Add / update / delete ---
   const addTrade = (newTrade: Trade) => {
     setTrades((prev) => {
-  const prevIds = new Set(prev.map((p) => String(p.id)).filter(Boolean));
+      const prevIds = new Set(prev.map((p) => String(p.id)).filter(Boolean));
       const id = newTrade.id && !prevIds.has(newTrade.id) ? newTrade.id : generateUniqueId(prevIds);
       return [...prev, { ...newTrade, id } as Trade];
     });
+    try { notify({ variant: "success", title: "Trade added", description: `${newTrade.symbol ?? 'Trade'} saved.` }); } catch {}
   };
 
   const updateTrade = (updatedTrade: Trade) => {
     setTrades((prevTrades) =>
       prevTrades.map((trade) => (trade.id === updatedTrade.id ? ({ ...trade, ...updatedTrade } as Trade) : trade))
     );
+    try { notify({ variant: "info", title: "Trade updated", description: `${updatedTrade.symbol ?? 'Trade'} updated.` }); } catch {}
   };
 
   const deleteTrade = (id: string) => {
     setTrades((prevTrades) => prevTrades.filter((trade) => trade.id !== id));
     setFilteredTrades((prev) => prev.filter((t) => t.id !== id));
+    try { notify({ variant: "warning", title: "Trade deleted", description: `Trade ${id} removed.` }); } catch {}
   };
 
   // --- Bulk helpers ---
@@ -239,6 +243,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // ignore localStorage errors
     }
+    try { notify({ variant: "info", title: reviewed ? 'Marked reviewed' : 'Unreviewed', description: `${ids.length} trades updated.` }); } catch {}
   };
 
   const bulkDelete = (ids: string[]) => {
@@ -253,6 +258,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // ignore
     }
+    try { notify({ variant: "warning", title: "Trades deleted", description: `${ids.length} trades removed.` }); } catch {}
   };
 
   // --- CSV import/upsert ---
@@ -288,6 +294,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
       return Array.from(byId.values());
     });
+    try { notify({ variant: "success", title: "Trades imported", description: `${csvTrades.length} rows processed.` }); } catch {}
   };
 
   const importTrades = (incoming: unknown[]) => {
@@ -302,6 +309,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // ignore localStorage errors
     }
+    try { notify({ variant: "warning", title: "Trade history cleared", description: "All local trades removed." }); } catch {}
   };
 
   const filterTrades = (fromDate: Date, toDate: Date) => {
@@ -522,6 +530,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </TradeContext.Provider>
   );
+  const { notify } = useNotification();
 };
 
 export const useTrade = () => {
