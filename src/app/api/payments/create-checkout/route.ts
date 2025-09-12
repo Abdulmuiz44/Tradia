@@ -4,15 +4,55 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createCheckoutForPlan } from "@/lib/flutterwave.server";
 import { logPayment } from "@/lib/payment-logging.server";
+import { cookies, headers as nextHeaders } from "next/headers";
+import jwt from "jsonwebtoken";
+import { createClient } from "@/utils/supabase/server";
+
+async function resolveUserFromRequest() {
+  // 1) Try NextAuth session
+  const session = await getServerSession(authOptions);
+  if (session?.user?.id && session.user.email) {
+    return { id: String(session.user.id), email: String(session.user.email) };
+  }
+
+  // 2) Try custom JWT used by middleware (Authorization header or cookies 'session'/'app_token')
+  try {
+    const hdrs = nextHeaders();
+    const auth = hdrs.get("authorization");
+    const rawToken = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
+    const c = cookies();
+    const cookieToken = c.get("session")?.value || c.get("app_token")?.value || null;
+    const token = rawToken || cookieToken || null;
+    const secret = process.env.JWT_SECRET || "dev_secret";
+    if (token && secret) {
+      const payload = jwt.verify(token, secret) as any;
+      const email = typeof payload?.email === "string" ? payload.email : null;
+      if (email) {
+        const supabase = createClient();
+        const { data: user } = await supabase
+          .from("users")
+          .select("id, email")
+          .eq("email", email)
+          .maybeSingle();
+        if (user?.id) {
+          return { id: String(user.id), email: String(user.email) };
+        }
+      }
+    }
+  } catch (err) {
+    // ignore and continue
+  }
+
+  return null;
+}
 
 export async function POST(req: Request) {
   try {
     if (!process.env.FLUTTERWAVE_SECRET_KEY) {
       console.error("FLUTTERWAVE_SECRET_KEY is not set in environment");
     }
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id || !session?.user?.email) {
+    const resolved = await resolveUserFromRequest();
+    if (!resolved) {
       try {
         const body = await req.json().catch(() => ({}));
         await (await import("@/lib/payment-logging.server")).logPayment(
@@ -51,8 +91,8 @@ export async function POST(req: Request) {
     // Create checkout session with Flutterwave
     const checkout = await createCheckoutForPlan(
       planType as 'pro' | 'plus' | 'elite',
-      session.user.email,
-      session.user.id,
+      resolved.email,
+      resolved.id,
       successUrl || `${process.env.NEXTAUTH_URL}/dashboard/billing?success=true`,
       cancelUrl || `${process.env.NEXTAUTH_URL}/dashboard/billing?canceled=true`,
       paymentMethod || 'card',
@@ -66,7 +106,7 @@ export async function POST(req: Request) {
       "info",
       "Created Flutterwave checkout",
       { planType, billingCycle, checkoutId: checkout.paymentId, txRef: checkout.txRef },
-      session.user.id
+      resolved.id
     );
 
     return NextResponse.json({
