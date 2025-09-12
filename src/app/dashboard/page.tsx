@@ -371,6 +371,8 @@ function DashboardContent() {
   const filteredTrades = useMemo(() => {
     const arr: any[] = Array.isArray(trades) ? trades : [];
     const now = Date.now();
+    const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
+    const allowedDays = plan === 'free' ? 30 : plan === 'pro' ? 182 : plan === 'plus' ? Infinity : plan === 'elite' ? Infinity : 30;
     let fromMs = now - 24 * 60 * 60 * 1000; // default 24h
     let toMs = now;
 
@@ -411,6 +413,12 @@ function DashboardContent() {
         break;
       default:
         fromMs = now - 24 * 60 * 60 * 1000;
+    }
+
+    // Enforce plan limit clamp on fromMs
+    if (Number.isFinite(allowedDays)) {
+      const minAllowed = now - (allowedDays as number) * 24 * 60 * 60 * 1000;
+      if (fromMs < minAllowed) fromMs = minAllowed;
     }
 
     return arr.filter((tr) => {
@@ -656,18 +664,25 @@ function DashboardContent() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-64 bg-zinc-800 text-white border border-zinc-700">
                     <div className="p-2">
-                      {FILTERS.slice(0, FILTERS.length - 1).map((f) => (
-                        <DropdownMenuItem
-                          key={f.value}
-                          onClick={() => {
-                            setFilter(f.value);
-                            setCustomRange({ from: "", to: "" });
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {f.label}
-                        </DropdownMenuItem>
-                      ))}
+                      {(() => {
+                        const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
+                        const allowed = new Set<string>(['24h','7d','30d']);
+                        if (plan === 'pro') { ['60d','3m','6m'].forEach(v => allowed.add(v)); }
+                        if (plan === 'plus' || plan === 'elite') { ['60d','3m','6m','1y'].forEach(v => allowed.add(v)); }
+                        const options = FILTERS.filter(f => f.value !== 'custom' && allowed.has(f.value));
+                        return options.map((f) => (
+                          <DropdownMenuItem
+                            key={f.value}
+                            onClick={() => {
+                              setFilter(f.value);
+                              setCustomRange({ from: "", to: "" });
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {f.label}
+                          </DropdownMenuItem>
+                        ));
+                      })()}
 
                       <DropdownMenuItem
                         key="custom"
@@ -705,6 +720,17 @@ function DashboardContent() {
                           <button
                             onClick={() => {
                               if (customRange.from && customRange.to) {
+                                try {
+                                  const f = new Date(customRange.from + 'T00:00:00').getTime();
+                                  const t = new Date(customRange.to + 'T23:59:59.999').getTime();
+                                  const days = Math.ceil((t - f) / (24*60*60*1000));
+                                  const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
+                                  const allowedDays = plan === 'free' ? 30 : plan === 'pro' ? 182 : plan === 'plus' ? Infinity : plan === 'elite' ? Infinity : 30;
+                                  if (Number.isFinite(allowedDays) && days > (allowedDays as number)) {
+                                    alert(`Your plan allows up to ${allowedDays} days. Please narrow the range or upgrade.`);
+                                    return;
+                                  }
+                                } catch {}
                                 setFilter("custom");
                               } else {
                                 setFilter("24h");

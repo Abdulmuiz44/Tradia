@@ -286,6 +286,48 @@ export default function BillingPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Manage Subscription */}
+          <div className="lg:col-span-3">
+            <div className="bg-gray-800 rounded-lg p-6 mb-4">
+              <h2 className="text-xl font-semibold mb-4">Manage Subscription</h2>
+              {subscription ? (
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-400">Plan</div>
+                    <div className="font-medium capitalize">{String(subscription.plan_type || currentPlan)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400">Status</div>
+                    <div className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${getStatusColor(subscription.status || 'active')}`}>
+                      {getStatusIcon(subscription.status || 'active')}
+                      <span className="ml-1 capitalize">{subscription.status || 'active'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400">Billing</div>
+                    <div className="font-medium capitalize">{subscription.billing_cycle || 'monthly'}</div>
+                  </div>
+                  {subscription.current_period_end && (
+                    <div>
+                      <div className="text-gray-400">Renews</div>
+                      <div className="font-medium">{new Date(subscription.current_period_end).toLocaleDateString()}</div>
+                    </div>
+                  )}
+                  <div className="sm:col-span-2 pt-2">
+                    <button
+                      onClick={handleCancelSubscription}
+                      className="px-3 py-2 bg-transparent border border-red-600 text-red-400 rounded hover:bg-red-600/10"
+                    >
+                      Cancel Subscription
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-400">No active subscription found.</div>
+              )}
+            </div>
+          </div>
+
           {/* Current Plan */}
           <div className="lg:col-span-2">
             <div className="bg-gray-800 rounded-lg p-6">
@@ -307,8 +349,8 @@ export default function BillingPage() {
                   <h3 className="text-lg font-semibold capitalize">{getPlanDisplayName(currentPlan)} Plan</h3>
                   <p className="text-gray-400">
                     {currentPlan === 'free' ? 'Basic features included' :
-                     currentPlan === 'pro' ? '$29/month' :
-                     currentPlan === 'plus' ? '$79/month' : '$199/month'}
+                     currentPlan === 'pro' ? '$9/month' :
+                     currentPlan === 'plus' ? '$19/month' : '$39/month'}
                   </p>
                 </div>
               </div>

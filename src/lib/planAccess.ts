@@ -32,7 +32,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   pro: {
     mt5Accounts: 1,
     aiChatsPerDay: 50,
-    tradeStorageDays: 90,
+    tradeStorageDays: 182,
     advancedAnalytics: true,
     prioritySupport: false,
     customIntegrations: false
