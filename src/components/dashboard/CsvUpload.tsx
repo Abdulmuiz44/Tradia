@@ -426,34 +426,38 @@ export default function CsvUpload({
         cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 6);
       }
 
-      let limited = mappedForImport;
+      // If user attempts to import beyond their plan window, force upgrade
       if (cutoff) {
-        limited = mappedForImport.filter((row) => {
+        const violates = mappedForImport.some((row) => {
           const r = row as Record<string, unknown>;
-          const ot = r.openTime ?? (r as any).open_time ?? r.time ?? null;
-          const ct = r.closeTime ?? (r as any).close_time ?? null;
+          const ot = r.openTime ?? (r as any).open_time ?? (r as any).entered_at ?? r.time ?? null;
+          const ct = r.closeTime ?? (r as any).close_time ?? (r as any).closed_at ?? null;
           const raw = (ct as string) || (ot as string) || "";
-          if (!raw) return true;
+          if (!raw) return false;
           const d = new Date(String(raw));
-          return !Number.isNaN(d.getTime()) && d >= cutoff!;
+          if (Number.isNaN(d.getTime())) return false;
+          return d < cutoff!;
         });
+        if (violates) {
+          toast.error(`Your ${plan} plan allows importing up to ${plan === 'free' ? '30 days' : '6 months'} of history. Please upgrade to import older trades.`);
+          setOpen(false);
+          // Navigate to upgrade tab (works within dashboard layout)
+          try { (window as any).location.hash = '#upgrade'; } catch {}
+          return;
+        }
       }
 
       setParsing(true);
       setProgress(60);
-      setTradesFromCsv(limited as unknown[]);
+      setTradesFromCsv(mappedForImport as unknown[]);
       setProgress(100);
-      if (cutoff && limited.length !== mappedForImport.length) {
-        toast.success(`Imported ${limited.length} rows (filtered ${mappedForImport.length - limited.length} not within plan window)`);
-      } else {
-        toast.success(`Imported ${limited.length} rows`);
-      }
+      toast.success(`Imported ${mappedForImport.length} rows`);
       setTimeout(() => {
         setOpen(false);
         setParsing(false);
         if (typeof controlledOnImport === "function") {
           try {
-            controlledOnImport(limited as Partial<Trade>[]);
+            controlledOnImport(mappedForImport as Partial<Trade>[]);
           } catch (e) {
             // continue
             // eslint-disable-next-line no-console
