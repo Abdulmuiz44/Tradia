@@ -1,5 +1,5 @@
 // src/lib/planAccess.ts
-// Plan-based access control system with Stripe integration
+// Plan-based access control system (Flutterwave-backed billing)
 
 export type PlanType = 'starter' | 'pro' | 'plus' | 'elite' | 'free';
 

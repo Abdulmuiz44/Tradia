@@ -3,12 +3,26 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createCheckoutForPlan } from "@/lib/flutterwave.server";
+import { logPayment } from "@/lib/payment-logging.server";
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.FLUTTERWAVE_SECRET_KEY) {
+      console.error("FLUTTERWAVE_SECRET_KEY is not set in environment");
+    }
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id || !session?.user?.email) {
+      try {
+        const body = await req.json().catch(() => ({}));
+        await (await import("@/lib/payment-logging.server")).logPayment(
+          "checkout",
+          "warn",
+          "Unauthorized create-checkout (no session)",
+          { body },
+          null
+        );
+      } catch {}
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -46,6 +60,15 @@ export async function POST(req: Request) {
       currency
     );
 
+    // Log success for observability
+    await logPayment(
+      "checkout",
+      "info",
+      "Created Flutterwave checkout",
+      { planType, billingCycle, checkoutId: checkout.paymentId, txRef: checkout.txRef },
+      session.user.id
+    );
+
     return NextResponse.json({
       checkoutId: checkout.paymentId,
       checkoutUrl: checkout.checkoutUrl,
@@ -53,6 +76,17 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Checkout creation error:", error);
+    try {
+      const body = await req.json().catch(() => ({}));
+      const { planType, billingCycle } = body || {};
+      await logPayment(
+        "checkout",
+        "error",
+        error instanceof Error ? error.message : String(error),
+        { planType, billingCycle },
+        undefined
+      );
+    } catch {}
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create checkout" },
       { status: 500 }

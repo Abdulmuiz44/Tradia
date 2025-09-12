@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { verifyTransactionById, verifyTransactionByReference } from "@/lib/flutterwave.server";
+import { logPayment } from "@/lib/payment-logging.server";
 
 function asString(u: unknown) { return typeof u === "string" ? u.trim() : String(u ?? ""); }
 
@@ -10,6 +11,9 @@ export async function POST(req: NextRequest) {
     const raw = await req.text();
     let payload: any;
     try { payload = JSON.parse(raw); } catch { payload = {}; }
+
+    // Log receipt of webhook for traceability
+    await logPayment("webhook", "info", "Received Flutterwave webhook", { headers: Object.fromEntries(req.headers), payload }, null);
 
     // Optional header verification
     const verifHashHeader = req.headers.get("verif-hash") || "";
@@ -57,6 +61,14 @@ export async function POST(req: NextRequest) {
 
     if (event === "subscription" || data?.event === "subscription") {
       // handle subscription-created / subscription-cancelled etc
+      const subscriptionId = asString(data?.id || data?.subscription_id || "");
+      if (existing && subscriptionId) {
+        await supabase.from("user_plans").update({
+          flutterwave_subscription_id: subscriptionId,
+          updated_at: new Date().toISOString(),
+        }).eq("tx_ref", txRef);
+      }
+
       if (data?.status === "cancelled" || data?.event === "subscription_cancelled") {
         // mark cancelled
         if (existing) {
@@ -116,14 +128,17 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      await logPayment("webhook", "info", "Activated subscription from webhook", { txRef, txId, event, status: "active" }, existing?.user_id ?? null);
       return NextResponse.json({ received: true });
     }
 
     // Not successful; just ack to webhook
+    await logPayment("webhook", "info", "Non-success webhook acknowledged", { txRef, txId, event, verifiedStatus }, null);
     return NextResponse.json({ received: true });
 
   } catch (err) {
     console.error("Webhook handler error:", err);
+    await logPayment("webhook", "error", err instanceof Error ? err.message : String(err), null, null);
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

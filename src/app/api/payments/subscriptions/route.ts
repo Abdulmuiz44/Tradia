@@ -44,10 +44,10 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { subscriptionId, action, newPlanType } = body;
+    const { subscriptionId, planRowId, action, newPlanType } = body;
 
-    if (!subscriptionId) {
-      return NextResponse.json({ error: "Subscription ID is required" }, { status: 400 });
+    if (!subscriptionId && !planRowId) {
+      return NextResponse.json({ error: "Subscription identifier is required" }, { status: 400 });
     }
 
     const supabase = createClient();
@@ -59,8 +59,11 @@ export async function PATCH(req: Request) {
           status: 'cancelled',
           updated_at: new Date().toISOString()
         })
-        .eq('flutterwave_subscription_id', subscriptionId)
-        .eq('user_id', session.user.id)
+        .match(
+          subscriptionId
+            ? { flutterwave_subscription_id: subscriptionId, user_id: session.user.id }
+            : { id: planRowId, user_id: session.user.id }
+        )
         .select()
         .single();
 
@@ -79,8 +82,11 @@ export async function PATCH(req: Request) {
           plan_type: newPlanType,
           updated_at: new Date().toISOString()
         })
-        .eq('flutterwave_subscription_id', subscriptionId)
-        .eq('user_id', session.user.id)
+        .match(
+          subscriptionId
+            ? { flutterwave_subscription_id: subscriptionId, user_id: session.user.id }
+            : { id: planRowId, user_id: session.user.id }
+        )
         .select()
         .single();
 

@@ -76,12 +76,7 @@ export default function CheckoutPage() {
 
   const currentPlan = planDetails[plan] || planDetails.plus;
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [status, router]);
+  // Do not auto-redirect; show an inline sign-in CTA instead (handled below)
 
   const handleCreateCheckout = async () => {
     if (!session?.user?.email) return;
@@ -96,22 +91,33 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           planType: plan,
           paymentMethod: selectedPaymentMethod,
+          billingCycle: billing === 'yearly' ? 'yearly' : 'monthly',
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),
       });
 
-      const data: { checkoutUrl?: string; error?: string } = await response.json();
+      if (response.status === 401) {
+        const currentUrl = window.location.pathname + window.location.search;
+        router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+        return;
+      }
 
-      if (data.checkoutUrl) {
+      let data: any = null;
+      try { data = await response.json(); } catch { /* ignore */ }
+
+      if (response.ok && data?.checkoutUrl) {
         setCheckoutUrl(data.checkoutUrl);
         window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error(data.error || "Failed to create checkout");
+        return;
       }
+
+      const serverMsg = data?.error || `HTTP ${response.status}`;
+      console.error("Create checkout failed:", serverMsg);
+      alert(`Failed to create checkout: ${serverMsg}`);
     } catch (error) {
       console.error("Checkout error:", error);
-      alert("Failed to create checkout. Please try again.");
+      alert(`Failed to create checkout. ${error instanceof Error ? error.message : ""}`);
     } finally {
       setIsLoading(false);
     }
@@ -126,12 +132,80 @@ export default function CheckoutPage() {
   }
 
   if (status === "unauthenticated") {
-    return null;
+    const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
+    return (
+      <div className="min-h-screen bg-[#0D1117] text-white flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <h2 className="text-2xl font-semibold mb-2">Sign in required</h2>
+          <p className="text-gray-400 mb-6">Please sign in to continue to payment.</p>
+          <a
+            href={`/login?redirect=${encodeURIComponent(currentUrl)}`}
+            className="inline-block bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded"
+          >
+            Sign in
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-[#0D1117] text-white">
-      {/* ... UI unchanged ... */}
+      <div className="max-w-4xl mx-auto p-6">
+        <button
+          onClick={() => router.back()}
+          className="mb-4 inline-flex items-center gap-2 text-gray-300 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 bg-[#0F1623] rounded-lg border border-gray-800">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-2">Checkout</h2>
+              <p className="text-gray-400 mb-4">You’re upgrading to {currentPlan.displayName}.</p>
+
+              <div className="mb-6">
+                <PaymentMethodSelector
+                  selectedMethod={selectedPaymentMethod}
+                  onMethodChange={setSelectedPaymentMethod}
+                />
+              </div>
+
+              <Button onClick={handleCreateCheckout} disabled={isLoading} className="w-full">
+                {isLoading ? "Redirecting to Flutterwave..." : "Continue to Payment"}
+              </Button>
+
+              <div className="flex items-center gap-3 text-gray-400 text-sm mt-4">
+                <Shield className="w-4 h-4" />
+                Secure payment by Flutterwave
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#0F1623] rounded-lg border border-gray-800">
+            <div className="p-6">
+              <h3 className="font-semibold mb-3">Plan Summary</h3>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="text-3xl font-bold">${currentPlan.price}</span>
+                <span className="text-gray-400">/ {currentPlan.billing}</span>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-gray-300">
+                {currentPlan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" /> {f}
+                  </li>
+                ))}
+              </ul>
+              {currentPlan.trialDays > 0 && (
+                <div className="mt-4 text-xs text-gray-400">
+                  Includes a {currentPlan.trialDays}-day free trial.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -122,6 +122,7 @@ export async function createCheckoutForPlan(
       description: `${planType} (${billingCycle})`,
     },
     payment_plan: fwPlanId, // important: include plan ID so the customer is subscribed after first payment
+    meta: { user_id: userId, plan_type: planType, billing_cycle: billingCycle },
   };
 
   const resp = await callFlutterwave("/payments", "POST", payload);
@@ -167,6 +168,17 @@ export async function verifyTransactionByReference(txRef: string) {
     "GET"
   );
   return resp;
+}
+
+export async function cancelFlutterwaveSubscription(subscriptionId: string) {
+  // Best-effort: Flutterwave subscription cancel endpoint
+  try {
+    const resp = await callFlutterwave(`/subscriptions/${subscriptionId}/cancel`, "POST");
+    return resp;
+  } catch (err) {
+    // Some accounts/plans may not support this; log and continue
+    throw err;
+  }
 }
 
 /* ----------------------------

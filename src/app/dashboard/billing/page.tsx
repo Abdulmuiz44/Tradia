@@ -48,7 +48,7 @@ export default function BillingPage() {
   const searchParams = useSearchParams();
 
   const [currentPlan, setCurrentPlan] = useState<PlanType>('free');
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscription, setSubscription] = useState<any | null>(null);
   const [billingHistory, setBillingHistory] = useState<BillingHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
@@ -86,6 +86,8 @@ export default function BillingPage() {
         const data = await subscriptionResponse.json();
         if (data.subscriptions && data.subscriptions.length > 0) {
           setSubscription(data.subscriptions[0]);
+        } else {
+          setSubscription(null);
         }
       }
 
@@ -160,7 +162,8 @@ export default function BillingPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subscriptionId: subscription.id,
+          subscriptionId: subscription.flutterwave_subscription_id || undefined,
+          planRowId: !subscription?.flutterwave_subscription_id ? subscription.id : undefined,
           action: 'cancel'
         })
       });
@@ -211,7 +214,7 @@ export default function BillingPage() {
     {
       type: 'pro' as PlanType,
       name: 'Pro',
-      price: 29,
+      price: 9,
       features: [
         '1 MT5 account connection',
         '50 AI chats per day',
@@ -224,7 +227,7 @@ export default function BillingPage() {
     {
       type: 'plus' as PlanType,
       name: 'Plus',
-      price: 79,
+      price: 19,
       features: [
         '3 MT5 account connections',
         '200 AI chats per day',
@@ -238,7 +241,7 @@ export default function BillingPage() {
     {
       type: 'elite' as PlanType,
       name: 'Elite',
-      price: 199,
+      price: 39,
       features: [
         'Unlimited MT5 accounts',
         'Unlimited AI chats',

@@ -27,7 +27,13 @@ export async function middleware(req: NextRequest) {
     });
 
     if (nextAuthToken?.email) {
-      console.log("middleware: NextAuth user accessing dashboard:", nextAuthToken.email);
+      // Enforce paywall for free/starter plans except on billing page
+      const userPlan = (nextAuthToken as any).plan || 'free';
+      const isBilling = pathname.startsWith("/dashboard/billing");
+      const isAllowed = isBilling;
+      if ((userPlan === 'free' || userPlan === 'starter') && !isAllowed) {
+        return NextResponse.redirect(new URL("/upgrade", req.url));
+      }
       return res; // Allow access
     }
 
@@ -44,8 +50,8 @@ export async function middleware(req: NextRequest) {
         const payload = jwt.verify(rawToken, JWT_SECRET);
         const userEmail = typeof payload === 'object' && payload !== null ? (payload as any).email : null;
         if (userEmail) {
-          console.log("middleware: Custom JWT user accessing dashboard:", userEmail);
-          return res; // Allow access
+          // Without plan info in custom JWT, allow and rely on client checks
+          return res;
         }
       } catch (err) {
         console.warn("middleware: invalid JWT", (err as any).message);

@@ -29,7 +29,7 @@ export default function UpgradePrompt({
     {
       type: 'pro' as PlanType,
       name: 'Pro',
-      price: 29,
+      price: 9,
       description: 'Perfect for serious traders',
       features: [
         '1 MT5 account connection',
@@ -43,7 +43,7 @@ export default function UpgradePrompt({
     {
       type: 'plus' as PlanType,
       name: 'Plus',
-      price: 79,
+      price: 19,
       description: 'For professional traders',
       features: [
         '3 MT5 account connections',
@@ -58,7 +58,7 @@ export default function UpgradePrompt({
     {
       type: 'elite' as PlanType,
       name: 'Elite',
-      price: 199,
+      price: 39,
       description: 'Ultimate trading experience',
       features: [
         'Unlimited MT5 accounts',
@@ -96,7 +96,7 @@ export default function UpgradePrompt({
 
       if (response.ok) {
         const data = await response.json();
-        // Redirect to Polar checkout
+        // Redirect to Flutterwave checkout
         window.location.href = data.checkoutUrl;
       } else {
         alert('Failed to create checkout session. Please try again.');
@@ -268,7 +268,7 @@ export function CompactUpgradePrompt({
 
       if (response.ok) {
         const data = await response.json();
-        // Redirect to Polar checkout
+        // Redirect to Flutterwave checkout
         window.location.href = data.checkoutUrl;
       } else {
         alert('Failed to create checkout session. Please try again.');

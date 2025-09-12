@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { getPaymentMethodOptions, type PaymentMethod } from "@/lib/flutterwave.server";
+import { getPaymentMethodOptions, type PaymentMethod } from "@/lib/payment-options";
 
 interface PaymentMethodSelectorProps {
   selectedMethod: string | null | undefined;
