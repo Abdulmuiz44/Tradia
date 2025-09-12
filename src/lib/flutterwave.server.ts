@@ -2,8 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 
 const API_BASE = "https://api.flutterwave.com/v3";
-const SECRET = process.env.FLUTTERWAVE_SECRET_KEY!;
-if (!SECRET) throw new Error("FLUTTERWAVE_SECRET_KEY not set");
+const SECRET = process.env.FLUTTERWAVE_SECRET_KEY || "";
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -18,12 +17,16 @@ function intervalFromBilling(b: BillingCycle) {
 }
 
 async function callFlutterwave(path: string, method = "GET", body?: any) {
+  if (!SECRET) {
+    throw new Error("FLUTTERWAVE_SECRET_KEY not set");
+  }
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
     method,
     headers: {
       Authorization: `Bearer ${SECRET}`,
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: body ? JSON.stringify(body) : undefined,
   });

@@ -104,15 +104,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid billing cycle" }, { status: 400 });
     }
 
+    // Derive safe URLs
+    const hdrs = nextHeaders();
+    const origin = hdrs.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const successUrlFinal = successUrl || `${origin}/dashboard/billing?success=true`;
+    const cancelUrlFinal = cancelUrl || `${origin}/dashboard/billing?canceled=true`;
+
     // Create checkout session with Flutterwave
     const checkout = await createCheckoutForPlan(
-      planType as 'pro' | 'plus' | 'elite',
+      (String(planType).toLowerCase() as 'pro' | 'plus' | 'elite'),
       resolved.email,
       resolved.id,
-      successUrl || `${process.env.NEXTAUTH_URL}/dashboard/billing?success=true`,
-      cancelUrl || `${process.env.NEXTAUTH_URL}/dashboard/billing?canceled=true`,
+      successUrlFinal,
+      cancelUrlFinal,
       paymentMethod || 'card',
-      billingCycle as 'monthly' | 'yearly',
+      (String(billingCycle).toLowerCase() as 'monthly' | 'yearly'),
       currency
     );
 

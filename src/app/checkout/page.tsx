@@ -25,6 +25,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+  const { notify } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("card");
@@ -80,10 +81,18 @@ export default function CheckoutPage() {
   // Do not auto-redirect; show an inline sign-in CTA instead (handled below)
 
   const handleCreateCheckout = async () => {
-    if (!session?.user?.email) return;
+    if (!session?.user?.email) {
+      const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
+      notify({ variant: 'warning', title: 'Sign in required', description: 'Please sign in to continue to payment.' });
+      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
 
     setIsLoading(true);
     try {
+      notify({ variant: 'info', title: 'Preparing checkout', description: 'Redirecting to Flutterwave...' });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
       const response = await fetch("/api/payments/create-checkout", {
         method: "POST",
         headers: {
@@ -98,7 +107,9 @@ export default function CheckoutPage() {
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
       if (response.status === 401) {
         const currentUrl = window.location.pathname + window.location.search;
@@ -212,5 +223,4 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
-  const { notify } = useNotification();
 }
