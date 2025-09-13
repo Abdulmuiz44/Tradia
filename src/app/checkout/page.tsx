@@ -31,6 +31,7 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("card");
+  const [email, setEmail] = useState<string>("");
 
   const plan = (searchParams?.get("plan") as keyof typeof planDetails) || "plus";
   const billing = searchParams?.get("billing") || "monthly";
@@ -80,16 +81,18 @@ export default function CheckoutPage() {
 
   const currentPlan = planDetails[plan] || planDetails.plus;
 
-  // Do not auto-redirect; show an inline sign-in CTA instead (handled below)
+  // Initialize email from any available auth context
+  useEffect(() => {
+    if (unified.email && !email) setEmail(unified.email);
+  }, [unified.email]);
 
   const handleCreateCheckout = async () => {
-    if (!unified.isAuthenticated || !unified.email) {
-      const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
-      notify({ variant: 'warning', title: 'Sign in required', description: 'Please sign in to continue to payment.' });
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+    // Allow guest checkout: require an email if not authenticated
+    const effectiveEmail = unified.email || email;
+    if (!effectiveEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail)) {
+      notify({ variant: 'warning', title: 'Email required', description: 'Enter a valid email to continue to payment.' });
       return;
     }
-
     setIsLoading(true);
     try {
       notify({ variant: 'info', title: 'Preparing checkout', description: 'Redirecting to Flutterwave...' });
@@ -104,21 +107,14 @@ export default function CheckoutPage() {
           planType: plan,
           paymentMethod: selectedPaymentMethod,
           billingCycle: billing === 'yearly' ? 'yearly' : 'monthly',
-          userEmail: unified.email,
-          userId: unified.id,
+          userEmail: effectiveEmail,
+          userId: unified.id || undefined,
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),
         signal: controller.signal,
       });
       clearTimeout(timeout);
-
-      if (response.status === 401) {
-        const currentUrl = window.location.pathname + window.location.search;
-        notify({ variant: "warning", title: "Sign in required", description: "Please sign in to continue to payment." });
-        router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
-        return;
-      }
 
       let data: any = null;
       try { data = await response.json(); } catch { /* ignore */ }
@@ -148,23 +144,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!unified.isAuthenticated) {
-    const currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
-    return (
-      <div className="min-h-screen bg-[#0D1117] text-white flex items-center justify-center p-6">
-        <div className="max-w-md text-center">
-          <h2 className="text-2xl font-semibold mb-2">Sign in required</h2>
-          <p className="text-gray-400 mb-6">Please sign in to continue to payment.</p>
-          <a
-            href={`/login?redirect=${encodeURIComponent(currentUrl)}`}
-            className="inline-block bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded"
-          >
-            Sign in
-          </a>
-        </div>
-      </div>
-    );
-  }
+  // Do not gate the page; allow guest checkout with email input
 
   return (
     <div className="min-h-screen bg-[#0D1117] text-white">
@@ -182,12 +162,29 @@ export default function CheckoutPage() {
               <h2 className="text-xl font-semibold mb-2">Checkout</h2>
               <p className="text-gray-400 mb-4">You’re upgrading to {currentPlan.displayName}.</p>
 
+              {/* Payment method selection */}
               <div className="mb-6">
                 <PaymentMethodSelector
                   selectedMethod={selectedPaymentMethod}
                   onMethodChange={setSelectedPaymentMethod}
                 />
               </div>
+
+              {/* Guest email input when not authenticated */}
+              {!unified.isAuthenticated && (
+                <div className="mb-4">
+                  <label htmlFor="email" className="block text-sm text-gray-300 mb-1">Email for receipt and account</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full bg-[#0B1220] border border-gray-700 rounded px-3 py-2 text-gray-100 outline-none focus:border-blue-500"
+                  />
+                  <div className="text-xs text-gray-500 mt-1">We’ll send your payment receipt and account link to this email.</div>
+                </div>
+              )}
 
               <Button onClick={handleCreateCheckout} disabled={isLoading} className="w-full">
                 {isLoading ? "Redirecting to Flutterwave..." : "Continue to Payment"}

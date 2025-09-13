@@ -8,7 +8,9 @@ import { cookies, headers as nextHeaders } from "next/headers";
 import jwt from "jsonwebtoken";
 import { createClient } from "@/utils/supabase/server";
 
-async function resolveUserFromRequest(body?: any) {
+type ResolvedUser = { id: string; email: string } | null;
+
+async function resolveUserFromRequest(body?: any): Promise<ResolvedUser> {
   // 1) Try NextAuth session
   const session = await getServerSession(authOptions);
   if (session?.user?.id && session.user.email) {
@@ -43,17 +45,12 @@ async function resolveUserFromRequest(body?: any) {
     // ignore and continue
   }
 
-  // 3) Fallback: accept body-provided identifiers and validate against DB
+  // 3) Fallback: accept body-provided identifiers without forcing DB validation (guest checkout)
   try {
     const email = typeof body?.userEmail === 'string' ? body.userEmail : undefined;
     const userId = typeof body?.userId === 'string' ? body.userId : undefined;
-    if (email || userId) {
-      const supabase = createClient();
-      const query = supabase.from('users').select('id,email').limit(1);
-      const { data } = await (email ? query.eq('email', email) : query.eq('id', userId as string));
-      if (data && data.length > 0) {
-        return { id: String(data[0].id), email: String(data[0].email) };
-      }
+    if (email) {
+      return { id: userId ? String(userId) : 'guest', email: String(email) };
     }
   } catch {}
 
@@ -70,18 +67,25 @@ export async function POST(req: Request) {
     // Parse body once
     try { body = await req.json(); } catch { body = {}; }
 
-    const resolved = await resolveUserFromRequest(body);
-    if (!resolved) {
-      try {
-        await (await import("@/lib/payment-logging.server")).logPayment(
-          "checkout",
-          "warn",
-          "Unauthorized create-checkout (no session)",
-          { body },
-          null
-        );
-      } catch {}
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const resolvedMaybe = await resolveUserFromRequest(body);
+    let user: { id: string; email: string } | null = resolvedMaybe;
+    if (!user) {
+      // As a last resort, extract email directly (guest checkout) if present in body
+      const fallbackEmail = typeof body?.userEmail === 'string' ? body.userEmail : undefined;
+      if (!fallbackEmail) {
+        try {
+          await (await import("@/lib/payment-logging.server")).logPayment(
+            "checkout",
+            "warn",
+            "Missing email for checkout",
+            { body },
+            null
+          );
+        } catch {}
+        return NextResponse.json({ error: "Email required" }, { status: 400 });
+      }
+      // proceed as guest with provided email
+      user = { id: 'guest', email: fallbackEmail };
     }
     const {
       planType,
@@ -113,8 +117,8 @@ export async function POST(req: Request) {
     // Create checkout session with Flutterwave
     const checkout = await createCheckoutForPlan(
       (String(planType).toLowerCase() as 'pro' | 'plus' | 'elite'),
-      resolved.email,
-      resolved.id,
+      user!.email,
+      user!.id,
       successUrlFinal,
       cancelUrlFinal,
       paymentMethod || 'card',
@@ -123,12 +127,13 @@ export async function POST(req: Request) {
     );
 
     // Log success for observability
+    const userIdForLog = user!.id === 'guest' ? undefined : user!.id;
     await logPayment(
       "checkout",
       "info",
       "Created Flutterwave checkout",
       { planType, billingCycle, checkoutId: checkout.paymentId, txRef: checkout.txRef },
-      resolved.id
+      userIdForLog
     );
 
     return NextResponse.json({

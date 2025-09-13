@@ -158,14 +158,7 @@ export default function PricingPlans(): React.ReactElement {
       return;
     }
 
-    // If user is not authenticated, send them to login preserving intended checkout target
-    if (!session) {
-      const loginUrl = `/login?redirect=${encodeURIComponent(checkoutUrl)}`;
-      router.push(loginUrl);
-      return;
-    }
-
-    // Authenticated: set the plan locally and go to checkout
+    // Proceed to checkout regardless of auth; checkout will collect email if needed
     setPlan(selectedPlan as unknown as import("@/context/UserContext").PlanType);
     router.push(checkoutUrl);
   };

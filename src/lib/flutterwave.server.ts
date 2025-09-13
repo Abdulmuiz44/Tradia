@@ -91,7 +91,7 @@ export async function getOrCreatePlanOnFlutterwave(
 export async function createCheckoutForPlan(
   planType: "pro" | "plus" | "elite",
   userEmail: string,
-  userId: string,
+  userId: string | null | undefined,
   successUrl: string,
   cancelUrl: string,
   paymentMethod: string,
@@ -110,7 +110,7 @@ export async function createCheckoutForPlan(
     currency
   );
 
-  const txRef = `${planKey}_${userId}_${Date.now()}`;
+  const txRef = `${planKey}_${userId || 'guest'}_${Date.now()}`;
 
   // Create payment (first payment that will subscribe the customer to the plan)
   const payload: any = {
@@ -132,23 +132,26 @@ export async function createCheckoutForPlan(
   const link = resp?.data?.link || resp?.data?.url || resp?.data?.checkout_url;
 
   // persist a pending subscription record into user_plans
-  const supabase = createClient();
-  const { error } = await supabase.from("user_plans").insert({
-    user_id: userId,
-    plan_type: planType,
-    billing_cycle: billingCycle,
-    amount: price,
-    currency,
-    status: "pending",
-    tx_ref: txRef,
-    flutterwave_plan_id: fwPlanId,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
+  // Only persist pending plan if we have a real user id
+  if (userId) {
+    const supabase = createClient();
+    const { error } = await supabase.from("user_plans").insert({
+      user_id: userId,
+      plan_type: planType,
+      billing_cycle: billingCycle,
+      amount: price,
+      currency,
+      status: "pending",
+      tx_ref: txRef,
+      flutterwave_plan_id: fwPlanId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
-  if (error) {
-    console.error("Failed to insert pending user_plan:", error);
-    // not fatal for checkout, but log
+    if (error) {
+      console.error("Failed to insert pending user_plan:", error);
+      // not fatal for checkout, but log
+    }
   }
 
   return {

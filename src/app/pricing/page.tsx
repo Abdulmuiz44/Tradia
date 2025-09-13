@@ -82,8 +82,87 @@ export default function PricingPage(): React.ReactElement {
     return billing === "monthly" ? p.monthly : Math.round(p.monthly * 12 * 0.8);
   };
 
+  // JSON-LD: Offer catalog and pricing FAQ
+  const offerJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "OfferCatalog",
+    "name": "Tradia Plans",
+    "url": "https://tradiaai.app/pricing",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Pro (monthly)",
+        "price": 9,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://tradiaai.app/checkout?plan=pro&billing=monthly",
+        "category": "SoftwareApplication",
+        "description": "6 months trade history, 3 account connections, AI weekly summary",
+      },
+      {
+        "@type": "Offer",
+        "name": "Plus (monthly)",
+        "price": 19,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://tradiaai.app/checkout?plan=plus&billing=monthly",
+        "category": "SoftwareApplication",
+        "description": "Unlimited history, 5 account connections, AI trade reviews & SL/TP suggestions",
+      },
+      {
+        "@type": "Offer",
+        "name": "Elite (monthly)",
+        "price": 39,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://tradiaai.app/checkout?plan=elite&billing=monthly",
+        "category": "SoftwareApplication",
+        "description": "Unlimited connections, AI strategy builder, Prop-firm dashboard",
+      }
+    ]
+  } as const;
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is there a free plan?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes — the Starter plan is free forever and includes core analytics, CSV import, and 30 days of trade history."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you offer a free trial?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes — Plus and Pro include a 3‑day free trial. You can cancel within the trial without charges."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I cancel or change plans anytime?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can upgrade, downgrade, or cancel anytime. Annual plans are billed up‑front and include a discount."
+        }
+      }
+    ]
+  } as const;
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(offerJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <Navbar />
 
       <main className="min-h-screen bg-[#061226] text-gray-100">
