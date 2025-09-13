@@ -22,7 +22,7 @@ export default function ContactPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-[#061226] text-gray-100">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors">
         <section className="max-w-3xl mx-auto px-6 py-16">
           <h1 className="text-3xl font-bold mb-2">Contact Us</h1>
           <p className="text-gray-400 mb-8">We’d love to help. Send us a message and we’ll get back to you.</p>
@@ -53,4 +53,3 @@ export default function ContactPage() {
     </>
   );
 }
-

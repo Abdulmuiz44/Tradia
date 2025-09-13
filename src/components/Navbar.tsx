@@ -22,7 +22,7 @@ import { signOut, useSession } from "next-auth/react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const { data: session } = useSession();
 
   const [mounted, setMounted] = useState(false);
@@ -79,14 +79,14 @@ export default function Navbar() {
 
   return (
     <header
-      className="w-full px-6 py-3 sticky top-0 z-50 backdrop-blur-md"
+      className="w-full px-6 py-3 sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-[#0b1220]/60 bg-white/80 dark:bg-[#0b1220]/80 border-b border-white/20 dark:border-white/10"
       aria-label="Main navigation"
     >
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3 no-underline">
-            <img src="/tradia-logo.svg" alt="Tradia" className="h-8 w-auto" />
+            <img src="/TRADIA-LOGO2.svg" alt="Tradia" className="h-8 w-auto" />
             <div className="hidden sm:block">
               <div className="text-lg font-bold text-gray-900 dark:text-white">Tradia</div>
               <div className="text-xs text-gray-500 dark:text-gray-300 -mt-1">AI Trading Performance</div>
@@ -96,16 +96,16 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
-          <ul className="flex items-center gap-6">
+          <ul className="flex items-center gap-1">
             {navLinks.map(({ label, href }) => (
               <li key={href}>
                 <Link
                   href={href}
-                  className={`text-sm font-medium ${
+                  className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
                     isActive(href)
-                      ? "text-indigo-500 dark:text-indigo-300"
-                      : "text-gray-700 dark:text-gray-300"
-                  } hover:underline`}
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
+                  }`}
                 >
                   {label}
                 </Link>
@@ -118,10 +118,18 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
-              className="p-2 rounded-md hover:bg-white/5 transition text-gray-700 dark:text-gray-300"
+              className="p-2 rounded-md transition text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
             >
               {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+            {mounted && (
+              <span
+                className="hidden lg:inline-flex items-center px-2 py-1 rounded-md text-xs bg-white/10 dark:bg-zinc-800 border border-white/10 text-gray-700 dark:text-gray-300"
+                title="Current theme"
+              >
+                Theme: {(resolvedTheme || theme || 'system').toString().replace(/^./, c => c.toUpperCase())}
+              </span>
+            )}
 
             {/* Auth links */}
             {authLinks.map(({ label, href, onClick }) => {
@@ -136,10 +144,10 @@ export default function Navbar() {
                       onClick();
                     }
                   }}
-                  className={`text-sm font-medium px-3 py-1 rounded-md ${
+                  className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${
                     isCta
                       ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                      : "text-gray-700 dark:text-gray-300 hover:underline"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   {label}
@@ -148,19 +156,7 @@ export default function Navbar() {
             })}
 
             {/* Profile pill */}
-            {session && (
-              <Link
-                href="/dashboard"
-                className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-zinc-800 border border-white/6 shadow-sm"
-              >
-                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs font-semibold text-white">
-                  {profileInitial}
-                </div>
-                <span className="text-sm text-gray-800 dark:text-gray-100 hidden sm:inline">
-                  {session.user?.name ?? session.user?.email ?? "User"}
-                </span>
-              </Link>
-            )}
+            {session && <CoachPill />}
           </div>
         </nav>
 
@@ -169,10 +165,15 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="p-2 rounded-md text-gray-700 dark:text-gray-300"
+            className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
           >
             {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+          {mounted && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 dark:bg-zinc-800 text-gray-700 dark:text-gray-300" title="Current theme">
+              {(resolvedTheme || theme || 'system').toString()}
+            </span>
+          )}
 
           <button
             onClick={() => setMenuOpen((s) => !s)}
@@ -187,7 +188,7 @@ export default function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
-          className="md:hidden mt-3 w-full bg-white dark:bg-zinc-900 border-t border-white/6 shadow-lg"
+          className="md:hidden mt-3 w-full backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-[#0b1220]/80 bg-white/90 dark:bg-[#0b1220]/90 border-t border-white/20 dark:border-white/10 shadow-lg"
           role="dialog"
           aria-modal="true"
         >
@@ -197,10 +198,10 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className={`text-base ${
+                className={`text-base px-2 py-2 rounded-md transition-colors ${
                   isActive(href)
-                    ? "text-indigo-500 dark:text-indigo-300 font-semibold"
-                    : "text-gray-700 dark:text-gray-300"
+                    ? "text-indigo-600 dark:text-indigo-300 bg-indigo-500/10"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 {label}
@@ -235,7 +236,7 @@ export default function Navbar() {
                     setMenuOpen(false);
                     signOut().catch(() => {});
                   }}
-                  className="w-full text-left flex items-center gap-2 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-white/5"
+                  className="w-full text-left flex items-center gap-2 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <LogOut size={16} />
                   <span>Sign out</span>
@@ -246,5 +247,41 @@ export default function Navbar() {
         </div>
       )}
     </header>
+  );
+}
+
+function CoachPill() {
+  const [points, setPoints] = useState<number | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/coach/points', { cache: 'no-store' });
+        if (res.ok) { const j = await res.json(); setPoints(Number(j.points || 0)); }
+      } catch {}
+    })();
+  }, []);
+  const { data: session } = useSession();
+  const profileInitial = (
+    session?.user?.name?.trim()?.charAt(0) ??
+    session?.user?.email?.trim()?.charAt(0) ??
+    "U"
+  ).toUpperCase();
+  return (
+    <Link
+      href="/dashboard"
+      className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-zinc-800 border border-white/10 shadow-sm"
+    >
+      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs font-semibold text-white">
+        {profileInitial}
+      </div>
+      <span className="text-sm text-gray-800 dark:text-gray-100 hidden sm:inline">
+        {session?.user?.name ?? session?.user?.email ?? "User"}
+      </span>
+      {points !== null && (
+        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+          Pts: {points}
+        </span>
+      )}
+    </Link>
   );
 }

@@ -19,6 +19,48 @@ body {
   color: #e5e7eb;
 }
 
+/* Light theme: increase clarity/contrast and bolder typography */
+html:not(.dark) body {
+  background-color: #ffffff;
+  color: #0f172a; /* slate-900 */
+}
+html:not(.dark) h1,
+html:not(.dark) h2,
+html:not(.dark) h3,
+html:not(.dark) h4 {
+  font-weight: 800; /* extra-bold headings */
+  letter-spacing: -0.01em;
+}
+html:not(.dark) p,
+html:not(.dark) li,
+html:not(.dark) span,
+html:not(.dark) label,
+html:not(.dark) small,
+html:not(.dark) div {
+  font-weight: 500; /* make body text slightly bolder for readability */
+}
+/* Boost legibility of commonly used muted text classes in light mode */
+html:not(.dark) .text-gray-300 { color: #374151 !important; } /* -> gray-700 */
+html:not(.dark) .text-gray-400 { color: #374151 !important; } /* -> gray-700 */
+html:not(.dark) .text-gray-500 { color: #1f2937 !important; } /* -> gray-800 */
+html:not(.dark) .text-muted-foreground { color: #334155 !important; } /* slate-700 */
+html:not(.dark) a {
+  color: #0f172a;
+}
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: #d1d5db; /* gray-300 */
+}
+/* Smooth theme transitions for common properties */
+* {
+  transition-property: color, background-color, border-color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
 /* Make sure everything stretches full height */
 body,
 #__next,

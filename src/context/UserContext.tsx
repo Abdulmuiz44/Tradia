@@ -59,24 +59,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         .eq('email', session.user.email)
         .single();
 
-      if (error) {
-        console.error('Error fetching user data:', error);
-        // Fallback to session data
-        setUser({
-          id: session.user.id || '',
-          name: session.user.name || null,
-          email: session.user.email,
-          plan: "free",
-          emailVerified: false,
-          createdAt: new Date().toISOString(),
-        });
-        // Admin override even if DB lookup failed
-        if (session.user.email === 'abdulmuizproject@gmail.com') {
-          setPlanState('elite');
-        } else {
-          setPlanState("free");
-        }
-      } else {
+      if (!error && userData) {
         const userInfo: UserData = {
           id: userData.id,
           name: userData.name,
@@ -104,6 +87,43 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           setUser(userInfo);
           setPlanState(userInfo.plan);
         }
+      } else {
+        console.error('Error fetching user data:', error);
+        // Fallback: try server API which uses server session context
+        try {
+          const res = await fetch('/api/user/profile', { cache: 'no-store' });
+          if (res.ok) {
+            const json = await res.json();
+            const p = json?.profile as any;
+            if (p?.email) {
+              const { data: planRow } = await supabase.from('users').select('plan').eq('email', p.email).single();
+              const planVal = (planRow?.plan as PlanType) || 'free';
+              setUser({
+                id: p.id || (session.user.id || ''),
+                name: p.name || session.user.name || null,
+                email: p.email,
+                plan: planVal,
+                emailVerified: false,
+                createdAt: p.createdAt || '',
+                lastLogin: p.lastLogin || undefined,
+              });
+              setPlanState(planVal);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Fallback /api/user/profile failed:', e);
+        }
+        // Final fallback to session data without fabricating createdAt
+        setUser({
+          id: session.user.id || '',
+          name: session.user.name || null,
+          email: session.user.email,
+          plan: 'free',
+          emailVerified: false,
+          createdAt: '',
+        });
+        setPlanState(session.user.email === 'abdulmuizproject@gmail.com' ? 'elite' : 'free');
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);

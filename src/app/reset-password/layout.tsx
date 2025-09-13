@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
-  alternates: { canonical: "/signup" },
+  alternates: { canonical: "/reset-password" },
 };
 
-export default function SignupLayout({ children }: { children: React.ReactNode }) {
+export default function ResetPasswordLayout({ children }: { children: React.ReactNode }) {
   return children;
 }
 

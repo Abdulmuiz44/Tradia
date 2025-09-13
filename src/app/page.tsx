@@ -155,7 +155,7 @@ export default function Home(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#061226] text-gray-100">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors">
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 -z-10 pointer-events-none">
@@ -196,8 +196,7 @@ export default function Home(): React.ReactElement {
                   </motion.button>
 
                   <Link href="/pricing" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20">
-                    View plans
-                  </Link>
+                    View plans\n                  </Link>\n\n                  <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 text-xs font-semibold">\n                    New: AI Mental Coach\n                  </span>
 
                   {/* stats intentionally removed — nothing visible here */}
                 </div>
@@ -579,4 +578,5 @@ export default function Home(): React.ReactElement {
     </>
   );
 }
+
 

@@ -19,31 +19,31 @@ import Footer from "@/components/Footer";
  * - Testimonials, FAQ, and benefits
  */
 
-const PLANS = [
-  {
-    id: "starter",
-    name: "Starter",
-    monthly: 0,
-    highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
-    cta: "Get started (Free)",
-    tag: "Free forever",
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    monthly: 9,
-    highlights: ["All Starter features", "6 months trade history", "3 account connections", "AI weekly summary"],
-    cta: "Start 3-day trial",
-    tag: "Popular",
-  },
-  {
-    id: "plus",
-    name: "Plus",
-    monthly: 19,
-    highlights: ["All Pro features", "Unlimited history", "5 account connections", "AI trade reviews & suggestions"],
-    cta: "Start 3-day trial",
-    tag: "For active traders",
-  },
+  const PLANS = [
+    {
+      id: "starter",
+      name: "Starter",
+      monthly: 0,
+      highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import", "AI Mental Coach (basic)", "Mood tracking"],
+      cta: "Get started (Free)",
+      tag: "Free forever",
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      monthly: 9,
+      highlights: ["All Starter features", "6 months trade history", "3 account connections", "AI weekly summary", "AI Mental Coach + Coach points"],
+      cta: "Start 3-day trial",
+      tag: "Popular",
+    },
+    {
+      id: "plus",
+      name: "Plus",
+      monthly: 19,
+      highlights: ["All Pro features", "Unlimited history", "5 account connections", "AI trade reviews & suggestions", "Guided mental resets + rewards"],
+      cta: "Start 3-day trial",
+      tag: "For active traders",
+    },
   {
     id: "elite",
     name: "Elite",
@@ -71,6 +71,15 @@ export default function PricingPage(): React.ReactElement {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<string>("pro");
   const [testimonialIdx, setTestimonialIdx] = useState<number>(0);
+  const [coachPoints, setCoachPoints] = useState<number | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/coach/points', { cache: 'no-store' });
+        if (res.ok) { const j = await res.json(); setCoachPoints(Number(j.points || 0)); }
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setTestimonialIdx((i) => (i + 1) % TESTIMONIALS.length), 6000);
@@ -165,7 +174,7 @@ export default function PricingPage(): React.ReactElement {
       />
       <Navbar />
 
-      <main className="min-h-screen bg-[#061226] text-gray-100">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors">
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
@@ -212,6 +221,11 @@ export default function PricingPage(): React.ReactElement {
         {/* Pricing toggle + CTA */}
         <section id="plans" className="py-10 px-6">
           <div className="max-w-6xl mx-auto text-center">
+            {coachPoints !== null && (
+              <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 text-sm">
+                Your Coach points: <span className="font-bold">{coachPoints}</span>
+              </div>
+            )}
             <div className="inline-flex rounded-full bg-white/5 p-1 shadow-sm">
               <button
                 onClick={() => setBilling("monthly")}
@@ -385,3 +399,6 @@ export default function PricingPage(): React.ReactElement {
     </>
   );
 }
+
+
+

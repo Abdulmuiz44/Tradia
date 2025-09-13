@@ -4,16 +4,17 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { useTheme } from "next-themes";
 import {
   Settings,
   Moon,
   Sun,
   Bell,
   Shield,
-  Globe,
   Save,
   RefreshCw
 } from "lucide-react";
+import FeatureLock from "@/components/FeatureLock";
 
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
@@ -33,6 +34,7 @@ interface UserSettings {
 export default function SettingsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [settings, setSettings] = useState<UserSettings>({
     theme: 'dark',
     language: 'en',
@@ -49,10 +51,25 @@ export default function SettingsPage() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [riskControls, setRiskControls] = useState<{ maxDailyLossUSD: number; maxTradesPerDay: number; breakAfterConsecutiveLosses: number; enforceBlocks: boolean }>(() => {
+    try {
+      const raw = localStorage.getItem('riskControls');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { maxDailyLossUSD: 25, maxTradesPerDay: 4, breakAfterConsecutiveLosses: 3, enforceBlocks: false };
+  });
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  // keep settings.theme aligned with next-themes
+  useEffect(() => {
+    try {
+      const effective = (theme || resolvedTheme || 'system') as 'light' | 'dark' | 'system';
+      setSettings((prev) => (prev.theme === effective ? prev : { ...prev, theme: effective }));
+    } catch {}
+  }, [theme, resolvedTheme]);
 
   const loadSettings = () => {
     try {
@@ -73,9 +90,10 @@ export default function SettingsPage() {
     try {
       // Save to localStorage
       localStorage.setItem('userSettings', JSON.stringify(settings));
+      localStorage.setItem('riskControls', JSON.stringify(riskControls));
 
-      // Apply theme immediately
-      applyTheme(settings.theme);
+      // Apply theme via next-themes
+      setTheme(settings.theme);
 
       alert('Settings saved successfully!');
     } catch (error) {
@@ -86,17 +104,7 @@ export default function SettingsPage() {
     }
   };
 
-  const applyTheme = (theme: string) => {
-    const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
-  };
+  // applyTheme now delegated to next-themes setTheme
 
   const updateSetting = (section: keyof UserSettings, key: string, value: any) => {
     setSettings(prev => {
@@ -112,7 +120,7 @@ export default function SettingsPage() {
 
       // Apply theme instantly when changed
       if (section === 'theme' && key === 'theme') {
-        applyTheme(value as string);
+        setTheme(value as 'light' | 'dark' | 'system');
       }
 
       return next;
@@ -133,17 +141,28 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
-          <p className="text-gray-400">Customize your trading experience</p>
+          <div className="flex items-center gap-3 text-gray-400">
+            <p>Customize your trading experience</p>
+            {user?.createdAt && (() => {
+              const d = new Date(user.createdAt);
+              if (isNaN(d.getTime())) return null;
+              return (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-800 text-xs border border-gray-700">
+                  Member since {d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                </span>
+              );
+            })()}
+          </div>
         </div>
 
         <div className="space-y-6">
           {/* Appearance Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Settings className="w-6 h-6" />
               Appearance
@@ -158,20 +177,20 @@ export default function SettingsPage() {
                     { value: 'light', label: 'Light', icon: Sun },
                     { value: 'dark', label: 'Dark', icon: Moon },
                     { value: 'system', label: 'System', icon: Settings }
-                  ].map((theme) => {
-                    const Icon = theme.icon;
+                  ].map((opt) => {
+                    const Icon = opt.icon;
                     return (
                       <button
-                        key={theme.value}
-                        onClick={() => updateSetting('theme', 'theme', theme.value)}
+                        key={opt.value}
+                        onClick={() => updateSetting('theme', 'theme', opt.value)}
                         className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                          settings.theme === theme.value
+                          settings.theme === opt.value
                             ? 'border-blue-500 bg-blue-600'
                             : 'border-gray-600 hover:border-gray-500'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
-                        <span>{theme.label}</span>
+                        <span>{opt.label}</span>
                       </button>
                     );
                   })}
@@ -217,7 +236,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Notification Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Bell className="w-6 h-6" />
               Notifications
@@ -250,7 +269,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Privacy Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Shield className="w-6 h-6" />
               Privacy & Analytics
@@ -273,6 +292,57 @@ export default function SettingsPage() {
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Risk Controls */}
+          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Shield className="w-6 h-6" />
+              Risk Controls
+            </h2>
+
+            <FeatureLock requiredPlan="plus">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Daily loss limit (USD)</label>
+                  <input
+                    type="number"
+                    value={riskControls.maxDailyLossUSD}
+                    onChange={(e)=> setRiskControls(prev => ({...prev, maxDailyLossUSD: Number(e.target.value)}))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Max trades per day</label>
+                  <input
+                    type="number"
+                    value={riskControls.maxTradesPerDay}
+                    onChange={(e)=> setRiskControls(prev => ({...prev, maxTradesPerDay: Number(e.target.value)}))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Break after consecutive losses</label>
+                  <input
+                    type="number"
+                    value={riskControls.breakAfterConsecutiveLosses}
+                    onChange={(e)=> setRiskControls(prev => ({...prev, breakAfterConsecutiveLosses: Number(e.target.value)}))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="enforceBlocks"
+                    type="checkbox"
+                    checked={riskControls.enforceBlocks}
+                    onChange={(e)=> setRiskControls(prev => ({...prev, enforceBlocks: e.target.checked}))}
+                    className="h-4 w-4"
+                  />
+                  <label htmlFor="enforceBlocks" className="text-sm text-gray-300">Strong warnings (Pro/Elite)</label>
+                </div>
+              </div>
+              <div className="mt-4 text-xs text-gray-400">Risk Guard shows reminders or strong warnings when limits are hit. Adjust these to match your plan rules (e.g., prop-challenge risk).</div>
+            </FeatureLock>
           </div>
 
           {/* Save Button */}
@@ -300,3 +370,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

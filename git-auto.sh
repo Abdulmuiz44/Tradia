@@ -21,41 +21,41 @@ if [ -z "$message" ]; then
   exit 1
 fi
 
-echo "🚀 Starting deployment process..."
+echo "Starting deployment process..."
 
 # Build the project first
-echo "📦 Building project..."
+echo "Building project..."
 if ! pnpm run build; then
-  echo "❌ Build failed! Please fix build errors before deploying."
+  echo "Build failed! Please fix build errors before deploying."
   exit 1
 fi
 
-echo "✅ Build successful!"
+echo "Build successful!"
 
 # Add and commit changes
-echo "📝 Committing changes..."
+echo "Committing changes..."
 git add .
 git commit -m "$message" || {
-  echo "⚠️  Nothing to commit or commit failed";
+  echo "Nothing to commit or commit failed";
 }
 
 # Push to GitHub
-echo "⬆️  Pushing to GitHub..."
+echo "Pushing to GitHub..."
 git push origin main
 
-echo "✅ Code pushed successfully to GitHub!"
+echo "Code pushed successfully to GitHub!"
 
 # Check if Vercel CLI is available and deploy
 if command -v vercel &> /dev/null; then
-  echo "🚀 Deploying to Vercel..."
+  echo "Deploying to Vercel..."
   if vercel --prod; then
-    echo "✅ Deployment to Vercel successful!"
+    echo "Deployment to Vercel successful!"
   else
-    echo "❌ Vercel deployment failed. You can also deploy manually from the Vercel dashboard."
+    echo "Vercel deployment failed. You can also deploy manually from the Vercel dashboard."
     echo "   Make sure your environment variables are set in Vercel dashboard."
   fi
 else
-  echo "⚠️  Vercel CLI not found. Please install it with: npm i -g vercel"
+  echo "Vercel CLI not found. Please install it with: npm i -g vercel"
   echo "   Or deploy manually from the Vercel dashboard."
   echo "   Make sure to set these environment variables in Vercel:"
   echo "   - NEXTAUTH_SECRET"
@@ -70,4 +70,6 @@ else
   echo "   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS"
 fi
 
-echo "🎉 Deployment process complete!"
+echo "Deployment process complete!"
+
+

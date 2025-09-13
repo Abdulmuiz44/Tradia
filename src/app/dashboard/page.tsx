@@ -9,6 +9,9 @@ import { signOut, useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import { Tabs } from "@/components/ui/tabs";
 import OverviewCards from "@/components/dashboard/OverviewCards";
+import MentalCoach from "@/components/dashboard/MentalCoach";
+import WeeklyCoachRecap from "@/components/dashboard/WeeklyCoachRecap";
+import RiskGuard from "@/components/dashboard/RiskGuard";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import RiskMetrics from "@/components/dashboard/RiskMetrics";
 import PositionSizing from "@/components/dashboard/PositionSizing";
@@ -829,7 +832,15 @@ function DashboardContent() {
               </div>
             ) : (
               <>
-                {activeTab === "overview" && <OverviewCardsAny trades={filteredTrades} />}
+                {activeTab === "overview" && (
+                  <>
+                    <MentalCoach />
+                    <div className="mt-3" />
+                    <WeeklyCoachRecap />
+                    <RiskGuard />
+                    <OverviewCardsAny trades={filteredTrades} />
+                  </>
+                )}
 
                 {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
 
@@ -839,7 +850,12 @@ function DashboardContent() {
                   </div>
                 )}
 
-                {activeTab === "journal" && <TradeJournalAny />}
+                {activeTab === "journal" && (
+                  <>
+                    <MentalCoach />
+                    <TradeJournalAny />
+                  </>
+                )}
 
                 {activeTab === "tradia-ai" && (
                   <div className="h-full">
@@ -855,7 +871,12 @@ function DashboardContent() {
                   <UserAnalyticsDashboard />
                 )}
 
-                {activeTab === "risk" && <RiskMetricsAny trades={filteredTrades} />}
+                {activeTab === "risk" && (
+                  <>
+                    <RiskGuard />
+                    <RiskMetricsAny trades={filteredTrades} />
+                  </>
+                )}
 
                 {activeTab === "planner" && (
                   <TradePlanProvider>

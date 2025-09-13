@@ -134,7 +134,7 @@ function LoginPage(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#061226] text-gray-100 flex items-center justify-center py-12 px-4">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors flex items-center justify-center py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}

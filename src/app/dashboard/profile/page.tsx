@@ -96,7 +96,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">

@@ -138,8 +138,8 @@ export default function CheckoutPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors flex items-center justify-center">
+        <div>Loading...</div>
       </div>
     );
   }
@@ -147,7 +147,7 @@ export default function CheckoutPage() {
   // Do not gate the page; allow guest checkout with email input
 
   return (
-    <div className="min-h-screen bg-[#0D1117] text-white">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors">
       <div className="max-w-4xl mx-auto p-6">
         <button
           onClick={() => router.back()}

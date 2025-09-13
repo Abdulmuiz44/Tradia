@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="56" viewBox="0 0 340 56" role="img" aria-labelledby="title desc">
+  <title id="title">Tradia Brand Lockup</title>
+  <desc id="desc">Square monogram paired with Tradia wordmark</desc>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.6" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0.6  0 0 0 0 1  0 0 0 0.28 0"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5A4" stop-opacity="0.0"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Monogram container -->
+  <g transform="translate(8,7)">
+    <!-- Background squircle -->
+    <rect x="0" y="0" width="44" height="44" rx="12" fill="#0B1220" />
+    <rect x="0.8" y="0.8" width="42.4" height="42.4" rx="11.4" fill="none" stroke="url(#ring)" stroke-width="1.6" />
+
+    <!-- Rising accent line (subtle) -->
+    <path d="M5 32 L14 26 L21 28 L30 22 L37 24 L41 20" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.28"/>
+
+    <!-- T crossbar and stem (simplified, bolder) -->
+    <rect x="9" y="10" width="26" height="5" rx="2.5" fill="url(#grad)" filter="url(#soft)"/>
+    <rect x="20" y="15" width="6" height="20" rx="3" fill="url(#grad)" filter="url(#soft)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(68,38)" style="text-rendering:geometricPrecision;">
+    <text x="0" y="0"
+      fill="url(#grad)"
+      stroke="#0A0F1A" stroke-width="0.6" paint-order="stroke fill"
+      font-family="Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+      font-size="28" font-weight="800" letter-spacing="0.25" filter="url(#soft)">Tradia</text>
+    <!-- underline accent -->
+    <path d="M2 6 L96 6" transform="translate(0,4)" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+  </g>
+</svg>
