@@ -602,7 +602,7 @@ function DashboardContent() {
                 <Menu size={20} className="text-white" />
               </button>
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-white">{currentTabLabel}</h1>
+                <h1 className="text-lg md:text-xl font-bold brand-text-gradient">{currentTabLabel}</h1>
                 <p className="text-gray-400 text-xs sm:text-sm hidden sm:block">
                   {activeTab === 'tradia-ai' ? 'Your personal trading coach with voice support' :
                    activeTab === 'overview' ? 'Comprehensive trading overview and key metrics' :

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Safari pinned tab mask: black shapes define the mask -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="#000"/>
+  <rect x="128" y="176" width="256" height="48" rx="24" fill="#000"/>
+  <rect x="224" y="224" width="64" height="200" rx="28" fill="#000"/>
+</svg>

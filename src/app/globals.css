@@ -14,6 +14,34 @@ body {
   color: #111827;
 }
 
+/* Brand palette (kept in sync with logo) */
+:root {
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-200: #c7d2fe;
+  --brand-300: #a5b4fc;
+  --brand-400: #818cf8; /* indigo-ish */
+  --brand-500: #6366F1; /* start of gradient */
+  --brand-600: #4F46E5;
+  --brand-700: #4338CA;
+  --brand-800: #3730A3;
+  --brand-900: #312E81;
+  --brand-accent: #06B6D4; /* cyan end of gradient */
+  --brand-bg-dark: #0B1220; /* monogram tile */
+  --brand-text-dark: #0f172a; /* slate-900 */
+  --brand-text-light: #ffffff;
+}
+
+.brand-gradient {
+  background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
+}
+.brand-text-gradient {
+  background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .dark body {
   background-color: #0f172a;
   color: #e5e7eb;
@@ -62,7 +90,7 @@ html:not(.dark) .text-gray-400 { color: #374151 !important; } /* -> gray-700 */
 html:not(.dark) .text-gray-500 { color: #1f2937 !important; } /* -> gray-800 */
 html:not(.dark) .text-muted-foreground { color: #334155 !important; } /* slate-700 */
 html:not(.dark) a {
-  color: #0f172a;
+  color: var(--brand-700);
 }
 html:not(.dark) input,
 html:not(.dark) select,
@@ -70,6 +98,16 @@ html:not(.dark) textarea {
   background-color: #ffffff;
   color: #0f172a;
   border-color: #d1d5db; /* gray-300 */
+}
+
+/* Focus visibility and selection colors */
+*:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--brand-500);
+  color: #ffffff;
 }
 /* Smooth theme transitions for common properties */
 * {
@@ -129,3 +167,26 @@ button[title="Debug admin status"] {
 .table-cell {
   @apply px-3 py-2;
 }
+
+/* Map frequently used Tailwind indigo utilities to our brand palette */
+.text-indigo-600 { color: var(--brand-600) !important; }
+.text-indigo-500 { color: var(--brand-500) !important; }
+.text-indigo-400 { color: var(--brand-400) !important; }
+.dark .text-indigo-300 { color: #a5b4fc !important; }
+.bg-indigo-600 { background-color: var(--brand-600) !important; }
+.bg-indigo-500 { background-color: var(--brand-500) !important; }
+.hover\:bg-indigo-500:hover { background-color: var(--brand-500) !important; }
+.ring-indigo-500 { --tw-ring-color: var(--brand-500) !important; }
+.border-indigo-500 { border-color: var(--brand-500) !important; }
+
+/* Primary button and badge helpers */
+.btn-primary, .brand-cta {
+  background: linear-gradient(90deg, var(--brand-600), var(--brand-accent));
+  color: white;
+}
+.btn-primary:hover, .brand-cta:hover {
+  filter: brightness(1.05);
+}
+
+/* Light mode: ensure muted text does not look washed out */
+html:not(.dark) .text-muted-foreground { color: #334155 !important; }

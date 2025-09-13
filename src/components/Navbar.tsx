@@ -85,15 +85,48 @@ export default function Navbar() {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3 no-underline">
-            <img
-              src="/tradia-lockup.svg"
-              alt="Tradia"
-              className="h-10 sm:h-12 w-auto drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] contrast-125"
-            />
+          <Link href="/" className="flex items-center gap-3 no-underline" aria-label="Tradia Home">
+            {/* Inline, theme-aware lockup: gradient monogram + solid wordmark */}
+            <svg
+              className="h-12 sm:h-14 w-auto text-gray-900 dark:text-white select-none"
+              viewBox="0 0 360 64"
+              role="img"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6366F1" />
+                  <stop offset="100%" stopColor="#06B6D4" />
+                </linearGradient>
+              </defs>
+              {/* Monogram with background tile for clarity */}
+              <g transform="translate(8,8)">
+                <rect x="0" y="0" width="48" height="48" rx="12" fill="#0B1220" />
+                <rect x="6" y="12" width="36" height="8" rx="4" fill="url(#brandGrad)" />
+                <rect x="20" y="20" width="8" height="26" rx="4" fill="url(#brandGrad)" />
+              </g>
+              {/* Wordmark now uses gradient fill with a subtle stroke for contrast */}
+              <g transform="translate(72,44)">
+                <text
+                  x="0"
+                  y="0"
+                  fill="url(#brandGrad)"
+                  stroke="currentColor"
+                  strokeOpacity="0.08"
+                  strokeWidth="0.6"
+                  fontFamily="Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+                  fontSize="30"
+                  fontWeight="800"
+                  letterSpacing="0.2"
+                >
+                  Tradia
+                </text>
+              </g>
+            </svg>
             <div className="hidden sm:block">
-              <div className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white">Tradia</div>
-              <div className="text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 -mt-0.5 font-medium">AI Trading Performance</div>
+              <div className="text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 -mt-0.5 font-medium">
+                AI Trading Performance
+              </div>
             </div>
           </Link>
         </div>

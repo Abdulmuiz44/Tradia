@@ -184,7 +184,7 @@ export default function PricingPage(): React.ReactElement {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.45 }}
-                  className="text-4xl sm:text-5xl lg:text-5xl font-extrabold leading-tight"
+                  className="text-4xl sm:text-5xl lg:text-5xl font-extrabold leading-tight brand-text-gradient"
                 >
                   Simple pricing. Powerful results.
                 </motion.h1>

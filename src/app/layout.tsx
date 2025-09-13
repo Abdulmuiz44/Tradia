@@ -148,7 +148,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Icons */}
         <link rel="icon" href="/tradia-mark.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/tradia-mark.svg" type="image/svg+xml" />
-        <link rel="mask-icon" href="/tradia-mark.svg" color="#0f172a" />
+        <link rel="mask-icon" href="/mask-icon.svg" color="#0f172a" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

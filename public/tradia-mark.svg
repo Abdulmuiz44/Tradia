@@ -1,42 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">Tradia Monogram</title>
-  <desc id="desc">Square monogram logo for Tradia with gradient T and subtle candlestick accents</desc>
+  <desc id="desc">Simplified, high-contrast T monogram for Tradia</desc>
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#6366F1"/>
       <stop offset="100%" stop-color="#06B6D4"/>
     </linearGradient>
-    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur"/>
-      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0.6  0 0 0 0 1  0 0 0 0.35 0"/>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
   </defs>
 
-  <!-- Background with subtle gradient ring -->
+  <!-- Background -->
   <rect x="16" y="16" width="480" height="480" rx="96" fill="#0B1220"/>
-  <rect x="18" y="18" width="476" height="476" rx="92" fill="none" stroke="url(#grad)" stroke-opacity="0.25" stroke-width="4"/>
 
-  <!-- Rising accent line (quieter) -->
-  <path d="M64 360 L168 300 L236 324 L320 270 L392 288 L448 248" fill="none" stroke="url(#grad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.20"/>
-
-  <!-- Monogram T (more balanced) -->
-  <!-- Crossbar -->
-  <rect x="128" y="160" width="256" height="44" rx="22" fill="url(#grad)" filter="url(#soft)"/>
-  <!-- Stem -->
-  <rect x="224" y="204" width="64" height="190" rx="28" fill="url(#grad)" filter="url(#soft)"/>
-
-  <!-- Minimal candlestick accents -->
-  <g opacity="0.65">
-    <line x1="172" y1="236" x2="172" y2="320" stroke="#9AA4B2" stroke-width="9" stroke-linecap="round"/>
-    <rect x="156" y="260" width="32" height="44" rx="8" fill="#9AA4B2"/>
-  </g>
-  <g opacity="0.65">
-    <line x1="340" y1="244" x2="340" y2="320" stroke="#9AA4B2" stroke-width="9" stroke-linecap="round"/>
-    <rect x="324" y="284" width="32" height="34" rx="8" fill="#9AA4B2"/>
-  </g>
+  <!-- Clean T monogram (no blur, no extras) -->
+  <rect x="128" y="176" width="256" height="48" rx="24" fill="url(#brand)"/>
+  <rect x="224" y="224" width="64" height="200" rx="28" fill="url(#brand)"/>
 </svg>

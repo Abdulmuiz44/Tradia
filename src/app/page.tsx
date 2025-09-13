@@ -226,7 +226,7 @@ export default function Home(): React.ReactElement {
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold">Advanced Trading Analytics Platform</h2>
+              <h2 className="text-3xl font-bold brand-text-gradient">Advanced Trading Analytics Platform</h2>
               <p className="mt-2 text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze performance, improve strategies and scale profits — built around real trading workflows and powered by artificial intelligence.</p>
             </div>
 
@@ -260,21 +260,25 @@ export default function Home(): React.ReactElement {
         {/* VIDEO DEMO */}
         <section className="py-16 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">See Tradia in Action</h2>
+            <h2 className="text-3xl font-bold mb-4 brand-text-gradient">See Tradia in Action</h2>
             <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
               Watch how traders use Tradia to analyze their performance, get AI insights, and improve their strategies.
               From uploading trades to seeing actionable recommendations.
             </p>
 
             <div className="relative w-full max-w-4xl mx-auto">
-              <div className="aspect-video rounded-xl overflow-hidden shadow-2xl">
-                <iframe
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                  title="Tradia Trading Analytics Demo"
+              <div className="aspect-video rounded-xl overflow-hidden shadow-2xl bg-black">
+                <video
                   className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+                  src="/TRADIA_FILTER_LOGIC.mkv"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/TradiaDashboard.png"
+                >
+                  Your browser does not support the video tag. You can
+                  <a href="/TRADIA_FILTER_LOGIC.mkv">download the video here</a>.
+                </video>
               </div>
             </div>
 
@@ -288,7 +292,7 @@ export default function Home(): React.ReactElement {
         <section className="py-16 px-6 bg-gradient-to-r from-indigo-900/20 to-purple-900/20">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Why Professional Traders Choose Tradia</h2>
+              <h2 className="text-3xl font-bold mb-4 brand-text-gradient">Why Professional Traders Choose Tradia</h2>
               <p className="text-gray-300 max-w-3xl mx-auto text-lg">
                 Join thousands of successful traders who have transformed their trading performance using our comprehensive analytics platform.
                 From day traders to swing traders, Tradia provides the insights and tools needed to trade with confidence.
@@ -410,7 +414,7 @@ export default function Home(): React.ReactElement {
         {/* Pricing */}
         <section className="py-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl font-bold">Pricing</h2>
+            <h2 className="text-3xl font-bold brand-text-gradient">Pricing</h2>
             <p className="mt-2 text-gray-400">Start free — upgrade when you need advanced AI and history.</p>
 
             <div className="mt-6 inline-flex rounded-full bg-white/5 p-1 shadow-sm">

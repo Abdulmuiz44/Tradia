@@ -1,43 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="340" height="56" viewBox="0 0 340 56" role="img" aria-labelledby="title desc">
-  <title id="title">Tradia Brand Lockup</title>
-  <desc id="desc">Square monogram paired with Tradia wordmark</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="64" viewBox="0 0 360 64" role="img" aria-labelledby="title desc">
+  <title id="title">Tradia Brand</title>
+  <desc id="desc">Clean, high-contrast Tradia monogram with wordmark</desc>
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <!-- Brand gradient tuned to app UI (indigo → cyan) -->
+    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#6366F1"/>
       <stop offset="100%" stop-color="#06B6D4"/>
     </linearGradient>
-    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="0.6" result="blur"/>
-      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0.6  0 0 0 0 1  0 0 0 0.28 0"/>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0EA5A4" stop-opacity="0.0"/>
-      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.35"/>
-    </linearGradient>
   </defs>
 
-  <!-- Monogram container (transparent, blends on light/dark) -->
-  <g transform="translate(8,7)">
-    <!-- Rising accent line (subtle) -->
-    <path d="M5 32 L14 26 L21 28 L30 22 L37 24 L41 20" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.28"/>
-
-    <!-- T crossbar and stem (simplified, bolder) -->
-    <rect x="9" y="10" width="26" height="5" rx="2.5" fill="url(#grad)" filter="url(#soft)"/>
-    <rect x="20" y="15" width="6" height="20" rx="3" fill="url(#grad)" filter="url(#soft)"/>
+  <!-- Monogram with background tile for clarity on any page background -->
+  <g transform="translate(8,8)">
+    <rect x="0" y="0" width="48" height="48" rx="12" fill="#0B1220"/>
+    <!-- T crossbar and stem -->
+    <rect x="6" y="12" width="36" height="8" rx="4" fill="url(#brand)"/>
+    <rect x="20" y="20" width="8" height="26" rx="4" fill="url(#brand)"/>
   </g>
 
-  <!-- Wordmark -->
-  <g transform="translate(68,38)" style="text-rendering:geometricPrecision;">
+  <!-- Wordmark: heavy weight, no blur, tighter tracking for clarity -->
+  <g transform="translate(72,44)">
     <text x="0" y="0"
-      fill="url(#grad)"
+      fill="url(#brand)"
       font-family="Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
-      font-size="28" font-weight="800" letter-spacing="0.25" filter="url(#soft)">Tradia</text>
-    <!-- underline accent -->
-    <path d="M2 6 L96 6" transform="translate(0,4)" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+      font-size="30" font-weight="800" letter-spacing="0.2">Tradia</text>
   </g>
 </svg>
