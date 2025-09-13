@@ -188,7 +188,7 @@ export default function StrategyComparison({ className = "" }: StrategyCompariso
           </div>
           <Button
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-            onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch {} }}
+            onClick={() => { try { (window as any).location.href = '/checkout?plan=pro&billing=monthly'; } catch {} }}
           >
             Upgrade to PRO
           </Button>

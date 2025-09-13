@@ -68,10 +68,10 @@ export default function FeatureLock({
               onClick={() => {
                 setOpen(false);
                 try {
-                  (window as any).location.href = "/dashboard#upgrade";
+                  const plan = encodeURIComponent(requiredPlan);
+                  (window as any).location.href = `/checkout?plan=${plan}&billing=monthly`;
                 } catch {
-                  // best-effort fallback
-                  (window as any).location.hash = '#upgrade';
+                  (window as any).location.href = "/checkout?plan=pro";
                 }
               }}
             >

@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import ShareButtons from "@/components/ShareButtons";
+import ExportButtons from "@/components/dashboard/ExportButtons";
 import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -553,7 +554,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             <Button
               className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
               onClick={() => {
-                try { (window as any).location.hash = '#upgrade'; } catch {}
+                try { (window as any).location.href = '/checkout?plan=pro&billing=monthly'; } catch {}
               }}
             >
               Upgrade to PRO
@@ -703,7 +704,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             <Button
               className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
               onClick={() => {
-                try { (window as any).location.hash = '#upgrade'; } catch {}
+                try { (window as any).location.href = '/checkout?plan=plus&billing=monthly'; } catch {}
               }}
             >
               Upgrade to PRO+
@@ -931,11 +932,14 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" /> Export Report
-            </Button>
+            <ExportButtons data={filteredTrades as any[]} />
             <ShareButtons title="My Trading Analytics" text="Check out my trading performance on Tradia" />
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPremium((s) => !s)}
+              title="Toggle premium metrics visibility"
+            >
               <Settings className="w-4 h-4 mr-2" /> Customize View
             </Button>
           </div>

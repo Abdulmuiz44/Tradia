@@ -21,7 +21,7 @@ import Spinner from "@/components/ui/spinner";
 import LayoutClient from "@/components/LayoutClient";
 import ClientOnly from "@/components/ClientOnly";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { Menu, X, RefreshCw, Filter, User, Settings, Lock } from "lucide-react";
+import { Menu, X, RefreshCw, Filter, User, Settings, Lock, Moon, Sun } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -602,8 +602,8 @@ function DashboardContent() {
                 <Menu size={20} className="text-white" />
               </button>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">{currentTabLabel}</h1>
-                <p className="text-gray-400 text-sm hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-white">{currentTabLabel}</h1>
+                <p className="text-gray-400 text-xs sm:text-sm hidden sm:block">
                   {activeTab === 'tradia-ai' ? 'Your personal trading coach with voice support' :
                    activeTab === 'overview' ? 'Comprehensive trading overview and key metrics' :
                    activeTab === 'analytics' ? 'Detailed performance analytics and insights' :
@@ -621,6 +621,21 @@ function DashboardContent() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Theme toggle */}
+              <button
+                onClick={() => {
+                  try {
+                    const root = document.documentElement;
+                    const isDark = root.classList.contains('dark');
+                    if (isDark) { root.classList.remove('dark'); } else { root.classList.add('dark'); }
+                  } catch {}
+                }}
+                aria-label="Toggle theme"
+                className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors hidden sm:inline-flex"
+                title="Toggle theme"
+              >
+                <Sun className="w-4 h-4 text-gray-200" />
+              </button>
               {/* Mobile Profile Avatar - NEW */}
               <div className="lg:hidden">
                 <DropdownMenu>
