@@ -60,14 +60,7 @@ import {
   Minus,
   Eye,
   EyeOff,
-  Shield,
-  Play,
-  StopCircle,
-  SlidersHorizontal,
-  CheckSquare,
-  Square as SquareIcon,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 
 // Types
@@ -98,9 +91,6 @@ interface RiskMetrics {
   informationRatio: number;
 }
 
-// Lazy-load AI chat to keep bundle lean
-const AIChatInterface = dynamic(() => import("@/components/ai/AIChatInterface"), { ssr: false });
-
 interface TradeAnalyticsProps {
   className?: string;
 }
@@ -109,7 +99,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const { data: session } = useSession();
   const { trades = [] } = useTrade();
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
-  const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'coach' | 'controls'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   const [showPremium, setShowPremium] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -169,7 +159,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
-    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'coach' | 'controls')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast', 'coach', 'controls'];
+    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast'];
     const currentIndex = views.indexOf(activeView);
 
     if (isLeftSwipe && currentIndex < views.length - 1) {
@@ -550,12 +540,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             <p className="text-muted-foreground mb-4">
               Unlock detailed risk metrics, Sharpe ratio, drawdown analysis, and more with a PRO subscription.
             </p>
-            <Button
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
-              onClick={() => {
-                try { (window as any).location.hash = '#upgrade'; } catch {}
-              }}
-            >
+            <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
               Upgrade to PRO
             </Button>
           </CardContent>
@@ -700,12 +685,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             <p className="text-muted-foreground mb-4">
               Get personalized trading forecasts, market predictions, and AI-driven insights with PRO+.
             </p>
-            <Button
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-              onClick={() => {
-                try { (window as any).location.hash = '#upgrade'; } catch {}
-              }}
-            >
+            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
               Upgrade to PRO+
             </Button>
           </CardContent>
@@ -885,8 +865,6 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           { id: 'risk', label: 'Risk Analysis', icon: <Activity className="w-4 h-4" />, premium: true },
           { id: 'patterns', label: 'Patterns', icon: <PieChartIcon className="w-4 h-4" /> },
           { id: 'forecast', label: 'AI Forecast', icon: <Zap className="w-4 h-4" />, premium: true },
-          { id: 'coach', label: 'AI Mental Coach', icon: <Star className="w-4 h-4" /> },
-          { id: 'controls', label: 'Risk Controls & Prop Sim', icon: <Shield className="w-4 h-4" /> },
         ].map((tab) => {
           const isPremium = tab.premium && plan === 'free';
           return (
@@ -913,18 +891,6 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         {activeView === 'risk' && renderRisk()}
         {activeView === 'patterns' && renderPatterns()}
         {activeView === 'forecast' && renderForecast()}
-        {activeView === 'coach' && (
-          <div className="min-h-[480px]">
-            <AIChatInterface />
-          </div>
-        )}
-        {activeView === 'controls' && (
-          <RiskControlsAndPropSim
-            plan={plan as 'free' | 'pro' | 'plus' | 'elite'}
-            accountBalance={accountBalance}
-            filteredTrades={filteredTrades}
-          />
-        )}
       </div>
 
       {/* Export Actions */}
@@ -945,313 +911,3 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   );
 }
 
-type PlanTier = 'free' | 'pro' | 'plus' | 'elite';
-
-function RiskControlsAndPropSim({
-  plan,
-  accountBalance,
-  filteredTrades,
-}: {
-  plan: PlanTier;
-  accountBalance: number | null;
-  filteredTrades: any[];
-}) {
-  const [autoGuard, setAutoGuard] = useState(false);
-  const [riskPct, setRiskPct] = useState<number>(2);
-  const [maxTradesPerDay, setMaxTradesPerDay] = useState<number>(10);
-  const [maxDailyLoss, setMaxDailyLoss] = useState<number>(accountBalance ? Math.max(25, accountBalance * 0.02) : 100);
-  const [maxWeeklyLoss, setMaxWeeklyLoss] = useState<number>(accountBalance ? Math.max(50, accountBalance * 0.05) : 250);
-  const [cooldownMins, setCooldownMins] = useState<number>(10);
-  const [checklist, setChecklist] = useState<Record<string, boolean>>({
-    setupValid: false,
-    stopLossSet: false,
-    rrOk: false,
-    noRevenge: false,
-    journalReady: false,
-  });
-
-  // Persist settings locally
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('risk_controls');
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (typeof s.autoGuard === 'boolean') setAutoGuard(s.autoGuard);
-        if (typeof s.riskPct === 'number') setRiskPct(s.riskPct);
-        if (typeof s.maxTradesPerDay === 'number') setMaxTradesPerDay(s.maxTradesPerDay);
-        if (typeof s.maxDailyLoss === 'number') setMaxDailyLoss(s.maxDailyLoss);
-        if (typeof s.maxWeeklyLoss === 'number') setMaxWeeklyLoss(s.maxWeeklyLoss);
-        if (typeof s.cooldownMins === 'number') setCooldownMins(s.cooldownMins);
-      }
-      const rawCl = localStorage.getItem('pretrade_checklist');
-      if (rawCl) setChecklist({ ...checklist, ...JSON.parse(rawCl) });
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem('risk_controls', JSON.stringify({ autoGuard, riskPct, maxTradesPerDay, maxDailyLoss, maxWeeklyLoss, cooldownMins }));
-    } catch {}
-  }, [autoGuard, riskPct, maxTradesPerDay, maxDailyLoss, maxWeeklyLoss, cooldownMins]);
-  useEffect(() => {
-    try { localStorage.setItem('pretrade_checklist', JSON.stringify(checklist)); } catch {}
-  }, [checklist]);
-
-  // Derive daily PnL and counts
-  const daily = useMemo(() => {
-    const map = new Map<string, { pnl: number; count: number }>();
-    filteredTrades.forEach((t) => {
-      const d = new Date(t.openTime || t.closeTime || Date.now());
-      const key = d.toISOString().slice(0, 10);
-      const prev = map.get(key) || { pnl: 0, count: 0 };
-      const pnl = parseFloat(String(t.pnl || 0)) || 0;
-      map.set(key, { pnl: prev.pnl + pnl, count: prev.count + 1 });
-    });
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [filteredTrades]);
-
-  // Breach checks
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const today = daily.find(([k]) => k === todayKey)?.[1] || { pnl: 0, count: 0 };
-  const overTrading = today.count > maxTradesPerDay;
-  const dailyLossBreach = today.pnl < -Math.abs(maxDailyLoss);
-  const weeklyLossBreach = (() => {
-    // last 5 trading days aggregate
-    const last = daily.slice(-5).reduce((sum, [, v]) => sum + v.pnl, 0);
-    return last < -Math.abs(maxWeeklyLoss);
-  })();
-
-  // Prop firm simulator inputs
-  const [propBalance, setPropBalance] = useState<number>(accountBalance || 1000);
-  const [propTargetPct, setPropTargetPct] = useState<number>(10); // e.g., 10%
-  const [propMaxDailyLossPct, setPropMaxDailyLossPct] = useState<number>(5);
-  const [propMaxTotalLossPct, setPropMaxTotalLossPct] = useState<number>(10);
-  const [propDays, setPropDays] = useState<number>(20);
-
-  const propSim = useMemo(() => {
-    // Use existing historical daily PnL as demo; scale to selected balance
-    const bal = propBalance || 1000;
-    const scaledDaily = daily.slice(-propDays).map(([date, v]) => ({
-      date,
-      pnl: v.pnl, // assuming pnl already in account currency; treat as absolute
-      count: v.count,
-    }));
-
-    const target = (propTargetPct / 100) * bal;
-    const maxDailyLoss = (propMaxDailyLossPct / 100) * bal;
-    const maxTotalLoss = (propMaxTotalLossPct / 100) * bal;
-
-    let cum = 0;
-    let pass = false;
-    let breach = '';
-    for (const d of scaledDaily) {
-      cum += d.pnl;
-      if (d.pnl < -maxDailyLoss) { breach = 'Max daily loss breached'; break; }
-      if (cum < -maxTotalLoss) { breach = 'Max total loss breached'; break; }
-      if (cum >= target) { pass = true; break; }
-    }
-    return { target, maxDailyLoss, maxTotalLoss, cum, pass, breach, data: scaledDaily };
-  }, [daily, propBalance, propTargetPct, propMaxDailyLossPct, propMaxTotalLossPct, propDays]);
-
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="rounded-xl border border-white/10 bg-white/5 dark:bg-white/5 p-4">
-      <h3 className="font-semibold mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-indigo-500" /> {title}</h3>
-      {children}
-    </div>
-  );
-
-  const ControlsInput = (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-        <div className="text-xs text-muted-foreground mb-1">Risk per trade</div>
-        <div className="flex items-center gap-2">
-          <input type="range" min={0.25} max={3} step={0.25} value={riskPct} onChange={(e)=>setRiskPct(parseFloat(e.target.value))} className="w-full" />
-          <span className="text-sm font-medium">{riskPct.toFixed(2)}%</span>
-        </div>
-      </div>
-      <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-        <div className="text-xs text-muted-foreground mb-1">Max trades/day</div>
-        <div className="flex items-center gap-2">
-          <input type="number" min={1} max={50} value={maxTradesPerDay} onChange={(e)=>setMaxTradesPerDay(parseInt(e.target.value||'0'))} className="w-24 bg-transparent border rounded px-2 py-1" />
-        </div>
-      </div>
-      <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-        <div className="text-xs text-muted-foreground mb-1">Max daily loss</div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm">$</span>
-          <input type="number" min={10} step={10} value={Math.round(maxDailyLoss)} onChange={(e)=>setMaxDailyLoss(parseFloat(e.target.value||'0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
-        </div>
-      </div>
-      {(plan === 'plus' || plan === 'elite' || plan === 'pro') && (
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Max weekly loss</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">$</span>
-            <input type="number" min={50} step={10} value={Math.round(maxWeeklyLoss)} onChange={(e)=>setMaxWeeklyLoss(parseFloat(e.target.value||'0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
-          </div>
-        </div>
-      )}
-      {(plan === 'plus' || plan === 'elite') && (
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Cooldown after loss</div>
-          <div className="flex items-center gap-2">
-            <input type="number" min={5} step={5} value={cooldownMins} onChange={(e)=>setCooldownMins(parseInt(e.target.value||'0'))} className="w-20 bg-transparent border rounded px-2 py-1" />
-            <span className="text-sm">mins</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const Checklist = (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-      {[
-        { key: 'setupValid', label: 'Setup is valid and A+ quality' },
-        { key: 'stopLossSet', label: 'Stop loss defined and placed' },
-        { key: 'rrOk', label: 'Risk/Reward ≥ 1.5R' },
-        { key: 'noRevenge', label: 'Not trading to win back losses' },
-        { key: 'journalReady', label: 'Will journal immediately after trade' },
-      ].map((item) => (
-        <button
-          key={item.key}
-          onClick={() => setChecklist((c) => ({ ...c, [item.key]: !c[item.key as keyof typeof c] }))}
-          className={`flex items-center gap-2 p-2 rounded border ${checklist[item.key as keyof typeof checklist] ? 'border-green-500 bg-green-500/10' : 'border-white/10 hover:bg-white/5'}`}
-        >
-          {checklist[item.key as keyof typeof checklist] ? <CheckSquare className="w-4 h-4 text-green-500" /> : <SquareIcon className="w-4 h-4 text-gray-400" />}
-          <span className="text-sm">{item.label}</span>
-        </button>
-      ))}
-    </div>
-  );
-
-  const GuardStatus = (
-    <div className="grid sm:grid-cols-3 gap-3">
-      <div className={`p-3 rounded ${overTrading ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/5'}`}>
-        <div className="text-xs text-muted-foreground">Today trades</div>
-        <div className="text-lg font-bold">{today.count} / {maxTradesPerDay}</div>
-        {overTrading && <div className="text-xs text-red-400 mt-1">Overtrading detected. Consider stopping.</div>}
-      </div>
-      <div className={`p-3 rounded ${dailyLossBreach ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/5'}`}>
-        <div className="text-xs text-muted-foreground">Today P/L</div>
-        <div className="text-lg font-bold">${today.pnl.toFixed(2)}</div>
-        {dailyLossBreach && <div className="text-xs text-red-400 mt-1">Max daily loss breached.</div>}
-      </div>
-      <div className={`p-3 rounded ${weeklyLossBreach ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/5'}`}>
-        <div className="text-xs text-muted-foreground">Last 5 days P/L</div>
-        <div className="text-lg font-bold">${daily.slice(-5).reduce((s,[,v])=>s+v.pnl,0).toFixed(2)}</div>
-        {weeklyLossBreach && <div className="text-xs text-red-400 mt-1">Max weekly loss breached.</div>}
-      </div>
-    </div>
-  );
-
-  const PropSimUI = (
-    <div className="space-y-3">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Balance</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">$</span>
-            <input type="number" min={100} step={50} value={Math.round(propBalance)} onChange={(e)=>setPropBalance(parseFloat(e.target.value||'0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
-          </div>
-        </div>
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Profit target</div>
-          <div className="flex items-center gap-2">
-            <input type="range" min={5} max={20} step={1} value={propTargetPct} onChange={(e)=>setPropTargetPct(parseFloat(e.target.value))} className="w-full" />
-            <span className="text-sm font-medium">{propTargetPct}%</span>
-          </div>
-        </div>
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Max daily loss</div>
-          <div className="flex items-center gap-2">
-            <input type="range" min={2} max={10} step={1} value={propMaxDailyLossPct} onChange={(e)=>setPropMaxDailyLossPct(parseFloat(e.target.value))} className="w-full" />
-            <span className="text-sm font-medium">{propMaxDailyLossPct}%</span>
-          </div>
-        </div>
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Max total loss</div>
-          <div className="flex items-center gap-2">
-            <input type="range" min={5} max={20} step={1} value={propMaxTotalLossPct} onChange={(e)=>setPropMaxTotalLossPct(parseFloat(e.target.value))} className="w-full" />
-            <span className="text-sm font-medium">{propMaxTotalLossPct}%</span>
-          </div>
-        </div>
-        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
-          <div className="text-xs text-muted-foreground mb-1">Challenge days</div>
-          <div className="flex items-center gap-2">
-            <input type="number" min={5} max={60} value={propDays} onChange={(e)=>setPropDays(parseInt(e.target.value||'0'))} className="w-20 bg-transparent border rounded px-2 py-1" />
-            <span className="text-sm">days</span>
-          </div>
-        </div>
-      </div>
-      <div className="rounded-lg p-4 bg-white/5">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm">Target: <span className="font-semibold">${propSim.target.toFixed(0)}</span></div>
-          <div className="text-sm">Max Daily Loss: <span className="font-semibold">${propSim.maxDailyLoss.toFixed(0)}</span></div>
-          <div className="text-sm">Max Total Loss: <span className="font-semibold">${propSim.maxTotalLoss.toFixed(0)}</span></div>
-          <div className="ml-auto text-sm font-semibold">
-            {propSim.breach ? <span className="text-red-400">{propSim.breach}</span> : propSim.pass ? <span className="text-green-400">Target reached ✓</span> : <span className="text-yellow-400">In progress</span>}
-          </div>
-        </div>
-        <div className="mt-3 w-full bg-black/20 rounded h-2 overflow-hidden">
-          <div className={`h-full ${propSim.pass ? 'bg-green-500' : propSim.breach ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, Math.max(0, (propSim.cum / (propSim.target||1)) * 100))}%` }} />
-        </div>
-      </div>
-    </div>
-  );
-
-  const upgradeCta = (label = 'Upgrade to unlock') => (
-    <Button variant="outline" size="sm" onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch {} }}>
-      <Crown className="w-4 h-4 mr-1 text-yellow-500" /> {label}
-    </Button>
-  );
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold flex items-center gap-2"><Shield className="w-5 h-5 text-indigo-500" /> Automated Risk Controls & Prop Firm Simulator</h3>
-          <p className="text-muted-foreground">Set your guardrails, run prop-challenge demos, and keep yourself from blowing up.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={autoGuard ? 'default' : 'outline'}
-            onClick={() => setAutoGuard(!autoGuard)}
-            className="flex items-center gap-2"
-          >
-            {autoGuard ? <StopCircle className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {autoGuard ? 'Auto-Guard ON' : 'Auto-Guard OFF'}
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2" onClick={() => alert('Saved!')}><SlidersHorizontal className="w-4 h-4" /> Save</Button>
-        </div>
-      </div>
-
-      {/* Pre-trade Checklist */}
-      <Section title="Pre-Trade Checklist">
-        {Checklist}
-        {plan === 'free' && (
-          <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> More checklist templates in Pro and Plus. {upgradeCta('Upgrade')}</div>
-        )}
-      </Section>
-
-      {/* Risk Rules */}
-      <Section title="Risk Rules & Auto-Stop">
-        {ControlsInput}
-        <div className="mt-3">
-          {GuardStatus}
-        </div>
-        {plan === 'free' && (
-          <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> Auto-stop & cooldown in Pro+. {upgradeCta()}</div>
-        )}
-      </Section>
-
-      {/* Prop Firm Simulator */}
-      <Section title="Prop Firm Simulator (Demo Mode)">
-        {PropSimUI}
-        {plan === 'free' && (
-          <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> Custom prop templates in Elite. {upgradeCta('Unlock Elite')}</div>
-        )}
-      </Section>
-    </div>
-  );
-}

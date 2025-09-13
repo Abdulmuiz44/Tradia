@@ -1,5 +1,6 @@
 // src/app/api/analytics/user-stats/route.ts
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { createAdminSupabase } from '@/utils/supabase/admin';

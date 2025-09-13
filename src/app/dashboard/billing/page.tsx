@@ -58,12 +58,31 @@ export default function BillingPage() {
   // Check for success/cancel parameters
   const success = searchParams?.get('success');
   const canceled = searchParams?.get('canceled');
+  const txRef = searchParams?.get('tx_ref') || searchParams?.get('txRef') || null;
 
   useEffect(() => {
     if (session?.user) {
       loadBillingData();
     }
   }, [session]);
+
+  // If redirected from Flutterwave with tx_ref, verify explicitly to avoid waiting for webhook
+  useEffect(() => {
+    (async () => {
+      try {
+        if (success && txRef) {
+          await fetch('/api/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ txRef })
+          });
+          // refresh plan/subscription once after verification
+          await loadBillingData();
+        }
+      } catch {}
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [success, txRef]);
 
   const loadBillingData = async () => {
     if (!session?.user?.id) return;

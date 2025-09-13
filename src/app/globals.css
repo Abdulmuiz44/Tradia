@@ -39,6 +39,23 @@ html:not(.dark) small,
 html:not(.dark) div {
   font-weight: 500; /* make body text slightly bolder for readability */
 }
+/* Light mode: make corners more rounded across common surfaces */
+html:not(.dark) .rounded,
+html:not(.dark) .rounded-md,
+html:not(.dark) .rounded-lg,
+html:not(.dark) .rounded-xl,
+html:not(.dark) .card,
+html:not(.dark) .btn,
+html:not(.dark) .input,
+html:not(.dark) .select,
+html:not(.dark) .textarea {
+  border-radius: 12px !important;
+}
+html:not(.dark) .shadow,
+html:not(.dark) .shadow-md,
+html:not(.dark) .shadow-lg {
+  box-shadow: 0 2px 10px rgba(17, 24, 39, 0.08), 0 1px 3px rgba(17, 24, 39, 0.06) !important;
+}
 /* Boost legibility of commonly used muted text classes in light mode */
 html:not(.dark) .text-gray-300 { color: #374151 !important; } /* -> gray-700 */
 html:not(.dark) .text-gray-400 { color: #374151 !important; } /* -> gray-700 */

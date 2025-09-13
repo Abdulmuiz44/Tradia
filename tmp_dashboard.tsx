@@ -59,7 +59,6 @@ import DrawdownChart from "@/components/charts/DrawdownChart";
 import PerformanceTimeline from "@/components/charts/PerformanceTimeline";
 import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
 import TradePatternChart from "@/components/charts/TradePatternChart";
-import NotificationBell from "@/components/notifications/NotificationBell";
 
 // Base tabs available to all users
 const BASE_TAB_DEFS = [
@@ -504,12 +503,12 @@ function DashboardContent() {
           <div className="flex flex-col h-full">
             {/* Logo/Brand */}
             <div className="flex items-center gap-3 p-6 border-b border-[#2a2f3a]">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-white font-extrabold text-base">T</span>
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">T</span>
               </div>
               <div>
-                <h1 className="text-white font-extrabold text-xl tracking-tight">Tradia</h1>
-                <p className="text-gray-300 text-xs">Trading Dashboard</p>
+                <h1 className="text-white font-bold text-lg">Tradia</h1>
+                <p className="text-gray-400 text-xs">Trading Dashboard</p>
               </div>
             </div>
 
@@ -565,13 +564,13 @@ function DashboardContent() {
           onClick={() => setMobileMenuOpen(false)}
         >
           <div className="absolute inset-0 bg-black/50" />
-            <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a] transform transition-transform duration-300">
-              <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
-                <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-extrabold text-sm">T</span>
+          <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a] transform transition-transform duration-300">
+            <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">T</span>
                 </div>
-                <h1 className="text-white font-extrabold text-lg">Tradia</h1>
+                <h1 className="text-white font-bold text-lg">Tradia</h1>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -802,7 +801,19 @@ function DashboardContent() {
               </button>
 
               {/* Notifications */}
-              <NotificationBell />
+              <DropdownMenu>
+                <DropdownMenuTrigger className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Notifications">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80 bg-zinc-800 text-white border border-zinc-700">
+                  <div className="p-3 text-sm font-semibold">Latest Updates</div>
+                  <div className="px-3 pb-2 space-y-2 text-sm">
+                    <div className="p-2 rounded bg-zinc-700/40">New: 3-day trials for Pro and Plus plans</div>
+                    <div className="p-2 rounded bg-zinc-700/40">MT5 Account Balance metric added to Analytics</div>
+                    <div className="p-2 rounded bg-zinc-700/40">Mobile layout and sidebar improvements</div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Current filter indicator */}
               {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
@@ -823,6 +834,8 @@ function DashboardContent() {
               <>
                 {activeTab === "overview" && (
                   <>
+                    <MentalCoach />
+                    <div className="mt-3" />
                     <WeeklyCoachRecap />
                     <RiskGuard />
                     <OverviewCardsAny trades={filteredTrades} />
@@ -838,7 +851,10 @@ function DashboardContent() {
                 )}
 
                 {activeTab === "journal" && (
-                  <TradeJournalAny />
+                  <>
+                    <MentalCoach />
+                    <TradeJournalAny />
+                  </>
                 )}
 
                 {activeTab === "tradia-ai" && (
@@ -902,3 +918,4 @@ export default function DashboardPage() {
     </ClientOnly>
   );
 }
+

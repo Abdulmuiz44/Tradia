@@ -67,7 +67,12 @@ export default function FeatureLock({
               className="w-full"
               onClick={() => {
                 setOpen(false);
-                window.location.href = "/upgrade"; // Replace with your upgrade page
+                try {
+                  (window as any).location.href = "/dashboard#upgrade";
+                } catch {
+                  // best-effort fallback
+                  (window as any).location.hash = '#upgrade';
+                }
               }}
             >
               Upgrade to {requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)}

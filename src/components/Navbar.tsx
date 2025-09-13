@@ -86,10 +86,14 @@ export default function Navbar() {
         {/* Brand */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3 no-underline">
-            <img src="/TRADIA-LOGO2.svg" alt="Tradia" className="h-8 w-auto" />
+            <img
+              src="/TRADIA-LOGO2.svg"
+              alt="Tradia"
+              className="h-10 sm:h-11 w-auto drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] contrast-125"
+            />
             <div className="hidden sm:block">
-              <div className="text-lg font-bold text-gray-900 dark:text-white">Tradia</div>
-              <div className="text-xs text-gray-500 dark:text-gray-300 -mt-1">AI Trading Performance</div>
+              <div className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white">Tradia</div>
+              <div className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-300 -mt-0.5 font-medium">AI Trading Performance</div>
             </div>
           </Link>
         </div>

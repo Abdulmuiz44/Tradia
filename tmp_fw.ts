@@ -88,15 +88,6 @@ export async function getOrCreatePlanOnFlutterwave(
   return String(fwPlanId);
 }
 
-const PAYMENT_OPTION_MAP: Record<string, string> = {
-  card: "card",
-  bank: "banktransfer",
-  banktransfer: "banktransfer",
-  ussd: "ussd",
-  qr: "qr",
-  mobilemoney: "mobilemoney",
-};
-
 export async function createCheckoutForPlan(
   planType: "pro" | "plus" | "elite",
   userEmail: string,
@@ -121,9 +112,6 @@ export async function createCheckoutForPlan(
 
   const txRef = `${planKey}_${userId || 'guest'}_${Date.now()}`;
 
-  // Resolve Flutterwave payment option from UI choice
-  const fwPaymentOption = PAYMENT_OPTION_MAP[String(paymentMethod).toLowerCase()] || "card";
-
   // Create payment (first payment that will subscribe the customer to the plan)
   const payload: any = {
     tx_ref: txRef,
@@ -131,14 +119,13 @@ export async function createCheckoutForPlan(
     currency,
     redirect_url: successUrl,
     customer: { email: userEmail },
-    // Restrict to the option selected by the user so the checkout matches their choice
-    payment_options: fwPaymentOption,
+    payment_options: "card,bank,ussd,qr", // let Flutterwave pick allowed methods
     customizations: {
       title: "Tradia subscription",
       description: `${planType} (${billingCycle})`,
     },
     payment_plan: fwPlanId, // important: include plan ID so the customer is subscribed after first payment
-    meta: { user_id: userId, plan_type: planType, billing_cycle: billingCycle, payment_method: fwPaymentOption },
+    meta: { user_id: userId, plan_type: planType, billing_cycle: billingCycle },
   };
 
   const resp = await callFlutterwave("/payments", "POST", payload);
@@ -278,3 +265,4 @@ export function getPaymentMethodOptions(): PaymentMethod[] {
     },
   ];
 }
+

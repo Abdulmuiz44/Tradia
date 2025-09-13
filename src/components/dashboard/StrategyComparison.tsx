@@ -186,7 +186,10 @@ export default function StrategyComparison({ className = "" }: StrategyCompariso
               <span>AI-powered strategy recommendations</span>
             </div>
           </div>
-          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+          <Button
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch {} }}
+          >
             Upgrade to PRO
           </Button>
         </CardContent>
