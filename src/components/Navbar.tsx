@@ -87,13 +87,13 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3 no-underline">
             <img
-              src="/TRADIA-LOGO2.svg"
+              src="/tradia-lockup.svg"
               alt="Tradia"
-              className="h-10 sm:h-11 w-auto drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] contrast-125"
+              className="h-10 sm:h-12 w-auto drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] contrast-125"
             />
             <div className="hidden sm:block">
               <div className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white">Tradia</div>
-              <div className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-300 -mt-0.5 font-medium">AI Trading Performance</div>
+              <div className="text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 -mt-0.5 font-medium">AI Trading Performance</div>
             </div>
           </Link>
         </div>

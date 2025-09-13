@@ -11,8 +11,8 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Tradia - AI Trading Performance Assistant | Trade Analysis & Insights",
-  description: "Transform your trading with Tradia's AI-powered performance analysis. Connect MT5, analyze trades, get AI insights, and improve your trading strategy. Start free today.",
+  title: "Tradia | AI Trading Performance, Analytics & MT5 Coach",
+  description: "Tradia is your AI trading performance hub: connect MT5, analyze trades, run prop-firm simulators, and get coaching to improve consistency. Start free and upgrade anytime.",
   keywords: "trade analysis, trading performance, MT5 integration, AI trading assistant, trade journal, trading insights, forex trading, trading analytics",
   authors: [{ name: "Tradia Team" }],
   creator: "Tradia",
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: "Tradia - AI Trading Performance Assistant | Trade Analysis & Insights",
-    description: "Transform your trading with AI-powered performance analysis. Connect MT5, analyze trades, and get actionable trading insights. Start free today.",
+    title: "Tradia | AI Trading Performance, Analytics & MT5 Coach",
+    description: "AI-powered trade analytics, coaching, MT5 integration, prop-firm simulator and risk controls — all in one.",
     url: "https://tradiaai.app",
     siteName: "Tradia",
     images: [
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tradia - AI Trading Performance Assistant",
-    description: "Transform your trading with AI-powered performance analysis. Connect MT5, analyze trades, and get actionable insights.",
+    title: "Tradia | AI Trading Performance & MT5 Coach",
+    description: "Analyze trades, get AI insights and risk controls, and level up your consistency.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },
@@ -145,6 +145,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Icons */}
+        <link rel="icon" href="/tradia-mark.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/tradia-mark.svg" type="image/svg+xml" />
+        <link rel="mask-icon" href="/tradia-mark.svg" color="#0f172a" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -161,13 +165,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#061226" />
         <meta name="msapplication-TileColor" content="#061226" />
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" href="/tradia-mark.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body className="text-[13.5px] sm:text-[14.5px] md:text-[16px] leading-[1.35] md:leading-normal">
+      <body className="text-[15px] sm:text-[16px] md:text-[17px] leading-[1.45] md:leading-normal">
         <Providers>
           <PostHogInit />
            <GoogleAnalytics />

@@ -504,9 +504,7 @@ function DashboardContent() {
           <div className="flex flex-col h-full">
             {/* Logo/Brand */}
             <div className="flex items-center gap-3 p-6 border-b border-[#2a2f3a]">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-white font-extrabold text-base">T</span>
-              </div>
+              <img src="/tradia-mark.svg" alt="Tradia" className="h-8 w-auto" />
               <div>
                 <h1 className="text-white font-extrabold text-xl tracking-tight">Tradia</h1>
                 <p className="text-gray-300 text-xs">Trading Dashboard</p>
@@ -568,9 +566,7 @@ function DashboardContent() {
             <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a] transform transition-transform duration-300">
               <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
                 <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-extrabold text-sm">T</span>
-                </div>
+                <img src="/tradia-mark.svg" alt="Tradia" className="h-7 w-auto" />
                 <h1 className="text-white font-extrabold text-lg">Tradia</h1>
               </div>
               <button

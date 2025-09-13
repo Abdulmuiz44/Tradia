@@ -27,14 +27,9 @@ export async function middleware(req: NextRequest) {
     });
 
     if (nextAuthToken?.email) {
-      // Enforce paywall for free/starter plans except on billing page
-      const userPlan = (nextAuthToken as any).plan || 'free';
-      const isBilling = pathname.startsWith("/dashboard/billing");
-      const isAllowed = isBilling;
-      if ((userPlan === 'free' || userPlan === 'starter') && !isAllowed) {
-        return NextResponse.redirect(new URL("/upgrade", req.url));
-      }
-      return res; // Allow access
+      // Allow free/starter users to access the dashboard.
+      // Feature-level gating is handled in the client (FeatureLock/Upgrade prompts).
+      return res;
     }
 
     // Try custom JWT
