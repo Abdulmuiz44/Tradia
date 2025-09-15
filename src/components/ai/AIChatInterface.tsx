@@ -290,54 +290,67 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         content: msg.content
       }));
 
-      // Generate intelligent coaching response with trade analysis
-      const coachingResponse = generateIntelligentCoachingResponse(inputMessage, trades, uploadedFiles, userTier);
-
-      // Add PRO analytics summary for PRO+ users
-      let finalResponse = coachingResponse;
-      if (userTier !== 'free' && (inputMessage.toLowerCase().includes('analytics') || inputMessage.toLowerCase().includes('performance'))) {
-        const analyticsSummary = generateProAnalyticsSummary(trades);
-        finalResponse += '\n\n' + analyticsSummary;
+      // Check user tier for feature access
+      if (userTier === 'free' && (uploadedFiles.length > 0 || inputMessage.toLowerCase().includes('analyze') || inputMessage.toLowerCase().includes('screenshot'))) {
+        const upgradeMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: "🔒 **PRO Feature**: Advanced AI analysis, image processing, and personalized strategies are available for PRO subscribers and above! Upgrade to unlock:\n\n• 📸 **Screenshot Analysis** - AI-powered trade setup reviews\n• 🧠 **Advanced Analytics** - Deep performance insights\n• 🎯 **Personalized Strategies** - ML-based trading recommendations\n• 📊 **Risk Assessment** - Professional risk management analysis\n\nUpgrade now to get your personal AI trading coach! 🚀",
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, upgradeMessage]);
+        setIsTyping(false);
+        setUploadedFiles([]);
+        return;
       }
 
-      // Ensure plain text without markdown/asterisks or emojis
-      const sanitize = (raw: string) => {
-        try {
-          let t = raw;
-          t = t.replace(/\*\*|\*|__|_/g, ''); // remove markdown bold/italic
-          t = t.replace(/`{1,3}[^`]*`{1,3}/g, ''); // remove inline code
-          t = t.replace(/[•▪︎·\u2022\u25C6\u25CF\u25A0\u25CB\u25E6]/g, '-'); // replace bullets with dash
-          t = t.replace(/[\u{1F300}-\u{1FAD6}\u{1F900}-\u{1F9FF}\u{2600}-\u{27BF}]/gu, ''); // remove emojis/symbols
-          t = t.replace(/\s{2,}/g, ' ').trim();
-          return t;
-        } catch { return raw; }
-      };
-      finalResponse = sanitize(finalResponse);
+      // Call backend AI API for PRO+ users or basic responses
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputMessage,
+          tradeHistory: trades,
+          attachments: uploadedFiles,
+          conversationHistory: conversationHistory
+        }),
+      });
 
-      const assistantMessage: Message = {
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.response || generateIntelligentCoachingResponse(inputMessage, trades, uploadedFiles, userTier);
+
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: finalResponse,
+        content: aiResponse,
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => [...prev, aiMessage]);
 
-      // Auto-speak response if enabled
-      if (voiceSettings.autoSpeak && voiceSettings.voiceEnabled) {
-        setTimeout(() => speakText(finalResponse), 500);
+      // Auto-speak the response if voice is enabled
+      if (voiceSettings.voiceEnabled && voiceSettings.autoSpeak) {
+        speakText(aiResponse);
       }
 
+      setIsTyping(false);
+      setUploadedFiles([]);
+
     } catch (error) {
-      console.error('Error getting AI response:', error);
+      console.error('Error sending message:', error);
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         type: 'assistant',
-        content: "🤝 Hey, I'm here for you! Sometimes technology glitches, but that doesn't change the fact that you're an amazing trader working hard to improve. Let's try that again - what's on your mind?",
+        content: "Sorry, I encountered an error processing your request. Please try again or contact support if the issue persists.",
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setIsTyping(false);
       setUploadedFiles([]);
     }

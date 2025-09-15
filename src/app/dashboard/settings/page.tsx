@@ -4,13 +4,13 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { useTheme } from "next-themes";
 import {
   Settings,
   Moon,
   Sun,
   Bell,
   Shield,
+  Globe,
   Save,
   RefreshCw
 } from "lucide-react";
@@ -33,8 +33,7 @@ interface UserSettings {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, loading } = useUser();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { user, loading, plan } = useUser();
   const [settings, setSettings] = useState<UserSettings>({
     theme: 'dark',
     language: 'en',
@@ -63,14 +62,6 @@ export default function SettingsPage() {
     loadSettings();
   }, []);
 
-  // keep settings.theme aligned with next-themes
-  useEffect(() => {
-    try {
-      const effective = (theme || resolvedTheme || 'system') as 'light' | 'dark' | 'system';
-      setSettings((prev) => (prev.theme === effective ? prev : { ...prev, theme: effective }));
-    } catch {}
-  }, [theme, resolvedTheme]);
-
   const loadSettings = () => {
     try {
       const savedSettings = localStorage.getItem('userSettings');
@@ -92,8 +83,8 @@ export default function SettingsPage() {
       localStorage.setItem('userSettings', JSON.stringify(settings));
       localStorage.setItem('riskControls', JSON.stringify(riskControls));
 
-      // Apply theme via next-themes
-      setTheme(settings.theme);
+      // Apply theme immediately
+      applyTheme(settings.theme);
 
       alert('Settings saved successfully!');
     } catch (error) {
@@ -104,7 +95,17 @@ export default function SettingsPage() {
     }
   };
 
-  // applyTheme now delegated to next-themes setTheme
+  const applyTheme = (theme: string) => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  };
 
   const updateSetting = (section: keyof UserSettings, key: string, value: any) => {
     setSettings(prev => {
@@ -120,7 +121,7 @@ export default function SettingsPage() {
 
       // Apply theme instantly when changed
       if (section === 'theme' && key === 'theme') {
-        setTheme(value as 'light' | 'dark' | 'system');
+        applyTheme(value as string);
       }
 
       return next;
@@ -141,28 +142,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
+    <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
-          <div className="flex items-center gap-3 text-gray-400">
-            <p>Customize your trading experience</p>
-            {user?.createdAt && (() => {
-              const d = new Date(user.createdAt);
-              if (isNaN(d.getTime())) return null;
-              return (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-800 text-xs border border-gray-700">
-                  Member since {d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-                </span>
-              );
-            })()}
-          </div>
+          <p className="text-gray-400">Customize your trading experience</p>
         </div>
 
         <div className="space-y-6">
           {/* Appearance Settings */}
-          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
+          <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Settings className="w-6 h-6" />
               Appearance
@@ -177,20 +167,20 @@ export default function SettingsPage() {
                     { value: 'light', label: 'Light', icon: Sun },
                     { value: 'dark', label: 'Dark', icon: Moon },
                     { value: 'system', label: 'System', icon: Settings }
-                  ].map((opt) => {
-                    const Icon = opt.icon;
+                  ].map((theme) => {
+                    const Icon = theme.icon;
                     return (
                       <button
-                        key={opt.value}
-                        onClick={() => updateSetting('theme', 'theme', opt.value)}
+                        key={theme.value}
+                        onClick={() => updateSetting('theme', 'theme', theme.value)}
                         className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                          settings.theme === opt.value
+                          settings.theme === theme.value
                             ? 'border-blue-500 bg-blue-600'
                             : 'border-gray-600 hover:border-gray-500'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
-                        <span>{opt.label}</span>
+                        <span>{theme.label}</span>
                       </button>
                     );
                   })}
@@ -236,7 +226,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Notification Settings */}
-          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
+          <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Bell className="w-6 h-6" />
               Notifications
@@ -269,7 +259,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Privacy Settings */}
-          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
+          <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Shield className="w-6 h-6" />
               Privacy & Analytics
@@ -295,13 +285,13 @@ export default function SettingsPage() {
           </div>
 
           {/* Risk Controls */}
-          <div className="rounded-lg p-6 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors">
+          <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Shield className="w-6 h-6" />
               Risk Controls
             </h2>
 
-            <FeatureLock requiredPlan="plus">
+            <FeatureLock requiredPlan={plan === 'free' ? 'plus' : undefined}>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">Daily loss limit (USD)</label>
@@ -370,4 +360,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

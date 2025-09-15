@@ -1,6 +1,4 @@
-
-// src/app/dashboard/page.tsx
-"use client";
+"use client"; // enable client-side rendering
 
 import React, { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -497,17 +495,17 @@ function DashboardContent() {
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
-    <main className="min-h-screen w-full bg-[#0D1117] transition-colors duration-300">
+    <main className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
       <div className="flex h-screen">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:bg-[#161B22] lg:border-r lg:border-[#2a2f3a]">
+        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:bg-gray-100 dark:lg:bg-[#161B22] lg:border-r lg:border-gray-200 dark:lg:border-[#2a2f3a]">
           <div className="flex flex-col h-full">
             {/* Logo/Brand */}
-            <div className="flex items-center gap-3 p-6 border-b border-[#2a2f3a]">
-              <img src="/tradia-mark.svg" alt="Tradia" className="h-8 w-auto" />
+            <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-[#2a2f3a]">
+              <img src="/tradia-mark.svg" alt="Tradia" className="h-6 w-auto" />
               <div>
-                <h1 className="text-white font-extrabold text-xl tracking-tight">Tradia</h1>
-                <p className="text-gray-300 text-xs">Trading Dashboard</p>
+                <h1 className="text-black dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
+                <p className="text-gray-600 dark:text-gray-300 text-xs">Trading Dashboard</p>
               </div>
             </div>
 
@@ -521,23 +519,23 @@ function DashboardContent() {
             </div>
 
             {/* User Profile Section */}
-            <div className="p-4 border-t border-[#2a2f3a]">
+            <div className="p-4 border-t border-gray-200 dark:border-[#2a2f3a]">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                <DropdownMenuTrigger className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
                     <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-white text-sm font-medium truncate">
+                    <p className="text-black dark:text-white text-sm font-medium truncate">
                       {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
                     </p>
-                    <p className="text-gray-400 text-xs truncate">
+                    <p className="text-gray-600 dark:text-gray-400 text-xs truncate">
                       {session?.user?.email || ''}
                     </p>
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-zinc-800 text-white border border-zinc-700">
+                <DropdownMenuContent className="w-56 bg-white dark:bg-zinc-800 text-black dark:text-white border border-gray-200 dark:border-zinc-700">
                   <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
                     <User className="w-4 h-4 mr-2" />
                     Profile
@@ -853,7 +851,7 @@ function DashboardContent() {
                 )}
 
                 {activeTab === "tradia-ai" && (
-                  <div className="h-full">
+                  <div className="h-full text-sm">
                     <AIChatInterface />
                   </div>
                 )}
