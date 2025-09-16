@@ -13,6 +13,14 @@ type AppNotification = {
 };
 
 const ANNOUNCEMENTS: AppNotification[] = [
+
+  {
+    id: "risk-ai-guard-rollout",
+    title: "New Risk & Prop Features",
+    body:
+      "Tilt Mode Detector, Prop Dashboard, Optimal Strategy Matcher, and Daily Loss & Drawdown Guard are now live. Gated by plan tiers with easy upgrade inside Analytics.",
+    date: new Date().toISOString(),
+  },
   {
     id: "ai-features-rollout",
     title: "New AI Features Across Plans",
