@@ -368,13 +368,13 @@ export class AIService {
       // Step 6: Generate AI response using Vercel AI SDK
       const aiResponse = await this.generateAIResponse(query, tradeSummary, analysis, reasoning, context);
 
-      // Step 7: Add plan-specific footer
-      const finalResponse = aiResponse + this.generatePlanFooter();
-
-      return finalResponse;
+      // Step 7: Add plan-specific footer for non-elite plans only, then sanitize
+      const shouldFooter = this.userPlan?.id !== 'elite';
+      const finalResponse = shouldFooter ? aiResponse + this.generatePlanFooter() : aiResponse;
+      return this.sanitizeOutput(finalResponse);
     } catch (error) {
       console.error('AI Response Generation Error:', error);
-      return this.generateFallbackResponse(query, trades);
+      return this.sanitizeOutput(this.generateFallbackResponse(query, trades));
     }
   }
 
@@ -388,9 +388,135 @@ export class AIService {
     reasoning: AIReasoningProcess,
     context?: any
   ): Promise<string> {
-    // Simple AI response generation without external SDK
+    // Prefer Hugging Face free models with plan-based ensemble
+    try {
+      const sys = this.buildSystemPrompt(tradeSummary, analysis, reasoning);
+      const user = this.buildUserPrompt(query, context);
+      const detail = `\n\nContext Summary (JSON):\n\n${JSON.stringify({ tradeSummary, keyInsights: analysis.insights.slice(0,5), patterns: analysis.patterns.slice(0,5) }, null, 2)}`;
+      const prompt = `${sys}\n\n${user}${detail}`;
+
+      const models = this.getHuggingFaceModelsForPlan();
+      if (models.length > 0) {
+        const results = await this.callMultipleHF(models, prompt);
+        const merged = this.mergeModelOutputs(results);
+        const formatted = this.formatAIResponse(merged, analysis);
+        return this.sanitizeOutput(formatted);
+      }
+    } catch (err) {
+      console.warn('Hugging Face generation failed, falling back:', err);
+    }
+
+    // Fallback: simple local response
     const response = this.generateSimpleResponse(query, tradeSummary, analysis);
-    return this.formatAIResponse(response, analysis);
+    return this.sanitizeOutput(this.formatAIResponse(response, analysis));
+  }
+
+  // --- Hugging Face integration (free models) ---
+  private getHuggingFaceModelsForPlan(): string[] {
+    // Allow override via env (comma-separated list)
+    const envList = (process.env.HUGGINGFACE_MODELS || '').split(',').map(s => s.trim()).filter(Boolean);
+    const defaultModels = envList.length > 0 ? envList : [
+      // Public instruct models commonly available on Inference API
+      'TinyLlama/TinyLlama-1.1B-Chat-v1.0',
+      'HuggingFaceH4/zephyr-7b-beta',
+      'mistralai/Mistral-7B-Instruct-v0.2',
+      'google/gemma-2-9b-it',
+      'Qwen/Qwen2.5-7B-Instruct',
+      'tiiuae/falcon-7b-instruct',
+      'openchat/openchat-3.5-0106',
+      'NousResearch/Hermes-2-Pro-Mistral-7B',
+      'Teknium/OpenHermes-2.5-Mistral-7B',
+      'allenai/OLMo-7B-Instruct'
+    ];
+
+    const plan = this.userPlan?.id || 'starter';
+    const counts: Record<string, number> = { starter: 1, free: 1, pro: 3, plus: 6, elite: 10 } as any;
+    const n = Math.max(1, counts[plan] || 1);
+    return defaultModels.slice(0, n);
+  }
+
+  private async callMultipleHF(models: string[], prompt: string): Promise<Array<{ model: string; text: string }>> {
+    const promises = models.map(m => this.callHuggingFace(m, prompt)
+      .then(text => ({ model: m, text }))
+      .catch(() => ({ model: m, text: '' }))
+    );
+    const results = await Promise.all(promises);
+    // Filter empty results
+    return results.filter(r => r.text && r.text.trim().length > 0);
+  }
+
+  private async callHuggingFace(model: string, prompt: string): Promise<string> {
+    const url = `https://api-inference.huggingface.co/models/${model}`;
+    const headersBase: Record<string, string> = { 'Content-Type': 'application/json' };
+    const rawKey = (process.env.HUGGINGFACE_API_KEY || process.env.HF_API_KEY || '').trim();
+    const cleaned = rawKey.replace(/^['"]|['"]$/g, ''); // strip quotes if present
+    const hfKey = /^hf_[A-Za-z0-9-]+/.test(cleaned) ? cleaned : '';
+    const authedHeaders = hfKey ? { ...headersBase, Authorization: `Bearer ${hfKey}` } : headersBase;
+
+    // Prefer text-generation; many instruct models support it via Inference API
+    const body = {
+      inputs: prompt,
+      parameters: {
+        max_new_tokens: Number(process.env.HF_MAX_NEW_TOKENS || 400),
+        temperature: Number(process.env.HF_TEMPERATURE || 0.3),
+        return_full_text: false,
+      }
+    } as any;
+
+    let res = await fetch(url, { method: 'POST', headers: authedHeaders, body: JSON.stringify(body) });
+    if (!res.ok) {
+      const firstTxt = await res.text().catch(() => '');
+      // If we used a key and received 401, retry once without Authorization (some models allow public access)
+      if (res.status === 401 && hfKey) {
+        try {
+          res = await fetch(url, { method: 'POST', headers: headersBase, body: JSON.stringify(body) });
+        } catch (_) {}
+        if (!res.ok) {
+          const secondTxt = await res.text().catch(() => '');
+          console.warn(`HF API error for ${model}:`, res.status, (secondTxt || firstTxt)?.slice(0, 300));
+          throw new Error(`HF-${res.status}`);
+        }
+        // retry succeeded; do not log the 401 spam
+      } else {
+        console.warn(`HF API error for ${model}:`, res.status, firstTxt?.slice(0, 300));
+        throw new Error(`HF-${res.status}`);
+      }
+    }
+    const data: any = await res.json();
+    // Possible response shapes: Array<{generated_text:string}> or string or object
+    if (Array.isArray(data) && data.length > 0) {
+      const first = data[0];
+      if (typeof first === 'string') return first;
+      if (typeof (first as any)?.generated_text === 'string') return (first as any).generated_text;
+      if (typeof (first as any)?.summary_text === 'string') return (first as any).summary_text;
+    }
+    if (typeof data === 'string') return data;
+    const asText = (data as any)?.generated_text || (data as any)?.data?.[0]?.generated_text || '';
+    return typeof asText === 'string' && asText.length > 0 ? asText : JSON.stringify(data);
+  }
+
+  private mergeModelOutputs(outputs: Array<{ model: string; text: string }>): string {
+    if (!outputs || outputs.length === 0) return '';
+    if (outputs.length === 1) return outputs[0].text;
+
+    // Simple ensemble: start with the longest response, then append unique bullet points from others
+    const sorted = outputs.sort((a, b) => (b.text?.length || 0) - (a.text?.length || 0));
+    const base = sorted[0].text;
+    const baseLower = base.toLowerCase();
+    const extras: string[] = [];
+    for (let i = 1; i < sorted.length; i++) {
+      const t = sorted[i].text;
+      // Extract bullet lines
+      const bullets = t.split(/\r?\n/).filter(l => /^(?:[-*•]|\d+\.)\s/.test(l.trim()));
+      for (const b of bullets) {
+        const bl = b.toLowerCase();
+        if (!baseLower.includes(bl) && !extras.some(e => e.toLowerCase() === bl)) extras.push(b);
+        if (extras.length >= 10) break; // cap additional bullets
+      }
+      if (extras.length >= 10) break;
+    }
+    if (extras.length === 0) return base;
+    return base + '\n\nAdditional perspectives from other models:\n' + extras.map(e => e).join('\n');
   }
 
   /**
@@ -1419,6 +1545,20 @@ What specific aspect of your trading would you like to explore? I'm here to help
 
     return losses > 0 ? profits / losses : profits > 0 ? 3.0 : 0.5;
   }
+
+  // --- Utility: sanitize weird encoding artifacts in templates ---
+  private sanitizeOutput(text: string): string {
+    try {
+      return text
+        .replace(/dY[\s\S]?/g, '')
+        .replace(/�\?�/g, '•')
+        .replace(/�\+'?/g, '→')
+        .replace(/�/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    } catch { return text; }
+  }
 }
 
 export const aiService = AIService.getInstance();
+

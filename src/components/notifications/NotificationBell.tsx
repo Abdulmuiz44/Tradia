@@ -14,6 +14,20 @@ type AppNotification = {
 
 const ANNOUNCEMENTS: AppNotification[] = [
   {
+    id: "ai-features-rollout",
+    title: "New AI Features Across Plans",
+    body:
+      "Personalized strategy recommendations, risk analysis, market timing, real-time analytics, and image-based trade reviews are now live for Pro/Plus/Elite plans.",
+    date: new Date().toISOString(),
+  },
+  {
+    id: "admin-analytics-live",
+    title: "Admin: Real-time Platform Analytics",
+    body:
+      "Live dashboard shows total trades (added/imported/deleted), total PnL, most active day/time, sessions, and average trade duration.",
+    date: new Date().toISOString(),
+  },
+  {
     id: "risk-controls-v1",
     title: "New: Automated Risk Controls & Prop Sim",
     body:

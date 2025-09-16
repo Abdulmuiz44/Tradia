@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import FeedbackModal from "./FeedbackModal";
 
@@ -31,18 +32,8 @@ export default function FloatingFeedbackButton({
     setMounted(true);
   }, []);
 
-  // Defensive pathname detection so component works with both app & pages router
-  const getPath = (): string => {
-    try {
-      // app-router hook (only available in app router)
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { usePathname } = require("next/navigation");
-      return usePathname() ?? (typeof window !== "undefined" ? window.location.pathname : "/");
-    } catch {
-      // fallback for pages router or when require fails
-      return typeof window !== "undefined" ? window.location.pathname : "/";
-    }
-  };
+  // Current pathname from Next.js app router
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!mounted) return;
@@ -50,14 +41,14 @@ export default function FloatingFeedbackButton({
       setVisible(true);
       return;
     }
-    const path = getPath();
+    const path = pathname ?? (typeof window !== "undefined" ? window.location.pathname : "/");
     // show if any prefix matches
     const ok = showOnPaths.some((p) => path.startsWith(p));
     setVisible(ok);
     // We also want to respond to client-side navigation (app router) changes.
     // Minimal listener to update on popstate.
     const onNav = () => {
-      const newPath = getPath();
+      const newPath = pathname ?? (typeof window !== "undefined" ? window.location.pathname : "/");
       const matches = showOnPaths.some((p) => newPath.startsWith(p));
       setVisible(matches);
     };
@@ -70,7 +61,7 @@ export default function FloatingFeedbackButton({
       window.removeEventListener("replacestate" as any, onNav);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showOnPaths, mounted]);
+  }, [showOnPaths, mounted, pathname]);
 
   if (!visible) return null;
 

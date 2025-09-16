@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useTrade } from "@/context/TradeContext";
@@ -117,7 +117,7 @@ const parsePL = (v?: string | number | null): number => {
 };
 
 const fmtDateTime = (d?: string | Date) => {
-  if (!d) return "—";
+  if (!d) return "â€”";
   const dt = typeof d === "string" ? new Date(d) : (d as Date);
   return isNaN(dt.getTime()) ? "Invalid Date" : format(dt, "dd MMM yyyy, HH:mm");
 };
@@ -162,9 +162,9 @@ function HeuristicForecast({ trades, summary }: { trades: Trade[]; summary: any 
     <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
       <div className="text-sm text-zinc-300">Probability next trade will be a WIN</div>
       <div className="text-3xl font-semibold text-white my-3">{p}%</div>
-      <div className="text-xs text-zinc-400">Recent WR {(recentWinRate * 100).toFixed(1)}% • streak {streak} • expectancy {summary.expectancy.toFixed(2)}</div>
+      <div className="text-xs text-zinc-400">Recent WR {(recentWinRate * 100).toFixed(1)}% â€¢ streak {streak} â€¢ expectancy {summary.expectancy.toFixed(2)}</div>
       <div className="mt-4 flex gap-2">
-        <Button variant="secondary" onClick={() => navigator.clipboard.writeText(`${p}% — Recent WR ${(recentWinRate * 100).toFixed(1)}%`)}>
+        <Button variant="secondary" onClick={() => navigator.clipboard.writeText(`${p}% â€” Recent WR ${(recentWinRate * 100).toFixed(1)}%`)}>
           Copy
         </Button>
         <Button variant="ghost" onClick={() => alert("Heuristic forecast: uses recent WR, streak, and expectancy. Replace with a trained model for production.")}>
@@ -275,7 +275,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
             <div className="text-sm text-zinc-300">Progress</div>
             <div className="text-2xl text-white my-2">{propStatus.pctGain.toFixed(2)}%</div>
             <div className="text-xs text-zinc-400">
-              Net P/L: ${propStatus.pnl.toFixed(2)} • Current equity: ${propStatus.current.toFixed(2)}
+              Net P/L: ${propStatus.pnl.toFixed(2)} â€¢ Current equity: ${propStatus.current.toFixed(2)}
             </div>
             <div className="mt-3 text-xs text-zinc-300 mb-2">
               Max Drawdown: {propStatus.maxDD.toFixed(2)}% (limit {propMaxDrawdownPercent}%)
@@ -288,16 +288,16 @@ function PropTracker({ trades }: { trades: Trade[] }) {
             </div>
             <div className="mt-4 space-y-2">
               <div className="text-xs text-zinc-300">
-                Win Rate: {propStatus.winRate.toFixed(1)}% • Required: {propMinWinRate}%
+                Win Rate: {propStatus.winRate.toFixed(1)}% â€¢ Required: {propMinWinRate}%
               </div>
               <div className="flex gap-2 mt-2">
                 <Button
                   variant="secondary"
                   onClick={() => {
                     const status = [];
-                    if (propStatus.passedTarget) status.push("Target ✓");
-                    if (propStatus.passedDD) status.push("Drawdown ✓");
-                    if (propStatus.passedWinRate) status.push("WinRate ✓");
+                    if (propStatus.passedTarget) status.push("Target âœ“");
+                    if (propStatus.passedDD) status.push("Drawdown âœ“");
+                    if (propStatus.passedWinRate) status.push("WinRate âœ“");
                     alert(`Prop check:\n${status.length ? status.join("\n") : "Not passing yet."}`);
                   }}
                 >
@@ -322,7 +322,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
                 key={m.percent}
                 className={`p-3 rounded-md ${m.achieved ? "bg-green-800" : "bg-zinc-900/30"} border border-zinc-800 text-sm`}
               >
-                {m.percent}% • {m.achieved ? "Achieved" : "Pending"}
+                {m.percent}% â€¢ {m.achieved ? "Achieved" : "Pending"}
               </div>
             ))}
           </div>
@@ -531,7 +531,7 @@ export default function TradeJournal(): React.ReactElement {
 
       const dt = new Date(t.openTime as any);
       const valid = !isNaN(dt.getTime());
-      const dow = valid ? format(dt, "EEE") : "—";
+      const dow = valid ? format(dt, "EEE") : "â€”";
       byDOW[dow] ??= { count: 0, pl: 0 };
       byDOW[dow].count += 1;
       byDOW[dow].pl += parsePL(t.pnl);
@@ -757,7 +757,7 @@ export default function TradeJournal(): React.ReactElement {
     })();
     const increasedRisk = last.some((t: Trade) => Math.abs(parsePL(t.pnl)) > Math.abs(summary.avgLoss) * 1.5);
     if (lossConsec >= 3 && increasedRisk) {
-      return { flagged: true, reason: `Detected ${lossConsec} consecutive losses and one or more larger-than-average trades — possible revenge trading.` };
+      return { flagged: true, reason: `Detected ${lossConsec} consecutive losses and one or more larger-than-average trades â€” possible revenge trading.` };
     }
     return { flagged: false, reason: "" };
   }, [trades, summary]);
@@ -938,7 +938,7 @@ export default function TradeJournal(): React.ReactElement {
               defaultValue={String(patch.symbol ?? t.symbol ?? "")}
               onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), symbol: e.target.value } }))}
             />
-          ) : <span className="font-medium">{t.symbol ?? "—"}</span>}
+          ) : <span className="font-medium">{t.symbol ?? "â€”"}</span>}
         </div>
         <div>
           {editMode ? (
@@ -947,14 +947,14 @@ export default function TradeJournal(): React.ReactElement {
               defaultValue={String(patch.outcome ?? t.outcome ?? "").toLowerCase()}
               onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), outcome: e.target.value } }))}
             >
-              <option value="">—</option>
+              <option value="">â€”</option>
               <option value="win">WIN</option>
               <option value="loss">LOSS</option>
               <option value="breakeven">BREAKEVEN</option>
             </select>
           ) : (
             <span className={`px-2 py-0.5 rounded text-xs font-semibold ${t.outcome?.toLowerCase() === "win" ? "bg-green-600/20 text-green-400" : t.outcome?.toLowerCase() === "loss" ? "bg-red-600/20 text-red-400" : "bg-yellow-600/20 text-yellow-300"}`}>
-              {(t.outcome ?? "—").toString().toUpperCase()}
+              {(t.outcome ?? "â€”").toString().toUpperCase()}
             </span>
           )}
         </div>
@@ -981,7 +981,7 @@ export default function TradeJournal(): React.ReactElement {
                 onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), strategy: e.target.value } }))}
               />
             ) : (
-              <span className="text-xs text-zinc-300">{t.strategy ?? <span className="text-zinc-500">—</span>}</span>
+              <span className="text-xs text-zinc-300">{t.strategy ?? <span className="text-zinc-500">â€”</span>}</span>
             )}
             <div className="flex flex-wrap gap-1">
               {mergedTags.length ? mergedTags.map(tg => (
@@ -1030,7 +1030,7 @@ export default function TradeJournal(): React.ReactElement {
               </>
             ) : (
               <div className="text-xs text-zinc-400">
-                {t.SL ? `SL:${t.SL}` : "SL:—"} • {t.TP ? `TP:${t.TP}` : "TP:—"}
+                {t.SL ? `SL:${t.SL}` : "SL:â€”"} â€¢ {t.TP ? `TP:${t.TP}` : "TP:â€”"}
               </div>
             )}
           </div>
@@ -1044,7 +1044,7 @@ export default function TradeJournal(): React.ReactElement {
               onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), note: e.target.value } }))}
             />
           ) : (
-            <p className="text-xs text-zinc-300 whitespace-pre-wrap">{t.note || <span className="text-zinc-500">—</span>}</p>
+            <p className="text-xs text-zinc-300 whitespace-pre-wrap">{t.note || <span className="text-zinc-500">â€”</span>}</p>
           )}
         </div>
         <div className="flex items-center justify-end gap-2">
@@ -1465,7 +1465,7 @@ export default function TradeJournal(): React.ReactElement {
         <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-0">
             <div className="px-4 pt-4 pb-2 text-xs text-zinc-400">
-              Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `• filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
+              Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `â€¢ filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
             </div>
             <div className="px-4 pb-2 text-[11px] text-zinc-500">
               Tip: Use strategy tags, SL/TP optimizer, bulk actions and the quick review checklist to speed up journaling.
@@ -1509,7 +1509,7 @@ export default function TradeJournal(): React.ReactElement {
                     <div className="h-2 rounded bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, ins.score ?? 0))}%` }} />
                   </div>
                   <div className="flex gap-2 mt-2">
-                    <Button variant="ghost" onClick={() => navigator.clipboard.writeText(`${ins.title} — ${ins.detail}`)}>Copy</Button>
+                    <Button variant="ghost" onClick={() => navigator.clipboard.writeText(`${ins.title} â€” ${ins.detail}`)}>Copy</Button>
                     <Button variant="secondary" onClick={() => setPinnedTips(p => p.includes(ins.detail) ? p : [ins.detail, ...p])}>Pin</Button>
                   </div>
                 </div>
@@ -1579,7 +1579,7 @@ export default function TradeJournal(): React.ReactElement {
                     {patterns.topSymbols.length ? patterns.topSymbols.map(s => (
                       <div key={s.symbol} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
                         <span className="font-medium">{s.symbol}</span>
-                        <span className="text-xs text-zinc-300">{s.trades} trades • {s.winRate.toFixed(0)}% WR • <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
+                        <span className="text-xs text-zinc-300">{s.trades} trades â€¢ {s.winRate.toFixed(0)}% WR â€¢ <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
                       </div>
                     )) : <p className="text-zinc-400 text-sm">No data</p>}
                   </div>
@@ -1601,7 +1601,7 @@ export default function TradeJournal(): React.ReactElement {
                     {Object.entries(patterns.sessions || {}).map(([name,s]) => (
                       <div key={name} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm capitalize">
                         <span className="font-medium">{name}</span>
-                        <span className="text-xs text-zinc-300">{s.count} trades • <span className={s.pl >= 0 ? "text-green-400" : "text-red-400"}>${s.pl.toFixed(2)}</span></span>
+                        <span className="text-xs text-zinc-300">{s.count} trades â€¢ <span className={s.pl >= 0 ? "text-green-400" : "text-red-400"}>${s.pl.toFixed(2)}</span></span>
                       </div>
                     ))}
                   </div>
@@ -1653,7 +1653,7 @@ export default function TradeJournal(): React.ReactElement {
               <HeuristicForecast trades={trades as Trade[]} summary={summary} />
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <h5 className="text-sm text-zinc-300">Actionable suggestion</h5>
-                <p className="mt-2 text-white">Combine the probability shown with your plan — do not rely only on this. This is not financial advice.</p>
+                <p className="mt-2 text-white">Combine the probability shown with your plan â€” do not rely only on this. This is not financial advice.</p>
                 <div className="mt-4 text-xs text-zinc-400">For a production-grade forecast, integrate a trained model server-side and surface calibrated probabilities here.</div>
               </div>
             </div>
@@ -1669,7 +1669,7 @@ export default function TradeJournal(): React.ReactElement {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <div className="text-sm text-zinc-300">Global suggested RR</div>
-                <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : "—"}</div>
+                <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : "â€”"}</div>
                 <div className="text-xs text-zinc-400">{sltpSuggestion?.note}</div>
                 <div className="mt-4 flex gap-2">
                   <Button variant="secondary" onClick={()=> applySltpToSelected(sltpSuggestion?.recommendedRR ?? 1)}>Apply to selected</Button>
@@ -1685,7 +1685,7 @@ export default function TradeJournal(): React.ReactElement {
                       <div key={name} className="rounded p-2 bg-zinc-900/40 border border-zinc-800 flex justify-between items-center text-sm">
                         <div>
                           <div className="font-medium">{name}</div>
-                          <div className="text-xs text-zinc-400">{s.trades} trades • WR: {s.trades ? ((s.wins/s.trades)*100).toFixed(1) : "0"}%</div>
+                          <div className="text-xs text-zinc-400">{s.trades} trades â€¢ WR: {s.trades ? ((s.wins/s.trades)*100).toFixed(1) : "0"}%</div>
                         </div>
                         <div className="flex gap-2">
                           <div className="text-xs text-zinc-200">Suggest {recommended}R</div>
@@ -1723,9 +1723,9 @@ export default function TradeJournal(): React.ReactElement {
               <div>
                 <div className="bg-zinc-900/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Behavioral Insights</h5>
-                  <div className="mt-2 text-xs text-zinc-400">Max win streak: {streaks.maxWinStreak} • Max loss streak: {streaks.maxLossStreak}</div>
-                  <div className="mt-2 text-xs text-zinc-400">Avg trade time: {summary.avgLengthMin.toFixed(1)} min • Sharpe-like: {summary.sharpe.toFixed(2)}</div>
-                  {revengeDetector.flagged ? <div className="mt-3 p-2 bg-red-900/30 rounded text-xs text-red-300">⚠️ {revengeDetector.reason}</div> : null}
+                  <div className="mt-2 text-xs text-zinc-400">Max win streak: {streaks.maxWinStreak} â€¢ Max loss streak: {streaks.maxLossStreak}</div>
+                  <div className="mt-2 text-xs text-zinc-400">Avg trade time: {summary.avgLengthMin.toFixed(1)} min â€¢ Sharpe-like: {summary.sharpe.toFixed(2)}</div>
+                  {revengeDetector.flagged ? <div className="mt-3 p-2 bg-red-900/30 rounded text-xs text-red-300">âš ï¸ {revengeDetector.reason}</div> : null}
                 </div>
                 <div className="mt-4 bg-zinc-900/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Guided Prompts</h5>
@@ -1798,7 +1798,7 @@ export default function TradeJournal(): React.ReactElement {
                     className={`p-1 sm:p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`}
                     data-track="journal_calendar_day_click"
                     data-track-meta={`{"date":"${format(d, "yyyy-MM-dd")}","trades":${ds.trades}}`}
-                    title={`${ds.trades} trade(s) • ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}
+                    title={`${ds.trades} trade(s) â€¢ ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}
                   >
                     <div className="text-[10px] sm:text-xs text-zinc-300">{format(d,"dd")}</div>
                     <div className="text-[9px] sm:text-[11px] text-zinc-200">{ds.trades} trades</div>

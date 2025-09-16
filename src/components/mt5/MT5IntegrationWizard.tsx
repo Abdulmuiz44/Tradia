@@ -320,6 +320,7 @@ export default function MT5IntegrationWizard({
           <button
             onClick={() => setShowRequirements(true)}
             className="flex items-center gap-2 px-3 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700"
+            data-track="mt5_requirements_open"
           >
             <Info className="w-4 h-4" />
             Requirements
@@ -339,6 +340,7 @@ export default function MT5IntegrationWizard({
               }}
               disabled={accountLimits ? !accountLimits.canAdd : false}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              data-track="mt5_add_account_open"
             >
               <Plus className="w-4 h-4" />
               Add MT5 Account
@@ -347,6 +349,7 @@ export default function MT5IntegrationWizard({
             <button
               onClick={() => setShowUpgradePrompt(true)}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700"
+              data-track="mt5_upgrade_click"
             >
               <Crown className="w-4 h-4" />
               Upgrade for MT5 Access
@@ -560,7 +563,7 @@ function MT5ConnectionModal({ onConnect, onClose, loading }: MT5ConnectionModalP
       <div className="relative w-full max-w-md bg-gray-800 border border-gray-700 rounded-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-white">Connect MT5 Account</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded">
+          <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded" data-track="mt5_connect_close">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
@@ -619,6 +622,7 @@ function MT5ConnectionModal({ onConnect, onClose, loading }: MT5ConnectionModalP
               onClick={handleTestConnection}
               disabled={testing || !credentials.server || !credentials.login || !credentials.password}
               className="flex-1 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              data-track="mt5_test_connection"
             >
               {testing ? (
                 <>
@@ -658,11 +662,12 @@ function MT5ConnectionModal({ onConnect, onClose, loading }: MT5ConnectionModalP
           )}
 
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-gray-300">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-gray-300" data-track="mt5_connect_cancel">Cancel</button>
             <button
               type="submit"
               disabled={loading || !credentials.server || !credentials.login || !credentials.password}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              data-track="mt5_connect_account"
             >
               {loading ? (
                 <>

@@ -1,4 +1,4 @@
-"use client"; // enable client-side rendering
+﻿"use client"; // enable client-side rendering
 
 import React, { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 // Advanced Analytics Component
@@ -228,7 +229,7 @@ function DashboardContent() {
     const isAdminUser = userEmail === "abdulmuizproject@gmail.com" ||
                        userEmail.includes("abdulmuizproject@gmail.com");
 
-    console.log('🔍 Admin check result:', {
+    console.log('Admin check result:', {
       email: session.user.email,
       name: session.user.name,
       userEmail,
@@ -239,7 +240,7 @@ function DashboardContent() {
 
     // Show alert for debugging (remove this later)
     if (typeof window !== 'undefined') {
-      console.log(`Admin status: ${isAdminUser ? '✅ ADMIN' : '❌ NOT ADMIN'}`);
+      console.log(`Admin status: ${isAdminUser ? 'ADMIN' : 'NOT ADMIN'}`);
     }
 
     setIsAdmin(isAdminUser);
@@ -452,7 +453,7 @@ function DashboardContent() {
       case "1y":
         return "Last 1 year";
       case "custom":
-        return customRange.from && customRange.to ? `${customRange.from} → ${customRange.to}` : "Custom range";
+        return customRange.from && customRange.to ? `${customRange.from} to ${customRange.to}` : "Custom range";
       default:
         return "Last 24 hours";
     }
@@ -520,35 +521,50 @@ function DashboardContent() {
 
             {/* User Profile Section */}
             <div className="p-4 border-t border-gray-200 dark:border-[#2a2f3a]">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
-                    <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left">
-                    <p className="text-black dark:text-white text-sm font-medium truncate">
-                      {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs truncate">
-                      {session?.user?.email || ''}
-                    </p>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white dark:bg-zinc-800 text-black dark:text-white border border-gray-200 dark:border-zinc-700">
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <AnimatedDropdown
+                title="Account"
+                panelClassName="w-[95%] max-w-sm"
+                positionClassName="left-4 top-16"
+                trigger={(
+                  <button className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="Open account menu">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
+                      <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 text-left">
+                      <p className="text-black dark:text-white text-sm font-medium truncate">
+                        {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
+                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs truncate">
+                        {session?.user?.email || ''}
+                      </p>
+                    </div>
+                  </button>
+                )}
+              >
+                <div className="p-2">
+                  <button
+                    onClick={() => router.push("/dashboard/profile")}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    onClick={() => router.push("/dashboard/settings")}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-red-400 hover:text-red-300"
+                  >
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </AnimatedDropdown>
             </div>
           </div>
         </div>
@@ -636,49 +652,58 @@ function DashboardContent() {
               </button>
               {/* Mobile Profile Avatar - NEW */}
               <div className="lg:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-700 transition-colors">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage
-                        src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || session?.user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=fff&size=32`}
-                        alt={session?.user?.name || session?.user?.email?.split('@')[0] || 'Profile'}
-                      />
-                      <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">{userInitial}</AvatarFallback>
-                    </Avatar>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-zinc-800 text-white border border-zinc-700 shadow-lg">
-                    <DropdownMenuItem
+                <AnimatedDropdown
+                  title="Account"
+                  panelClassName="w-[95%] max-w-sm"
+                  trigger={(
+                    <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-700 transition-colors" aria-label="Open account menu">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage
+                          src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || session?.user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=fff&size=32`}
+                          alt={session?.user?.name || session?.user?.email?.split('@')[0] || 'Profile'}
+                        />
+                        <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">{userInitial}</AvatarFallback>
+                      </Avatar>
+                    </button>
+                  )}
+                >
+                  <div className="p-2">
+                    <button
                       onClick={() => router.push("/dashboard/profile")}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
                     >
                       <User className="w-4 h-4" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                      <span>Profile</span>
+                    </button>
+                    <button
                       onClick={() => router.push("/dashboard/settings")}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
                     >
                       <Settings className="w-4 h-4" />
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                      <span>Settings</span>
+                    </button>
+                    <button
                       onClick={handleSignOut}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 cursor-pointer text-red-400 hover:text-red-300"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-red-400 hover:text-red-300"
                     >
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </AnimatedDropdown>
               </div>
 
               {/* Filter - Only show for relevant tabs */}
               {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Filter trades">
-                    <Filter size={18} className="text-gray-300" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 bg-zinc-800 text-white border border-zinc-700">
-                    <div className="p-2">
+                <AnimatedDropdown
+                  title="Filter Trades"
+                  panelClassName="w-[95%] max-w-md"
+                  trigger={(
+                    <button className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Filter trades" aria-label="Filter trades">
+                      <Filter size={18} className="text-gray-300" />
+                    </button>
+                  )}
+                >
+                  <div className="p-3">
                       {(() => {
                         const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
                         const allowed = new Set<string>(['24h','7d','30d']);
@@ -691,7 +716,7 @@ function DashboardContent() {
                         return FILTERS.filter(f => f.value !== 'custom').map((f) => {
                           const isAllowed = allowed.has(f.value);
                           return (
-                            <DropdownMenuItem
+                            <div
                               key={f.value}
                               onClick={() => {
                                 if (isAllowed) {
@@ -701,7 +726,7 @@ function DashboardContent() {
                                   setActiveTab('upgrade');
                                 }
                               }}
-                              className={`cursor-pointer flex items-center justify-between ${isAllowed ? '' : 'opacity-70'}`}
+                              className={`cursor-pointer flex items-center justify-between px-2 py-1.5 rounded hover:bg-zinc-700 ${isAllowed ? '' : 'opacity-70'}`}
                             >
                               <span>{f.label}</span>
                               {!isAllowed && (
@@ -709,20 +734,19 @@ function DashboardContent() {
                                   <Lock className="w-3.5 h-3.5" /> Upgrade
                                 </span>
                               )}
-                            </DropdownMenuItem>
+                            </div>
                           );
                         });
                       })()}
 
-                      <DropdownMenuItem
-                        key="custom"
+                      <div
                         onClick={() => setFilter("custom")}
-                        className="cursor-pointer"
+                        className="cursor-pointer px-2 py-1.5 rounded hover:bg-zinc-700"
                       >
                         Custom range
-                      </DropdownMenuItem>
+                      </div>
 
-                      <div className="border-t border-white/6 my-2" />
+                      <div className="border-t border-white/10 my-2" />
 
                       {/* Custom inputs */}
                       <div className="space-y-2">
@@ -783,8 +807,7 @@ function DashboardContent() {
                         </div>
                       </div>
                     </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                </AnimatedDropdown>
               )}
 
               {/* Refresh button - Only show for relevant tabs */}
@@ -807,7 +830,7 @@ function DashboardContent() {
                 className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
                 title="Debug admin status"
               >
-                🔄
+                Debug
               </button>
 
               {/* Notifications */}

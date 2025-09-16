@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { Menu, Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
+import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 
 /**
  * Navbar redesigned to match the dark/glass aesthetic used across the app pages.
@@ -304,21 +305,42 @@ function CoachPill() {
     "U"
   ).toUpperCase();
   return (
-    <Link
-      href="/dashboard"
-      className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-zinc-800 border border-white/10 shadow-sm"
-    >
-      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs font-semibold text-white">
-        {profileInitial}
-      </div>
-      <span className="text-sm text-gray-800 dark:text-gray-100 hidden sm:inline">
-        {session?.user?.name ?? session?.user?.email ?? "User"}
-      </span>
-      {points !== null && (
-        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
-          Pts: {points}
-        </span>
+    <AnimatedDropdown
+      title="Account"
+      positionClassName="right-4 top-16"
+      panelClassName="w-[95%] max-w-sm"
+      trigger={(
+        <button className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-zinc-800 border border-white/10 shadow-sm" aria-label="Open account menu">
+          <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs font-semibold text-white">
+            {profileInitial}
+          </div>
+          <span className="text-sm text-gray-800 dark:text-gray-100 hidden sm:inline">
+            {session?.user?.name ?? session?.user?.email ?? "User"}
+          </span>
+          {points !== null && (
+            <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+              Pts: {points}
+            </span>
+          )}
+        </button>
       )}
-    </Link>
+    >
+      <div className="p-2">
+        <Link href="/dashboard/profile" className="block px-3 py-2 hover:bg-zinc-700 rounded">
+          Profile
+        </Link>
+        <Link href="/dashboard/settings" className="block px-3 py-2 hover:bg-zinc-700 rounded">
+          Settings
+        </Link>
+        <button
+          onClick={() => {
+            signOut({ callbackUrl: "/" }).catch(() => {});
+          }}
+          className="w-full text-left px-3 py-2 hover:bg-zinc-700 rounded text-red-400 hover:text-red-300"
+        >
+          Sign Out
+        </button>
+      </div>
+    </AnimatedDropdown>
   );
 }

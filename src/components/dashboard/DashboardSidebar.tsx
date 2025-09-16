@@ -88,6 +88,8 @@ export default function DashboardSidebar({
               }
               ${isMobile ? "w-full justify-start" : "w-full justify-start"}
             `}
+            data-track="dashboard_tab_click"
+            data-track-meta={`{"tab":"${tab.value}","label":"${tab.label}"}`}
           >
             <IconComponent
               className={`w-5 h-5 transition-colors ${

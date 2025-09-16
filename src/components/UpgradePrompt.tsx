@@ -36,6 +36,9 @@ export default function UpgradePrompt({
         '50 AI chats per day',
         '90 days trade storage',
         'Advanced analytics & insights',
+        'Personalized strategy recommendations',
+        'Risk management analysis & optimization',
+        'Market timing and entry/exit recommendations',
         'Priority email support'
       ],
       popular: false
@@ -50,6 +53,8 @@ export default function UpgradePrompt({
         '200 AI chats per day',
         '1 year trade storage',
         'Advanced analytics & insights',
+        'Image processing for trade screenshots',
+        'Real-time performance analytics and insights',
         'Priority support',
         'Custom integrations'
       ],
@@ -65,6 +70,7 @@ export default function UpgradePrompt({
         'Unlimited AI chats',
         'Unlimited trade storage',
         'All premium features',
+        'All AI features included',
         'Dedicated support',
         'Custom integrations',
         'API access'

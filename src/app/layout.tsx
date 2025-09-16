@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import PostHogInit from "@/components/analytics/PostHogInit";
 import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import ActivityTracker from "@/components/analytics/ActivityTracker";
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -169,9 +170,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="text-[15px] sm:text-[16px] md:text-[17px] leading-[1.45] md:leading-normal">
         <Providers>
+          {/* Hector Analytics */}
+          <script defer src="https://www.hectoranalytics.com/script.js"></script>
           <PostHogInit />
            <GoogleAnalytics />
           <Analytics />
+          {/* App activity tracking */}
+          <ActivityTracker />
           {children}
           {/* keep floating button available app-wide */}
           <FloatingFeedbackButton />

@@ -29,10 +29,10 @@ export default function ExportButtons({ data }: ExportButtonsProps): React.React
 
   return (
     <div className="flex space-x-3">
-      <Button variant="outline" onClick={exportExcel}>
+      <Button variant="outline" onClick={exportExcel} data-track="export_trades" data-track-meta='{"format":"excel"}'>
         Export Excel
       </Button>
-      <Button variant="outline" onClick={exportJSON}>
+      <Button variant="outline" onClick={exportJSON} data-track="export_trades" data-track-meta='{"format":"json"}'>
         Export JSON
       </Button>
     </div>

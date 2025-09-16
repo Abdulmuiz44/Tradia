@@ -69,6 +69,11 @@ import {
   Square as SquareIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import WeeklyCoachRecap from "@/components/analytics/WeeklyCoachRecap";
+import ProInsights from "@/components/analytics/ProInsights";
+import StrategyBuilder from "@/components/analytics/StrategyBuilder";
+import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 
 // Types
@@ -101,6 +106,7 @@ interface RiskMetrics {
 
 // Lazy-load AI chat to keep bundle lean
 const AIChatInterface = dynamic(() => import("@/components/ai/AIChatInterface"), { ssr: false });
+const AIForecastWidget = dynamic(() => import("@/components/ai/AIForecastWidget"), { ssr: false });
 
 interface TradeAnalyticsProps {
   className?: string;
@@ -118,8 +124,12 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [showQuickActions, setShowQuickActions] = useState(false);
 
-  // Plan from session (free/pro/plus/elite)
+  // Plan/role from session
   const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
+  const role = String((session?.user as any)?.role || '').toLowerCase();
+  const email = String((session?.user as any)?.email || '').toLowerCase();
+  const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
+  const effectivePlan = (isAdmin ? 'elite' : plan) as 'free' | 'pro' | 'plus' | 'elite';
 
   // Mobile detection
   useEffect(() => {
@@ -182,15 +192,15 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
   // Quick actions for mobile
   const quickActions = [
-    { label: 'Export PDF', icon: Download, action: () => console.log('Export PDF') },
-    { label: 'Share Report', icon: Share2, action: () => console.log('Share Report') },
-    { label: 'Set Alerts', icon: Settings, action: () => console.log('Set Alerts') },
-  ];
+    { label: 'Export PDF', icon: Download, action: () => console.log('Export PDF'), requiresPaid: true },
+    { label: 'Share Report', icon: Share2, action: () => console.log('Share Report'), requiresPaid: true },
+    { label: 'Set Alerts', icon: Settings, action: () => console.log('Set Alerts'), requiresPaid: true },
+  ].filter(a => (effectivePlan !== 'free') || !a.requiresPaid);
 
   // Filter trades based on timeframe with plan clamp
   const filteredTrades = useMemo(() => {
     let days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : timeframe === '90d' ? 90 : timeframe === '1y' ? 365 : Infinity;
-    const allowedDays = plan === 'free' ? 30 : plan === 'pro' ? 182 : (plan === 'plus' || plan === 'elite') ? Infinity : 30;
+    const allowedDays = effectivePlan === 'free' ? 30 : effectivePlan === 'pro' ? 182 : (effectivePlan === 'plus' || effectivePlan === 'elite') ? Infinity : 30;
     if (Number.isFinite(allowedDays)) {
       days = Math.min(days, allowedDays as number);
     }
@@ -740,6 +750,8 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             </div>
 
             <div className="space-y-4">
+              <AIForecastWidget userId={(session?.user as any)?.id || (session?.user as any)?.email || 'unknown'} symbol="BTCUSD" />
+              <Separator className="my-4" />
               <div>
                 <h4 className="font-medium mb-2">Recommended Actions</h4>
                 <div className="space-y-2">
@@ -806,8 +818,8 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           <div className="flex bg-muted rounded-lg p-1">
             {(['7d', '30d', '90d', '1y', 'all'] as const).map((period) => {
               const allowed = new Set(['7d','30d']);
-              if (plan === 'pro') ['90d'].forEach(v=>allowed.add(v));
-              if (plan === 'plus' || plan === 'elite') ['90d','1y','all'].forEach(v=>allowed.add(v));
+              if (effectivePlan === 'pro') ['90d'].forEach(v=>allowed.add(v));
+              if (effectivePlan === 'plus' || effectivePlan === 'elite') ['90d','1y','all'].forEach(v=>allowed.add(v));
               const isAllowed = allowed.has(period);
               return (
               <Button
@@ -842,7 +854,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           )}
 
           {/* Premium Toggle */}
-          {(plan !== 'free') && (
+          {(effectivePlan !== 'free') && (
             <Button
               variant="outline"
               size="sm"
@@ -889,7 +901,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           { id: 'coach', label: 'AI Mental Coach', icon: <Star className="w-4 h-4" /> },
           { id: 'controls', label: 'Risk Controls & Prop Sim', icon: <Shield className="w-4 h-4" /> },
         ].map((tab) => {
-          const isPremium = tab.premium && plan === 'free';
+          const isPremium = tab.premium && effectivePlan === 'free';
           return (
             <Button
               key={tab.id}
@@ -916,12 +928,62 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         {activeView === 'forecast' && renderForecast()}
         {activeView === 'coach' && (
           <div className="min-h-[480px]">
-            <AIChatInterface />
+            <Tabs defaultValue={(effectivePlan === 'free') ? 'chat' : 'weekly'}>
+              <TabsList className="mb-3">
+                <TabsTrigger value="weekly">Weekly Recap</TabsTrigger>
+                <TabsTrigger value="pro">Pro Insights</TabsTrigger>
+                <TabsTrigger value="builder">Strategy Builder</TabsTrigger>
+                <TabsTrigger value="chat">AI Coach</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="weekly">
+                {(effectivePlan === 'free') ? (
+                  <CompactUpgradePrompt
+                    currentPlan={'free' as any}
+                    feature="Weekly Coach Recap"
+                    onUpgrade={() => {}}
+                    className="mb-4"
+                  />
+                ) : (
+                  <WeeklyCoachRecap trades={filteredTrades as any} plan={effectivePlan} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="pro">
+                {(effectivePlan === 'free') ? (
+                  <CompactUpgradePrompt
+                    currentPlan={'free' as any}
+                    feature="Pro Insights"
+                    onUpgrade={() => {}}
+                    className="mb-4"
+                  />
+                ) : (
+                  <ProInsights trades={filteredTrades as any} plan={effectivePlan} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="builder">
+                {(effectivePlan !== 'elite') ? (
+                  <CompactUpgradePrompt
+                    currentPlan={effectivePlan as any}
+                    feature="Strategy Builder"
+                    onUpgrade={() => {}}
+                    className="mb-4"
+                  />
+                ) : (
+                  <StrategyBuilder trades={filteredTrades as any} plan={effectivePlan} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="chat">
+                <AIChatInterface />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
         {activeView === 'controls' && (
           <RiskControlsAndPropSim
-            plan={plan as 'free' | 'pro' | 'plus' | 'elite'}
+            plan={effectivePlan}
             accountBalance={accountBalance}
             filteredTrades={filteredTrades}
           />
@@ -932,16 +994,22 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-2 justify-center">
-            <ExportButtons data={filteredTrades as any[]} />
-            <ShareButtons title="My Trading Analytics" text="Check out my trading performance on Tradia" />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPremium((s) => !s)}
-              title="Toggle premium metrics visibility"
-            >
-              <Settings className="w-4 h-4 mr-2" /> Customize View
-            </Button>
+            {(effectivePlan === 'pro' || effectivePlan === 'plus' || effectivePlan === 'elite') && (
+              <ExportButtons data={filteredTrades as any[]} />
+            )}
+            {(effectivePlan === 'pro' || effectivePlan === 'plus' || effectivePlan === 'elite') && (
+              <ShareButtons title="My Trading Analytics" text="Check out my trading performance on Tradia" />
+            )}
+            {(effectivePlan === 'pro' || effectivePlan === 'plus' || effectivePlan === 'elite') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPremium((s) => !s)}
+                title="Toggle premium metrics visibility"
+              >
+                <Settings className="w-4 h-4 mr-2" /> Customize View
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

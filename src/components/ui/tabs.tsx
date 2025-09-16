@@ -29,6 +29,17 @@ const TabsTrigger = React.forwardRef<
       "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
       className
     )}
+    data-track="tabs_click"
+    data-track-meta={(() => {
+      try {
+        // @ts-ignore value is a valid prop for Trigger
+        const v = (props as any).value ?? undefined;
+        const id = (props as any).id ?? undefined;
+        return JSON.stringify({ component: 'TabsTrigger', value: v, id });
+      } catch {
+        return undefined as any;
+      }
+    })()}
     {...props}
   />
 ))

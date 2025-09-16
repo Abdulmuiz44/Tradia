@@ -10,6 +10,20 @@ export interface PlanLimits {
   advancedAnalytics: boolean;
   prioritySupport: boolean;
   customIntegrations: boolean;
+  // New AI feature flags
+  aiMLAnalysis: boolean; // AI-powered trading analysis using ML
+  imageProcessing: boolean; // Image processing for trade screenshots
+  personalizedStrategy: boolean; // Personalized strategy recommendations
+  realTimeAnalytics: boolean; // Real-time performance analytics
+  riskManagement: boolean; // Risk management analysis
+  marketTiming: boolean; // Market timing and entry/exit recommendations
+  // Planner limits
+  maxTradePlans: number; // -1 for unlimited
+  // UI/Actions
+  exportData: boolean; // Enable export buttons
+  shareReports: boolean; // Enable share report
+  alerts: boolean; // Enable set alerts
+  customizeView: boolean; // Enable customize view
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
@@ -19,7 +33,18 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tradeStorageDays: 30,
     advancedAnalytics: false,
     prioritySupport: false,
-    customIntegrations: false
+    customIntegrations: false,
+    aiMLAnalysis: true,
+    imageProcessing: false,
+    personalizedStrategy: false,
+    realTimeAnalytics: true,
+    riskManagement: false,
+    marketTiming: false,
+    maxTradePlans: 3,
+    exportData: false,
+    shareReports: false,
+    alerts: false,
+    customizeView: false,
   },
   starter: {
     mt5Accounts: 0,
@@ -27,7 +52,18 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tradeStorageDays: 30,
     advancedAnalytics: false,
     prioritySupport: false,
-    customIntegrations: false
+    customIntegrations: false,
+    aiMLAnalysis: true,
+    imageProcessing: false,
+    personalizedStrategy: false,
+    realTimeAnalytics: true,
+    riskManagement: false,
+    marketTiming: false,
+    maxTradePlans: 3,
+    exportData: false,
+    shareReports: false,
+    alerts: false,
+    customizeView: false,
   },
   pro: {
     mt5Accounts: 1,
@@ -35,7 +71,18 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tradeStorageDays: 182,
     advancedAnalytics: true,
     prioritySupport: false,
-    customIntegrations: false
+    customIntegrations: false,
+    aiMLAnalysis: true,
+    imageProcessing: false,
+    personalizedStrategy: true,
+    realTimeAnalytics: true,
+    riskManagement: true,
+    marketTiming: true,
+    maxTradePlans: 25,
+    exportData: true,
+    shareReports: true,
+    alerts: true,
+    customizeView: true,
   },
   plus: {
     mt5Accounts: 3,
@@ -43,7 +90,18 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tradeStorageDays: 365,
     advancedAnalytics: true,
     prioritySupport: true,
-    customIntegrations: false
+    customIntegrations: false,
+    aiMLAnalysis: true,
+    imageProcessing: true,
+    personalizedStrategy: true,
+    realTimeAnalytics: true,
+    riskManagement: true,
+    marketTiming: true,
+    maxTradePlans: 100,
+    exportData: true,
+    shareReports: true,
+    alerts: true,
+    customizeView: true,
   },
   elite: {
     mt5Accounts: -1, // unlimited
@@ -51,7 +109,18 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tradeStorageDays: -1, // unlimited
     advancedAnalytics: true,
     prioritySupport: true,
-    customIntegrations: true
+    customIntegrations: true,
+    aiMLAnalysis: true,
+    imageProcessing: true,
+    personalizedStrategy: true,
+    realTimeAnalytics: true,
+    riskManagement: true,
+    marketTiming: true,
+    maxTradePlans: -1,
+    exportData: true,
+    shareReports: true,
+    alerts: true,
+    customizeView: true,
   }
 };
 

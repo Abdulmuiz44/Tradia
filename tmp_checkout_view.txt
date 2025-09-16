@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -49,9 +49,6 @@ export default function CheckoutPage() {
         "6 months trade history",
         "3 account connections",
         "AI weekly summary",
-        "Personalized strategy recommendations",
-        "Risk management analysis & optimization",
-        "Market timing and entry/exit recommendations",
       ],
     },
     plus: {
@@ -65,8 +62,6 @@ export default function CheckoutPage() {
         "Unlimited history",
         "5 account connections",
         "AI trade reviews & SL/TP suggestions",
-        "Image processing for trade screenshots",
-        "Real-time performance analytics & insights",
       ],
     },
     elite: {
@@ -80,7 +75,6 @@ export default function CheckoutPage() {
         "Unlimited connections",
         "AI strategy builder",
         "Prop-firm dashboard",
-        "All AI features included",
       ],
     },
   };
@@ -166,7 +160,7 @@ export default function CheckoutPage() {
           <div className="md:col-span-2 bg-[#0F1623] rounded-lg border border-gray-800">
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-2">Checkout</h2>
-              <p className="text-gray-400 mb-4">You’re upgrading to {currentPlan.displayName}.</p>
+              <p className="text-gray-400 mb-4">Youâ€™re upgrading to {currentPlan.displayName}.</p>
 
               {/* Payment method selection */}
               <div className="mb-6">
@@ -188,7 +182,7 @@ export default function CheckoutPage() {
                     placeholder="you@example.com"
                     className="w-full bg-[#0B1220] border border-gray-700 rounded px-3 py-2 text-gray-100 outline-none focus:border-blue-500"
                   />
-                  <div className="text-xs text-gray-500 mt-1">We’ll send your payment receipt and account link to this email.</div>
+                  <div className="text-xs text-gray-500 mt-1">Weâ€™ll send your payment receipt and account link to this email.</div>
                 </div>
               )}
 

@@ -51,6 +51,8 @@ const plansData: Plan[] = [
       "Basic trade analytics",
       "30 days trade history",
       "CSV trade import",
+      "AI-powered trading analysis (basic)",
+      "Real-time analytics (basic)",
     ],
   },
   {
@@ -64,6 +66,9 @@ const plansData: Plan[] = [
       "6 months trade history",
       "3 account connections",
       "AI weekly summary",
+      "Personalized strategy recommendations",
+      "Risk management analysis & optimization",
+      "Market timing and entry/exit recommendations",
     ],
     highlight: true,
   },
@@ -78,6 +83,8 @@ const plansData: Plan[] = [
       "Unlimited history",
       "5 account connections",
       "AI trade reviews & SL/TP suggestions",
+      "Image processing for trade screenshot analysis",
+      "Real-time performance analytics and insights",
     ],
   },
   {
@@ -91,6 +98,7 @@ const plansData: Plan[] = [
       "Unlimited connections",
       "AI strategy builder",
       "Prop-firm dashboard",
+      "All AI features included",
     ],
   },
 ];

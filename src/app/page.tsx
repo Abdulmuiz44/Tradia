@@ -70,7 +70,14 @@ const PLANS = [
     id: "pro",
     name: "Pro",
     monthly: 9,
-    highlights: ["All Starter features", "6 months trade history", "3 account connections", "AI weekly summary"],
+    highlights: [
+      "All Starter features",
+      "6 months trade history",
+      "3 account connections",
+      "AI weekly summary",
+      "Personalized strategy recommendations",
+      "Risk management & market timing insights"
+    ],
     cta: "Start 3-day trial",
     tag: "Popular",
   },
@@ -78,7 +85,14 @@ const PLANS = [
     id: "plus",
     name: "Plus",
     monthly: 19,
-    highlights: ["All Pro features", "Unlimited history", "5 account connections", "AI trade reviews & SL/TP suggestions"],
+    highlights: [
+      "All Pro features",
+      "Unlimited history",
+      "5 account connections",
+      "AI trade reviews & SL/TP suggestions",
+      "Image processing for trade screenshots",
+      "Real-time performance analytics & insights"
+    ],
     cta: "Start 3-day trial",
     tag: "For active traders",
   },
@@ -86,7 +100,13 @@ const PLANS = [
     id: "elite",
     name: "Elite",
     monthly: 39,
-    highlights: ["Everything in Plus", "Unlimited connections", "AI strategy builder", "Prop-firm dashboard"],
+    highlights: [
+      "Everything in Plus",
+      "Unlimited connections",
+      "AI strategy builder",
+      "Prop-firm dashboard",
+      "All AI features included"
+    ],
     cta: "Contact sales",
     tag: "Advanced",
   },

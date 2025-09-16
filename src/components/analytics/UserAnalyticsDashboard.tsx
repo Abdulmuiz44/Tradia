@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, UserCheck, UserPlus, TrendingUp, Activity, ShieldX } from 'lucide-react';
+import LiveActivityFeed from '@/components/analytics/LiveActivityFeed';
 
 interface UserStats {
   totalUsers: number;
@@ -23,6 +24,13 @@ interface UserStats {
   totalAIChats: number;
   tradingStyles: Record<string, number>;
   tradingExperience: Record<string, number>;
+  totalTradesAdded?: number;
+  totalTradesImported?: number;
+  totalTradesDeleted?: number;
+  avgTradeOpenHour?: number | null;
+  mostActiveWeekday?: number | null; // 0=Sun..6=Sat
+  sessionDistribution?: Record<string, number>;
+  avgTradeDurationSec?: number | null;
   lastUpdated: string;
   dataFreshness: string;
 }
@@ -79,6 +87,9 @@ export default function UserAnalyticsDashboard() {
 
   useEffect(() => {
     fetchUserStats();
+    // simple polling for near real-time
+    const id = setInterval(fetchUserStats, 10000);
+    return () => clearInterval(id);
   }, []);
 
   const fetchUserStats = async () => {
@@ -103,6 +114,24 @@ export default function UserAnalyticsDashboard() {
     if (num <= -1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
     if (num <= -1_000) return (num / 1_000).toFixed(1) + 'K';
     return String(num);
+  };
+
+  const formatDuration = (sec?: number | null) => {
+    if (!sec || sec <= 0) return '—';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    if (m >= 60) {
+      const h = Math.floor(m / 60);
+      const rm = m % 60;
+      return `${h}h ${rm}m`;
+    }
+    return `${m}m ${s}s`;
+  };
+
+  const weekdayName = (d?: number | null) => {
+    const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    if (d === null || d === undefined) return '—';
+    return names[d] ?? String(d);
   };
 
   const getActiveUserPercentage = () => {
@@ -143,6 +172,9 @@ export default function UserAnalyticsDashboard() {
           Live Data
         </Badge>
       </div>
+
+      {/* Real-time live feed */}
+      <LiveActivityFeed />
 
       {/* User Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -275,6 +307,87 @@ export default function UserAnalyticsDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{formatNumber(stats.totalMT5Connections)}</div>
             <p className="text-xs text-muted-foreground">Active MT5 accounts</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Trade Breakdown */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Trades Added (Manual)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatNumber(stats.totalTradesAdded || 0)}</div>
+            <p className="text-xs text-muted-foreground">All users</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Trades Imported</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatNumber(stats.totalTradesImported || 0)}</div>
+            <p className="text-xs text-muted-foreground">CSV / MT5</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Trades Deleted</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatNumber(stats.totalTradesDeleted || 0)}</div>
+            <p className="text-xs text-muted-foreground">Audit logged</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Avg Trade Duration</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatDuration(stats.avgTradeDurationSec)}</div>
+            <p className="text-xs text-muted-foreground">Across all trades</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Activity Timing */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Avg Open Hour (UTC)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-emerald-600">{stats.avgTradeOpenHour !== null && stats.avgTradeOpenHour !== undefined ? Math.round(Number(stats.avgTradeOpenHour)) + ':00' : '—'}</div>
+            <p className="text-sm text-muted-foreground">Typical time users open trades</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Most Active Weekday</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-amber-600">{weekdayName(stats.mostActiveWeekday)}</div>
+            <p className="text-sm text-muted-foreground">Based on trade opens (UTC)</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Top Sessions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.sessionDistribution && Object.keys(stats.sessionDistribution).length > 0 ? (
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {Object.entries(stats.sessionDistribution).sort((a,b)=> b[1]-a[1]).slice(0,3).map(([k,v]) => (
+                  <div key={k}>
+                    <div className="text-xl font-bold">{formatNumber(v)}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{k}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No data</div>
+            )}
           </CardContent>
         </Card>
       </div>

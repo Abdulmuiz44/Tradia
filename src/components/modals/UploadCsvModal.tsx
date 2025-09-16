@@ -236,6 +236,8 @@ export default function UploadCsvModal({
           <label
             htmlFor="csv-file"
             className="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-zinc-700 p-3 bg-zinc-900 hover:bg-zinc-800"
+            data-track="csv_browse"
+            data-track-meta='{"location":"upload_csv_modal"}'
           >
             <div className="flex items-center gap-3">
               <svg

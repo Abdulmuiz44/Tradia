@@ -5,6 +5,12 @@ import bcrypt from "bcryptjs";
 import { pool } from "@/lib/db";
 import type { NextAuthOptions } from "next-auth";
 
+// Allow disabling DB lookups inside NextAuth JWT callback to avoid noisy errors when DB is unreachable
+function skipAuthDb(): boolean {
+  const v = (process.env.DISABLE_AUTH_DB_QUERIES || process.env.AUTH_DB_LOOKUPS || '').toLowerCase();
+  return v === '1' || v === 'true' || v === 'off' || v === 'disable' || v === 'disabled';
+}
+
 /** Environment warnings (kept from original file) */
 if (!process.env.NEXTAUTH_URL) {
   console.warn(
@@ -246,17 +252,17 @@ export const authOptions: NextAuthOptions = {
           if (getString(user, "name")) token.name = getString(user, "name");
           if (getString(user, "plan")) (token as any).plan = getString(user, "plan");
           if (getString(user, "role")) (token as any).role = getString(user, "role");
-        } else if (!("userId" in token) && typeof token.email === "string") {
+        } else if (!skipAuthDb() && !("userId" in token) && typeof token.email === "string") {
           try {
             const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(token.email)], 2000);
             const row = getFirstRow<{ id: string }>(r);
             if (row?.id) token.userId = row.id;
           } catch (err) {
-            console.error("jwt callback DB lookup failed:", err instanceof Error ? err.message : String(err));
+            console.warn("jwt callback DB lookup failed:", err instanceof Error ? err.message : String(err));
           }
         }
 
-        if (typeof token.userId === "string") {
+        if (!skipAuthDb() && typeof token.userId === "string") {
           try {
             const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null; plan?: string | null }>(
               `SELECT id, name, email, image, role, plan FROM users WHERE id=$1 LIMIT 1`,
@@ -272,7 +278,7 @@ export const authOptions: NextAuthOptions = {
               (token as any).plan = u.plan ?? (token as any).plan ?? "free";
             }
           } catch (err) {
-            console.error("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
+            console.warn("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
           }
         }
       } catch (err: unknown) {

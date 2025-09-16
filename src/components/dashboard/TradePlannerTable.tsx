@@ -17,6 +17,7 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 
 /**
  * TradePlannerTable — polished:
@@ -64,6 +65,12 @@ export default function TradePlannerTable() {
     } catch {
       return "free";
     }
+  })();
+
+  const maxPlans = (() => {
+    const key = (userPlan as unknown as PlanType) || 'free';
+    const limits = PLAN_LIMITS[key] || PLAN_LIMITS.free;
+    return limits.maxTradePlans;
   })();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -353,10 +360,10 @@ export default function TradePlannerTable() {
           Are you sure you want to permanently delete this trade plan? This action cannot be undone.
         </div>
         <div className="mt-4 flex gap-2 justify-end">
-          <Button size="sm" variant="ghost" onClick={onCancel}>
+          <Button size="sm" variant="ghost" onClick={onCancel} data-track="planner_delete_cancel">
             Cancel
           </Button>
-          <Button size="sm" onClick={() => onConfirm(id)}>
+          <Button size="sm" onClick={() => onConfirm(id)} data-track="planner_delete_confirm" data-track-meta={`{"planId":"${String(id)}"}`}>
             Delete
           </Button>
         </div>
@@ -441,8 +448,12 @@ export default function TradePlannerTable() {
               size="sm"
               variant="default"
               onClick={() => {
-                setCreating((c) => !c);
-                if (!creating) resetNewPlan();
+                if (maxPlans !== -1 && (plans?.length || 0) >= maxPlans) {
+                  alert(`Plan limit reached. Upgrade to create more than ${maxPlans} plans.`);
+                  return;
+                }
+                setCreating(true);
+                resetNewPlan();
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -461,9 +472,9 @@ export default function TradePlannerTable() {
         </div>
       )}
 
-      {/* create form */}
-      {!loading && creating && (
-        <div className={cardBase}>
+      {/* create form (modal) */}
+      {!loading && (
+        <GenericModal open={creating} title="New Trade Plan" onClose={() => setCreating(false)}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-zinc-400">Pair / Symbol</label>
@@ -578,23 +589,37 @@ export default function TradePlannerTable() {
             </div>
           </div>
 
-          <div className="mt-3 flex gap-2 items-center">
-            <div className="text-xs text-zinc-400 mr-2">Presets:</div>
-            {PRESETS.map((p) => (
-              <button
-                key={p.label}
-                className="px-3 py-1 text-xs rounded bg-zinc-800 hover:bg-zinc-700"
-                onClick={() => setNewPlan((cur) => ({ ...cur, setupType: p.setupType, riskReward: p.rr ?? cur.riskReward }))}
-              >
-                {p.label}
-              </button>
-            ))}
-
-            <div className="ml-auto text-xs text-zinc-400">
-              Unlock advanced automated alerts in <span className="font-medium capitalize">{userPlan}</span>+
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex gap-2 items-center">
+              {PRESETS.map((preset) => (
+                <Button
+                  key={preset.label}
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setNewPlan((p) => ({ ...p, setupType: preset.setupType, riskReward: preset.rr }))}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleCreatePlan}>
+                Create Plan
+              </Button>
             </div>
           </div>
-        </div>
+
+          <div className="mt-4">
+            <RiskRewardBar
+              entry={Number(newPlan.plannedEntry ?? 0)}
+              sl={Number(newPlan.stopLoss ?? 0)}
+              tp={Number(newPlan.takeProfit ?? 0)}
+            />
+          </div>
+        </GenericModal>
       )}
 
       {/* planner list */}
@@ -769,7 +794,7 @@ export default function TradePlannerTable() {
                     </div>
 
                     <div className="mt-2 flex flex-col gap-2 items-end">
-                      <button className="flex items-center gap-2 text-xs text-zinc-300" onClick={() => setAlertsTarget(plan.id)}>
+                      <button className="flex items-center gap-2 text-xs text-zinc-300" onClick={() => setAlertsTarget(plan.id)} data-track="planner_alerts_open" data-track-meta={`{"planId":"${String(plan.id)}"}`}>
                         <Zap className="w-4 h-4 text-yellow-400" /> Auto alerts
                         <span className="ml-1 px-2 py-0.5 rounded text-xs bg-zinc-800">coming</span>
                       </button>

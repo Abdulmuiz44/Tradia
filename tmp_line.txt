@@ -1,0 +1,1 @@
+                    <span className="text-xs text-muted-foreground">WR {s.wr.toFixed(0)}% · {s.count}</span>

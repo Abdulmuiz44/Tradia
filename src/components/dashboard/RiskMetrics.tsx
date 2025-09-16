@@ -44,6 +44,16 @@ export default function RiskMetrics() {
   const { trades } = useContext(TradeContext);
   const [chartType, setChartType] = useState("bar");
 
+  const track = async (name: string, properties?: Record<string, any>) => {
+    try {
+      await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'action', name, path: window.location.pathname, meta: properties })
+      });
+    } catch {}
+  };
+
   const equitySeries = useMemo(() => {
     let balance = 0;
     return trades.map((t) => {
@@ -204,7 +214,7 @@ export default function RiskMetrics() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-bold">Risk Metrics Summary</CardTitle>
           <Popover>
-            <PopoverTrigger>
+            <PopoverTrigger data-track="riskmetrics_info_open">
               <Info className="h-5 w-5 text-muted-foreground cursor-pointer" />
             </PopoverTrigger>
             <PopoverContent className="max-w-md text-sm">
@@ -237,8 +247,8 @@ export default function RiskMetrics() {
           <CardTitle className="text-lg font-semibold">Select Chart Type</CardTitle>
         </CardHeader>
         <CardContent className="w-48">
-          <Select defaultValue={chartType} onValueChange={(val) => setChartType(val)}>
-            <SelectTrigger>
+          <Select defaultValue={chartType} onValueChange={(val) => { setChartType(val); track('riskmetrics_chart_type', { value: val }); }}>
+            <SelectTrigger data-track="riskmetrics_charttype_open" data-track-meta={`{"value":"${chartType}"}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

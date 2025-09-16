@@ -327,15 +327,15 @@ ${results.recommendation}`;
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <Button onClick={saveCalculation} variant="outline" size="sm">
+                    <Button onClick={saveCalculation} variant="outline" size="sm" data-track="calculator_save" data-track-meta='{"tool":"position_sizing","mode":"basic"}'>
                       <Save className="w-4 h-4 mr-2" />
                       Save
                     </Button>
-                    <Button onClick={copyResults} variant="outline" size="sm">
+                    <Button onClick={copyResults} variant="outline" size="sm" data-track="calculator_copy" data-track-meta='{"tool":"position_sizing","mode":"basic"}'>
                       <Copy className="w-4 h-4 mr-2" />
                       Copy
                     </Button>
-                    <Button onClick={resetCalculator} variant="outline" size="sm">
+                    <Button onClick={resetCalculator} variant="outline" size="sm" data-track="calculator_reset" data-track-meta='{"tool":"position_sizing","mode":"basic"}'>
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Reset
                     </Button>
