@@ -370,7 +370,7 @@ export default function PricingPage(): React.ReactElement {
               <div className="space-y-3">
                 {[
                   { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                  { q: "Which integrations are supported?", a: "CSV imports are supported today; MT5 & direct broker links coming soon." },
+                  { q: "Which integrations are supported?", a: "CSV imports are supported today; direct broker connections will be added over time." },
                   { q: "How does the trial work?", a: "Start Pro/Plus with a 3-day trial. Cancel anytime before the trial ends to avoid charges." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-white/10">

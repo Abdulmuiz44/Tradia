@@ -2,8 +2,10 @@
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CheckCircle, X, Trash2 } from "lucide-react";
+import { FEATURES, type FeatureAnnouncement } from "@/lib/feature-registry";
 
 type AppNotification = {
   id: string;
@@ -12,64 +14,24 @@ type AppNotification = {
   date: string; // ISO or friendly
 };
 
-const ANNOUNCEMENTS: AppNotification[] = [
+function useAnnouncementsByPlan(): AppNotification[] {
+  const { data: session } = useSession();
+  const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
+  const role = String((session?.user as any)?.role || '').toLowerCase();
+  const email = String((session?.user as any)?.email || '').toLowerCase();
+  const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
+  const effectivePlan = (isAdmin ? 'elite' : plan) as 'free' | 'pro' | 'plus' | 'elite';
+  const planRank: Record<'free'|'pro'|'plus'|'elite', number> = { free:0, pro:1, plus:2, elite:3 };
+  const hasPlan = (min: 'free'|'pro'|'plus'|'elite'='free') => planRank[effectivePlan] >= planRank[min];
+  const visible: FeatureAnnouncement[] = FEATURES.filter(f => hasPlan((f.minPlan ?? 'free') as any));
+  return visible.map<AppNotification>((f) => ({ id: f.id, title: f.title, body: f.body, date: f.date }));
+}
 
-  {
-    id: "risk-ai-guard-rollout",
-    title: "New Risk & Prop Features",
-    body:
-      "Tilt Mode Detector, Prop Dashboard, Optimal Strategy Matcher, and Daily Loss & Drawdown Guard are now live. Gated by plan tiers with easy upgrade inside Analytics.",
-    date: new Date().toISOString(),
-  },
-  {
-    id: "ai-features-rollout",
-    title: "New AI Features Across Plans",
-    body:
-      "Personalized strategy recommendations, risk analysis, market timing, real-time analytics, and image-based trade reviews are now live for Pro/Plus/Elite plans.",
-    date: new Date().toISOString(),
-  },
-  {
-    id: "admin-analytics-live",
-    title: "Admin: Real-time Platform Analytics",
-    body:
-      "Live dashboard shows total trades (added/imported/deleted), total PnL, most active day/time, sessions, and average trade duration.",
-    date: new Date().toISOString(),
-  },
-  {
-    id: "risk-controls-v1",
-    title: "New: Automated Risk Controls & Prop Sim",
-    body:
-      "Set your own guardrails, get breach alerts, and run a prop-firm challenge demo with targets and loss limits.",
-    date: new Date().toISOString(),
-  },
-  {
-    id: "coach-tab-move",
-    title: "AI Mental Coach is now in Analytics",
-    body:
-      "Find the AI Mental Coach inside Trade Analytics under its own subtab – a smoother, more focused workflow.",
-    date: new Date().toISOString(),
-  },
-  {
-    id: "flutterwave-modes",
-    title: "Flutterwave: Choose your payment method",
-    body:
-      "Card, bank transfer, USSD, QR, and mobile money are now supported. Plans activate only after successful payment.",
-    date: new Date().toISOString(),
-  },
-  {
-    id: "ui-refresh",
-    title: "UI Refresh: Sharper Logo & Light Mode",
-    body:
-      "Clearer branding, refined light theme contrast, and rounded elements for a more polished experience.",
-    date: new Date().toISOString(),
-  },
-];
+const STORAGE_KEY_READ = "notif_read_ids_v2";
+const STORAGE_KEY_ITEMS = "notif_items_v2";
+const STORAGE_KEY_DELETED = "notif_deleted_ids_v2";
 
-const STORAGE_KEY_READ = "notif_read_ids_v1";
-const STORAGE_KEY_ITEMS = "notif_items_v1";
-const STORAGE_KEY_DELETED = "notif_deleted_ids_v1";
-
-function useNotificationState() {
+function useNotificationState(announcements: AppNotification[]) {
   const [open, setOpen] = React.useState(false);
   const [readIds, setReadIds] = React.useState<string[]>([]);
   const [deletedIds, setDeletedIds] = React.useState<string[]>([]);
@@ -88,18 +50,18 @@ function useNotificationState() {
         setItems(Array.isArray(parsed) ? parsed : []);
       } else {
         // First run: seed announcements into storage
-        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(ANNOUNCEMENTS));
-        setItems(ANNOUNCEMENTS);
+        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(announcements));
+        setItems(announcements);
       }
     } catch {}
-  }, []);
+  }, [announcements]);
 
   const persist = (next: string[]) => {
     setReadIds(next);
     try { localStorage.setItem(STORAGE_KEY_READ, JSON.stringify(next)); } catch {}
   };
 
-  const markAllRead = () => persist(Array.from(new Set([...readIds, ...ANNOUNCEMENTS.map(a => a.id)])));
+  const markAllRead = () => persist(Array.from(new Set([...readIds, ...announcements.map(a => a.id)])));
   const markRead = (id: string) => persist(Array.from(new Set([...readIds, id])));
 
   const persistItems = (list: AppNotification[]) => {
@@ -118,14 +80,14 @@ function useNotificationState() {
     try {
       const currentIds = new Set(items.map(i => i.id));
       const deletedSet = new Set(deletedIds);
-      const toAdd = ANNOUNCEMENTS.filter(a => !currentIds.has(a.id) && !deletedSet.has(a.id));
+      const toAdd = announcements.filter(a => !currentIds.has(a.id) && !deletedSet.has(a.id));
       if (toAdd.length) {
         const merged = [...items, ...toAdd];
         persistItems(merged);
       }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deletedIds]);
+  }, [deletedIds, announcements]);
 
   const removeItem = (id: string) => {
     const next = items.filter(i => i.id !== id);
@@ -143,7 +105,8 @@ function useNotificationState() {
 }
 
 export default function NotificationBell() {
-  const { open, setOpen, unread, all, markAllRead, markRead, removeItem } = useNotificationState();
+  const announcements = useAnnouncementsByPlan();
+  const { open, setOpen, unread, all, markAllRead, markRead, removeItem } = useNotificationState(announcements);
 
   return (
     <>

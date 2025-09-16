@@ -62,19 +62,28 @@ import {
   Eye,
   EyeOff,
   Shield,
+  ShieldCheck,
   Play,
   StopCircle,
   SlidersHorizontal,
   CheckSquare,
   Square as SquareIcon,
+  Brain,
+  Gauge,
+  Compass,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WeeklyCoachRecap from "@/components/analytics/WeeklyCoachRecap";
 import ProInsights from "@/components/analytics/ProInsights";
 import StrategyBuilder from "@/components/analytics/StrategyBuilder";
+import DailyLossDrawdownGuard from "@/components/analytics/DailyLossDrawdownGuard";
+import TiltModeDetector from "@/components/analytics/TiltModeDetector";
+import PropFirmDashboard from "@/components/analytics/PropFirmDashboard";
+import OptimalStrategyMatcher from "@/components/analytics/OptimalStrategyMatcher";
 import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
+import type { Trade } from "@/types/trade";
 
 // Types
 interface AnalyticsMetric {
@@ -116,7 +125,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const { data: session } = useSession();
   const { trades = [] } = useTrade();
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
-  const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'coach' | 'controls'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'coach' | 'controls'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   const [showPremium, setShowPremium] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -130,6 +139,9 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const email = String((session?.user as any)?.email || '').toLowerCase();
   const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
   const effectivePlan = (isAdmin ? 'elite' : plan) as 'free' | 'pro' | 'plus' | 'elite';
+  const planRank: Record<'free' | 'pro' | 'plus' | 'elite', number> = { free: 0, pro: 1, plus: 2, elite: 3 };
+  const hasPlan = (min: 'free' | 'pro' | 'plus' | 'elite' = 'free') => planRank[effectivePlan] >= planRank[min];
+
 
   // Mobile detection
   useEffect(() => {
@@ -180,7 +192,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
-    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'coach' | 'controls')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast', 'coach', 'controls'];
+    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'coach' | 'controls')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast', 'guard', 'tilt', 'prop', 'matcher', 'coach', 'controls'];
     const currentIndex = views.indexOf(activeView);
 
     if (isLeftSwipe && currentIndex < views.length - 1) {
@@ -709,7 +721,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             <Zap className="w-16 h-16 mx-auto mb-4 text-blue-500" />
             <h3 className="text-xl font-semibold mb-2">AI-Powered Forecasting</h3>
             <p className="text-muted-foreground mb-4">
-              Get personalized trading forecasts, market predictions, and AI-driven insights with PRO+.
+              Get personalized trading forecasts, market predictions, and AI-driven insights with PRO.
             </p>
             <Button
               className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
@@ -717,7 +729,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
                 try { (window as any).location.href = '/checkout?plan=plus&billing=monthly'; } catch {}
               }}
             >
-              Upgrade to PRO+
+              Upgrade to PRO
             </Button>
           </CardContent>
         </Card>
@@ -895,37 +907,68 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         {[
           { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
           { id: 'performance', label: 'Performance', icon: <TrendingUp className="w-4 h-4" /> },
-          { id: 'risk', label: 'Risk Analysis', icon: <Activity className="w-4 h-4" />, premium: true },
+          { id: 'risk', label: 'Risk Analysis', icon: <Activity className="w-4 h-4" />, minPlan: 'pro' },
           { id: 'patterns', label: 'Patterns', icon: <PieChartIcon className="w-4 h-4" /> },
-          { id: 'forecast', label: 'AI Forecast', icon: <Zap className="w-4 h-4" />, premium: true },
+          { id: 'forecast', label: 'AI Forecast', icon: <Zap className="w-4 h-4" />, minPlan: 'pro' },
+          { id: 'guard', label: 'Loss Guard', icon: <ShieldCheck className="w-4 h-4" />, minPlan: 'pro' },
+          { id: 'tilt', label: 'Tilt Detector', icon: <Brain className="w-4 h-4" />, minPlan: 'plus' },
+          { id: 'prop', label: 'Prop Dashboard', icon: <Gauge className="w-4 h-4" />, minPlan: 'plus' },
+          { id: 'matcher', label: 'Strategy Matcher', icon: <Compass className="w-4 h-4" />, minPlan: 'pro' },
           { id: 'coach', label: 'AI Mental Coach', icon: <Star className="w-4 h-4" /> },
-          { id: 'controls', label: 'Risk Controls & Prop Sim', icon: <Shield className="w-4 h-4" /> },
+          { id: 'controls', label: 'Manual Risk Controls', icon: <Shield className="w-4 h-4" /> },
         ].map((tab) => {
-          const isPremium = tab.premium && effectivePlan === 'free';
+          const allowed = typeof (tab as any).minPlan === 'string' ? hasPlan((tab as any).minPlan) : true;
           return (
             <Button
               key={tab.id}
-              variant={activeView === tab.id ? 'default' : 'ghost'}
+              variant={activeView === (tab as any).id ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setActiveView(tab.id as any)}
-              disabled={isPremium}
-              className={`flex items-center gap-2 ${isPremium ? 'opacity-50' : ''}`}
+              onClick={() => setActiveView((tab as any).id as any)}
+              className={['flex items-center gap-2', !allowed ? 'opacity-70' : ''].filter(Boolean).join(' ')}
             >
-          {tab.icon}
-          {tab.label}
-          {isPremium && <Crown className="w-3 h-3 text-yellow-500" />}
-        </Button>
-      );
-    })}
+              {tab.icon}
+              {tab.label}
+              {!allowed && <Crown className="w-3 h-3 text-yellow-500" />}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[480px]">
         {activeView === 'overview' && renderOverview()}
         {activeView === 'performance' && renderPerformance()}
         {activeView === 'risk' && renderRisk()}
         {activeView === 'patterns' && renderPatterns()}
         {activeView === 'forecast' && renderForecast()}
+        {activeView === 'guard' && (
+          hasPlan('pro') ? (
+            <DailyLossDrawdownGuard trades={filteredTrades as Trade[]} plan={effectivePlan} accountBalance={accountBalance} />
+          ) : (
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Daily Loss & Drawdown Guard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          )
+        )}
+        {activeView === 'tilt' && (
+          hasPlan('plus') ? (
+            <TiltModeDetector trades={filteredTrades as Trade[]} plan={effectivePlan} />
+          ) : (
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Tilt Mode Detector" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          )
+        )}
+        {activeView === 'prop' && (
+          hasPlan('plus') ? (
+            <PropFirmDashboard trades={filteredTrades as Trade[]} plan={effectivePlan} accountBalance={accountBalance} />
+          ) : (
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop Firm Dashboard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          )
+        )}
+        {activeView === 'matcher' && (
+          hasPlan('pro') ? (
+            <OptimalStrategyMatcher trades={filteredTrades as Trade[]} plan={effectivePlan} />
+          ) : (
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Optimal Strategy Matcher" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          )
+        )}
         {activeView === 'coach' && (
           <div className="min-h-[480px]">
             <Tabs defaultValue={(effectivePlan === 'free') ? 'chat' : 'weekly'}>
@@ -938,12 +981,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
               <TabsContent value="weekly">
                 {(effectivePlan === 'free') ? (
-                  <CompactUpgradePrompt
-                    currentPlan={'free' as any}
-                    feature="Weekly Coach Recap"
-                    onUpgrade={() => {}}
-                    className="mb-4"
-                  />
+                  <CompactUpgradePrompt currentPlan={'free' as any} feature="Weekly Coach Recap" onUpgrade={() => {}} className="mb-4" />
                 ) : (
                   <WeeklyCoachRecap trades={filteredTrades as any} plan={effectivePlan} />
                 )}
@@ -951,12 +989,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
               <TabsContent value="pro">
                 {(effectivePlan === 'free') ? (
-                  <CompactUpgradePrompt
-                    currentPlan={'free' as any}
-                    feature="Pro Insights"
-                    onUpgrade={() => {}}
-                    className="mb-4"
-                  />
+                  <CompactUpgradePrompt currentPlan={'free' as any} feature="Pro Insights" onUpgrade={() => {}} className="mb-4" />
                 ) : (
                   <ProInsights trades={filteredTrades as any} plan={effectivePlan} />
                 )}
@@ -964,12 +997,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
               <TabsContent value="builder">
                 {(effectivePlan !== 'elite') ? (
-                  <CompactUpgradePrompt
-                    currentPlan={effectivePlan as any}
-                    feature="Strategy Builder"
-                    onUpgrade={() => {}}
-                    className="mb-4"
-                  />
+                  <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Strategy Builder" onUpgrade={() => {}} className="mb-4" />
                 ) : (
                   <StrategyBuilder trades={filteredTrades as any} plan={effectivePlan} />
                 )}
@@ -982,11 +1010,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           </div>
         )}
         {activeView === 'controls' && (
-          <RiskControlsAndPropSim
-            plan={effectivePlan}
-            accountBalance={accountBalance}
-            filteredTrades={filteredTrades}
-          />
+          <RiskControlsAndPropSim plan={effectivePlan} accountBalance={accountBalance} filteredTrades={filteredTrades} />
         )}
       </div>
 
@@ -1093,37 +1117,102 @@ function RiskControlsAndPropSim({
     return last < -Math.abs(maxWeeklyLoss);
   })();
 
-  // Prop firm simulator inputs
+  // Prop firm simulator inputs (plan-aware)
   const [propBalance, setPropBalance] = useState<number>(accountBalance || 1000);
   const [propTargetPct, setPropTargetPct] = useState<number>(10); // e.g., 10%
   const [propMaxDailyLossPct, setPropMaxDailyLossPct] = useState<number>(5);
   const [propMaxTotalLossPct, setPropMaxTotalLossPct] = useState<number>(10);
   const [propDays, setPropDays] = useState<number>(20);
+  const [propPhases, setPropPhases] = useState<number>(plan === 'elite' ? 2 : 1);
+
+  const canEditBasic = plan !== 'free';
+  const canEditPhases = plan === 'plus' || plan === 'elite';
+  const canUseTemplates = plan === 'plus' || plan === 'elite';
+
+  const applyPreset = (preset: '50k' | '100k' | '200k') => {
+    if (!canUseTemplates) return;
+    if (preset === '50k') {
+      setPropBalance(50000);
+      setPropTargetPct(8);
+      setPropMaxDailyLossPct(5);
+      setPropMaxTotalLossPct(10);
+      setPropDays(30);
+      setPropPhases(2);
+    } else if (preset === '100k') {
+      setPropBalance(100000);
+      setPropTargetPct(10);
+      setPropMaxDailyLossPct(5);
+      setPropMaxTotalLossPct(10);
+      setPropDays(35);
+      setPropPhases(2);
+    } else if (preset === '200k') {
+      setPropBalance(200000);
+      setPropTargetPct(12);
+      setPropMaxDailyLossPct(5);
+      setPropMaxTotalLossPct(10);
+      setPropDays(40);
+      setPropPhases(2);
+    }
+  };
 
   const propSim = useMemo(() => {
-    // Use existing historical daily PnL as demo; scale to selected balance
     const bal = propBalance || 1000;
-    const scaledDaily = daily.slice(-propDays).map(([date, v]) => ({
-      date,
-      pnl: v.pnl, // assuming pnl already in account currency; treat as absolute
-      count: v.count,
-    }));
+    const series = daily.slice(-propDays).map(([date, v]) => ({ date, pnl: v.pnl, count: v.count }));
 
-    const target = (propTargetPct / 100) * bal;
-    const maxDailyLoss = (propMaxDailyLossPct / 100) * bal;
-    const maxTotalLoss = (propMaxTotalLossPct / 100) * bal;
+    const dailyCap = (propMaxDailyLossPct / 100) * bal;
+    const totalCap = (propMaxTotalLossPct / 100) * bal;
 
-    let cum = 0;
-    let pass = false;
-    let breach = '';
-    for (const d of scaledDaily) {
-      cum += d.pnl;
-      if (d.pnl < -maxDailyLoss) { breach = 'Max daily loss breached'; break; }
-      if (cum < -maxTotalLoss) { breach = 'Max total loss breached'; break; }
-      if (cum >= target) { pass = true; break; }
+    // Phase targets: phase 1 uses propTargetPct; phase 2 uses 60% of that by default
+    const phaseTargetsPct: number[] = propPhases === 2 ? [propTargetPct, Math.max(3, Math.round(propTargetPct * 0.6))] : [propTargetPct];
+    const phaseResults: { phase: number; target: number; cum: number; days: number; pass: boolean; breach?: string }[] = [];
+
+    let idx = 0;
+    let overallBreach: string | undefined;
+    for (let p = 0; p < phaseTargetsPct.length; p++) {
+      const targetValue = (phaseTargetsPct[p] / 100) * bal;
+      let cum = 0;
+      let pass = false;
+      let days = 0;
+      let breach: string | undefined;
+      for (; idx < series.length; idx++) {
+        const d = series[idx];
+        days += 1;
+        cum += d.pnl;
+        if (d.pnl < -dailyCap) { breach = 'Max daily loss breached'; overallBreach = breach; break; }
+        if (cum < -totalCap) { breach = 'Max total loss breached'; overallBreach = breach; break; }
+        if (cum >= targetValue) { pass = true; idx += 1; break; }
+      }
+      phaseResults.push({ phase: p + 1, target: targetValue, cum, days, pass, breach });
+      if (breach) break;
+      // reset accumulation for next phase
     }
-    return { target, maxDailyLoss, maxTotalLoss, cum, pass, breach, data: scaledDaily };
-  }, [daily, propBalance, propTargetPct, propMaxDailyLossPct, propMaxTotalLossPct, propDays]);
+
+    const overallPass = phaseResults.length === phaseTargetsPct.length && phaseResults.every(r => r.pass) && !overallBreach;
+    const progressPct = (() => {
+      const current = phaseResults[phaseResults.length - 1];
+      if (!current) return 0;
+      return Math.min(100, Math.max(0, (current.cum / (current.target || 1)) * 100));
+    })();
+
+    const current = phaseResults[phaseResults.length - 1];
+    return {
+      balance: bal,
+      dailyCap,
+      totalCap,
+      phaseTargetsPct,
+      phaseResults,
+      overallPass,
+      breach: overallBreach,
+      series,
+      progressPct,
+      // compatibility fields for UI (to be refactored):
+      target: current?.target ?? 0,
+      maxDailyLoss: dailyCap,
+      maxTotalLoss: totalCap,
+      pass: overallPass,
+      cum: current?.cum ?? 0,
+    };
+  }, [daily, propBalance, propTargetPct, propMaxDailyLossPct, propMaxTotalLossPct, propDays, propPhases]);
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="rounded-xl border border-white/10 bg-white/5 dark:bg-white/5 p-4">
@@ -1229,21 +1318,21 @@ function RiskControlsAndPropSim({
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Profit target</div>
           <div className="flex items-center gap-2">
-            <input type="range" min={5} max={20} step={1} value={propTargetPct} onChange={(e)=>setPropTargetPct(parseFloat(e.target.value))} className="w-full" />
+            <input type="range" min={5} max={20} step={1} value={propTargetPct} onChange={(e)=> canEditBasic && setPropTargetPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
             <span className="text-sm font-medium">{propTargetPct}%</span>
           </div>
         </div>
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Max daily loss</div>
           <div className="flex items-center gap-2">
-            <input type="range" min={2} max={10} step={1} value={propMaxDailyLossPct} onChange={(e)=>setPropMaxDailyLossPct(parseFloat(e.target.value))} className="w-full" />
+            <input type="range" min={2} max={10} step={1} value={propMaxDailyLossPct} onChange={(e)=> canEditBasic && setPropMaxDailyLossPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
             <span className="text-sm font-medium">{propMaxDailyLossPct}%</span>
           </div>
         </div>
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Max total loss</div>
           <div className="flex items-center gap-2">
-            <input type="range" min={5} max={20} step={1} value={propMaxTotalLossPct} onChange={(e)=>setPropMaxTotalLossPct(parseFloat(e.target.value))} className="w-full" />
+            <input type="range" min={5} max={20} step={1} value={propMaxTotalLossPct} onChange={(e)=> canEditBasic && setPropMaxTotalLossPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
             <span className="text-sm font-medium">{propMaxTotalLossPct}%</span>
           </div>
         </div>
@@ -1254,6 +1343,26 @@ function RiskControlsAndPropSim({
             <span className="text-sm">days</span>
           </div>
         </div>
+      </div>
+      {/* Advanced controls by plan */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="p-3 rounded bg-black/5 dark:bg-white/5">
+          <div className="text-xs text-muted-foreground mb-1">Phases</div>
+          <div className="flex items-center gap-2">
+            <input type="number" min={1} max={2} value={propPhases} onChange={(e)=> canEditPhases && setPropPhases(Math.min(2, Math.max(1, parseInt(e.target.value||'1'))))} className="w-20 bg-transparent border rounded px-2 py-1" disabled={!canEditPhases} />
+            <span className="text-sm">{propPhases === 2 ? 'Two-phase' : 'One-phase'}</span>
+          </div>
+        </div>
+        {canUseTemplates && (
+          <div className="p-3 rounded bg-black/5 dark:bg-white/5">
+            <div className="text-xs text-muted-foreground mb-1">Templates</div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => applyPreset('50k')}>50k</Button>
+              <Button size="sm" variant="outline" onClick={() => applyPreset('100k')}>100k</Button>
+              <Button size="sm" variant="outline" onClick={() => applyPreset('200k')}>200k</Button>
+            </div>
+          </div>
+        )}
       </div>
       <div className="rounded-lg p-4 bg-white/5">
         <div className="flex flex-wrap items-center gap-3">
@@ -1318,7 +1427,7 @@ function RiskControlsAndPropSim({
       </Section>
 
       {/* Prop Firm Simulator */}
-      <Section title="Prop Firm Simulator (Demo Mode)">
+      <Section title="Prop Firm Simulator">
         {PropSimUI}
         {plan === 'free' && (
           <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> Custom prop templates in Elite. {upgradeCta('Unlock Elite')}</div>

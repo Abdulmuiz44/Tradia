@@ -25,7 +25,20 @@ echo "Starting deployment process..."
 
 # Build the project first
 echo "Building project..."
-if ! pnpm run build; then
+# Detect package manager
+PKG_CMD=""
+if command -v pnpm >/dev/null 2>&1; then
+  PKG_CMD="pnpm run build"
+elif command -v npm >/dev/null 2>&1; then
+  PKG_CMD="npm run build"
+elif command -v yarn >/dev/null 2>&1; then
+  PKG_CMD="yarn build"
+else
+  echo "No package manager (pnpm/npm/yarn) found in PATH." >&2
+  exit 1
+fi
+
+if ! eval "$PKG_CMD"; then
   echo "Build failed! Please fix build errors before deploying."
   exit 1
 fi

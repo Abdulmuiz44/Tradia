@@ -109,19 +109,26 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
   else if (outcome === "Loss") pnl = -Math.abs(pnl);
   else pnl = 0;
 
-  const resultRR =
-    Number.isFinite(toNumber(raw.resultRR)) && toNumber(raw.resultRR) !== 0
-      ? toNumber(raw.resultRR)
-      : computeResultRR({
-          entryPrice,
-          stopLossPrice,
-          takeProfitPrice,
-          outcome,
-        });
+  // Always compute RR from prices and outcome so changes to outcome reflect instantly
+  const resultRR = computeResultRR({
+    entryPrice,
+    stopLossPrice,
+    takeProfitPrice,
+    outcome,
+  });
 
   const duration =
     String(raw.duration ?? "") ||
     calcDuration(openTime || undefined, closeTime || undefined);
+
+  // Preserve optional metadata fields provided by UI (strategy and screenshots)
+  const strategy = String((raw as any).strategy ?? raw.reasonForTrade ?? "");
+  const beforeScreenshotUrl = (raw as any).beforeScreenshotUrl
+    ? String((raw as any).beforeScreenshotUrl)
+    : undefined;
+  const afterScreenshotUrl = (raw as any).afterScreenshotUrl
+    ? String((raw as any).afterScreenshotUrl)
+    : undefined;
 
   return {
     id,
@@ -140,9 +147,12 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
     outcome,
     duration,
     reasonForTrade: String(raw.reasonForTrade ?? ""),
+    strategy,
     emotion: String(raw.emotion ?? "neutral"),
     journalNotes: String(raw.journalNotes ?? raw.notes ?? ""),
     notes: String(raw.notes ?? raw.journalNotes ?? ""),
+    beforeScreenshotUrl,
+    afterScreenshotUrl,
     updated_at: new Date().toISOString(),
   } as Trade;
 };
@@ -202,7 +212,7 @@ export default function TradeHistoryTable() {
   const [page, setPage] = useState<number>(1);
   const pageSize = 20;
 
-  /* init from localStorage */
+  // Migrate any old 'userTrades' cache into the unified TradeContext store ('trade-history').
   useEffect(() => {
     if (!hasLoaded.current) {
       try {
@@ -211,9 +221,11 @@ export default function TradeHistoryTable() {
           if (stored) {
             const parsed = JSON.parse(stored) as unknown;
             if (Array.isArray(parsed) && parsed.length > 0) {
-              // Normalize on load so RR exists for old records too
               const normalized = (parsed as Partial<Trade>[]).map(normalizeTrade);
-              setTradesFromCsv(normalized as unknown[]);
+              // Upsert into context-managed state
+              importTrades(normalized as unknown[]);
+              // Clear legacy key to prevent divergence
+              localStorage.removeItem("userTrades");
             }
           }
         }
@@ -223,18 +235,7 @@ export default function TradeHistoryTable() {
       hasLoaded.current = true;
     }
     setMounted(true);
-  }, [setTradesFromCsv]);
-
-  /* persist to localStorage */
-  useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("userTrades", JSON.stringify(trades));
-      }
-    } catch {
-      // ignore
-    }
-  }, [trades]);
+  }, [importTrades]);
 
   /* processed data (filters + search + sort) */
   // Plan-limited trades window
@@ -724,11 +725,12 @@ export default function TradeHistoryTable() {
                         ${pnl.toFixed(2)}
                       </td>
                       <td className="px-3 py-2">{(() => { const o=toDateOrNull(getField(t,"openTime")); const c=toDateOrNull(getField(t,"closeTime")); return (o&&c)? calcDuration(o.toISOString(), c.toISOString()) : toStringSafe(getField(t,"duration")); })()}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "strategy") || getField(t, "reasonForTrade"))}</td>
+                      {/* Outcome column */}
                       <td className="px-3 py-2">{toStringSafe(getField(t, "outcome"))}</td>
-                      <td className="px-3 py-2">
-                        {formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}
-                      </td>
+                      {/* RR column */}
+                      <td className="px-3 py-2">{formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}</td>
+                      {/* Strategy column */}
+                      <td className="px-3 py-2">{toStringSafe(getField(t, "strategy") || getField(t, "reasonForTrade"))}</td>
                       <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
                       <td className="px-3 py-2">
                         {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}

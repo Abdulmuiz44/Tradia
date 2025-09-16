@@ -503,7 +503,7 @@ function DashboardContent() {
           <div className="flex flex-col h-full">
             {/* Logo/Brand */}
             <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-[#2a2f3a]">
-              <img src="/tradia-mark.svg" alt="Tradia" className="h-6 w-auto" />
+              <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-6 w-auto" />
               <div>
                 <h1 className="text-black dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
                 <p className="text-gray-600 dark:text-gray-300 text-xs">Trading Dashboard</p>
@@ -580,7 +580,7 @@ function DashboardContent() {
             <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a] transform transition-transform duration-300">
               <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
                 <div className="flex items-center gap-3">
-                <img src="/tradia-mark.svg" alt="Tradia" className="h-7 w-auto" />
+                <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-7 w-auto" />
                 <h1 className="text-white font-extrabold text-lg">Tradia</h1>
               </div>
               <button
@@ -616,8 +616,8 @@ function DashboardContent() {
                 <Menu size={20} className="text-white" />
               </button>
               <div>
-                <h1 className="text-lg md:text-xl font-bold brand-text-gradient">{currentTabLabel}</h1>
-                <p className="text-gray-400 text-xs sm:text-sm hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-white">{currentTabLabel}</h1>
+                <p className="text-white text-xs sm:text-sm hidden sm:block">
                   {activeTab === 'tradia-ai' ? 'Your personal trading coach with voice support' :
                    activeTab === 'overview' ? 'Comprehensive trading overview and key metrics' :
                    activeTab === 'analytics' ? 'Detailed performance analytics and insights' :
@@ -627,7 +627,7 @@ function DashboardContent() {
                 {/* Admin Status Indicator */}
                 <div className="flex items-center gap-2 mt-1">
                   <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-white">
                     {isAdmin ? 'Admin Access' : 'Standard Access'}
                   </span>
                 </div>

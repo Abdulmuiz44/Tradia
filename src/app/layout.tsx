@@ -12,9 +12,9 @@ import ActivityTracker from "@/components/analytics/ActivityTracker";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Tradia | AI Trading Performance, Analytics & MT5 Coach",
-  description: "Tradia is your AI trading performance hub: connect MT5, analyze trades, run prop-firm simulators, and get coaching to improve consistency. Start free and upgrade anytime.",
-  keywords: "trade analysis, trading performance, MT5 integration, AI trading assistant, trade journal, trading insights, forex trading, trading analytics",
+  title: "Tradia | AI Trading Performance & Analytics",
+  description: "Tradia is your AI trading performance hub: add trades manually or import via CSV to analyze performance, get insights, and improve consistency. Start free and upgrade anytime.",
+  keywords: "trade analysis, trading performance, AI trading assistant, trade journal, trading insights, forex trading, trading analytics, CSV import",
   authors: [{ name: "Tradia Team" }],
   creator: "Tradia",
   publisher: "Tradia",
@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: "Tradia | AI Trading Performance, Analytics & MT5 Coach",
-    description: "AI-powered trade analytics, coaching, MT5 integration, prop-firm simulator and risk controls — all in one.",
+    title: "Tradia | AI Trading Performance & Analytics",
+    description: "AI-powered trade analytics, coaching, CSV import, prop-firm simulator and risk controls — all in one.",
     url: "https://tradiaai.app",
     siteName: "Tradia",
     images: [
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tradia | AI Trading Performance & MT5 Coach",
+    title: "Tradia | AI Trading Performance & Analytics",
     description: "Analyze trades, get AI insights and risk controls, and level up your consistency.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Tradia",
-    "description": "AI-powered trading performance assistant for MT5 traders. Analyze trades, get AI insights, and improve your trading strategy.",
+    "description": "AI-powered trading performance assistant. Add trades manually or import via CSV to analyze performance, get AI insights, and improve your trading strategy.",
     "url": "https://tradiaai.app",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web Browser",
@@ -86,7 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       "name": "Tradia"
     },
     "featureList": [
-      "MT5 Integration",
+      "CSV Trade Import",
       "AI Trade Analysis",
       "Performance Metrics",
       "Trade Journal",
@@ -113,7 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         "name": "Which brokers are supported by Tradia?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Tradia currently supports CSV imports for all brokers and has native MT5 integration for MetaTrader 5 accounts. We're continuously adding support for more broker APIs and direct integrations to make trade analysis even easier."
+          "text": "Tradia currently supports CSV imports for all brokers. We're continuously adding support for more broker APIs and direct integrations to make trade analysis even easier."
         }
       },
       {
@@ -147,10 +147,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Icons */}
-        <link rel="icon" href="/tradia-mark.svg" type="image/svg+xml" />
-        <link rel="shortcut icon" href="/tradia-mark.svg" type="image/svg+xml" />
-        <link rel="mask-icon" href="/mask-icon.svg" color="#0f172a" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" />
+        <link rel="shortcut icon" href="/Tradia-logo-ONLY.png" type="image/png" />
+        <link rel="mask-icon" href="/Tradia-logo-ONLY.png" color="#0f172a" />
+        <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

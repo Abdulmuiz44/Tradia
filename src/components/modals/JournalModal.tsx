@@ -211,7 +211,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
     }
 
     // parse numbers allowing full precision (step="any")
-    const parsedLot = Number(String(lotSize).trim()) || 0;
+    const parsedLot = Math.max(0.01, Number(String(lotSize).trim()) || 0);
     const parsedEntry = entryPrice !== "" ? Number(String(entryPrice).trim()) : NaN;
     const parsedStop = stopLossPrice !== "" ? Number(String(stopLossPrice).trim()) : NaN;
     const parsedTP = takeProfitPrice !== "" ? Number(String(takeProfitPrice).trim()) : NaN;
@@ -415,7 +415,8 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             <label className="block text-sm text-zinc-300 mb-1">Lot size</label>
             <input
               type="number"
-              step="any"
+              min="0.01"
+              step="0.01"
               value={lotSize}
               onChange={(e) => setLotSize(e.target.value)}
               className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"

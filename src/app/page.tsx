@@ -197,13 +197,13 @@ export default function Home(): React.ReactElement {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight"
+                  className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white"
                 >
-                  Tradia — <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">AI Trading Performance Assistant</span>
+                  Tradia — AI Trading Performance Assistant
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
-                  Transform your trading performance with AI-powered analysis. Track every trade, discover your edge, and scale with confidence. Connect your MT5 account or upload CSV files to get instant AI trade reviews, comprehensive risk analysis, and actionable insights that help serious traders improve their win rates and profitability.
+                  Transform your trading performance with AI-powered analysis. Track every trade, discover your edge, and scale with confidence. For now, add trades manually or import your trades via CSV to see your overall performance, risk, and AI insights.
                 </motion.p>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-400 max-w-2xl">
@@ -246,7 +246,7 @@ export default function Home(): React.ReactElement {
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold brand-text-gradient">Advanced Trading Analytics Platform</h2>
+              <h2 className="text-3xl font-bold text-white">Advanced Trading Analytics Platform</h2>
               <p className="mt-2 text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze performance, improve strategies and scale profits — built around real trading workflows and powered by artificial intelligence.</p>
             </div>
 
@@ -280,7 +280,7 @@ export default function Home(): React.ReactElement {
         {/* VIDEO DEMO */}
         <section className="py-16 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 brand-text-gradient">See Tradia in Action</h2>
+            <h2 className="text-3xl font-bold mb-4 text-white">See Tradia in Action</h2>
             <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
               Watch how traders use Tradia to analyze their performance, get AI insights, and improve their strategies.
               From uploading trades to seeing actionable recommendations.
@@ -312,7 +312,7 @@ export default function Home(): React.ReactElement {
         <section className="py-16 px-6 bg-gradient-to-r from-indigo-900/20 to-purple-900/20">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 brand-text-gradient">Why Professional Traders Choose Tradia</h2>
+              <h2 className="text-3xl font-bold mb-4 text-white">Why Professional Traders Choose Tradia</h2>
               <p className="text-gray-300 max-w-3xl mx-auto text-lg">
                 Join thousands of successful traders who have transformed their trading performance using our comprehensive analytics platform.
                 From day traders to swing traders, Tradia provides the insights and tools needed to trade with confidence.
@@ -434,7 +434,7 @@ export default function Home(): React.ReactElement {
         {/* Pricing */}
         <section className="py-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl font-bold brand-text-gradient">Pricing</h2>
+              <h2 className="text-3xl font-bold text-white">Pricing</h2>
             <p className="mt-2 text-gray-400">Start free — upgrade when you need advanced AI and history.</p>
 
             <div className="mt-6 inline-flex rounded-full bg-white/5 p-1 shadow-sm">
@@ -573,7 +573,7 @@ export default function Home(): React.ReactElement {
               <div className="space-y-3">
                 {[
                   { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                  { q: "Which brokers are supported?", a: "We support CSV imports today and are adding MT5 and more broker integrations soon." },
+                  { q: "Which brokers are supported?", a: "Right now you can import trades via CSV from any broker, or add trades manually. Direct connections will be added over time." },
                   { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-white/10">

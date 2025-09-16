@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "About Tradia — AI Trading Performance Assistant",
   description:
-    "Learn how Tradia helps traders analyze performance, eliminate emotional mistakes, and grow consistently with AI trade insights, MT5 integration, and risk controls.",
+    "Learn how Tradia helps traders analyze performance, eliminate emotional mistakes, and grow consistently with AI trade insights, CSV import/manual trade entry, and risk controls.",
   alternates: { canonical: "/about" },
 };
 
@@ -34,7 +34,7 @@ export default function AboutPage() {
             </h1>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-3xl">
               Tradia is an AI trading performance assistant that helps you trade smarter and grow faster. We combine
-              rich analytics, MT5 integrations, and human‑centred design to make trade reviews effortless, highlight
+              rich analytics, CSV imports/manual trade entry, and human-centred design to make trade reviews effortless, highlight
               blind spots, and build sustainable habits around risk and discipline.
             </p>
           </div>
@@ -85,7 +85,7 @@ export default function AboutPage() {
               <strong>AI Trade Insights:</strong> automatic analysis of results, risk patterns, and behavior hints.
             </li>
             <li className="rounded-xl p-5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
-              <strong>MT5 Integration & CSV Import:</strong> keep trades in sync or upload from any broker.
+              <strong>CSV Import & Manual Entry:</strong> upload from any broker via CSV or add trades manually.
             </li>
             <li className="rounded-xl p-5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
               <strong>Risk Guard:</strong> guardrails for overtrading, daily loss limits, and loss streak breaks.
@@ -107,7 +107,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold">How Tradia Works</h2>
           <ol className="mt-4 grid gap-4 md:grid-cols-3 text-sm text-gray-700 dark:text-gray-200">
             <li className="rounded-xl p-5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
-              <strong>1) Connect or Import:</strong> Link MT5 accounts or upload CSV history from your broker.
+              <strong>1) Add or Import:</strong> Add trades manually or upload CSV history from your broker.
             </li>
             <li className="rounded-xl p-5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
               <strong>2) Analyze:</strong> AI summarizes your performance, highlights issues, and surfaces patterns.
@@ -129,7 +129,7 @@ export default function AboutPage() {
               <strong>Plus:</strong> unlimited history, more connections, AI reviews.
             </div>
             <div className="rounded-xl p-5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
-              <strong>Pro:</strong> advanced insights, enhanced risk layers, MT5 workflows.
+              <strong>Pro:</strong> advanced insights and enhanced risk layers.
             </div>
             <div className="rounded-xl p-5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
               <strong>Elite:</strong> everything in Pro with premium features and priority support.
@@ -174,7 +174,7 @@ export default function AboutPage() {
           <div className="rounded-2xl p-6 border border-indigo-300/40 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/10">
             <h3 className="text-xl font-semibold">Start Free — Upgrade Anytime</h3>
             <p className="mt-2 text-sm text-gray-700 dark:text-gray-200 max-w-3xl">
-              Create your free account, connect MT5 or import your trades, and let Tradia highlight the next best
+              Create your free account, add trades manually or import your trades via CSV, and let Tradia highlight the next best
               improvements in your process. It only takes a few minutes to see your first insights.
             </p>
             <div className="mt-4 flex gap-3">
@@ -192,4 +192,3 @@ export default function AboutPage() {
     </>
   );
 }
-

@@ -163,7 +163,7 @@ function LoginPage(): React.ReactElement {
                     <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">⚡</span>
                     <div>
                       <div className="font-medium">Fast insights</div>
-                      <div className="text-sm text-gray-400">Upload CSV or connect MT5 and get instant feedback.</div>
+                      <div className="text-sm text-gray-400">Upload CSV or add trades manually and get instant feedback.</div>
                     </div>
                   </li>
                 </ul>

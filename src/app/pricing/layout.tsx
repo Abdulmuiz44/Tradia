@@ -33,11 +33,10 @@ export const metadata: Metadata = {
     "trading pricing",
     "forex journal pricing",
     "AI trading assistant plans",
-    "MT5 analytics subscription",
+    "Trading analytics subscription",
   ],
 };
 
 export default function PricingLayout({ children }: { children: React.ReactNode }) {
   return children;
 }
-

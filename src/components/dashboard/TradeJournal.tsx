@@ -5,6 +5,8 @@ import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { Badge } from "@/components/ui/badge";
 import {
   Trash2,
@@ -84,7 +86,19 @@ ChartJS.register(
    Types & helpers
 -------------------------------------------------------------------------------- */
 type Tier = "free" | "plus" | "premium" | "pro";
-type SubTab = "journal" | "insights" | "patterns" | "psychology" | "calendar" | "forecast" | "optimizer" | "prop";
+type SubTab =
+  | "journal"
+  | "insights"
+  | "patterns"
+  | "psychology"
+  | "calendar"
+  | "forecast"
+  | "optimizer"
+  | "prop"
+  | "review"
+  | "mistakes"
+  | "risk"
+  | "playbook";
 type Trade = TradeFromTypes & {
   id?: string | number;
   _id?: string | number;
@@ -159,9 +173,9 @@ function HeuristicForecast({ trades, summary }: { trades: Trade[]; summary: any 
   const score = 2.0 * recentWinRate + 1.2 * streakFactor + 1.5 * (expectancyNorm || 0);
   const p = Math.round(sigmoid(score - 1.5) * 100);
   return (
-    <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
-      <div className="text-sm text-zinc-300">Probability next trade will be a WIN</div>
-      <div className="text-3xl font-semibold text-white my-3">{p}%</div>
+    <div className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30">
+      <div className="text-sm text-muted-foreground">Probability next trade will be a WIN</div>
+      <div className="text-3xl font-semibold my-3">{p}%</div>
       <div className="text-xs text-zinc-400">Recent WR {(recentWinRate * 100).toFixed(1)}% • streak {streak} • expectancy {summary.expectancy.toFixed(2)}</div>
       <div className="mt-4 flex gap-2">
         <Button variant="secondary" onClick={() => navigator.clipboard.writeText(`${p}% — Recent WR ${(recentWinRate * 100).toFixed(1)}%`)}>
@@ -337,7 +351,14 @@ function PropTracker({ trades }: { trades: Trade[] }) {
 ------------------------------------------------------------------------- */
 export default function TradeJournal(): React.ReactElement {
   const { data: session } = useSession();
-  const tier = ((session?.user as { subscription?: Tier } | undefined)?.subscription as Tier) || "free";
+  // Plan and access control (aligned with TradeAnalytics)
+  const planStr = String((session?.user as any)?.plan || 'free').toLowerCase();
+  const roleStr = String((session?.user as any)?.role || '').toLowerCase();
+  const emailStr = String((session?.user as any)?.email || '').toLowerCase();
+  const isAdmin = roleStr === 'admin' || emailStr === 'abdulmuizproject@gmail.com';
+  const effectivePlan = (isAdmin ? 'elite' : planStr) as 'free' | 'pro' | 'plus' | 'elite';
+  const planRank: Record<'free' | 'pro' | 'plus' | 'elite', number> = { free: 0, pro: 1, plus: 2, elite: 3 };
+  const hasPlan = (min: 'free' | 'pro' | 'plus' | 'elite' = 'free') => planRank[effectivePlan] >= planRank[min];
   const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
   const tradesTyped = trades as Trade[];
 
@@ -360,6 +381,16 @@ export default function TradeJournal(): React.ReactElement {
   const [riskPercent, setRiskPercent] = useState<number>(1);
   const storageKey = "trading_psych_note_" + (session?.user?.email ?? session?.user?.name ?? "anon");
   const [psychNote, setPsychNote] = useState<string>("");
+  // Strategy playbooks (persisted locally, plan-limited)
+  const playbookKey = "trade_playbooks_" + (session?.user?.email ?? session?.user?.name ?? "anon");
+  const [playbooks, setPlaybooks] = useState<Array<{ id: string; name: string; entry: string; exit: string; notes?: string }>>([]);
+  useEffect(() => {
+    try { const raw = typeof window !== 'undefined' ? localStorage.getItem(playbookKey) : null; if (raw) setPlaybooks(JSON.parse(raw)); } catch {}
+  }, [playbookKey]);
+  useEffect(() => {
+    try { if (typeof window !== 'undefined') localStorage.setItem(playbookKey, JSON.stringify(playbooks)); } catch {}
+  }, [playbooks, playbookKey]);
+  const playbookLimit = effectivePlan === 'free' ? 1 : effectivePlan === 'pro' ? 3 : 10;
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
     if (saved) setPsychNote(saved);
@@ -938,7 +969,7 @@ export default function TradeJournal(): React.ReactElement {
               defaultValue={String(patch.symbol ?? t.symbol ?? "")}
               onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), symbol: e.target.value } }))}
             />
-          ) : <span className="font-medium">{t.symbol ?? "—"}</span>}
+          ) : <span className="font-medium">{t.symbol ?? "�"}</span>}
         </div>
         <div>
           {editMode ? (
@@ -947,14 +978,14 @@ export default function TradeJournal(): React.ReactElement {
               defaultValue={String(patch.outcome ?? t.outcome ?? "").toLowerCase()}
               onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), outcome: e.target.value } }))}
             >
-              <option value="">—</option>
+              <option value="">�</option>
               <option value="win">WIN</option>
               <option value="loss">LOSS</option>
               <option value="breakeven">BREAKEVEN</option>
             </select>
           ) : (
             <span className={`px-2 py-0.5 rounded text-xs font-semibold ${t.outcome?.toLowerCase() === "win" ? "bg-green-600/20 text-green-400" : t.outcome?.toLowerCase() === "loss" ? "bg-red-600/20 text-red-400" : "bg-yellow-600/20 text-yellow-300"}`}>
-              {(t.outcome ?? "—").toString().toUpperCase()}
+              {(t.outcome ?? "�").toString().toUpperCase()}
             </span>
           )}
         </div>
@@ -1251,7 +1282,7 @@ export default function TradeJournal(): React.ReactElement {
             onChange={(e) => setTagFilter(e.target.value || null)}
             title="Filter by tag"
           >
-            <option value="">All tags</option>
+            <option value="">�</option>
             {allTags.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
@@ -1448,7 +1479,7 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Subtabs */}
       <Tabs value={subTab} onValueChange={(v) => setSubTab(v as SubTab)} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-12">
           <TabsTrigger value="journal">Journal</TabsTrigger>
           <TabsTrigger value="insights">Insights</TabsTrigger>
           <TabsTrigger value="patterns">Patterns</TabsTrigger>
@@ -1457,12 +1488,16 @@ export default function TradeJournal(): React.ReactElement {
           <TabsTrigger value="forecast">Forecast</TabsTrigger>
           <TabsTrigger value="optimizer">Optimizer</TabsTrigger>
           <TabsTrigger value="prop">Prop-Firm</TabsTrigger>
+          <TabsTrigger value="review">Review</TabsTrigger>
+          <TabsTrigger value="risk">Risk</TabsTrigger>
+          <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
+          <TabsTrigger value="playbook">Playbook</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* Journal */}
       {subTab === "journal" && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
           <CardContent className="p-0">
             <div className="px-4 pt-4 pb-2 text-xs text-zinc-400">
               Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `• filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
@@ -1471,7 +1506,7 @@ export default function TradeJournal(): React.ReactElement {
               Tip: Use strategy tags, SL/TP optimizer, bulk actions and the quick review checklist to speed up journaling.
             </div>
             <div className="px-4">
-              <div className="hidden md:grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-zinc-400 text-xs border-b border-zinc-800 py-2">
+              <div className="hidden md:grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-muted-foreground text-xs border-b border-white/10 py-2">
                 <div>Date</div>
                 <div>Symbol</div>
                 <div>Outcome</div>
@@ -1479,7 +1514,7 @@ export default function TradeJournal(): React.ReactElement {
                 <div>Note</div>
                 <div className="text-right">Actions</div>
               </div>
-              <div className="divide-y divide-zinc-800">
+              <div className="divide-y divide-white/10">
                 {sorted.length ? sorted.map(t => <Row key={getTradeId(t)} t={t} />) : <div className="py-10 text-center text-zinc-400">No trades found.</div>}
               </div>
             </div>
@@ -1489,23 +1524,23 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Insights */}
       {subTab === "insights" && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
           <CardContent className="p-5 space-y-4">
-            <div className="flex items-center gap-2 text-zinc-200">
+            <div className="flex items-center gap-2">
               <BarChart2 className="h-5 w-5" />
               <h3 className="font-semibold">AI & Heuristic Insights</h3>
               <div className="ml-auto flex items-center gap-2">
-                <Button variant="ghost" className="text-zinc-300" onClick={copyInsightsMarkdown}>
+                <Button variant="ghost" onClick={copyInsightsMarkdown}>
                   <Clipboard className="h-4 w-4 mr-2" /> Copy MD
                 </Button>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {computedInsights.map(ins => (
-                <div key={ins.id} className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50 flex flex-col gap-2">
-                  <div className="text-sm font-semibold text-white">{ins.title}</div>
-                  <p className="text-xs text-zinc-300">{ins.detail}</p>
-                  <div className="h-2 w-full bg-zinc-800 rounded">
+                <div key={ins.id} className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30 flex flex-col gap-2">
+                  <div className="text-sm font-semibold">{ins.title}</div>
+                  <p className="text-xs text-muted-foreground">{ins.detail}</p>
+                  <div className="h-2 w-full bg-white/10 rounded">
                     <div className="h-2 rounded bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, ins.score ?? 0))}%` }} />
                   </div>
                   <div className="flex gap-2 mt-2">
@@ -1522,7 +1557,7 @@ export default function TradeJournal(): React.ReactElement {
       {/* Patterns */}
       {subTab === "patterns" && (
         <div className="space-y-6">
-          <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+          <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
@@ -1642,7 +1677,10 @@ export default function TradeJournal(): React.ReactElement {
       )}
 
       {/* Forecast */}
-      {subTab === "forecast" && (
+      {!hasPlan('pro') && subTab === 'forecast' && (
+        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="AI Forecast" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+      )}
+      {subTab === "forecast" && hasPlan('pro') && (
         <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200">
@@ -1662,7 +1700,10 @@ export default function TradeJournal(): React.ReactElement {
       )}
 
       {/* Optimizer */}
-      {subTab === "optimizer" && (
+      {!hasPlan('pro') && subTab === 'optimizer' && (
+        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="SL/TP Optimizer" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+      )}
+      {subTab === "optimizer" && hasPlan('pro') && (
         <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200"><Target className="h-5 w-5" /><h3 className="font-semibold">SL/TP Optimization</h3></div>
@@ -1702,7 +1743,10 @@ export default function TradeJournal(): React.ReactElement {
       )}
 
       {/* Prop-Firm */}
-      {subTab === "prop" && <PropTracker trades={trades as Trade[]} />}
+      {!hasPlan('plus') && subTab === 'prop' && (
+        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop-Firm Dashboard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+      )}
+      {subTab === "prop" && hasPlan('plus') && <PropTracker trades={trades as Trade[]} />}
 
       {/* Psychology */}
       {subTab === "psychology" && (
@@ -1812,6 +1856,196 @@ export default function TradeJournal(): React.ReactElement {
         </Card>
       )}
 
+      {/* Review */}
+      {subTab === "review" && (
+        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center gap-2"><FileText className="h-5 w-5" /><h3 className="font-semibold">Weekly Review</h3></div>
+            {(() => {
+              const now = new Date();
+              const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              const recent = (tradesTyped || []).filter((t: Trade) => {
+                const d = new Date((t.closeTime || t.openTime || now) as any);
+                return d >= sevenDaysAgo && d <= now;
+              });
+              const pnl = recent.reduce((s: number, t: Trade) => s + parsePL(t.pnl), 0);
+              const wins = recent.filter(t => (t.outcome || '').toLowerCase() === 'win').length;
+              const losses = recent.filter(t => (t.outcome || '').toLowerCase() === 'loss').length;
+              const wr = recent.length ? (wins / recent.length) * 100 : 0;
+              let peak = 0, eq = 0, maxDD = 0;
+              recent.forEach(t => { eq += parsePL(t.pnl); peak = Math.max(peak, eq); maxDD = Math.max(maxDD, peak - eq); });
+              const best = [...recent].sort((a,b)=>parsePL(b.pnl)-parsePL(a.pnl))[0];
+              const worst = [...recent].sort((a,b)=>parsePL(a.pnl)-parsePL(b.pnl))[0];
+              const topNotes = computedInsights.slice(0, 3);
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-1">Net PnL</div>
+                      <div className={`text-2xl font-semibold ${pnl>=0?'text-emerald-400':'text-red-400'}`}>${pnl.toFixed(2)}</div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-1">Win / Loss</div>
+                      <div className="text-sm">{wins} / {losses} ({wr.toFixed(1)}%)</div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-1">Max drawdown</div>
+                      <div className="text-sm">${maxDD.toFixed(2)}</div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-1">Best / Worst</div>
+                      <div className="text-sm">{best ? `${best.symbol ?? '—'} $${parsePL(best.pnl).toFixed(2)}` : '—'}</div>
+                      <div className="text-sm">{worst ? `${worst.symbol ?? '-'} $${parsePL(worst.pnl).toFixed(2)}` : '—'}</div>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-2">Highlights</div>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                        {topNotes.length ? topNotes.map((i)=> (<li key={i.id}>{i.title}: {i.detail}</li>)) : (<li>Keep executing your plan consistently.</li>)}
+                      </ul>
+                    </div>
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-2">Next actions</div>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                        {topNotes.length ? topNotes.map((i)=> (<li key={i.id}>{i.title}: {i.detail}</li>)) : (<li>Keep executing your plan consistently.</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Risk */}
+      {subTab === "risk" && (
+        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center gap-2"><Target className="h-5 w-5" /><h3 className="font-semibold">Risk Budget</h3></div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
+                <div className="text-xs text-muted-foreground mb-1">Account balance</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">$</span>
+                  <input type="number" min={100} step={50} value={accountBalance === '' ? '' : Number(accountBalance)} onChange={(e)=>setAccountBalance(e.target.value === '' ? '' : parseFloat(e.target.value))} className="w-32 bg-transparent border rounded px-2 py-1 border-white/10" />
+                </div>
+              </div>
+              <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
+                <div className="text-xs text-muted-foreground mb-1">Risk per trade</div>
+                <div className="flex items-center gap-2">
+                  <input type="range" min={0.25} max={3} step={0.25} value={riskPercent} onChange={(e)=>setRiskPercent(parseFloat(e.target.value))} className="w-full" />
+                  <span className="text-sm font-medium">{riskPercent.toFixed(2)}%</span>
+                </div>
+              </div>
+              <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
+                <div className="text-xs text-muted-foreground mb-1">Recommended daily loss</div>
+                <div className="text-sm">{(() => { const bal = typeof accountBalance==='number'? accountBalance : 0; const pct = effectivePlan==='free'? 2 : 1.5; return `$${(bal * (pct/100)).toFixed(0)} (${pct}% of balance)`; })()}</div>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="rounded-lg border border-white/10 p-4">
+                <div className="text-sm text-muted-foreground">Per-trade dollar risk (1R)</div>
+                <div className="text-2xl font-semibold">{(() => { const bal = typeof accountBalance==='number'? accountBalance : 0; return `$${(bal * (riskPercent/100)).toFixed(2)}`; })()}</div>
+              </div>
+              <div className="rounded-lg border border-white/10 p-4">
+                <div className="text-sm text-muted-foreground">Max lots guidance (heuristic)</div>
+                <div className="text-xs text-muted-foreground">Use broker pip value to convert 1R to lots for your symbol.</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Mistakes (Pro) */}
+      {subTab === "mistakes" && (
+        hasPlan('pro') ? (
+          <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" /><h3 className="font-semibold">Mistake Analyzer</h3></div>
+              {(() => {
+                const by = (key: 'strategy' | 'symbol') => {
+                  const map = new Map<string, number>();
+                  tradesTyped.forEach(t => { const k = String((t as any)[key] || 'Unknown'); map.set(k, (map.get(k) || 0) + parsePL(t.pnl)); });
+                  return Array.from(map.entries()).sort((a,b)=>a[1]-b[1]).slice(0,3);
+                };
+                const byHour = () => {
+                  const map = new Map<number, number>();
+                  tradesTyped.forEach(t => { const d = new Date((t.closeTime||t.openTime||'') as any); const h = d.getHours(); map.set(h, (map.get(h)||0)+parsePL(t.pnl)); });
+                  return Array.from(map.entries()).sort((a,b)=>a[1]-b[1]).slice(0,3);
+                };
+                const worstStrats = by('strategy');
+                const worstSymbols = by('symbol');
+                const worstHours = byHour();
+                return (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-2">Top recurring losses by strategy</div>
+                      <ul className="text-sm space-y-1">{worstStrats.map(([k,v])=> (<li key={k} className="flex justify-between"><span>{k}</span><span className={v<0? 'text-red-400':'text-emerald-400'}>${v.toFixed(2)}</span></li>))}</ul>
+                    </div>
+                    <div className="rounded-lg border border-white/10 p-4">
+                      <div className="text-sm font-semibold mb-2">Worst symbols</div>
+                      <ul className="text-sm space-y-1">{worstSymbols.map(([k,v])=> (<li key={k} className="flex justify-between"><span>{k}</span><span className={v<0? 'text-red-400':'text-emerald-400'}>${v.toFixed(2)}</span></li>))}</ul>
+                    </div>
+                    <div className="rounded-lg border border-white/10 p-4 md:col-span-2">
+                      <div className="text-sm font-semibold mb-2">Risky trading hours (UTC)</div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        {worstHours.map(([h,v])=> (
+                          <div key={h} className="rounded border border-white/10 px-2 py-1 flex items-center justify-between"><span>{h}:00</span><span className={v<0? 'text-red-400':'text-emerald-400'}>${v.toFixed(2)}</span></div>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-xs text-muted-foreground">Set cooldowns or avoid these windows to reduce tilt.</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        ) : (
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Mistake Analyzer" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        )
+      )}
+
+      {/* Playbook (Plus) */}
+      {subTab === "playbook" && (
+        hasPlan('plus') ? (
+          <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2"><Star className="h-5 w-5" /><h3 className="font-semibold">Strategy Playbook</h3></div>
+                <Button size="sm" variant="secondary" onClick={() => { if (playbooks.length < playbookLimit) setPlaybooks([{ id: String(Date.now()), name: 'New Setup', entry: '', exit: '', notes: '' }, ...playbooks]); }} disabled={playbooks.length >= playbookLimit}>
+                  <Plus className="w-4 h-4 mr-1" /> Add
+                </Button>
+              </div>
+              {playbooks.length === 0 && <div className="text-sm text-muted-foreground">No playbooks yet.</div>}
+              <div className="grid md:grid-cols-2 gap-4">
+                {playbooks.map((p, idx) => (
+                  <div key={p.id} className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <input className="flex-1 bg-transparent border border-white/10 rounded px-2 py-1 text-sm" value={p.name} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, name: e.target.value }: pb))} />
+                      <Button size="sm" variant="ghost" onClick={()=> setPlaybooks(playbooks.filter(pb=> pb.id!==p.id))}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">Entry rules</div>
+                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.entry} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, entry: e.target.value }: pb))} />
+                    <div className="text-xs text-muted-foreground mb-1">Exit rules</div>
+                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.exit} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, exit: e.target.value }: pb))} />
+                    <div className="text-xs text-muted-foreground mb-1">Notes</div>
+                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm" rows={2} value={p.notes || ''} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, notes: e.target.value }: pb))} />
+                    <div className="mt-3 text-xs text-muted-foreground">Tip: Pin one setup and focus until it’s consistent.</div>
+                  </div>
+                ))}
+              </div>
+              {playbooks.length >= playbookLimit && (
+                <div className="text-xs text-yellow-400">Reached playbook limit for your plan. Upgrade to add more.</div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Strategy Playbook" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        )
+      )}
+
       {/* Import preview */}
       {importPreview && (
         <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
@@ -1852,3 +2086,7 @@ export default function TradeJournal(): React.ReactElement {
     </div>
   );
 }
+
+
+
+

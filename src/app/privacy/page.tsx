@@ -22,7 +22,7 @@ export default function PrivacyPage() {
               <h2 className="text-xl font-semibold mb-2">Data We Collect</h2>
               <ul className="list-disc pl-5 text-gray-300 space-y-1">
                 <li>Account details: name, email, and profile preferences</li>
-                <li>Trading data you upload or sync (e.g., CSV, MT5)</li>
+                <li>Trading data you upload (e.g., CSV; future direct connections)</li>
                 <li>Usage analytics to improve product reliability and UX</li>
               </ul>
             </div>
@@ -52,4 +52,3 @@ export default function PrivacyPage() {
     </>
   );
 }
-

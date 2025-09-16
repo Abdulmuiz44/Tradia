@@ -255,7 +255,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       openTime: openIso,
       closeTime: closeIso,
       session: String(form.session ?? ""),
-      lotSize: Number(form.lotSize ?? 0),
+      lotSize: Math.max(0.01, Number(form.lotSize ?? 0)),
       entryPrice: Number(form.entryPrice ?? 0),
       stopLossPrice: Number(form.stopLossPrice ?? 0),
       takeProfitPrice: Number(form.takeProfitPrice ?? 0),
@@ -370,7 +370,8 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             <label className="block text-sm font-medium text-gray-300 mb-1">Lot Size</label>
             <input
               type="number"
-              step="any"
+              min="0.01"
+              step="0.01"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.lotSize ?? 0)}
               onChange={(e) => handleChange("lotSize", e.target.value === "" ? 0 : Number(e.target.value) as Trade["lotSize"])}
