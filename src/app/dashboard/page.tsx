@@ -64,7 +64,7 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 const BASE_TAB_DEFS = [
   { value: "overview", label: "Overview", icon: "BarChart3" },
   { value: "history", label: "Trade History", icon: "History" },
-  { value: "mt5", label: "MT5 Integration", icon: "Database" },
+  { value: "mt5", label: "Broker Integration", icon: "Database" },
   { value: "journal", label: "Trade Journal", icon: "BookOpen" },
   { value: "tradia-ai", label: "Tradia AI", icon: "Bot" },
   { value: "analytics", label: "Trade Analytics", icon: "TrendingUp" },

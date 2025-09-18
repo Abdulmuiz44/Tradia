@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 import { fetchAndSyncAccountInfo } from "@/lib/mtapi";
 
 export async function GET() {
@@ -14,6 +15,10 @@ export async function GET() {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(session?.user?.email || ""));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
     const { data: accounts, error } = await supabase
       .from("mt5_accounts")
       .select("*")
@@ -48,6 +53,10 @@ export async function POST(req: Request) {
     const { account_info } = await fetchAndSyncAccountInfo(userId, { server, login, password });
 
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(session?.user?.email || ""));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
     const { data, error } = await supabase
       .from("mt5_accounts")
       .upsert({

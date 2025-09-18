@@ -15,6 +15,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import FeatureLock from "@/components/FeatureLock";
+import TrialStatusCard from "@/components/TrialStatusCard";
 
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
@@ -151,6 +152,9 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-6">
+          {/* Trial status */}
+          <TrialStatusCard />
+
           {/* Appearance Settings */}
           <div className="bg-gray-800 rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">

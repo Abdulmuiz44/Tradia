@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { credentialStorage } from "@/lib/credential-storage";
 import { createClient } from "@/utils/supabase/server";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -36,6 +37,10 @@ export async function GET(
 
     // Get user from database
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(userEmail));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")
@@ -125,6 +130,10 @@ export async function PUT(
 
     // Get user from database
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(userEmail));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")
@@ -230,6 +239,10 @@ export async function DELETE(
 
     // Get user from database
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(userEmail));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")

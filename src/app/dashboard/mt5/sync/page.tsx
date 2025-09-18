@@ -8,7 +8,7 @@ import { syncProgressTracker } from "@/lib/sync-progress";
 import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Loader2, Database } from "lucide-react";
 import Link from "next/link";
 
-interface MT5Account {
+interface brokerAccount {
   id: string;
   server: string;
   login: string;
@@ -17,9 +17,9 @@ interface MT5Account {
   last_connected_at?: string;
 }
 
-export default function MT5SyncPage() {
+export default function brokerSyncPage() {
   const router = useRouter();
-  const [accounts, setAccounts] = useState<MT5Account[]>([]);
+  const [accounts, setAccounts] = useState<brokerAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -33,7 +33,7 @@ export default function MT5SyncPage() {
   const [currentSyncId, setCurrentSyncId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
 
-  // Load user's MT5 accounts
+  // Load user's broker accounts
   useEffect(() => {
     loadAccounts();
   }, []);
@@ -53,12 +53,12 @@ export default function MT5SyncPage() {
       setAccounts(accountsList);
 
       // Auto-select the first connected account
-      const connectedAccount = accountsList.find((acc: MT5Account) => acc.state === 'connected');
+      const connectedAccount = accountsList.find((acc: brokerAccount) => acc.state === 'connected');
       if (connectedAccount) {
         setSelectedAccountId(connectedAccount.id);
       }
     } catch (err) {
-      console.error("Failed to load MT5 accounts:", err);
+      console.error("Failed to load broker accounts:", err);
       setError(err instanceof Error ? err.message : "Failed to load accounts");
     } finally {
       setAccountsLoading(false);
@@ -69,7 +69,7 @@ export default function MT5SyncPage() {
     e.preventDefault();
 
     if (!selectedAccountId) {
-      setError("Please select an MT5 account to sync");
+      setError("Please select an broker account to sync");
       return;
     }
 
@@ -97,7 +97,7 @@ export default function MT5SyncPage() {
 
     // Define sync steps for progress tracking
     const syncSteps = [
-      { name: "Connecting to MT5", description: "Establishing connection to MetaTrader 5", weight: 15 },
+      { name: "Connecting to broker", description: "Establishing connection to your broker", weight: 15 },
       { name: "Authenticating", description: "Verifying account credentials", weight: 10 },
       { name: "Fetching Account Info", description: "Retrieving account information", weight: 10 },
       { name: "Analyzing Trade History", description: "Scanning for new trades", weight: 20 },
@@ -121,9 +121,9 @@ export default function MT5SyncPage() {
 
       // Update progress: Connecting
       await syncProgressTracker.updateProgress(syncId, {
-        currentStep: "Connecting to MT5",
+        currentStep: "Connecting to broker",
         currentStepIndex: 0,
-        message: "Establishing connection to MetaTrader 5...",
+        message: "Establishing connection to your broker...",
         progress: 5
       });
 
@@ -132,7 +132,7 @@ export default function MT5SyncPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mt5AccountId: selectedAccountId,
+          brokerAccountId: selectedAccountId,
           from: undefined, // Will sync last 90 days by default
           to: undefined,
           syncId: syncId
@@ -236,8 +236,8 @@ export default function MT5SyncPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Sync MT5 Trades</h1>
-              <p className="text-sm text-gray-600">Import your latest trading data from MetaTrader 5</p>
+              <h1 className="text-2xl font-bold text-gray-900">Sync Broker Trades</h1>
+              <p className="text-sm text-gray-600">Import your latest trading data from your broker</p>
             </div>
           </div>
         </div>
@@ -266,22 +266,22 @@ export default function MT5SyncPage() {
               ) : accounts.length === 0 ? (
                 <div className="text-center py-8">
                   <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No MT5 Accounts Connected</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Broker Accounts Connected</h3>
                   <p className="text-gray-600 mb-4">
-                    You need to connect an MT5 account before you can sync trades.
+                    You need to connect an broker account before you can sync trades.
                   </p>
                   <Link
-                    href="/dashboard/mt5/connect"
+                    href="/dashboard/broker/connect"
                     className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
                   >
-                    Connect MT5 Account
+                    Connect broker account
                   </Link>
                 </div>
               ) : (
                 <form onSubmit={sync} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Select MT5 Account
+                      Select broker account
                     </label>
                     <div className="space-y-3">
                       {accounts.map((account) => (
@@ -430,7 +430,7 @@ export default function MT5SyncPage() {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Need Help?</h3>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>• Make sure MT5 terminal is running</p>
+                <p>• Make sure broker terminal is running</p>
                 <p>• Check your internet connection</p>
                 <p>• Verify account credentials are correct</p>
                 <p>• Contact support if issues persist</p>

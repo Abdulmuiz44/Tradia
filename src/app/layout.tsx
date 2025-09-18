@@ -9,6 +9,7 @@ import PostHogInit from "@/components/analytics/PostHogInit";
 import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import ActivityTracker from "@/components/analytics/ActivityTracker";
+import TrialBanner from "@/components/TrialBanner";
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -177,6 +178,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Analytics />
           {/* App activity tracking */}
           <ActivityTracker />
+          {/* Trial banner */}
+          <TrialBanner />
           {children}
           {/* keep floating button available app-wide */}
           <FloatingFeedbackButton />

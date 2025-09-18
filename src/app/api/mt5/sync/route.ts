@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { credentialStorage } from "@/lib/credential-storage";
 import { fetchDeals } from "@/lib/mtapi";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 type SyncBody = {
   credentialId?: string;
@@ -22,6 +23,14 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Trial enforcement via email from session
+    const email = (session?.user as any)?.email as string | undefined;
+    if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const trial = await requireActiveTrialOrPaid(email);
+    if (!trial.allowed) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
 
     const body: SyncBody = await req.json().catch(() => ({}));
     const { credentialId, from, to } = body;

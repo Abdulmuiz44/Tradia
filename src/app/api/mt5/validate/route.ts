@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import { validateAccount } from "@/lib/mtapi";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 export async function POST(req: Request) {
   if (process.env.FREEZE_MT5_INTEGRATION === '1') {
@@ -16,6 +17,14 @@ export async function POST(req: Request) {
     }
 
     const supabase = createClient();
+    // Trial enforcement
+    const trial = await requireActiveTrialOrPaid(String(userEmail));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json(
+        { error: "UPGRADE_REQUIRED", message: "Broker validation requires an active paid plan. Trial users must upgrade." },
+        { status: 403 }
+      );
+    }
     const { data: user, error } = await supabase
       .from("users")
       .select("id")

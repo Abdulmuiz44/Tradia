@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 export async function POST(req: Request) {
   try {
@@ -14,9 +15,15 @@ export async function POST(req: Request) {
     }
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
+    const email = (session?.user as any)?.email as string | undefined;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const trial = email ? await requireActiveTrialOrPaid(email) : { allowed: false } as any;
+    if (!email || !trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
     }
 
     const body = await req.json();

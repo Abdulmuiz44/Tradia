@@ -150,21 +150,25 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
   };
 }
 
-export function canAccessMT5(plan: UserPlan): boolean {
-  return PLAN_LIMITS[plan.type].mt5Accounts > 0 || PLAN_LIMITS[plan.type].mt5Accounts === -1;
+// Accepts either a UserPlan object or a PlanType string for convenience
+export function canAccessMT5(plan: UserPlan | PlanType): boolean {
+  const type = typeof plan === 'string' ? plan : plan.type;
+  return PLAN_LIMITS[type].mt5Accounts > 0 || PLAN_LIMITS[type].mt5Accounts === -1;
 }
 
-export function getMT5AccountLimit(plan: UserPlan): number {
-  return PLAN_LIMITS[plan.type].mt5Accounts;
+export function getMT5AccountLimit(plan: UserPlan | PlanType): number {
+  const type = typeof plan === 'string' ? plan : plan.type;
+  return PLAN_LIMITS[type].mt5Accounts;
 }
 
-export function canAccessFeature(plan: UserPlan, feature: keyof PlanLimits): boolean {
-  const limit = PLAN_LIMITS[plan.type][feature];
+export function canAccessFeature(plan: UserPlan | PlanType, feature: keyof PlanLimits): boolean {
+  const type = typeof plan === 'string' ? plan : plan.type;
+  const limit = PLAN_LIMITS[type][feature];
   return limit === true || limit === -1 || (typeof limit === 'number' && limit > 0);
 }
 
-export function getUpgradeMessage(plan: UserPlan, feature: string): string {
-  const currentPlan = plan.type;
+export function getUpgradeMessage(plan: UserPlan | PlanType, feature: string): string {
+  const currentPlan = (typeof plan === 'string' ? plan : plan.type);
   const upgradeOptions = getUpgradeOptions(currentPlan);
 
   return `🚀 **Upgrade Required**\n\nYou're currently on the **${currentPlan.toUpperCase()}** plan, which doesn't include ${feature}.\n\n**Upgrade to access this feature:**\n${upgradeOptions.map(option => `• **${option.name}**: ${option.description} - $${option.price}/month`).join('\n')}\n\n**Benefits you'll get:**\n${upgradeOptions[0].benefits.map(benefit => `• ${benefit}`).join('\n')}`;

@@ -76,7 +76,7 @@ export function MonitoringMiniWidget({
 
       <div className="flex-1">
         <div className="text-sm font-medium text-gray-900">
-          MT5 Monitoring
+          Broker Monitoring
         </div>
         <div className="flex items-center gap-4 text-xs text-gray-600">
           <span>{stats.totalSyncs} syncs</span>
@@ -181,7 +181,7 @@ export default function MonitoringWidget({
         <div className="flex items-center gap-3">
           <Activity className="w-6 h-6 text-blue-500" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">MT5 Monitoring</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Broker Monitoring</h3>
             <p className="text-sm text-gray-600">Sync performance and health metrics</p>
           </div>
         </div>
@@ -299,7 +299,7 @@ export default function MonitoringWidget({
           <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h4 className="text-sm font-medium text-gray-900 mb-2">No Sync Data</h4>
           <p className="text-sm text-gray-600">
-            Connect an MT5 account and run your first sync to see monitoring data.
+            Connect a broker account and run your first sync to see monitoring data.
           </p>
         </div>
       )}

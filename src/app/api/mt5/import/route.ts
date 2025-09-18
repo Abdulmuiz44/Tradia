@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 type AccountInfo = { login?: number | string; server?: string; info?: Record<string, unknown> | null };
 type ReqBody = { account?: AccountInfo; trades?: unknown[] };
@@ -31,6 +32,14 @@ export async function POST(req: Request) {
     }
 
     const supabase = createClient();
+    // Trial enforcement
+    const trial = await requireActiveTrialOrPaid(String(userEmail));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json(
+        { error: "UPGRADE_REQUIRED", message: "Broker import requires an active paid plan. Trial users must upgrade." },
+        { status: 403 }
+      );
+    }
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("id")
@@ -40,16 +49,6 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
     const userId = (user as any).id as string;
 
-    // Check user's plan access for MT5
-    const { getUserPlan, canAccessMT5 } = await import("@/lib/planAccess");
-    const userPlan = await getUserPlan(userId);
-    if (!canAccessMT5(userPlan)) {
-      return NextResponse.json({
-        error: "MT5 integration requires a Pro, Plus, or Elite plan",
-        upgradeRequired: true,
-        currentPlan: userPlan.type
-      }, { status: 403 });
-    }
 
     const body = (await req.json()) as ReqBody;
     const account = body?.account;

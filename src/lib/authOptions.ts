@@ -228,6 +228,19 @@ export const authOptions: NextAuthOptions = {
               );
             }
 
+            // Initialize trial fields for OAuth sign-ins (non-grandfathered by default)
+            await safeQuery(
+              `UPDATE users
+                 SET signup_at = COALESCE(signup_at, NOW()),
+                     trial_ends_at = CASE
+                       WHEN COALESCE(is_grandfathered, FALSE) THEN trial_ends_at
+                       WHEN trial_ends_at IS NULL THEN NOW() + INTERVAL '30 days'
+                       ELSE trial_ends_at
+                     END
+               WHERE id=$1`,
+              [userId]
+            );
+
             return true;
           } catch (dbErr: unknown) {
             console.error("Google signIn DB error (continuing OAuth):", dbErr instanceof Error ? dbErr.message : String(dbErr));

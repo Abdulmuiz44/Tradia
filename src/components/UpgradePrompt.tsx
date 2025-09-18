@@ -32,7 +32,7 @@ export default function UpgradePrompt({
       price: 9,
       description: 'Perfect for serious traders',
       features: [
-        '1 MT5 account connection',
+        '1 broker connection',
         '50 AI chats per day',
         '90 days trade storage',
         'Advanced analytics & insights',
@@ -49,7 +49,7 @@ export default function UpgradePrompt({
       price: 19,
       description: 'For professional traders',
       features: [
-        '3 MT5 account connections',
+        '3 broker connections',
         '200 AI chats per day',
         '1 year trade storage',
         'Advanced analytics & insights',
@@ -66,7 +66,7 @@ export default function UpgradePrompt({
       price: 39,
       description: 'Ultimate trading experience',
       features: [
-        'Unlimited MT5 accounts',
+        'Unlimited broker connections',
         'Unlimited AI chats',
         'Unlimited trade storage',
         'All premium features',
@@ -213,7 +213,7 @@ export default function UpgradePrompt({
               <h4 className="font-medium text-gray-900 mb-2">Your Current {getPlanDisplayName(currentPlan)} Plan Includes:</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
                 <div>
-                  <strong>MT5 Accounts:</strong> {currentPlan === 'free' ? '0' : currentPlan === 'pro' ? '1' : currentPlan === 'plus' ? '3' : 'Unlimited'}
+                  <strong>Broker Connections:</strong> {currentPlan === 'free' ? '0' : currentPlan === 'pro' ? '1' : currentPlan === 'plus' ? '3' : 'Unlimited'}
                 </div>
                 <div>
                   <strong>AI Chats:</strong> {currentPlan === 'free' ? '5/day' : currentPlan === 'pro' ? '50/day' : currentPlan === 'plus' ? '200/day' : 'Unlimited'}

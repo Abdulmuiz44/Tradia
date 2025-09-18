@@ -8,6 +8,7 @@ import ConnectionStatusComponent, { useConnectionStatus } from "@/components/mt5
 import ErrorRecoveryComponent, { QuickErrorRecovery } from "@/components/mt5/ErrorRecovery";
 import { ArrowLeft, CheckCircle, AlertCircle, Loader2, Info } from "lucide-react";
 import Link from "next/link";
+import BrokerSelector from "@/components/brokers/BrokerSelector";
 
 type ConnectForm = {
   server: string;
@@ -18,6 +19,7 @@ type ConnectForm = {
 
 export default function MT5ConnectPage() {
   const router = useRouter();
+  const [broker, setBroker] = useState<string>('mt5');
   const [form, setForm] = useState<ConnectForm>({
     server: "",
     login: "",
@@ -223,14 +225,18 @@ export default function MT5ConnectPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Connect MT5 Account</h1>
-              <p className="text-sm text-gray-600">Link your MetaTrader 5 account to sync your trading data</p>
+              <h1 className="text-2xl font-bold text-gray-900">Broker Integration</h1>
+              <p className="text-sm text-gray-600">Link your broker account to sync your trading data</p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Broker Integration</h2>
+          <BrokerSelector value={broker} onChange={setBroker} />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">

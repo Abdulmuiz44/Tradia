@@ -27,8 +27,20 @@ export async function middleware(req: NextRequest) {
     });
 
     if (nextAuthToken?.email) {
-      // Allow free/starter users to access the dashboard.
-      // Feature-level gating is handled in the client (FeatureLock/Upgrade prompts).
+      // Enforce trial: if expired and not paid/grandfathered -> redirect to checkout
+      try {
+        const apiUrl = new URL("/api/user/trial-status", req.url).toString();
+        const r = await fetch(apiUrl, { headers: { cookie: req.headers.get('cookie') || '' } });
+        if (r.ok) {
+          const data = await r.json();
+          const info = data?.info;
+          if (info && !info.isPaid && !info.isGrandfathered && info.expired) {
+            const url = new URL("/checkout", req.url);
+            url.searchParams.set("reason", "trial_expired");
+            return NextResponse.redirect(url);
+          }
+        }
+      } catch {}
       return res;
     }
 
@@ -45,7 +57,19 @@ export async function middleware(req: NextRequest) {
         const payload = jwt.verify(rawToken, JWT_SECRET);
         const userEmail = typeof payload === 'object' && payload !== null ? (payload as any).email : null;
         if (userEmail) {
-          // Without plan info in custom JWT, allow and rely on client checks
+          try {
+            const apiUrl = new URL("/api/user/trial-status", req.url).toString();
+            const r = await fetch(apiUrl, { headers: { cookie: req.headers.get('cookie') || '' } });
+            if (r.ok) {
+              const data = await r.json();
+              const info = data?.info;
+              if (info && !info.isPaid && !info.isGrandfathered && info.expired) {
+                const url = new URL("/checkout", req.url);
+                url.searchParams.set("reason", "trial_expired");
+                return NextResponse.redirect(url);
+              }
+            }
+          } catch {}
           return res;
         }
       } catch (err) {

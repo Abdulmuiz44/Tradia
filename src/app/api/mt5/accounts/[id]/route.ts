@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 export async function GET(
   req: Request,
@@ -24,6 +25,10 @@ export async function GET(
     }
 
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(session?.user?.email || ""));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
 
     // Get specific MT5 account
     const { data: account, error } = await supabase
@@ -68,6 +73,10 @@ export async function PUT(
 
     const body = await req.json();
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(session?.user?.email || ""));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
 
     // Update MT5 account
     const { data, error } = await supabase
@@ -110,6 +119,10 @@ export async function DELETE(
     }
 
     const supabase = createClient();
+    const trial = await requireActiveTrialOrPaid(String(session?.user?.email || ""));
+    if (!trial.allowed || !(trial.info?.isGrandfathered || trial.info?.isPaid)) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
 
     // Delete MT5 account
     const { error } = await supabase

@@ -1924,6 +1924,11 @@ export default function TradeJournal(): React.ReactElement {
         <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><Target className="h-5 w-5" /><h3 className="font-semibold">Risk Budget</h3></div>
+            {effectivePlan === 'free' && (accountBalance === '' || typeof accountBalance !== 'number') && (
+              <div className="p-3 rounded border border-yellow-600 bg-yellow-900/30 text-yellow-200 text-sm">
+                Free plan: enter your current live account size above to enable risk calculations.
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
                 <div className="text-xs text-muted-foreground mb-1">Account balance</div>

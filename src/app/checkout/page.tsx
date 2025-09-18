@@ -36,6 +36,7 @@ export default function CheckoutPage() {
   const plan = (searchParams?.get("plan") as keyof typeof planDetails) || "plus";
   const billing = searchParams?.get("billing") || "monthly";
   const trialDays = parseInt(searchParams?.get("trial") || "3", 10);
+  const reason = searchParams?.get("reason");
 
   const planDetails: Record<string, PlanDetails> = {
     pro: {
@@ -161,6 +162,12 @@ export default function CheckoutPage() {
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
+
+        {reason === 'trial_expired' && (
+          <div className="mb-4 p-3 rounded-lg bg-red-900/30 border border-red-700 text-red-200">
+            Your 30-day free trial has ended. Please upgrade to continue using Tradia.
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 bg-[#0F1623] rounded-lg border border-gray-800">

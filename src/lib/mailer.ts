@@ -47,3 +47,16 @@ export async function sendPasswordResetEmail(to: string, token: string) {
 
   return sendEmail(to, "Reset your password", html);
 }
+
+export async function sendTrialExpiredEmail(to: string) {
+  const origin = getAppOrigin();
+  const upgradeUrl = `${origin}/checkout?reason=trial_expired`;
+  const html = `
+    <p>Hi there,</p>
+    <p>Your 30-day free trial on <strong>Tradia</strong> has ended.</p>
+    <p>To continue using the platform, please upgrade to any of our paid plans.</p>
+    <p><a href="${upgradeUrl}">Upgrade now to continue</a></p>
+    <p>If you have any questions, just reply to this email.</p>
+  `;
+  return sendEmail(to, "Your Tradia trial has ended — upgrade to continue", html);
+}

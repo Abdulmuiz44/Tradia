@@ -93,6 +93,8 @@ export async function POST(req: Request) {
         country: body.country || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        signup_at: new Date().toISOString(),
+        trial_ends_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
       });
 
       if (insErr) {

@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import TrialStatusCard from "@/components/TrialStatusCard";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import {
@@ -102,6 +103,10 @@ export default function ProfilePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Profile</h1>
           <p className="text-gray-400">Manage your account information</p>
+        </div>
+
+        <div className="mb-6">
+          <TrialStatusCard />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

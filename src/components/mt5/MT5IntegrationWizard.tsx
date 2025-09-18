@@ -489,7 +489,7 @@ export default function MT5IntegrationWizard({
       {showUpgradePrompt && userPlan && (
         <UpgradePrompt
           currentPlan={userPlan}
-          feature="MT5 account connections"
+          feature="Broker integrations"
           onUpgrade={(plan) => {
             console.log("Upgrading to:", plan);
             setShowUpgradePrompt(false);
@@ -517,6 +517,8 @@ function MT5ConnectionModal({ onConnect, onClose, loading }: MT5ConnectionModalP
     password: "",
     name: "",
   });
+  const [broker, setBroker] = useState<string>("");
+  const [platform, setPlatform] = useState<string>("MT5");
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -562,20 +564,64 @@ function MT5ConnectionModal({ onConnect, onClose, loading }: MT5ConnectionModalP
 
       <div className="relative w-full max-w-md bg-gray-800 border border-gray-700 rounded-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-white">Connect MT5 Account</h3>
+          <h3 className="text-lg font-semibold text-white">Connect Broker Account</h3>
           <button onClick={onClose} className="p-1 hover:bg-gray-700 rounded" data-track="mt5_connect_close">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Broker</label>
+              <select
+                value={broker}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setBroker(val);
+                  // Hint common server strings when broker is selected
+                  const presets: Record<string, string> = {
+                    Exness: "Exness-MT5",
+                    "IC Markets": "ICMarketsSC-MT5",
+                    XM: "XMGlobal-MT5",
+                    HotForex: "HFMarketsSV-MT5",
+                    OctaFX: "OctaFX-Real",
+                  };
+                  if (!credentials.server && presets[val]) {
+                    setCredentials((prev) => ({ ...prev, server: presets[val] }));
+                  }
+                }}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Select broker</option>
+                <option>Exness</option>
+                <option>IC Markets</option>
+                <option>XM</option>
+                <option>HotForex</option>
+                <option>OctaFX</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Platform</label>
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option>MT5</option>
+                <option disabled>MT4 (coming soon)</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Broker Server</label>
             <input
               type="text"
               value={credentials.server}
               onChange={(e) => setCredentials((prev) => ({ ...prev, server: e.target.value }))}
-              placeholder="e.g., ICMarketsSC-MT5"
+              placeholder={broker ? `e.g., ${credentials.server || broker}` : "e.g., ICMarketsSC-MT5"}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />

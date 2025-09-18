@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { requireActiveTrialOrPaid } from "@/lib/trial";
 
 type ConnectBody = {
   server?: string;
@@ -44,13 +45,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Plan access enforcement (only pro/plus/elite allowed)
+    // Trial + plan enforcement: requires paid plan OR active trial/grandfather
+    const trial = await requireActiveTrialOrPaid(userEmail);
     const { canAccessMT5 } = await import("@/lib/planAccess");
-    if (!canAccessMT5((user.plan as any) || "free")) {
+    if (!trial.allowed || (!trial.info?.isGrandfathered && !canAccessMT5((user.plan as any) || "free"))) {
       return NextResponse.json(
         {
           error: "UPGRADE_REQUIRED",
-          message: "MT5 integration requires Pro, Plus or Elite plan"
+          message: "Broker integration requires an active paid plan (grandfathered users allowed). Trial users must upgrade to connect."
         },
         { status: 403 }
       );
