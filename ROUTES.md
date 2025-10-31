@@ -376,12 +376,16 @@ All API endpoints are under the `/api` route and return JSON responses.
 - **Body**: 
   ```json
   {
-    "message": "User question",
-    "tradeHistory": [],
-    "attachments": [],
-    "conversationHistory": []
+    "message": "User question (string, required if no attachments)",
+    "tradeHistory": "Array of trade objects (optional, for context)",
+    "attachments": "Array of file metadata objects (optional)",
+    "conversationHistory": "Array of previous messages (optional, for context)"
   }
   ```
+  - `message` (string, required*): The user's question or prompt (* required if attachments not provided)
+  - `tradeHistory` (array, optional): User's trade data for personalized insights
+  - `attachments` (array, optional): File metadata for analysis `[{ name, type, size }]`
+  - `conversationHistory` (array, optional): Previous chat messages for context `[{ role: 'user'|'assistant', content: string }]`
 - **Returns**: AI-generated response with trading insights
 
 #### `POST /api/ai/voice`
@@ -459,9 +463,10 @@ All API endpoints are under the `/api` route and return JSON responses.
 ### Additional API
 
 #### `POST /api/verify-email`
-- **Purpose**: Alternative email verification endpoint
+- **Purpose**: Alternative email verification endpoint (server-side verification)
 - **Body**: `{ token }`
 - **Returns**: Verification status
+- **Note**: This is a POST endpoint alternative to `POST /api/auth/verify-email`. Both verify email addresses but this endpoint may be used in different contexts (e.g., server-side verification vs client-side flows).
 
 ---
 
