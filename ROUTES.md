@@ -213,10 +213,15 @@ All API endpoints are under the `/api` route and return JSON responses.
 - **Body**: `{ token, newPassword }`
 - **Returns**: Success message
 
+#### `GET /api/auth/verify-email`
+- **Purpose**: Verify user email address via token (from email link)
+- **Query Parameters**: `token` - Verification token from email
+- **Returns**: Redirects to `/verify-email/success` or `/verify-email/failed`
+
 #### `POST /api/auth/verify-email`
-- **Purpose**: Verify user email address
+- **Purpose**: Programmatic email verification (for server-to-server calls)
 - **Body**: `{ token }`
-- **Returns**: Verification status
+- **Returns**: JSON response `{ ok: true }` or error
 
 #### `POST /api/auth/resend-verification`
 - **Purpose**: Resend verification email
@@ -462,11 +467,11 @@ All API endpoints are under the `/api` route and return JSON responses.
 
 ### Additional API
 
-#### `POST /api/verify-email`
-- **Purpose**: Alternative email verification endpoint (server-side verification)
-- **Body**: `{ token }`
-- **Returns**: Verification status
-- **Note**: This is a POST endpoint alternative to `POST /api/auth/verify-email`. Both verify email addresses but this endpoint may be used in different contexts (e.g., server-side verification vs client-side flows).
+#### `GET /api/verify-email`
+- **Purpose**: Alternative email verification endpoint with JWT re-issuance
+- **Query Parameters**: `token` - Verification token
+- **Returns**: Redirects to success/failed page and sets new JWT cookie with updated `email_verified` claim
+- **Note**: This endpoint uses a different implementation than `/api/auth/verify-email`. It calls a SQL function `verify_email` and re-issues the JWT token with updated verification status. Use this when you need the JWT token to be automatically refreshed after verification.
 
 ---
 
