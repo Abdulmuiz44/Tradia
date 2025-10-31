@@ -237,9 +237,10 @@ All API endpoints are under the `/api` route and return JSON responses.
 - **Purpose**: Refresh authentication token
 - **Returns**: New JWT token
 
-#### `GET/POST /api/auth/[...nextauth]`
+#### `* /api/auth/[...nextauth]` (supports GET and POST)
 - **Purpose**: NextAuth.js authentication handler
 - **Features**: Handles OAuth and session management
+- **Note**: This is a catch-all route that handles multiple HTTP methods for NextAuth.js flows
 
 ---
 
@@ -387,7 +388,7 @@ All API endpoints are under the `/api` route and return JSON responses.
     "conversationHistory": "Array of previous messages (optional, for context)"
   }
   ```
-  - `message` (string, required*): The user's question or prompt (* required if attachments not provided)
+  - `message` (string, required when attachments not provided): The user's question or prompt
   - `tradeHistory` (array, optional): User's trade data for personalized insights
   - `attachments` (array, optional): File metadata for analysis `[{ name, type, size }]`
   - `conversationHistory` (array, optional): Previous chat messages for context `[{ role: 'user'|'assistant', content: string }]`
