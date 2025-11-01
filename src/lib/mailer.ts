@@ -53,7 +53,7 @@ export async function sendTrialExpiredEmail(to: string) {
   const upgradeUrl = `${origin}/checkout?reason=trial_expired`;
   const html = `
     <p>Hi there,</p>
-    <p>Your 30-day free trial on <strong>Tradia</strong> has ended.</p>
+    <p>Your 3-day free trial on <strong>Tradia</strong> has ended.</p>
     <p>To continue using the platform, please upgrade to any of our paid plans.</p>
     <p><a href="${upgradeUrl}">Upgrade now to continue</a></p>
     <p>If you have any questions, just reply to this email.</p>

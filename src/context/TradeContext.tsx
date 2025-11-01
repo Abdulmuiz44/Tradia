@@ -7,534 +7,732 @@ import React, {
   useEffect,
   ReactNode,
   useContext,
+  useCallback,
 } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Trade } from "@/types/trade";
 import { useNotification } from "@/context/NotificationContext";
+import { useUser } from "@/context/UserContext"; // Assuming UserContext is available
+import { PLAN_LIMITS } from "@/lib/planAccess";
+import { generateSampleTrades, shouldLoadSampleData, markSampleDataAsSeen } from "@/lib/sampleTrades";
 
-/**
- * Types
- */
-interface SyncResult {
-  success: boolean;
-  account?: unknown;
-  trades?: Trade[];
-  positions?: unknown[];
-  error?: string;
-}
-
-interface TradeContextProps {
-  trades: Trade[];
-  filteredTrades: Trade[];
-  addTrade: (newTrade: Trade) => void;
-  updateTrade: (updatedTrade: Trade) => void;
-  deleteTrade: (id: string) => void;
-  setTradesFromCsv: (csvTrades: unknown[]) => void;
-  importTrades: (trades: unknown[]) => void;
-  filterTrades: (fromDate: Date, toDate: Date) => void;
-  refreshTrades: () => Promise<void>;
-  syncFromMT5: (
-    login: string,
-    password: string,
-    server: string,
-    backendUrl?: string
-  ) => Promise<SyncResult>;
-  clearTrades: () => void;
-
-  /* Bulk helpers (added to satisfy BulkActionBar and similar components) */
-  bulkToggleReviewed: (ids: string[], reviewed: boolean) => void;
-  bulkDelete: (ids: string[]) => void;
-}
-
-/**
- * Safe helpers (module scope to avoid hook dependency issues)
- */
-function getRandomUUID(): string {
-  const g = globalThis as unknown as { crypto?: { randomUUID?: () => string } };
-  if (g.crypto && typeof g.crypto.randomUUID === "function") {
-    try {
-      return g.crypto.randomUUID();
-    } catch {
-      // fallback below
+const coalesce = <T>(...values: (T | null | undefined)[]): T | undefined => {
+  for (const value of values) {
+    if (value !== null && value !== undefined) {
+      return value;
     }
   }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
+  return undefined;
+};
 
-function generateUniqueId(existingIds?: Set<string>): string {
-  let id = getRandomUUID();
-  if (!existingIds) return id;
-  // loop until unique
-  while (existingIds.has(id)) {
-    id = getRandomUUID();
+const toNumberOrUndefined = (value: unknown): number | undefined => {
+  if (value === null || value === undefined) return undefined;
+  const coerced = Number(value);
+  return Number.isFinite(coerced) ? coerced : undefined;
+};
+
+const CANONICAL_OUTCOMES = new Set(["win", "loss", "breakeven"]);
+
+const normalizeOutcomeForStorage = (value: Trade["outcome"]): string | undefined => {
+  if (!value) return undefined;
+  if (typeof value === "string") {
+    const lower = value.toLowerCase();
+    if (CANONICAL_OUTCOMES.has(lower)) {
+      return lower;
+    }
+    return value;
   }
-  return id;
-}
+  return undefined;
+};
 
-function toNumberSafe(v: unknown): number {
-  if (v === undefined || v === null || v === "") return 0;
-  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
-  if (typeof v === "bigint") return Number(v);
-  if (typeof v === "string") {
-    const cleaned = v.replace(/[^0-9eE\.\-+]/g, "");
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : 0;
-  }
-  return 0;
-}
+// Helper to transform frontend trade to backend format
+const transformTradeForBackend = (trade: Trade) => {
+  const raw = (trade.raw ?? {}) as any;
+  const symbol = coalesce(trade.symbol, raw.symbol) ?? "";
+  const openTime = coalesce(trade.openTime, trade.entry_time, raw.openTime, raw.entry_time, raw.opentime);
+  const closeTime = coalesce(trade.closeTime, trade.exit_time, raw.closeTime, raw.exit_time, raw.closetime);
+  const lotSize = toNumberOrUndefined(coalesce(trade.lotSize, trade.lot_size, raw.lotSize, raw.lot_size, raw.volume));
+  const entryPrice = toNumberOrUndefined(coalesce(trade.entryPrice, trade.entry_price, raw.entryPrice, raw.entry_price));
+  const exitPrice = toNumberOrUndefined(coalesce(trade.exitPrice, trade.exit_price, raw.exitPrice, raw.exit_price));
+  const stopLossPrice = toNumberOrUndefined(
+    coalesce(trade.stopLossPrice, trade.stop_loss_price, raw.stopLossPrice, raw.stop_loss_price)
+  );
+  const takeProfitPrice = toNumberOrUndefined(
+    coalesce(trade.takeProfitPrice, trade.take_profit_price, raw.takeProfitPrice, raw.take_profit_price)
+  );
+  const pnl = toNumberOrUndefined(coalesce(trade.pnl, raw.pnl, raw.profit));
+  const commission = toNumberOrUndefined(coalesce(trade.commission, raw.commission));
+  const swap = toNumberOrUndefined(coalesce(trade.swap, raw.swap));
+  const outcomeSource = coalesce(trade.outcome, raw.outcome);
+  const normalizedOutcome = normalizeOutcomeForStorage(outcomeSource);
 
-function toStringSafe(v: unknown): string {
-  if (v === undefined || v === null) return "";
-  if (typeof v === "string") return v;
-  if (typeof v === "number" || typeof v === "boolean" || typeof v === "bigint")
-    return String(v);
-  try {
-    return JSON.stringify(v);
-  } catch {
-    return String(v);
-  }
-}
-
-function toISOStringSafe(v: unknown): string {
-  if (v === undefined || v === null || v === "") return "";
-  if (v instanceof Date) {
-    return isNaN(v.getTime()) ? "" : v.toISOString();
-  }
-  if (typeof v === "number") {
-    const s = String(v);
-    if (/^\d{10}$/.test(s)) return new Date(v * 1000).toISOString();
-    if (/^\d{13}$/.test(s)) return new Date(v).toISOString();
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? "" : d.toISOString();
-  }
-  if (typeof v === "string") {
-    const s = v.trim();
-    if (/^\d{10}$/.test(s)) return new Date(Number(s) * 1000).toISOString();
-    if (/^\d{13}$/.test(s)) return new Date(Number(s)).toISOString();
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? s : d.toISOString();
-  }
-  const s = toStringSafe(v);
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? s : d.toISOString();
-}
-
-/**
- * Normalize an incoming (unknown-shape) broker object into our Trade type.
- * Permissive — picks common field names and coerces types safely.
- */
-function normalizeBrokerTrade(t: unknown): Trade {
-  const rec = (t && typeof t === "object") ? (t as Record<string, unknown>) : {};
-
-  const profitRaw =
-    rec["profit"] ??
-    rec["pnl"] ??
-    rec["profitLoss"] ??
-    rec["profit_loss"] ??
-    rec["netProfit"] ??
-    rec["profitAmount"] ??
-    rec["netpl"] ??
-    rec["net_pnl"] ??
-    0;
-
-  const profit = toNumberSafe(profitRaw);
-
-  const entryRaw =
-    rec["entryPrice"] ?? rec["entry_price"] ?? rec["open_price"] ?? rec["open"] ?? rec["price"];
-  const exitRaw =
-    rec["exitPrice"] ?? rec["exit_price"] ?? rec["close_price"] ?? rec["close"];
-  const lotsRaw =
-    rec["lotSize"] ?? rec["lots"] ?? rec["volume"] ?? rec["size"] ?? rec["contractsize"] ?? rec["quantity"] ?? 1;
-  const openTimeRaw =
-    rec["openTime"] ?? rec["open_time"] ?? rec["time"] ?? rec["entry_time"] ?? rec["create_time"] ?? rec["time_msc"];
-  const closeTimeRaw =
-    rec["closeTime"] ?? rec["close_time"] ?? rec["time_done"] ?? rec["exit_time"] ?? rec["close_dt"] ?? rec["close"];
-
-  const idCandidate = rec["id"] ?? rec["ticket"] ?? rec["deal"] ?? rec["trade_id"] ?? rec["ticket_no"] ?? undefined;
-
-  const normalized: Partial<Trade> = {
-    id: idCandidate ? toStringSafe(idCandidate) : undefined,
-    symbol: toStringSafe(rec["symbol"] ?? rec["instrument"] ?? rec["ticker"] ?? "UNKNOWN"),
-    direction: (toStringSafe(rec["direction"] ?? rec["side"] ?? "") as "Buy" | "Sell" | undefined) || undefined,
-    orderType: toStringSafe(rec["orderType"] ?? rec["type"] ?? ""),
-    openTime: toISOStringSafe(openTimeRaw),
-    closeTime: toISOStringSafe(closeTimeRaw),
-    session: toStringSafe(rec["session"] ?? ""),
-    lotSize: toNumberSafe(lotsRaw),
-    entryPrice: Number(toNumberSafe(entryRaw)),
-    stopLossPrice: Number(toNumberSafe(rec["stopLossPrice"] ?? rec["stop_loss"] ?? 0)),
-    takeProfitPrice: Number(toNumberSafe(rec["takeProfitPrice"] ?? rec["take_profit"] ?? 0)),
-    pnl: profit,
-    resultRR: Number(toNumberSafe(rec["rr"] ?? rec["resultRR"] ?? 0)),
-    outcome: profit > 0 ? "Win" : profit < 0 ? "Loss" : "Breakeven",
-    duration: toStringSafe(rec["duration"] ?? ""),
-    reasonForTrade: toStringSafe(rec["reasonForTrade"] ?? rec["reason"] ?? rec["strategy"] ?? ""),
-    emotion: toStringSafe(rec["emotion"] ?? ""),
-    journalNotes: toStringSafe(rec["notes"] ?? rec["note"] ?? rec["comment"] ?? ""),
-    // Note: we intentionally do not enforce a strict `reviewed` type here.
-    // If your Trade type defines a `reviewed` boolean, it will be set; otherwise
-    // it will exist at runtime but we cast the object back to Trade below.
-    reviewed: false as unknown as boolean,
+  const result: Record<string, unknown> = {
+    user_id: coalesce(trade.user_id, raw.user_id),
+    symbol: String(symbol).toUpperCase(),
+    direction: coalesce(trade.direction, raw.direction),
+    ordertype: coalesce(trade.orderType, raw.orderType) || "Market Execution",
+    opentime: openTime ?? null,
+    closetime: closeTime ?? null,
+    session: coalesce(trade.session, raw.session),
+    lotsize: lotSize ?? null,
+    entryprice: entryPrice ?? null,
+    exitprice: exitPrice ?? null,
+    stoplossprice: stopLossPrice ?? null,
+    takeprofitprice: takeProfitPrice ?? null,
+    pnl: pnl ?? null,
+    profitloss: coalesce(trade.profitLoss, trade.profit_loss, raw.profitLoss, raw.profit_loss),
+    resultrr: coalesce(trade.resultRR, trade.result_rr, raw.resultRR, raw.result_rr),
+    rr: coalesce(trade.rr, raw.rr),
+    outcome: normalizedOutcome ?? outcomeSource,
+    duration: coalesce(trade.duration, raw.duration),
+    reasonfortrade: coalesce(
+      trade.reasonForTrade,
+      trade.reason_for_trade,
+      raw.reasonForTrade,
+      raw.reason_for_trade
+    ),
+    emotion: coalesce(trade.emotion, trade.emotion_label, raw.emotion, raw.emotion_label),
+    journalnotes: coalesce(
+      trade.journalNotes,
+      trade.journal_notes,
+      raw.journalNotes,
+      raw.journal_notes,
+      raw.comment
+    ),
+    notes: coalesce(trade.notes, raw.notes, raw.comment),
+    strategy: coalesce(trade.strategy, raw.strategy),
+    beforescreenshoturl: coalesce(
+      trade.beforeScreenshotUrl,
+      trade.before_screenshot_url,
+      raw.beforeScreenshotUrl,
+      raw.before_screenshot_url
+    ),
+    afterscreenshoturl: coalesce(
+      trade.afterScreenshotUrl,
+      trade.after_screenshot_url,
+      raw.afterScreenshotUrl,
+      raw.after_screenshot_url
+    ),
+    commission: commission ?? null,
+    swap: swap ?? null,
+    pinned: coalesce(trade.pinned, raw.pinned) ?? false,
+    tags: coalesce(trade.tags, raw.tags) ?? [],
+    reviewed: coalesce(trade.reviewed, raw.reviewed) ?? false,
+    raw: trade,
   };
 
-  return normalized as Trade;
+  if (trade.id && trade.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    result.id = trade.id;
+  }
+
+  return result;
+};
+
+// Helper to transform backend trade to frontend format
+const transformTradeForFrontend = (trade: any): Trade => {
+  const raw = (trade.raw ?? {}) as any;
+  const openTime = coalesce(trade.opentime, trade.open_time, trade.entry_time, raw.openTime, raw.entry_time);
+  const closeTime = coalesce(trade.closetime, trade.close_time, trade.exit_time, raw.closeTime, raw.exit_time);
+  const lotSize = toNumberOrUndefined(coalesce(trade.lotsize, trade.lot_size, raw.lotSize, raw.lot_size, raw.volume));
+  const entryPrice = toNumberOrUndefined(coalesce(trade.entryprice, trade.entry_price, raw.entryPrice, raw.entry_price));
+  const exitPrice = toNumberOrUndefined(coalesce(trade.exitprice, trade.exit_price, raw.exitPrice, raw.exit_price));
+  const stopLossPrice = toNumberOrUndefined(
+    coalesce(trade.stoplossprice, trade.stop_loss_price, raw.stopLossPrice, raw.stop_loss_price)
+  );
+  const takeProfitPrice = toNumberOrUndefined(
+    coalesce(trade.takeprofitprice, trade.take_profit_price, raw.takeProfitPrice, raw.take_profit_price)
+  );
+  const pnl = toNumberOrUndefined(coalesce(trade.pnl, raw.pnl, trade.profit));
+  const commission = toNumberOrUndefined(coalesce(trade.commission, raw.commission));
+  const swap = toNumberOrUndefined(coalesce(trade.swap, raw.swap));
+  const profitLoss = coalesce(trade.profitloss, trade.profit_loss, raw.profitLoss, raw.profit_loss);
+  const resultRR = toNumberOrUndefined(
+    coalesce(trade.resultrr, trade.result_rr, raw.resultRR, raw.result_rr)
+  );
+  const outcomeSource = coalesce(trade.outcome, raw.outcome) as Trade["outcome"];
+  const normalizedOutcome = normalizeOutcomeForStorage(outcomeSource);
+  const tagsSource = coalesce(trade.tags, raw.tags);
+  const tags = Array.isArray(tagsSource)
+    ? tagsSource
+    : typeof tagsSource === "string"
+    ? tagsSource.split(",").map((tag) => tag.trim()).filter(Boolean)
+    : undefined;
+
+  return {
+    id: String(trade.id),
+    user_id: coalesce(trade.user_id, raw.user_id),
+    symbol: String(coalesce(trade.symbol, raw.symbol, "")).toUpperCase(),
+    direction:
+      coalesce(trade.direction, raw.direction) ||
+      (trade.type === "BUY" ? "Buy" : trade.type === "SELL" ? "Sell" : undefined),
+    orderType: coalesce(trade.ordertype, trade.order_type, raw.orderType, "Market Execution"),
+    openTime,
+    closeTime,
+    session: coalesce(trade.session, raw.session),
+    lotSize,
+    entryPrice,
+    exitPrice,
+    stopLossPrice,
+    takeProfitPrice,
+    pnl,
+    profitLoss,
+    resultRR,
+    rr: coalesce(trade.rr, raw.rr),
+    outcome: (normalizedOutcome ?? outcomeSource) as Trade["outcome"],
+    duration: coalesce(trade.duration, raw.duration),
+    reasonForTrade: coalesce(
+      trade.reasonfortrade,
+      trade.reason_for_trade,
+      raw.reasonForTrade,
+      raw.reason_for_trade
+    ),
+    emotion: coalesce(trade.emotion, trade.emotion_label, raw.emotion, raw.emotion_label),
+    journalNotes: coalesce(
+      trade.journalnotes,
+      trade.journal_notes,
+      trade.comment,
+      raw.journalNotes,
+      raw.journal_notes
+    ),
+    notes: coalesce(trade.notes, raw.notes, trade.comment, raw.comment),
+    strategy: coalesce(trade.strategy, raw.strategy),
+    beforeScreenshotUrl: coalesce(
+      trade.beforescreenshoturl,
+      trade.before_screenshot_url,
+      raw.beforeScreenshotUrl,
+      raw.before_screenshot_url
+    ),
+    afterScreenshotUrl: coalesce(
+      trade.afterscreenshoturl,
+      trade.after_screenshot_url,
+      raw.afterScreenshotUrl,
+      raw.after_screenshot_url
+    ),
+    commission,
+    swap,
+    pinned: coalesce(trade.pinned, raw.pinned),
+    tags,
+    reviewed: coalesce(trade.reviewed, raw.reviewed),
+    created_at: trade.created_at ?? raw.created_at,
+    updated_at: trade.updated_at ?? raw.updated_at,
+    raw: (trade.raw as Record<string, unknown> | undefined) ?? trade,
+    entry_time: openTime,
+    exit_time: closeTime,
+    entry_price: entryPrice,
+    exit_price: exitPrice,
+    lot_size: lotSize,
+    stop_loss_price: stopLossPrice,
+    take_profit_price: takeProfitPrice,
+    profit_loss: profitLoss,
+    result_rr: resultRR,
+    before_screenshot_url: coalesce(
+      trade.beforescreenshoturl,
+      trade.before_screenshot_url,
+      raw.beforeScreenshotUrl,
+      raw.before_screenshot_url
+    ),
+    after_screenshot_url: coalesce(
+      trade.afterscreenshoturl,
+      trade.after_screenshot_url,
+      raw.afterScreenshotUrl,
+      raw.after_screenshot_url
+    ),
+    emotion_label: coalesce(trade.emotion_label, raw.emotion_label),
+    reason_for_trade: coalesce(trade.reason_for_trade, raw.reason_for_trade),
+    journal_notes: coalesce(trade.journal_notes, raw.journal_notes),
+    strategy_tags: coalesce(trade.strategy_tags, raw.strategy_tags),
+  };
+};
+
+export interface TradeContextType {
+  trades: Trade[];
+  addTrade: (trade: Trade) => void;
+  updateTrade: (trade: Trade) => void;
+  deleteTrade: (tradeId: string) => void;
+  refreshTrades: () => Promise<void>;
+  clearTrades: () => Promise<void>;
+  migrationLoading: boolean;
+  needsMigration: boolean;
+  migrateLocalTrades: () => Promise<{ migratedCount: number }>;
+  legacyLocalTrades: Trade[];
+  importTrades: (trades: Trade[]) => Promise<void>;
+  importLoading: boolean;
 }
 
-/**
- * Context + Provider
- */
-export const TradeContext = createContext<TradeContextProps>({
-  trades: [],
-  filteredTrades: [],
-  addTrade: () => undefined,
-  updateTrade: () => undefined,
-  deleteTrade: () => undefined,
-  setTradesFromCsv: () => undefined,
-  importTrades: () => undefined,
-  filterTrades: () => undefined,
-  refreshTrades: async () => undefined,
-  syncFromMT5: async () => ({ success: false }),
-  clearTrades: () => undefined,
-  bulkToggleReviewed: () => undefined,
-  bulkDelete: () => undefined,
-});
+const TradeContext = createContext<TradeContextType | undefined>(undefined);
 
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
+  const [legacyLocalTrades, setLegacyLocalTrades] = useState<Trade[]>([]);
+  const [needsMigration, setNeedsMigration] = useState<boolean>(false);
+  const [migrationLoading, setMigrationLoading] = useState<boolean>(false);
+  const [importLoading, setImportLoading] = useState<boolean>(false);
+  const { notify } = useNotification();
+  const { user } = useUser(); // Get user from UserContext
 
-  // --- Add / update / delete ---
-  const addTrade = (newTrade: Trade) => {
-    setTrades((prev) => {
-      const prevIds = new Set(prev.map((p) => String(p.id)).filter(Boolean));
-      const id = newTrade.id && !prevIds.has(newTrade.id) ? newTrade.id : generateUniqueId(prevIds);
-      return [...prev, { ...newTrade, id } as Trade];
-    });
-    try { notify({ variant: "success", title: "Trade added", description: `${newTrade.symbol ?? 'Trade'} saved.` }); } catch {}
-  };
+  const supabase = createClientComponentClient();
 
-  const updateTrade = (updatedTrade: Trade) => {
-    setTrades((prevTrades) =>
-      prevTrades.map((trade) => (trade.id === updatedTrade.id ? ({ ...trade, ...updatedTrade } as Trade) : trade))
-    );
-    try { notify({ variant: "info", title: "Trade updated", description: `${updatedTrade.symbol ?? 'Trade'} updated.` }); } catch {}
-  };
-
-  const deleteTrade = (id: string) => {
-    setTrades((prevTrades) => prevTrades.filter((trade) => trade.id !== id));
-    setFilteredTrades((prev) => prev.filter((t) => t.id !== id));
-    try { notify({ variant: "warning", title: "Trade deleted", description: `Trade ${id} removed.` }); } catch {}
-  };
-
-  // --- Bulk helpers ---
-  const bulkToggleReviewed = (ids: string[], reviewed: boolean) => {
-    if (!Array.isArray(ids) || ids.length === 0) return;
-    setTrades((prev) =>
-      prev.map((t) => (t.id && ids.includes(t.id) ? ({ ...t, reviewed } as Trade) : t))
-    );
-    setFilteredTrades((prev) =>
-      prev.map((t) => (t.id && ids.includes(t.id) ? ({ ...t, reviewed } as Trade) : t))
-    );
-    // persist
-    try {
-      if (typeof window !== "undefined") {
-        const next = trades.map((t) => (t.id && ids.includes(t.id) ? ({ ...t, reviewed } as Trade) : t));
-        localStorage.setItem("trade-history", JSON.stringify(next));
-      }
-    } catch {
-      // ignore localStorage errors
+  const fetchTrades = useCallback(async () => {
+    if (!user?.id) {
+      setTrades([]);
+      return [];
     }
-    try { notify({ variant: "info", title: reviewed ? 'Marked reviewed' : 'Unreviewed', description: `${ids.length} trades updated.` }); } catch {}
-  };
+    const { data, error } = await supabase
+      .from("trades")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("opentime", { ascending: false });
 
-  const bulkDelete = (ids: string[]) => {
-    if (!Array.isArray(ids) || ids.length === 0) return;
-    setTrades((prev) => prev.filter((t) => !(t.id && ids.includes(t.id))));
-    setFilteredTrades((prev) => prev.filter((t) => !(t.id && ids.includes(t.id))));
-    try {
-      if (typeof window !== "undefined") {
-        const next = trades.filter((t) => !(t.id && ids.includes(t.id)));
-        localStorage.setItem("trade-history", JSON.stringify(next));
-      }
-    } catch {
-      // ignore
-    }
-    try { notify({ variant: "warning", title: "Trades deleted", description: `${ids.length} trades removed.` }); } catch {}
-  };
-
-  // --- CSV import/upsert ---
-  const setTradesFromCsv = (csvTrades: unknown[]) => {
-    if (!Array.isArray(csvTrades) || csvTrades.length === 0) return;
-
-    setTrades((prev) => {
-      const byId = new Map<string, Trade>();
-      const prevIds = new Set<string>(prev.map(p => String(p.id)).filter(Boolean));
-      prev.forEach((p) => {
-        if (p.id) {
-          byId.set(String(p.id), p as Trade);
-        } else {
-          const newId = generateUniqueId(prevIds);
-          prevIds.add(newId);
-          byId.set(newId, { ...p, id: newId } as Trade);
-        }
+    if (error) {
+      console.error("Error fetching trades:", error);
+      notify({
+        variant: "destructive",
+        title: "Error fetching trades",
+        description: error.message,
       });
-
-      const normalized = csvTrades.map((t) => normalizeBrokerTrade(t));
-
-      normalized.forEach((nt) => {
-        const ntId = nt.id ? String(nt.id) : undefined;
-        if (ntId && byId.has(ntId)) {
-          const existing = byId.get(ntId)!;
-          byId.set(ntId, { ...existing, ...nt, id: ntId } as Trade);
-        } else {
-          const newId = ntId && !prevIds.has(ntId) ? ntId : generateUniqueId(prevIds);
-          prevIds.add(newId);
-          byId.set(newId, { ...nt, id: newId } as Trade);
-        }
-      });
-
-      return Array.from(byId.values());
-    });
-    try { notify({ variant: "success", title: "Trades imported", description: `${csvTrades.length} rows processed.` }); } catch {}
-  };
-
-  const importTrades = (incoming: unknown[]) => {
-    setTradesFromCsv(incoming);
-  };
-
-  const clearTrades = () => {
-    setTrades([]);
-    setFilteredTrades([]);
-    try {
-      if (typeof window !== "undefined") localStorage.removeItem("trade-history");
-    } catch {
-      // ignore localStorage errors
+      return [];
+    } else {
+      const transformedTrades = (data || []).map(transformTradeForFrontend);
+      setTrades(transformedTrades);
+      return transformedTrades;
     }
-    try { notify({ variant: "warning", title: "Trade history cleared", description: "All local trades removed." }); } catch {}
-  };
+  }, [user?.id, supabase, notify]);
 
-  const filterTrades = (fromDate: Date, toDate: Date) => {
-    const filtered = trades.filter((trade) => {
-      const tradeDate = new Date(trade.openTime);
-      if (isNaN(tradeDate.getTime())) return false;
-      return tradeDate >= fromDate && tradeDate <= toDate;
-    });
-    setFilteredTrades(filtered);
-  };
+  const refreshTrades = useCallback(async () => {
+    await fetchTrades();
+  }, [fetchTrades]);
 
-  // --- Refresh (fetch persisted trades from database) ---
-  const refreshTrades = async () => {
-    try {
-      const res = await fetch("/api/trades", { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to load trades");
-      const data = await res.json();
-      const rows = Array.isArray(data?.trades) ? data.trades : [];
+  useEffect(() => {
+    const loadTrades = async () => {
+      const existingTrades = await fetchTrades();
 
-      // Convert database format to Trade format
-      const normalizedTrades = rows.map((row: any) => ({
-        id: row.id,
-        symbol: row.symbol,
-        direction: row.direction,
-        orderType: row.order_type,
-        openTime: row.open_time,
-        closeTime: row.close_time,
-        session: row.session,
-        lotSize: row.lot_size,
-        entryPrice: row.entry_price,
-        exitPrice: row.exit_price,
-        stopLossPrice: row.stop_loss_price,
-        takeProfitPrice: row.take_profit_price,
-        pnl: row.pnl,
-        outcome: row.outcome,
-        resultRR: row.result_rr,
-        strategy: row.strategy,
-        beforeScreenshotUrl: row.before_screenshot_url,
-        afterScreenshotUrl: row.after_screenshot_url,
-        duration: row.duration,
-        reasonForTrade: row.reason_for_trade,
-        emotion: row.emotion,
-        journalNotes: row.journal_notes,
-        commission: row.commission,
-        swap: row.swap,
-        source: row.source,
-        updated_at: row.updated_at
-      }));
+      // If no trades exist and user should see sample data, load it
+      if ((!existingTrades || existingTrades.length === 0) && shouldLoadSampleData() && user?.id) {
+        const sampleTrades = generateSampleTrades();
+        // Update sample trades with actual user ID
+        const tradesWithUserId = sampleTrades.map(trade => ({
+          ...trade,
+          user_id: user.id
+        }));
 
-      setTradesFromCsv(normalizedTrades);
-    } catch (err: unknown) {
-      // console error but don't crash
-      // eslint-disable-next-line no-console
-      console.error("refreshTrades error:", err);
-    }
-  };
-
-  // --- Sync from MT5 via python backend, persist via /api/mt5/import, fallback to in-memory ---
-  const syncFromMT5 = async (
-    login: string,
-    password: string,
-    server: string,
-    backendUrl?: string
-  ): Promise<SyncResult> => {
-    if (!login || !password || !server) {
-      return { success: false, error: "Missing login, password or server." };
-    }
-
-    const backend =
-      backendUrl || (process.env.NEXT_PUBLIC_MT5_BACKEND as string) || "http://127.0.0.1:5000/sync_mt5";
-
-    const controller = new AbortController();
-    const timeoutMs = 60000;
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const mtRes = await fetch(backend, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login, password, server }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-
-      // parse JSON defensively
-      let mtData: unknown = null;
-      try {
-        mtData = await mtRes.json();
-      } catch {
-        const txt = await mtRes.text().catch(() => "");
-        return { success: false, error: `MT backend returned non-JSON: ${txt}` };
-      }
-
-      const mtObj = (mtData && typeof mtData === "object") ? (mtData as Record<string, unknown>) : {};
-
-      if (!mtRes.ok) {
-        return { success: false, error: (mtObj.detail as string) ?? (mtObj.error as string) ?? `MT backend failed: ${mtRes.status}` };
-      }
-      if (!(mtObj.success === true)) {
-        return { success: false, error: (mtObj.detail as string) ?? (mtObj.error as string) ?? "MT backend reported failure" };
-      }
-
-      const tradesFromBackend = Array.isArray(mtObj.trades)
-        ? (mtObj.trades as unknown[])
-        : Array.isArray(mtObj.deals)
-        ? (mtObj.deals as unknown[])
-        : [];
-
-      // attempt to persist to Next import route
-      try {
-        const importRes = await fetch("/api/mt5/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ account: mtObj.account ?? { login, server }, trades: tradesFromBackend }),
-        });
-
-        let importData: unknown = null;
         try {
-          importData = await importRes.json();
+          // Import sample trades
+          await importTrades(tradesWithUserId);
+          markSampleDataAsSeen();
+
+          notify({
+            variant: "info",
+            title: "Sample Data Loaded",
+            description: "We've loaded sample trades to help you explore Tradia's features. Add your real trades to get personalized insights!",
+          });
+        } catch (error) {
+          console.error('Failed to load sample data:', error);
+        }
+      }
+    };
+
+    loadTrades();
+  }, [fetchTrades, user?.id]);
+
+  // Load legacy local trades and check for migration
+  useEffect(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      const localTrades = localStorage.getItem("trade-history");
+      if (localTrades) {
+        try {
+          const parsedTrades: Trade[] = JSON.parse(localTrades);
+          if (parsedTrades.length > 0) {
+            setLegacyLocalTrades(parsedTrades);
+            setNeedsMigration(true);
+            notify({
+              variant: "info",
+              title: "Local Trades Found",
+              description: "We found some trades saved locally. Please migrate them to your account.",
+            });
+          }
+        } catch (e) {
+          console.error("Failed to parse local trade history:", e);
+          localStorage.removeItem("trade-history");
+        }
+      }
+    }
+  }, [user?.id, notify]);
+
+  const addTrade = async (trade: Trade) => {
+  if (!user?.id) {
+  notify({
+  variant: "destructive",
+  title: "Authentication Required",
+  description: "Please sign in to add trades.",
+  });
+  return;
+  }
+
+  // Check plan limits for max trades
+  const planLimits = PLAN_LIMITS[user.plan] || PLAN_LIMITS.free;
+  const maxTrades = planLimits.maxTrades;
+
+  if (maxTrades !== -1 && trades.length >= maxTrades) {
+  notify({
+  variant: "destructive",
+  title: "Trade Limit Reached",
+  description: `Your ${user.plan} plan allows up to ${maxTrades} trades. Please upgrade to add more trades.`,
+  });
+  return;
+  }
+
+  try {
+      const response = await fetch('/api/trades', {
+      method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+        body: JSON.stringify(trade),
+    });
+
+  if (!response.ok) {
+  const errorData = await response.json();
+  throw new Error(errorData.error || 'Failed to add trade');
+  }
+
+    const data = await response.json();
+  const transformedTrade = transformTradeForFrontend(data.trade);
+  setTrades((prev) => [transformedTrade, ...prev]);
+  notify({
+  variant: "success",
+  title: "Trade added",
+  description: "Your trade has been successfully recorded.",
+  });
+  } catch (error) {
+      console.error("Error adding trade:", error);
+      notify({
+        variant: "destructive",
+        title: "Error adding trade",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
+  };
+
+  const updateTrade = async (trade: Trade) => {
+  if (!user?.id) {
+  notify({
+  variant: "destructive",
+  title: "Authentication Required",
+  description: "Please sign in to update trades.",
+  });
+  return;
+  }
+
+  try {
+    const response = await fetch('/api/trades', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(trade),
+      });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+  throw new Error(errorData.error || 'Failed to update trade');
+  }
+
+  const data = await response.json();
+    const transformedTrade = transformTradeForFrontend(data.trade);
+  setTrades((prev) =>
+    prev.map((t) => (t.id === trade.id ? transformedTrade : t))
+  );
+  notify({
+    variant: "success",
+  title: "Trade updated",
+  description: "Your trade has been successfully updated.",
+  });
+  } catch (error) {
+    console.error("Error updating trade:", error);
+      notify({
+        variant: "destructive",
+        title: "Error updating trade",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
+  };
+
+  const deleteTrade = async (tradeId: string) => {
+  if (!user?.id) {
+  notify({
+  variant: "destructive",
+  title: "Authentication Required",
+  description: "Please sign in to delete trades.",
+  });
+  return;
+  }
+
+  try {
+  const response = await fetch(`/api/trades?id=${encodeURIComponent(tradeId)}`, {
+    method: 'DELETE',
+  });
+
+      if (!response.ok) {
+      const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to delete trade');
+  }
+
+  setTrades((prev) => prev.filter((t) => t.id !== tradeId));
+  notify({
+    variant: "success",
+      title: "Trade deleted",
+    description: "Your trade has been successfully deleted.",
+  });
+  } catch (error) {
+  console.error("Error deleting trade:", error);
+  notify({
+    variant: "destructive",
+      title: "Error deleting trade",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
+  };
+
+  const clearTrades = useCallback(async () => {
+    if (!user?.id) {
+      notify({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please sign in to clear trades.",
+      });
+      throw new Error("Authentication required");
+    }
+
+    const { error } = await supabase
+      .from("trades")
+      .delete()
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error clearing trades:", error);
+      notify({
+        variant: "destructive",
+        title: "Error clearing trades",
+        description: error.message,
+      });
+      throw error;
+    }
+
+    setTrades([]);
+  }, [supabase, user?.id, notify]);
+
+  const importTrades = async (tradesToImport: Trade[]): Promise<void> => {
+    if (tradesToImport.length === 0) return;
+
+    setImportLoading(true);
+    try {
+      console.log("Starting import of", tradesToImport.length, "trades...");
+
+      // Transform trades
+      const transformedTrades = tradesToImport.map(trade => transformTradeForBackend(trade));
+
+      const res = await fetch("/api/trades/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          trades: transformedTrades,
+          source: "csv-import"
+        }),
+      });
+
+      console.log("Import response status:", res.status);
+
+      if (!res.ok) {
+        let errorMessage = "Import failed";
+        try {
+          const payload = await res.json();
+          if (payload?.error) {
+            if (Array.isArray(payload.error)) {
+              errorMessage = payload.error.map((err: any) =>
+                typeof err === 'string' ? err : (err?.message || JSON.stringify(err))
+              ).join(', ');
+            } else {
+              errorMessage = typeof payload.error === 'string' ? payload.error : (payload.error?.message || JSON.stringify(payload.error));
+            }
+          }
+          console.error("Import API error payload:", payload);
         } catch {
-          const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
-          importTrades(normalizedInMemory);
-          return { success: true, account: mtObj.account, trades: normalizedInMemory, error: "Imported to memory; DB import returned non-JSON" };
+          errorMessage = `Import failed with status ${res.status}`;
         }
 
-        const importObj = (importData && typeof importData === "object") ? (importData as Record<string, unknown>) : {};
-        if (!importRes.ok || importObj.success !== true) {
-          const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
-          importTrades(normalizedInMemory);
-          return { success: true, account: mtObj.account, trades: normalizedInMemory, error: (importObj.error as string) ?? "Persist to DB failed" };
+        if (res.status === 401) {
+          errorMessage = "Authentication required. Please refresh the page and sign in again.";
+        } else if (res.status === 403) {
+          errorMessage = "You don't have permission to perform this action.";
+        } else if (res.status === 500) {
+          errorMessage = "Server error during import. Please try again.";
         }
-      } catch (impErr: unknown) {
-        // eslint-disable-next-line no-console
-        console.error("Error calling /api/mt5/import:", impErr);
-        const normalizedInMemory = tradesFromBackend.map(normalizeBrokerTrade);
-        importTrades(normalizedInMemory);
-        return { success: true, account: mtObj.account, trades: normalizedInMemory, error: "Failed to persist trades to DB; shown in-memory" };
+
+        throw new Error(errorMessage);
       }
 
-      // refresh persisted trades
+      const responseData = await res.json().catch(() => ({}));
+      console.log("Import response data:", responseData);
+      const importedCount = responseData?.newTrades || 0;
+
+      console.log(`Import successful: ${importedCount} trades imported`);
+
       await refreshTrades();
 
-      // return normalized trades
-      const normalizedTrades = tradesFromBackend.map(normalizeBrokerTrade);
-      return { success: true, account: mtObj.account, trades: normalizedTrades };
-    } catch (err: unknown) {
-      clearTimeout(timeout);
-      // eslint-disable-next-line no-console
-      console.error("syncFromMT5 error:", err);
-      const isAbort =
-        typeof err === "object" &&
-        err !== null &&
-        "name" in err &&
-        (err as Record<string, unknown>).name === "AbortError";
-      if (isAbort) {
-        return { success: false, error: `Request timed out after ${timeoutMs / 1000}s.` };
-      }
-      const msg = err instanceof Error ? err.message : String(err);
-      const hint =
-        msg.includes("Failed to fetch") || msg.includes("NetworkError")
-          ? `${msg} — frontend couldn't reach the MT backend or /api/mt5/import. Check both services.`
-          : msg;
-      return { success: false, error: hint };
+      try {
+        notify({
+          variant: "success",
+          title: "Trades imported successfully",
+          description: `${importedCount} trade${importedCount !== 1 ? 's' : ''} added to your account.`
+        });
+      } catch {}
+    } catch (err) {
+      console.error("importTrades error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Import failed. Please try again later.";
+
+      try {
+        notify({
+          variant: "destructive",
+          title: "Import failed",
+          description: errorMessage
+        });
+      } catch {}
     } finally {
-      clearTimeout(timeout);
+      setImportLoading(false);
     }
   };
 
-  // Load initial trades from local cache and refresh
-  useEffect(() => {
+  const migrateLocalTrades = async (): Promise<{ migratedCount: number }> => {
+    if (legacyLocalTrades.length === 0) {
+      setNeedsMigration(false);
+      return { migratedCount: 0 };
+    }
+
+    setMigrationLoading(true);
     try {
-      if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("trade-history");
-        if (stored) {
-          const parsed = JSON.parse(stored) as Trade[] | null;
-          if (Array.isArray(parsed)) setTrades(parsed);
+      console.log("Starting migration of", legacyLocalTrades.length, "local trades...");
+
+      // Authentication is handled by the API using NextAuth
+
+      const res = await fetch("/api/trades/import", {
+      method: "POST",
+      headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        trades: legacyLocalTrades,
+      source: "local-migration"
+      }),
+      });
+
+      console.log("Migration response status:", res.status);
+
+      if (!res.ok) {
+        let errorMessage = "Migration failed";
+        try {
+          const payload = await res.json();
+          if (payload?.error) {
+            if (Array.isArray(payload.error)) {
+              errorMessage = payload.error.map(err =>
+                typeof err === 'string' ? err : (err?.message || JSON.stringify(err))
+              ).join(', ');
+            } else {
+              errorMessage = typeof payload.error === 'string' ? payload.error : (payload.error?.message || JSON.stringify(payload.error));
+            }
+          }
+          console.error("Migration API error payload:", payload);
+        } catch {
+          errorMessage = `Migration failed with status ${res.status}`;
         }
+        
+        if (res.status === 401) {
+          errorMessage = "Authentication required. Please refresh the page and sign in again to migrate your trades.";
+        } else if (res.status === 403) {
+          errorMessage = "You don't have permission to perform this action. Please contact support.";
+        } else if (res.status === 500) {
+          errorMessage = "Server error during migration. Please try again in a few moments.";
+        }
+        
+        throw new Error(errorMessage);
       }
-    } catch {
-      // ignore parse errors
-    }
 
-    // fire-and-forget refresh
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    refreshTrades();
-  }, []); // refreshTrades is stable (module-level functions are used internally)
+      const responseData = await res.json().catch(() => ({}));
+      console.log("Migration response data:", responseData);
+      const migratedCount = (responseData?.newTrades || 0) + (responseData?.updatedTrades || 0);
+      
+      console.log(`Migration successful: ${migratedCount} trades migrated (${responseData?.newTrades || 0} new, ${responseData?.updatedTrades || 0} updated)`);
 
-  // persist to localStorage
-  useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("trade-history", JSON.stringify(trades));
+      setLegacyLocalTrades([]);
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("trade-history");
+          console.log("Local trade history cleared from localStorage");
+        }
+      } catch (storageErr) {
+        console.warn("Failed to clear localStorage:", storageErr);
       }
-    } catch {
-      // ignore
+      
+      await refreshTrades();
+      
+      setNeedsMigration(false);
+      
+      try {
+        notify({ 
+          variant: "success", 
+          title: "Trades migrated successfully", 
+          description: `${migratedCount} trade${migratedCount !== 1 ? 's' : ''} securely moved to the cloud.` 
+        });
+      } catch {}
+
+      return { migratedCount };
+    } catch (err) {
+      console.error("migrateLocalTrades error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Migration failed. Please try again later.";
+      
+      try {
+        notify({ 
+          variant: "destructive", 
+          title: "Migration failed", 
+          description: errorMessage 
+        });
+      } catch {}
+      
+      throw err;
+    } finally {
+      setMigrationLoading(false);
     }
-  }, [trades]);
+  };
 
   return (
     <TradeContext.Provider
       value={{
         trades,
-        filteredTrades,
         addTrade,
         updateTrade,
         deleteTrade,
-        setTradesFromCsv,
-        importTrades,
-        filterTrades,
         refreshTrades,
-        syncFromMT5,
-        clearTrades,
-        bulkToggleReviewed,
-        bulkDelete,
+        migrationLoading,
+        needsMigration,
+        migrateLocalTrades,
+        legacyLocalTrades,
+        importTrades,
+          clearTrades,
+        importLoading,
       }}
     >
       {children}
     </TradeContext.Provider>
   );
-  const { notify } = useNotification();
 };
 
 export const useTrade = () => {
-  const ctx = useContext(TradeContext);
-  if (!ctx) throw new Error("useTrade must be used within a TradeProvider");
-  return ctx;
+  const context = useContext(TradeContext);
+  if (context === undefined) {
+    throw new Error("useTrade must be used within a TradeProvider");
+  }
+  return context;
 };

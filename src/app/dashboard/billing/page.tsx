@@ -236,7 +236,7 @@ export default function BillingPage() {
       name: 'Pro',
       price: 9,
       features: [
-        '1 MT5 account connection',
+        'Advanced analytics',
         '50 AI chats per day',
         '90 days trade storage',
         'Advanced analytics & insights',
@@ -249,7 +249,7 @@ export default function BillingPage() {
       name: 'Plus',
       price: 19,
       features: [
-        '3 MT5 account connections',
+        'Unlimited AI chats',
         '200 AI chats per day',
         '1 year trade storage',
         'Advanced analytics & insights',

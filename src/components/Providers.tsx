@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/context/UserContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { TradeProvider } from "@/context/TradeContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <UserProvider>
           <NotificationProvider>
-            {children}
+            <TradeProvider>
+              {children}
+            </TradeProvider>
           </NotificationProvider>
         </UserProvider>
       </ThemeProvider>

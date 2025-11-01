@@ -137,7 +137,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user) {
+  if (!loading && !user) {
     router.push('/login');
     return null;
   }

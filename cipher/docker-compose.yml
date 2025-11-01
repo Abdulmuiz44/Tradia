@@ -1,0 +1,35 @@
+services:
+  cipher-api:
+    build: .
+    image: cipher-api
+    ports:
+      - '3000:3000'
+    environment:
+      - CIPHER_API_PREFIX=""
+    env_file:
+      - .env
+    command:
+      [
+        'sh',
+        '-c',
+        'node dist/src/app/index.cjs --mode api --port 3000 --host 0.0.0.0 --agent /app/memAgent/cipher.yml --mcp-transport-type sse',
+      ]
+    volumes:
+      - ./memAgent:/app/memAgent:ro
+      - cipher-data:/app/.cipher
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'sh',
+          '-c',
+          'wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  cipher-data:

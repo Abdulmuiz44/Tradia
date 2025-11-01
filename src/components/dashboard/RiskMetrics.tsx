@@ -2,8 +2,8 @@
 
 "use client";
 
-import { useContext, useMemo, useState } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import { useMemo, useState } from "react";
+import { useTrade } from "@/context/TradeContext";
 import {
   Card,
   CardHeader,
@@ -41,7 +41,7 @@ import {
 import { Info } from "lucide-react";
 
 export default function RiskMetrics() {
-  const { trades } = useContext(TradeContext);
+  const { trades } = useTrade();
   const [chartType, setChartType] = useState("bar");
 
   const track = async (name: string, properties?: Record<string, any>) => {

@@ -247,19 +247,29 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       resultRRNumeric = numericRR !== null ? numericRR : 0;
     }
 
-    const newTrade: Trade = {
-      id: `${String(form.symbol ?? "TRD")}-${Date.now()}`,
+    const lotSizeNum = Number(form.lotSize ?? 0);
+    const entryPriceNum = Number(form.entryPrice ?? 0);
+    const stopLossPriceNum = Number(form.stopLossPrice ?? 0);
+    const takeProfitPriceNum = Number(form.takeProfitPrice ?? 0);
+    const pnlNum = Number(form.pnl ?? 0);
+
+    if (isNaN(lotSizeNum) || isNaN(entryPriceNum) || isNaN(stopLossPriceNum) || isNaN(takeProfitPriceNum) || isNaN(pnlNum)) {
+      alert("Please enter valid numbers for lot size, entry price, stop loss, take profit, and PNL.");
+      return;
+    }
+
+    const newTrade: Omit<Trade, 'id'> = {
       symbol: String(form.symbol ?? ""),
       direction: (String(form.direction ?? "Buy") as "Buy" | "Sell"),
       orderType: String(form.orderType ?? ""),
       openTime: openIso,
       closeTime: closeIso,
       session: String(form.session ?? ""),
-      lotSize: Math.max(0.01, Number(form.lotSize ?? 0)),
-      entryPrice: Number(form.entryPrice ?? 0),
-      stopLossPrice: Number(form.stopLossPrice ?? 0),
-      takeProfitPrice: Number(form.takeProfitPrice ?? 0),
-      pnl: Number(form.pnl ?? 0),
+      lotSize: Math.max(0.01, lotSizeNum),
+      entryPrice: entryPriceNum,
+      stopLossPrice: stopLossPriceNum,
+      takeProfitPrice: takeProfitPriceNum,
+      pnl: pnlNum,
       resultRR: resultRRNumeric,
       outcome: (outcome as "Win" | "Loss" | "Breakeven"),
       duration: calculateDuration(String(form.openTime ?? ""), String(form.closeTime ?? "")),
@@ -369,12 +379,12 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Lot Size</label>
             <input
-              type="number"
-              min="0.01"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
-              value={String(form.lotSize ?? 0)}
-              onChange={(e) => handleChange("lotSize", e.target.value === "" ? 0 : Number(e.target.value) as Trade["lotSize"])}
+              value={String(form.lotSize ?? '')}
+              onChange={(e) => handleChange("lotSize", e.target.value)}
+              placeholder="e.g., 0.01"
             />
           </div>
 
@@ -382,12 +392,12 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Entry Price</label>
             <input
-              type="number"
-              step="any"
+              type="text"
               inputMode="decimal"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.entryPrice ?? 0)}
-              onChange={(e) => handleChange("entryPrice", e.target.value === "" ? 0 : Number(e.target.value) as Trade["entryPrice"])}
+              onChange={(e) => handleChange("entryPrice", e.target.value)}
+              placeholder="e.g., 1.12345"
             />
           </div>
 
@@ -395,12 +405,12 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Stop Loss</label>
             <input
-              type="number"
-              step="any"
+              type="text"
               inputMode="decimal"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.stopLossPrice ?? 0)}
-              onChange={(e) => handleChange("stopLossPrice", e.target.value === "" ? 0 : Number(e.target.value) as Trade["stopLossPrice"])}
+              onChange={(e) => handleChange("stopLossPrice", e.target.value)}
+              placeholder="e.g., 1.12000"
             />
           </div>
 
@@ -408,12 +418,12 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Take Profit</label>
             <input
-              type="number"
-              step="any"
+              type="text"
               inputMode="decimal"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
               value={String(form.takeProfitPrice ?? 0)}
-              onChange={(e) => handleChange("takeProfitPrice", e.target.value === "" ? 0 : Number(e.target.value) as Trade["takeProfitPrice"])}
+              onChange={(e) => handleChange("takeProfitPrice", e.target.value)}
+              placeholder="e.g., 1.12800"
             />
           </div>
 
@@ -421,11 +431,12 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">PNL ($)</label>
             <input
-              type="number"
-              step="any"
+              type="text"
+              inputMode="decimal"
               className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
-              value={String(form.pnl ?? 0)}
-              onChange={(e) => handleChange("pnl", e.target.value === "" ? 0 : Number(e.target.value) as Trade["pnl"])}
+              value={String(form.pnl ?? '')}
+              onChange={(e) => handleChange("pnl", e.target.value)}
+              placeholder="e.g., 150.50"
             />
           </div>
 

@@ -60,12 +60,12 @@ const plansData: Plan[] = [
     name: "pro",
     label: "Pro",
     priceMonthly: 9,
-    priceYearly: 90, // monthly * 10 (2 months free)
+    priceYearly: 90,
     tagline: "Popular",
     baseFeatures: [], // will inherit Free
     additionalFeatures: [
       "6 months trade history",
-      "3 account connections",
+      "Advanced analytics",
       "AI weekly summary",
       "Personalized strategy recommendations",
       "Daily loss & drawdown guard automations",
@@ -83,12 +83,13 @@ const plansData: Plan[] = [
     baseFeatures: [],
     additionalFeatures: [
       "Unlimited history",
-      "5 account connections",
+      "Advanced AI features",
       "AI trade reviews & SL/TP suggestions",
       "Image processing for trade screenshot analysis",
       "Prop dashboard with challenge tracking",
       "Tilt mode detector & burnout alerts",
       "Real-time performance analytics and insights",
+      "Tradia Predict with xAI Grok (Plus & Elite only)",
     ],
   },
   {
@@ -99,10 +100,11 @@ const plansData: Plan[] = [
     tagline: "Advanced",
     baseFeatures: [],
     additionalFeatures: [
-      "Unlimited connections",
+      "Premium AI features",
       "AI strategy builder",
       "Prop-firm automation & breach SMS",
       "All risk & AI features included",
+      "Tradia Predict with enhanced Grok predictions",
     ],
   },
 ];
@@ -121,7 +123,7 @@ const testimonials: { name: string; quote: string }[] = [
   {
     name: "Len • Swing Trader",
     quote:
-      "Auto-sync with MT5 and the weekly recap saved me hours every week. Better trades, less busywork.",
+      "The weekly recap and detailed analytics saved me hours every week. Better trades, less busywork.",
   },
 ];
 
@@ -146,12 +148,6 @@ export default function PricingPlans(): React.ReactElement {
     return Math.round(p.priceMonthly * 10);
   };
 
-  const getAnnualSavings = (p: Plan): number => {
-    const monthly = p.priceMonthly;
-    const yearly = typeof p.priceYearly === "number" ? p.priceYearly : monthly * 10;
-    const saved = Math.round(monthly * 12 - yearly);
-    return saved > 0 ? saved : 0;
-  };
 
   const handleUpgrade = (selectedPlan: PlanName) => {
     // Check if this is a valid action (upgrade or same plan)
@@ -160,7 +156,7 @@ export default function PricingPlans(): React.ReactElement {
       return;
     }
 
-    const trialDays = selectedPlan === "free" ? 0 : 3; // 3-day trial for paid plans
+    const trialDays = 30; // platform-wide 30-day trial for all new accounts
     const checkoutUrl = `/checkout?plan=${selectedPlan}&billing=${billingType}&trial=${trialDays}`;
 
     // If session is still loading, allow navigation to proceed (checkout will handle redirect if needed)
@@ -173,6 +169,31 @@ export default function PricingPlans(): React.ReactElement {
     // Proceed to checkout regardless of auth; checkout will collect email if needed
     setPlan(selectedPlan as unknown as import("@/context/UserContext").PlanType);
     router.push(checkoutUrl);
+  };
+
+  // Start trial: activate 30-day trial and route to sample import
+  const handleStartTrial = async (selectedPlan: PlanName) => {
+    try {
+      if (selectedPlan === "free") {
+        router.push("/signup");
+        return;
+      }
+      // If not authenticated yet, go signup and preserve intent
+      if (status !== "authenticated") {
+        router.push(`/signup?trial=1&plan=${selectedPlan}`);
+        return;
+      }
+      const res = await fetch("/api/user/trial/activate", { method: "POST" });
+      if (!res.ok) {
+        // fallback to checkout if trial could not be started server-side
+        return handleUpgrade(selectedPlan);
+      }
+      // Route to MT5 connect with upload prompt for fast time-to-value
+      router.push("/dashboard/mt5/connect?prompt=upload-sample");
+    } catch (e) {
+      // fallback to checkout
+      handleUpgrade(selectedPlan);
+    }
   };
 
   // Build derived view where each tier shows "Everything in previous tier" + its own additions
@@ -311,9 +332,6 @@ export default function PricingPlans(): React.ReactElement {
                   <span className="text-sm text-gray-400">/{billingType === "monthly" ? "mo" : "yr"}</span>
                 </div>
 
-                <div className="mt-1 text-sm text-green-300">
-                  {billingType === "yearly" && getAnnualSavings(p) > 0 && <span>Save ${getAnnualSavings(p)} with yearly billing</span>}
-                </div>
 
                 {/* Feature presentation: Free shows base features; other tiers show "Everything in previous tier" then additional items */}
                 <div className="mt-5 text-sm text-gray-200">
@@ -467,12 +485,12 @@ export default function PricingPlans(): React.ReactElement {
 
         <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-gray-400 max-w-2xl">
-            <strong>Pro tip:</strong> Start free, upgrade to Plus to get daily AI coaching. Move to Pro once you're consistently profitable and want automated SL/TP optimization.
+            <strong>Pro tip:</strong> Start free, upgrade to Plus to unlock Tradia Predict with xAI Grok and get daily AI coaching. Elite members get the most advanced predictions with hourly updates.
           </div>
 
           <div className="flex gap-3">
             <button
-              onClick={() => handleUpgrade("plus")}
+              onClick={() => handleStartTrial("plus")}
               disabled={!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")}
               className={`py-2 px-4 rounded-lg font-semibold ${
                 !isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
@@ -480,10 +498,10 @@ export default function PricingPlans(): React.ReactElement {
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
-              {isSamePlan(plan, "plus") ? "Current Plan" : "Start Plus Trial"}
+              {isSamePlan(plan, "plus") ? "Current Plan" : "Start 30-day Trial"}
             </button>
             <button
-              onClick={() => handleUpgrade("pro")}
+              onClick={() => handleStartTrial("pro")}
               disabled={!isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")}
               className={`py-2 px-4 rounded-lg ${
                 !isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")
@@ -491,7 +509,7 @@ export default function PricingPlans(): React.ReactElement {
                   : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-500"
               }`}
             >
-              {isSamePlan(plan, "pro") ? "Current Plan" : "Talk to Sales (Pro)"}
+              {isSamePlan(plan, "pro") ? "Current Plan" : "Start 30-day Trial"}
             </button>
           </div>
         </div>
@@ -511,9 +529,9 @@ export default function PricingPlans(): React.ReactElement {
       <div className="max-w-6xl mx-auto mt-8 p-6 bg-[#061226]/60 rounded-2xl border border-gray-800">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h5 className="text-lg font-bold">Risk-free trial & guarantee</h5>
+            <h5 className="text-lg font-bold">Risk-free 30-day trial</h5>
             <p className="text-gray-400 mt-2">
-              Start Plus or Pro with a 3-day free trial. Cancel within the trial &mdash; no charges. We&rsquo;re confident Tradia will reveal meaningful insights within 3 days.
+              Every new account includes a 30-day free trial of Tradia. Explore all features. Upgrade before the trial ends to keep your account active.
             </p>
           </div>
 
@@ -527,9 +545,9 @@ export default function PricingPlans(): React.ReactElement {
       {/* tiny FAQ */}
       <div className="max-w-6xl mx-auto mt-6 text-sm text-gray-400">
         <details className="mb-2">
-          <summary className="cursor-pointer font-semibold">How does the 3-day trial work?</summary>
+          <summary className="cursor-pointer font-semibold">How does the 30-day trial work?</summary>
           <div className="mt-2 text-gray-300">
-            Explore Plus/Pro features during the 3-day trial. Cancel anytime in the trial period to avoid billing.
+            All new accounts receive a 30-day trial. After 30 days, upgrade to any paid plan to continue. Accounts that do not upgrade will be closed.
           </div>
         </details>
 

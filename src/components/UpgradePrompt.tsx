@@ -30,9 +30,10 @@ export default function UpgradePrompt({
       type: 'pro' as PlanType,
       name: 'Pro',
       price: 9,
+      yearlyPrice: 90,
       description: 'Perfect for serious traders',
       features: [
-        '1 broker connection',
+        'Advanced analytics',
         '50 AI chats per day',
         '90 days trade storage',
         'Advanced analytics & insights',
@@ -47,14 +48,16 @@ export default function UpgradePrompt({
       type: 'plus' as PlanType,
       name: 'Plus',
       price: 19,
+      yearlyPrice: 190,
       description: 'For professional traders',
       features: [
-        '3 broker connections',
+        'Unlimited AI chats',
         '200 AI chats per day',
         '1 year trade storage',
         'Advanced analytics & insights',
         'Image processing for trade screenshots',
         'Real-time performance analytics and insights',
+        'Tradia Predict with xAI Grok (Plus & Elite only)',
         'Priority support',
         'Custom integrations'
       ],
@@ -64,13 +67,15 @@ export default function UpgradePrompt({
       type: 'elite' as PlanType,
       name: 'Elite',
       price: 39,
+      yearlyPrice: 390,
       description: 'Ultimate trading experience',
       features: [
-        'Unlimited broker connections',
+        'Custom integrations',
         'Unlimited AI chats',
         'Unlimited trade storage',
         'All premium features',
         'All AI features included',
+        'Tradia Predict with enhanced Grok predictions',
         'Dedicated support',
         'Custom integrations',
         'API access'
@@ -167,9 +172,14 @@ export default function UpgradePrompt({
 
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
-                      <span className="text-gray-600">/month</span>
+                    <div className="mb-2">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
+                        <span className="text-gray-600">/month</span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        or ${plan.yearlyPrice}/year
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600">{plan.description}</p>
                   </div>
@@ -213,7 +223,7 @@ export default function UpgradePrompt({
               <h4 className="font-medium text-gray-900 mb-2">Your Current {getPlanDisplayName(currentPlan)} Plan Includes:</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
                 <div>
-                  <strong>Broker Connections:</strong> {currentPlan === 'free' ? '0' : currentPlan === 'pro' ? '1' : currentPlan === 'plus' ? '3' : 'Unlimited'}
+                  <strong>Advanced Features:</strong> {currentPlan === 'free' ? 'Basic' : currentPlan === 'pro' ? 'Standard' : currentPlan === 'plus' ? 'Professional' : 'Elite'}
                 </div>
                 <div>
                   <strong>AI Chats:</strong> {currentPlan === 'free' ? '5/day' : currentPlan === 'pro' ? '50/day' : currentPlan === 'plus' ? '200/day' : 'Unlimited'}

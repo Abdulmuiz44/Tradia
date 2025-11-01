@@ -162,49 +162,6 @@ export default function ProInsights({ trades, plan }: Props) {
         </Card>
       </div>
 
-      {proOrAbove && (
-        <div className="grid lg:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-indigo-500" /> Session Edge (London/NY)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {base.sessionRank.map(s => (
-                  <div key={s.s} className="flex items-center justify-between">
-                    <div className="text-sm font-medium">{s.s}</div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm ${s.pnl>=0? 'text-emerald-500':'text-red-500'}`}>${s.pnl.toFixed(0)}</span>
-                      <span className="text-xs text-muted-foreground">WR {s.wr.toFixed(0)}% · {s.count}</span>
-                    </div>
-                  </div>
-                ))}
-                {!base.sessionRank.length && (
-                  <div className="text-sm text-muted-foreground">No session data available.</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><LineChartIcon className="w-4 h-4 text-orange-500" /> Time-of-Day Heat</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-6 gap-2">
-                {base.byHour.map((h, i) => (
-                  <div key={i} className="p-2 rounded bg-white/5 text-center">
-                    <div className="text-[10px] text-muted-foreground">{i}:00</div>
-                    <div className={`text-xs font-medium ${h.pnl>=0? 'text-emerald-500':'text-red-500'}`}>${h.pnl.toFixed(0)}</div>
-                    <div className="text-[10px] text-muted-foreground">WR {pct(h.wins, Math.max(1, h.count)).toFixed(0)}%</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {plusOrElite && (
         <Card>
           <CardHeader>

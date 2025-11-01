@@ -1,3 +1,4 @@
+
 // src/components/dashboard/DashboardSidebar.tsx
 "use client";
 
@@ -14,16 +15,19 @@ import {
   Calculator,
   GraduationCap,
   Crown,
+  Compass,
   Home,
   User,
   Users,
-  Settings
+  Settings,
+  Brain,
 } from "lucide-react";
 
 interface TabDef {
   value: string;
   label: string;
   icon: string;
+  href?: string;
 }
 
 interface DashboardSidebarProps {
@@ -46,10 +50,12 @@ const iconMap = {
   Calculator,
   GraduationCap,
   Crown,
+  Compass,
   Home,
   User,
   Users,
-  Settings
+  Settings,
+  Brain,
 };
 
 export default function DashboardSidebar({
@@ -57,18 +63,18 @@ export default function DashboardSidebar({
   activeTab,
   setActiveTab,
   isMobile = false,
-  onClose
+  onClose,
 }: DashboardSidebarProps) {
-  const handleTabClick = (tabValue: string) => {
-    setActiveTab(tabValue);
+  const handleTabClick = (tab: TabDef) => {
+    if (!tab.href) {
+      setActiveTab(tab.value);
+    }
     if (isMobile && onClose) {
       onClose();
     }
   };
 
-  const sidebarClasses = isMobile
-    ? "flex flex-col gap-2"
-    : "flex flex-col gap-1";
+  const sidebarClasses = `${isMobile ? "flex flex-col gap-2" : "flex flex-col gap-1"} dashboard-sidebar`;
 
   return (
     <nav className={sidebarClasses}>
@@ -76,39 +82,55 @@ export default function DashboardSidebar({
         const IconComponent = iconMap[tab.icon as keyof typeof iconMap] || BarChart3;
         const isActive = activeTab === tab.value;
 
-        return (
-          <button
-            key={tab.value}
-            onClick={() => handleTabClick(tab.value)}
-            className={`
-              flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group
-              ${isActive
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }
-              ${isMobile ? "w-full justify-start" : "w-full justify-start"}
-            `}
-            data-track="dashboard_tab_click"
-            data-track-meta={`{"tab":"${tab.value}","label":"${tab.label}"}`}
-          >
-            <IconComponent
-              className={`w-5 h-5 transition-colors ${
-                isActive
-                  ? "text-white"
-                  : "text-gray-400 group-hover:text-white"
-              }`}
-            />
-            <span className={`font-medium ${
-              isMobile ? "text-xs" : "text-sm"
-            }`}>
+        const buttonClasses = [
+          "group",
+          "dashboard-sidebar__item",
+          "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+          isMobile ? "w-full justify-start text-xs" : "w-full justify-start text-sm",
+          isActive ? "is-active" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        const buttonContent = (
+          <>
+            <IconComponent className="w-5 h-5 transition-colors dashboard-sidebar__icon" />
+            <span className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}>
               {tab.label}
             </span>
             {isActive && (
-              <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse" />
+              <div className="ml-auto dashboard-sidebar__indicator animate-pulse" />
             )}
+          </>
+        );
+
+        if (tab.href) {
+          return (
+            <a
+              key={tab.value}
+              href={tab.href}
+              className={buttonClasses}
+              data-track="dashboard_tab_click"
+              data-track-meta={`{"tab":"${tab.value}","label":"${tab.label}"}`}
+            >
+              {buttonContent}
+            </a>
+          );
+        }
+
+        return (
+          <button
+            key={tab.value}
+            onClick={() => handleTabClick(tab)}
+            className={buttonClasses}
+            data-track="dashboard_tab_click"
+            data-track-meta={`{"tab":"${tab.value}","label":"${tab.label}"}`}
+          >
+            {buttonContent}
           </button>
         );
       })}
     </nav>
   );
 }
+

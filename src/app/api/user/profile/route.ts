@@ -1,7 +1,7 @@
 // src/app/api/user/profile/route.ts
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 
@@ -18,7 +18,7 @@ export async function GET() {
     // Get user profile from database
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, name, email, image, role, created_at, last_login")
+      .select("id, name, email, image, role, created_at")
       .eq("id", session.user.id as string)
       .single();
 
@@ -35,7 +35,6 @@ export async function GET() {
         image: user.image,
         role: user.role || 'user',
         createdAt: user.created_at,
-        lastLogin: user.last_login
       }
     });
   } catch (error) {

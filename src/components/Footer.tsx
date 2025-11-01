@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 export default function Footer() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const currentTheme = (resolvedTheme || theme || 'system') as 'light' | 'dark' | 'system';
+
   return (
     <footer className="py-10 mt-20 border-t border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-[#0b1220]/70 supports-[backdrop-filter]:backdrop-blur">
       <div className="max-w-7xl mx-auto px-4">
@@ -35,4 +36,3 @@ export default function Footer() {
     </footer>
   );
 }
-

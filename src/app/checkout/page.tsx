@@ -48,7 +48,7 @@ export default function CheckoutPage() {
       features: [
         "All Starter features",
         "6 months trade history",
-        "3 account connections",
+        "Advanced analytics",
         "AI weekly summary",
         "Personalized strategy recommendations",
         "Risk management analysis & optimization",
@@ -64,7 +64,7 @@ export default function CheckoutPage() {
       features: [
         "All Pro features",
         "Unlimited history",
-        "5 account connections",
+        "Advanced AI features",
         "AI trade reviews & SL/TP suggestions",
         "Image processing for trade screenshots",
         "Real-time performance analytics & insights",
@@ -78,7 +78,7 @@ export default function CheckoutPage() {
       trialDays,
       features: [
         "Everything in Plus",
-        "Unlimited connections",
+        "Premium AI features",
         "AI strategy builder",
         "Prop-firm dashboard",
         "All AI features included",
@@ -116,6 +116,7 @@ export default function CheckoutPage() {
           billingCycle: billing === 'yearly' ? 'yearly' : 'monthly',
           userEmail: effectiveEmail,
           userId: unified.id || undefined,
+          trialDays,
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),

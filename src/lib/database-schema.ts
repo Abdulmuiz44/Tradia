@@ -224,8 +224,51 @@ export const MIGRATIONS = {
   `,
 
   add_backup_credentials: `
-    ALTER TABLE mt5_credentials
-    ADD COLUMN IF NOT EXISTS backup_password JSONB,
-    ADD COLUMN IF NOT EXISTS backup_enabled BOOLEAN DEFAULT false;
+  ALTER TABLE mt5_credentials
+  ADD COLUMN IF NOT EXISTS backup_password JSONB,
+  ADD COLUMN IF NOT EXISTS backup_enabled BOOLEAN DEFAULT false;
+  `,
+
+  // User Feedback Table for Growth Pulse Analytics
+  user_feedback: `
+    CREATE TABLE IF NOT EXISTS user_feedback (
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      focus VARCHAR(50), -- 'confidence', 'profits', 'automation'
+      rating INTEGER CHECK (rating >= 1 AND rating <= 10),
+      comment TEXT,
+      user_agent TEXT, -- browser/device info
+      page_url TEXT, -- where feedback was given
+      session_duration INTEGER, -- seconds spent on platform
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+      -- Ensure meaningful feedback
+      CONSTRAINT meaningful_feedback CHECK (
+        focus IS NOT NULL OR
+        rating IS NOT NULL OR
+        comment IS NOT NULL
+      )
+    );
+
+    -- Indexes for analytics
+    CREATE INDEX IF NOT EXISTS idx_user_feedback_user_id ON user_feedback(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_feedback_focus ON user_feedback(focus);
+    CREATE INDEX IF NOT EXISTS idx_user_feedback_rating ON user_feedback(rating);
+    CREATE INDEX IF NOT EXISTS idx_user_feedback_created_at ON user_feedback(created_at DESC);
+
+    -- Updated timestamp trigger
+    CREATE OR REPLACE FUNCTION update_user_feedback_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER trigger_user_feedback_updated_at
+      BEFORE UPDATE ON user_feedback
+      FOR EACH ROW
+      EXECUTE FUNCTION update_user_feedback_updated_at();
   `
 };

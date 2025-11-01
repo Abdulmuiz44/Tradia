@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "cipher": {
+      "command": "/path/to/cipher/dist/src/app/index.cjs",
+      "args": [
+        "--mode",
+        "mcp", 
+        "--agent",
+        "/path/to/cipher/examples/05-workspace-memory-team-progress/cipher.yml"
+      ],
+      "env": {
+        "MCP_SERVER_MODE": "aggregator",
+        
+        "OPENAI_API_KEY": "your_openai_api_key",
+        
+        "USE_WORKSPACE_MEMORY": "true",
+        "DISABLE_DEFAULT_MEMORY": "true",
+        "USE_ASK_CIPHER": "false",
+        
+        "WORKSPACE_VECTOR_STORE_COLLECTION": "workspace_memory",
+        "WORKSPACE_SEARCH_THRESHOLD": "0.4",
+        
+        "WORKSPACE_VECTOR_STORE_TYPE": "qdrant",
+        "WORKSPACE_VECTOR_STORE_DIMENSION": "1536",
+        "WORKSPACE_VECTOR_STORE_MAX_VECTORS": "10000",
+        
+        "WORKSPACE_VECTOR_STORE_HOST": "localhost",
+        "WORKSPACE_VECTOR_STORE_PORT": "6333",
+        "WORKSPACE_VECTOR_STORE_URL": "http://localhost:6333"
+      }
+    }
+  }
+}

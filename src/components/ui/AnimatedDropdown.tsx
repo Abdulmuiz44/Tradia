@@ -40,18 +40,18 @@ export default function AnimatedDropdown({
             <motion.div
               role="dialog"
               aria-modal="true"
-              className={`absolute ${positionClassName} ${panelClassName} bg-[#111827] text-white border border-gray-700 rounded-xl shadow-2xl overflow-hidden`}
+              className={`absolute ${positionClassName} ${panelClassName} bg-white dark:bg-[#111827] text-black dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden`}
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             >
               {title && (
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-[#0B1220]">
-                  <div className="font-semibold">{title}</div>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0B1220]">
+                  <div className="font-semibold text-black dark:text-white">{title}</div>
                   <button
                     onClick={() => setOpen(false)}
-                    className="p-1 rounded hover:bg-white/10"
+                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10"
                     aria-label="Close"
                   >
                     <svg
@@ -62,7 +62,7 @@ export default function AnimatedDropdown({
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="w-4 h-4"
+                      className="w-4 h-4 text-black dark:text-white"
                     >
                       <path d="M18 6 6 18" />
                       <path d="m6 6 12 12" />

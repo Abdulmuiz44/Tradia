@@ -1,12 +1,15 @@
 // src/lib/planAccess.ts
 // Plan-based access control system (Flutterwave-backed billing)
 
-export type PlanType = 'starter' | 'pro' | 'plus' | 'elite' | 'free';
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export type PlanType = 'pro' | 'plus' | 'elite' | 'free';
 
 export interface PlanLimits {
   mt5Accounts: number;
   aiChatsPerDay: number;
   tradeStorageDays: number;
+  maxTrades: number; // -1 for unlimited
   advancedAnalytics: boolean;
   prioritySupport: boolean;
   customIntegrations: boolean;
@@ -24,6 +27,12 @@ export interface PlanLimits {
   shareReports: boolean; // Enable share report
   alerts: boolean; // Enable set alerts
   customizeView: boolean; // Enable customize view
+  // TradingView features
+  tvAlerts: number; // Monthly TV alert optimizations (-1 unlimited)
+  tvBacktests: number; // Monthly TV backtest sims
+  tvPatterns: number; // Monthly pattern scans
+  tvScreener: boolean; // Basic screener access
+  tvBroker: boolean; // Broker execution (pro+)
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
@@ -31,6 +40,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     mt5Accounts: 0,
     aiChatsPerDay: 5,
     tradeStorageDays: 30,
+    maxTrades: 50,
     advancedAnalytics: false,
     prioritySupport: false,
     customIntegrations: false,
@@ -45,30 +55,18 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     shareReports: false,
     alerts: false,
     customizeView: false,
+    tvAlerts: 5,
+    tvBacktests: 2,
+    tvPatterns: 10,
+    tvScreener: false,
+    tvBroker: false,
   },
-  starter: {
-    mt5Accounts: 0,
-    aiChatsPerDay: 5,
-    tradeStorageDays: 30,
-    advancedAnalytics: false,
-    prioritySupport: false,
-    customIntegrations: false,
-    aiMLAnalysis: true,
-    imageProcessing: false,
-    personalizedStrategy: false,
-    realTimeAnalytics: true,
-    riskManagement: false,
-    marketTiming: false,
-    maxTradePlans: 3,
-    exportData: false,
-    shareReports: false,
-    alerts: false,
-    customizeView: false,
-  },
+
   pro: {
     mt5Accounts: 1,
     aiChatsPerDay: 50,
     tradeStorageDays: 182,
+    maxTrades: 500,
     advancedAnalytics: true,
     prioritySupport: false,
     customIntegrations: false,
@@ -83,11 +81,17 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     shareReports: true,
     alerts: true,
     customizeView: true,
+    tvAlerts: 50,
+    tvBacktests: 20,
+    tvPatterns: 50,
+    tvScreener: true,
+    tvBroker: true,
   },
   plus: {
     mt5Accounts: 3,
     aiChatsPerDay: 200,
     tradeStorageDays: 365,
+    maxTrades: 2000,
     advancedAnalytics: true,
     prioritySupport: true,
     customIntegrations: false,
@@ -102,11 +106,17 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     shareReports: true,
     alerts: true,
     customizeView: true,
+    tvAlerts: 200,
+    tvBacktests: 100,
+    tvPatterns: 200,
+    tvScreener: true,
+    tvBroker: true,
   },
   elite: {
     mt5Accounts: -1, // unlimited
     aiChatsPerDay: -1, // unlimited
     tradeStorageDays: -1, // unlimited
+    maxTrades: -1, // unlimited
     advancedAnalytics: true,
     prioritySupport: true,
     customIntegrations: true,
@@ -121,6 +131,11 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     shareReports: true,
     alerts: true,
     customizeView: true,
+    tvAlerts: -1,
+    tvBacktests: -1,
+    tvPatterns: -1,
+    tvScreener: true,
+    tvBroker: true,
   }
 };
 
@@ -135,7 +150,7 @@ export interface UserPlan {
 export async function getUserPlan(userId: string): Promise<UserPlan> {
   if (!userId) {
     return {
-      type: 'starter',
+      type: 'free',
       isActive: true,
       features: []
     };
@@ -144,7 +159,7 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
   // For client-side usage, return default plan
   // Database queries should be done via API routes
   return {
-    type: 'starter',
+    type: 'free',
     isActive: true,
     features: []
   };
@@ -174,7 +189,7 @@ export function getUpgradeMessage(plan: UserPlan | PlanType, feature: string): s
   return `🚀 **Upgrade Required**\n\nYou're currently on the **${currentPlan.toUpperCase()}** plan, which doesn't include ${feature}.\n\n**Upgrade to access this feature:**\n${upgradeOptions.map(option => `• **${option.name}**: ${option.description} - $${option.price}/month`).join('\n')}\n\n**Benefits you'll get:**\n${upgradeOptions[0].benefits.map(benefit => `• ${benefit}`).join('\n')}`;
 }
 
-function getUpgradeOptions(currentPlan: PlanType): Array<{
+export function getUpgradeOptions(currentPlan: PlanType): Array<{
   name: string;
   price: number;
   description: string;
@@ -182,13 +197,13 @@ function getUpgradeOptions(currentPlan: PlanType): Array<{
 }> {
   const options = [];
 
-  if (currentPlan === 'free' || currentPlan === 'starter') {
+  if (currentPlan === 'free') {
     options.push({
       name: 'Pro Plan',
       price: 29,
       description: 'Perfect for serious traders',
       benefits: [
-        '1 MT5 account connection',
+        'Advanced analytics & insights',
         '50 AI chats per day',
         '90 days trade storage',
         'Advanced analytics & insights',
@@ -200,7 +215,7 @@ function getUpgradeOptions(currentPlan: PlanType): Array<{
       price: 79,
       description: 'For professional traders',
       benefits: [
-        '3 MT5 account connections',
+        'Unlimited AI chats',
         '200 AI chats per day',
         '1 year trade storage',
         'Advanced analytics & insights',
@@ -214,7 +229,7 @@ function getUpgradeOptions(currentPlan: PlanType): Array<{
       price: 79,
       description: 'Unlock unlimited potential',
       benefits: [
-        '3 MT5 account connections',
+        'Unlimited AI chats',
         '200 AI chats per day',
         '1 year trade storage',
         'Priority support',
@@ -229,7 +244,6 @@ function getUpgradeOptions(currentPlan: PlanType): Array<{
 export function getPlanDisplayName(plan: PlanType): string {
   const names = {
     free: 'Free',
-    starter: 'Starter',
     pro: 'Pro',
     plus: 'Plus',
     elite: 'Elite'
@@ -240,10 +254,49 @@ export function getPlanDisplayName(plan: PlanType): string {
 export function getPlanColor(plan: PlanType): string {
   const colors = {
     free: 'text-gray-500',
-    starter: 'text-gray-500',
     pro: 'text-blue-500',
     plus: 'text-purple-500',
     elite: 'text-yellow-500'
   };
   return colors[plan];
+}
+
+export function normalizePlanType(value: unknown): PlanType {
+  if (!value) return 'free';
+  const str = String(value).toLowerCase();
+  if (str === 'premium') return 'plus';
+  if (str === 'basic' || str === 'starter') return 'free';
+  const allowed: PlanType[] = ['free', 'pro', 'plus', 'elite'];
+  return allowed.includes(str as PlanType) ? (str as PlanType) : 'free';
+}
+
+export const PLAN_RANK: Record<PlanType, number> = {
+  free: 0,
+  pro: 1,
+  plus: 2,
+  elite: 3,
+};
+
+export function isPlanAtLeast(plan: PlanType | string | null | undefined, required: PlanType): boolean {
+  const normalized = normalizePlanType(plan ?? 'starter');
+  return PLAN_RANK[normalized] >= PLAN_RANK[required];
+}
+
+export async function resolvePlanTypeForUser(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<PlanType> {
+  if (!userId) return 'free';
+  const { data, error } = await supabase
+    .from('users')
+    .select('plan')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('resolvePlanTypeForUser error', error);
+    return 'free';
+  }
+
+  return normalizePlanType(data?.plan ?? 'free');
 }

@@ -1,56 +1,48 @@
-﻿"use client"; // enable client-side rendering
+"use client"; // enable client-side rendering
 
 import React, { useEffect, useState, useMemo } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import type { Session } from "next-auth";
-import { Tabs } from "@/components/ui/tabs";
+import { TradeProvider, useTrade } from "@/context/TradeContext";
+import { TradingAccountProvider } from "@/context/TradingAccountContext";
+import { TradePlanProvider } from "@/context/TradePlanContext";
+import { UserProvider } from "@/context/UserContext";
+import { NotificationProvider } from "@/context/NotificationContext";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import TradeMigrationModal from "@/components/modals/TradeMigrationModal";
+import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import OverviewCards from "@/components/dashboard/OverviewCards";
-import MentalCoach from "@/components/dashboard/MentalCoach";
 import WeeklyCoachRecap from "@/components/dashboard/WeeklyCoachRecap";
 import RiskGuard from "@/components/dashboard/RiskGuard";
+import MentalCoach from "@/components/dashboard/MentalCoach";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import RiskMetrics from "@/components/dashboard/RiskMetrics";
 import PositionSizing from "@/components/dashboard/PositionSizing";
 import TraderEducation from "@/components/dashboard/TraderEducation";
 import TradeJournal from "@/components/dashboard/TradeJournal";
-import Spinner from "@/components/ui/spinner";
-import LayoutClient from "@/components/LayoutClient";
-import ClientOnly from "@/components/ClientOnly";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { Menu, X, RefreshCw, Filter, User, Settings, Lock, Moon, Sun } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-
-// Advanced Analytics Component
-const TradeAnalytics = dynamic(() => import("@/components/dashboard/TradeAnalytics"), { ssr: false });
-
-// Planner
 import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
-import { TradePlanProvider } from "@/context/TradePlanContext";
-
-// Pricing Component
 import PricingPlans from "@/components/payment/PricingPlans";
-
-// MT5 Components
-import MT5IntegrationWizard from "@/components/mt5/MT5IntegrationWizard";
-
-// AI Chat Interface
-import AIChatInterface from "@/components/ai/AIChatInterface";
-
-// Dashboard Sidebar
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-
-// User Analytics
 import UserAnalyticsDashboard from "@/components/analytics/UserAnalyticsDashboard";
+
+import TradiaAIChat from "@/components/ai/TradiaAIChat";
+import Spinner from "@/components/ui/spinner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  User,
+  Settings,
+  X,
+  Menu,
+  Sun,
+  Filter,
+  Lock,
+  RefreshCw,
+} from "lucide-react";
+import ClientOnly from "@/components/ClientOnly";
+import LayoutClient from "@/components/LayoutClient";
+import TradeAnalytics from "@/components/dashboard/TradeAnalytics";
+import SurveyPrompt from "@/components/marketing/SurveyPrompt";
+
 
 // Chart Components
 import ProfitLossChart from "@/components/charts/ProfitLossChart";
@@ -62,17 +54,29 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 
 // Base tabs available to all users
 const BASE_TAB_DEFS = [
-  { value: "overview", label: "Overview", icon: "BarChart3" },
-  { value: "history", label: "Trade History", icon: "History" },
-  { value: "mt5", label: "Broker Integration", icon: "Database" },
-  { value: "journal", label: "Trade Journal", icon: "BookOpen" },
-  { value: "tradia-ai", label: "Tradia AI", icon: "Bot" },
-  { value: "analytics", label: "Trade Analytics", icon: "TrendingUp" },
-  { value: "risk", label: "Risk Metrics", icon: "Shield" },
-  { value: "planner", label: "Trade Planner", icon: "Target" },
-  { value: "position-sizing", label: "Position Sizing", icon: "Calculator" },
-  { value: "education", label: "Trade Education", icon: "GraduationCap" },
-  { value: "upgrade", label: "Upgrade", icon: "Crown" },
+{ value: "overview", label: "Overview", icon: "BarChart3" },
+{ value: "history", label: "Trade History", icon: "History" },
+{ value: "journal", label: "Trade Journal", icon: "BookOpen" },
+{ value: "analytics", label: "Trade Analytics", icon: "TrendingUp" },
+
+{
+value: "chat",
+label: "Tradia AI",
+icon: "Bot",
+href: "/chat",
+},
+{
+value: "tradia-predict",
+label: "Tradia Predict",
+icon: "Brain",
+href: "/tradia-predict",
+},
+{ value: "risk", label: "Risk Management", icon: "Shield", href: "/dashboard/risk-management" },
+{ value: "reporting", label: "Reporting", icon: "FileText", href: "/dashboard/reporting" },
+{ value: "planner", label: "Trade Planner", icon: "Target" },
+{ value: "position-sizing", label: "Position Sizing", icon: "Calculator" },
+{ value: "education", label: "Trade Education", icon: "GraduationCap" },
+{ value: "upgrade", label: "Upgrade", icon: "Crown" },
 ];
 
 // Admin-only tabs
@@ -80,20 +84,7 @@ const ADMIN_TAB_DEFS = [
   { value: "user-analytics", label: "User Analytics", icon: "Users" },
 ];
 
-// type casting hack
-const OverviewCardsAny = OverviewCards as unknown as React.ComponentType<any>;
-const TradeHistoryTableAny = TradeHistoryTable as unknown as React.ComponentType<any>;
-const RiskMetricsAny = RiskMetrics as unknown as React.ComponentType<any>;
-const PositionSizingAny = PositionSizing as unknown as React.ComponentType<any>;
-const TraderEducationAny = TraderEducation as unknown as React.ComponentType<any>;
-const TradeJournalAny = TradeJournal as unknown as React.ComponentType<any>;
-const TradePlannerTableAny = TradePlannerTable as unknown as React.ComponentType<any>;
-const PricingPlansAny = PricingPlans as unknown as React.ComponentType<any>;
-const ProfitLossChartAny = ProfitLossChart as unknown as React.ComponentType<any>;
-const DrawdownChartAny = DrawdownChart as unknown as React.ComponentType<any>;
-const PerformanceTimelineAny = PerformanceTimeline as unknown as React.ComponentType<any>;
-const TradeBehavioralChartAny = TradeBehavioralChart as unknown as React.ComponentType<any>;
-const TradePatternChartAny = TradePatternChart as unknown as React.ComponentType<any>;
+
 
 // Filter ranges
 const FILTERS = [
@@ -114,7 +105,7 @@ const FILTERS = [
 // candidate keys to look for timestamps in a trade object
 const TIMESTAMP_KEYS = [
   "openTime",
-  "open_time",
+  "opentime",
   "opened_at",
   "entered_at",
   "enteredAt",
@@ -123,13 +114,13 @@ const TIMESTAMP_KEYS = [
   "created_at",
   "createdAt",
   "closeTime",
-  "close_time",
+  "closetime",
   "closedAt",
   "closed_time",
   "exit_time",
   "exitTime",
   "time_close",
-  "open_time_ms",
+  "opentime",
   "open_ts",
   "ts",
 ];
@@ -200,13 +191,26 @@ function DashboardContent() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
+  // Removed trading account enforcement; features remain accessible
+  // Removed hasAccount checking state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
 
-  const { trades, refreshTrades } = useTrade();
+  const { trades, refreshTrades, needsMigration } = useTrade();
+
+  const [showMigrationPrompt, setShowMigrationPrompt] = useState(false);
+  const [migrationDismissed, setMigrationDismissed] = useState(false);
+  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("survey_shown") !== "1") {
+      setIsSurveyOpen(true);
+      sessionStorage.setItem("survey_shown", "1");
+    }
+  }, []);
 
   // Filtering state
   const [filter, setFilter] = useState<string>("24h"); // default Last 24 hours
@@ -286,22 +290,12 @@ function DashboardContent() {
   // NEW: handle sign out and redirect to login page reliably
   const handleSignOut = async () => {
     try {
-      // Use signOut without redirect then navigate with Next router to ensure SPA navigation.
       await signOut({ redirect: false });
     } catch (err) {
       console.error("Sign out error:", err);
     } finally {
-      // Always navigate to login page after attempting sign out.
-      try {
-        router.push("/login");
-      } catch (e) {
-        // fallback: set location if router fails
-        try {
-          window.location.href = "/login";
-        } catch {
-          /* swallow */
-        }
-      }
+      // Force a full page reload to ensure clean logout
+      window.location.href = "/login";
     }
   };
 
@@ -309,6 +303,26 @@ function DashboardContent() {
     const t = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(t);
   }, []);
+
+  const handleMigrationClose = () => {
+    setShowMigrationPrompt(false);
+    setMigrationDismissed(true);
+  };
+
+  const handleMigrationSuccess = () => {
+    setMigrationDismissed(false);
+  };
+
+  useEffect(() => {
+    if (needsMigration) {
+      if (!migrationDismissed) {
+        setShowMigrationPrompt(true);
+      }
+    } else {
+      setShowMigrationPrompt(false);
+      setMigrationDismissed(false);
+    }
+  }, [needsMigration, migrationDismissed]);
 
   // --- Robust auth detection: prefer NextAuth session, fallback to cookie JWTs (session or app_token) ---
   useEffect(() => {
@@ -467,6 +481,8 @@ function DashboardContent() {
     }
   }, [authChecked, isAuthed, router]);
 
+  // Removed trading account enforcement check
+
   if (!authChecked) return <Spinner />;
   if (!isAuthed) return <Spinner />;
 
@@ -477,18 +493,28 @@ function DashboardContent() {
       return BASE_TAB_DEFS;
     }
 
+    const rawPlan = String((session?.user as any)?.plan || 'free').toLowerCase();
+    const normalizedPlan = rawPlan === 'starter' ? 'free' : rawPlan;
+
+    let tabs = BASE_TAB_DEFS;
+
+    if (normalizedPlan !== 'pro' && normalizedPlan !== 'plus' && normalizedPlan !== 'elite') {
+        tabs = tabs.filter(t => t.value !== 'tradia-predict');
+    }
+
     // Hide upgrade tab for elite users
-    const userPlan = (session?.user as any)?.plan || 'free';
-    const base = (userPlan === 'elite' || isAdmin) ? BASE_TAB_DEFS.filter(t => t.value !== 'upgrade') : BASE_TAB_DEFS;
-    const tabs = isAdmin ? [...base, ...ADMIN_TAB_DEFS] : base;
+    const base = (normalizedPlan === 'elite' || isAdmin)
+      ? tabs.filter(t => t.value !== 'upgrade')
+      : tabs;
+    const finalTabs = isAdmin ? [...base, ...ADMIN_TAB_DEFS] : base;
     console.log('Tab definitions computed:', {
       isAdmin,
       adminChecked,
-      tabCount: tabs.length,
-      tabs: tabs.map(t => ({ value: t.value, label: t.label })),
-      hasUserAnalytics: tabs.some(t => t.value === 'user-analytics')
+      tabCount: finalTabs.length,
+      tabs: finalTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, ...(t.href && { href: t.href }) })),
+      hasUserAnalytics: finalTabs.some(t => t.value === 'user-analytics')
     });
-    return tabs;
+    return finalTabs;
   };
 
   const TAB_DEFS = getTabDefinitions();
@@ -496,46 +522,52 @@ function DashboardContent() {
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
-    <main className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
-      <div className="flex h-screen">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:flex lg:flex-col lg:w-64 lg:bg-gray-100 dark:lg:bg-[#161B22] lg:border-r lg:border-gray-200 dark:lg:border-[#2a2f3a]">
-          <div className="flex flex-col h-full">
+    <main className="min-h-screen w-full bg-[var(--surface-primary)] dark:bg-[#0D1117] transition-colors duration-300 overflow-x-hidden">
+    <TradeMigrationModal
+    open={showMigrationPrompt}
+    onClose={handleMigrationClose}
+    onMigrated={handleMigrationSuccess}
+    />
+    <SurveyPrompt isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} />
+    <div className="flex min-h-screen max-w-full">
+    {/* Desktop Sidebar */}
+    <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[var(--surface-secondary)] dark:lg:bg-[#161B22] lg:border-r lg:border-[var(--surface-border)] dark:lg:border-[#2a2f3a]">
+    <div className="flex flex-col h-full sticky top-0">
             {/* Logo/Brand */}
-            <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-[#2a2f3a]">
+            <div className="flex items-center gap-3 p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-transparent">
               <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-6 w-auto" />
               <div>
-                <h1 className="text-black dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
-                <p className="text-gray-600 dark:text-gray-300 text-xs">Trading Dashboard</p>
+                <h1 className="text-slate-900 dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
+                <p className="text-slate-500 dark:text-gray-300 text-xs">Trading Dashboard</p>
               </div>
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 p-4 overflow-y-auto">
+            <div className="flex-1 p-4 overflow-y-auto bg-[var(--surface-secondary)] dark:bg-transparent">
               <DashboardSidebar
                 tabs={TAB_DEFS}
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={(tab) => setActiveTab(tab)}
               />
             </div>
 
             {/* User Profile Section */}
-            <div className="p-4 border-t border-gray-200 dark:border-[#2a2f3a]">
+            <div className="p-4 border-t border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-[#161B22]">
               <AnimatedDropdown
                 title="Account"
                 panelClassName="w-[95%] max-w-sm"
                 positionClassName="left-4 top-16"
                 trigger={(
-                  <button className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="Open account menu">
+                  <button className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface-secondary)] dark:bg-transparent hover:bg-[var(--surface-hover)] dark:hover:bg-gray-700 transition-colors" aria-label="Open account menu">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
                       <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 text-left">
-                      <p className="text-black dark:text-white text-sm font-medium truncate">
+                      <p className="text-[var(--text-primary)] dark:text-white text-sm font-medium truncate">
                         {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-gray-600 dark:text-gray-400 text-xs truncate">
+                      <p className="text-[var(--text-muted)] dark:text-gray-400 text-xs truncate">
                         {session?.user?.email || ''}
                       </p>
                     </div>
@@ -543,23 +575,37 @@ function DashboardContent() {
                 )}
               >
                 <div className="p-2">
+                  {/* User Plan Info */}
+                  <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-600 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`px-2 py-1 rounded-full text-xs font-light uppercase tracking-wide ${
+                        (session?.user as any)?.plan === 'elite' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                        (session?.user as any)?.plan === 'plus' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                        (session?.user as any)?.plan === 'pro' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                      }`}>
+                        {(session?.user as any)?.plan || 'free'} plan
+                      </div>
+                    </div>
+                  </div>
+
                   <button
                     onClick={() => router.push("/dashboard/profile")}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
                   >
-                    <User className="w-4 h-4" />
+                    <User className="w-4 h-4 text-black dark:text-white" />
                     <span>Profile</span>
                   </button>
                   <button
                     onClick={() => router.push("/dashboard/settings")}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
                   >
-                    <Settings className="w-4 h-4" />
+                    <Settings className="w-4 h-4 text-black dark:text-white" />
                     <span>Settings</span>
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-red-400 hover:text-red-300"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-light"
                   >
                     <span>Sign Out</span>
                   </button>
@@ -571,21 +617,21 @@ function DashboardContent() {
 
         {/* Mobile Sidebar Overlay */}
         <div
-          className={`fixed inset-0 z-40 lg:hidden ${
-            mobileMenuOpen ? 'block' : 'hidden'
-          }`}
-          onClick={() => setMobileMenuOpen(false)}
+        className={`fixed inset-0 z-40 lg:hidden ${
+        mobileMenuOpen ? 'block' : 'hidden'
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
         >
-          <div className="absolute inset-0 bg-black/50" />
-            <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a] transform transition-transform duration-300">
-              <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
+        <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute left-0 top-0 h-full w-64 max-w-[80vw] bg-white dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a] transform transition-transform duration-300 overflow-y-auto">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2f3a]">
                 <div className="flex items-center gap-3">
                 <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-7 w-auto" />
-                <h1 className="text-white font-extrabold text-lg">Tradia</h1>
+                <h1 className="text-black dark:text-white font-extrabold text-lg">Tradia</h1>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-black dark:hover:text-white"
               >
                 <X size={20} />
               </button>
@@ -603,38 +649,39 @@ function DashboardContent() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] text-[var(--text-primary)] dark:bg-[#0D1117] dark:text-white overflow-x-auto">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button
-                className="lg:hidden p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 transition-colors"
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open Menu"
               >
-                <Menu size={20} className="text-white" />
+                <Menu size={20} />
               </button>
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-white">{currentTabLabel}</h1>
-                <p className="text-white text-xs sm:text-sm hidden sm:block">
-                  {activeTab === 'tradia-ai' ? 'Your personal trading coach with voice support' :
-                   activeTab === 'overview' ? 'Comprehensive trading overview and key metrics' :
-                   activeTab === 'analytics' ? 'Detailed performance analytics and insights' :
-                   activeTab === 'user-analytics' ? 'Admin-only user analytics and backend metrics' :
+                <h1 className="text-lg md:text-xl font-semibold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
+                <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
+                  {activeTab === "chat" ? 'Your personal trading coach with voice support' :
+                   activeTab === "overview" ? 'Comprehensive trading overview and key metrics' :
+                   activeTab === "analytics" ? 'Detailed performance analytics and insights' :
+                   activeTab === "tradia-predict" ? 'AI-powered market predictions using OpenAI GPT-4 to forecast next market direction' :
+                   activeTab === "user-analytics" ? 'Admin-only user analytics and backend metrics' :
                    `Manage your ${currentTabLabel.toLowerCase()}`}
                 </p>
                 {/* Admin Status Indicator */}
                 <div className="flex items-center gap-2 mt-1">
-                  <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                  <span className="text-xs text-white">
+                  <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-slate-400 dark:bg-gray-500'}`}></div>
+                  <span className="text-xs text-[var(--text-secondary)] dark:text-white">
                     {isAdmin ? 'Admin Access' : 'Standard Access'}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto">
               {/* Theme toggle */}
               <button
                 onClick={() => {
@@ -645,10 +692,10 @@ function DashboardContent() {
                   } catch {}
                 }}
                 aria-label="Toggle theme"
-                className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors hidden sm:inline-flex"
+                    className="p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors hidden sm:inline-flex"
                 title="Toggle theme"
               >
-                <Sun className="w-4 h-4 text-gray-200" />
+                <Sun className="w-4 h-4" />
               </button>
               {/* Mobile Profile Avatar - NEW */}
               <div className="lg:hidden">
@@ -656,7 +703,7 @@ function DashboardContent() {
                   title="Account"
                   panelClassName="w-[95%] max-w-sm"
                   trigger={(
-                    <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-700 transition-colors" aria-label="Open account menu">
+                    <button className="flex items-center gap-2 p-2 rounded-xl hover:bg-gray-700 transition-colors" aria-label="Open account menu">
                       <Avatar className="w-8 h-8">
                         <AvatarImage
                           src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || session?.user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=fff&size=32`}
@@ -668,23 +715,37 @@ function DashboardContent() {
                   )}
                 >
                   <div className="p-2">
+                    {/* User Plan Info */}
+                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-600 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`px-2 py-1 rounded-full text-xs font-light uppercase tracking-wide ${
+                          (session?.user as any)?.plan === 'elite' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                          (session?.user as any)?.plan === 'plus' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                          (session?.user as any)?.plan === 'pro' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                        }`}>
+                          {(session?.user as any)?.plan || 'free'} plan
+                        </div>
+                      </div>
+                    </div>
+
                     <button
                       onClick={() => router.push("/dashboard/profile")}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
                     >
-                      <User className="w-4 h-4" />
+                      <User className="w-4 h-4 text-black dark:text-white" />
                       <span>Profile</span>
                     </button>
                     <button
                       onClick={() => router.push("/dashboard/settings")}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
                     >
-                      <Settings className="w-4 h-4" />
+                      <Settings className="w-4 h-4 text-black dark:text-white" />
                       <span>Settings</span>
                     </button>
                     <button
                       onClick={handleSignOut}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-red-400 hover:text-red-300"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-light"
                     >
                       <span>Sign Out</span>
                     </button>
@@ -698,8 +759,8 @@ function DashboardContent() {
                   title="Filter Trades"
                   panelClassName="w-[95%] max-w-md"
                   trigger={(
-                    <button className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" title="Filter trades" aria-label="Filter trades">
-                      <Filter size={18} className="text-gray-300" />
+                    <button className="p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors" title="Filter trades" aria-label="Filter trades">
+                      <Filter size={18} />
                     </button>
                   )}
                 >
@@ -726,7 +787,7 @@ function DashboardContent() {
                                   setActiveTab('upgrade');
                                 }
                               }}
-                              className={`cursor-pointer flex items-center justify-between px-2 py-1.5 rounded hover:bg-zinc-700 ${isAllowed ? '' : 'opacity-70'}`}
+                              className={`cursor-pointer flex items-center justify-between px-2 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-zinc-700 ${isAllowed ? '' : 'opacity-70'}`}
                             >
                               <span>{f.label}</span>
                               {!isAllowed && (
@@ -741,32 +802,32 @@ function DashboardContent() {
 
                       <div
                         onClick={() => setFilter("custom")}
-                        className="cursor-pointer px-2 py-1.5 rounded hover:bg-zinc-700"
+                        className="cursor-pointer px-2 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-zinc-700"
                       >
                         Custom range
                       </div>
 
-                      <div className="border-t border-white/10 my-2" />
+                      <div className="border-t border-slate-200 dark:border-white/10 my-2" />
 
                       {/* Custom inputs */}
                       <div className="space-y-2">
-                        <div className="text-xs text-gray-400">Custom range</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400">Custom range</div>
                         <div>
-                          <label className="text-xs text-gray-300">From</label>
+                          <label className="text-xs text-slate-500 dark:text-gray-300">From</label>
                           <input
                             type="date"
                             value={customRange.from}
                             onChange={(e) => setCustomRange((r) => ({ ...r, from: e.target.value }))}
-                            className="w-full mt-1 p-2 rounded bg-zinc-700 border border-zinc-600 text-white text-sm"
+                            className="w-full mt-1 p-2 rounded bg-white border border-slate-200 text-slate-900 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-white"
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-gray-300">To</label>
+                          <label className="text-xs text-slate-500 dark:text-gray-300">To</label>
                           <input
                             type="date"
                             value={customRange.to}
                             onChange={(e) => setCustomRange((r) => ({ ...r, to: e.target.value }))}
-                            className="w-full mt-1 p-2 rounded bg-zinc-700 border border-zinc-600 text-white text-sm"
+                            className="w-full mt-1 p-2 rounded bg-white border border-slate-200 text-slate-900 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-white"
                           />
                         </div>
 
@@ -791,7 +852,7 @@ function DashboardContent() {
                                 setCustomRange({ from: "", to: "" });
                               }
                             }}
-                            className="flex-1 px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-sm transition-colors"
+                            className="flex-1 px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm transition-colors"
                           >
                             Apply
                           </button>
@@ -800,7 +861,7 @@ function DashboardContent() {
                               setFilter("24h");
                               setCustomRange({ from: "", to: "" });
                             }}
-                            className="px-3 py-1 rounded bg-transparent border border-white/6 text-sm hover:bg-white/5 transition-colors"
+                            className="px-3 py-1 rounded-xl bg-transparent border border-[var(--surface-border)] text-[var(--text-secondary)] text-sm hover:bg-[var(--surface-hover)] dark:border-white/10 dark:text-white dark:hover:bg-white/5 transition-colors"
                           >
                             Reset
                           </button>
@@ -811,14 +872,14 @@ function DashboardContent() {
               )}
 
               {/* Refresh button - Only show for relevant tabs */}
-              {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'mt5') && (
-                <button
-                  className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
-                  onClick={handleSyncNow}
-                  title="Refresh data"
-                >
-                  <RefreshCw size={18} className="text-gray-300" />
-                </button>
+              {(activeTab === 'overview' || activeTab === 'history') && (
+              <button
+              className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
+              onClick={handleSyncNow}
+              title="Refresh data"
+              >
+              <RefreshCw size={18} className="text-gray-300" />
+              </button>
               )}
 
               {/* Admin Debug Button */}
@@ -827,7 +888,7 @@ function DashboardContent() {
                   console.log('Manual admin check:', { isAdmin, session: session?.user });
                   window.location.reload();
                 }}
-                className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+                className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors"
                 title="Debug admin status"
               >
                 Debug
@@ -838,7 +899,7 @@ function DashboardContent() {
 
               {/* Current filter indicator */}
               {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
-                <div className="hidden sm:flex items-center px-3 py-1 rounded-lg bg-gray-800 text-gray-300 text-sm">
+                <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-gray-800 text-gray-300 text-sm">
                   {filterLabel}
                 </div>
               )}
@@ -846,7 +907,8 @@ function DashboardContent() {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 min-w-0 max-w-full">
+            {/* Trading account enforcement removed */}
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <Spinner />
@@ -855,33 +917,26 @@ function DashboardContent() {
               <>
                 {activeTab === "overview" && (
                   <>
-                    <WeeklyCoachRecap />
-                    <RiskGuard />
-                    <OverviewCardsAny trades={filteredTrades} />
+                    
+                    <OverviewCards trades={filteredTrades} session={session} />
                   </>
                 )}
 
-                {activeTab === "history" && <TradeHistoryTableAny trades={filteredTrades} />}
+                {activeTab === "history" && <TradeHistoryTable trades={filteredTrades} />}
 
-                {activeTab === "mt5" && (
-                  <div className="max-w-4xl mx-auto">
-                    <MT5IntegrationWizard userId={(session?.user as any)?.id} />
-                  </div>
-                )}
+                
 
                 {activeTab === "journal" && (
-                  <TradeJournalAny />
+                  <TradeJournal />
                 )}
 
-                {activeTab === "tradia-ai" && (
-                  <div className="h-full text-sm">
-                    <AIChatInterface />
-                  </div>
-                )}
+                
 
                 {activeTab === "analytics" && (
-                  <TradeAnalytics />
+                  <TradeAnalytics trades={filteredTrades} session={session} isAdmin={isAdmin} />
                 )}
+
+                
 
                 {activeTab === "user-analytics" && (
                   <UserAnalyticsDashboard />
@@ -890,25 +945,25 @@ function DashboardContent() {
                 {activeTab === "risk" && (
                   <>
                     <RiskGuard />
-                    <RiskMetricsAny trades={filteredTrades} />
+                    <RiskMetrics trades={filteredTrades} />
                   </>
                 )}
 
                 {activeTab === "planner" && (
                   <TradePlanProvider>
                     <div className="grid gap-6 bg-transparent">
-                      <TradePlannerTableAny />
+                      <TradePlannerTable />
                     </div>
                   </TradePlanProvider>
                 )}
 
-                {activeTab === "position-sizing" && <PositionSizingAny />}
+                {activeTab === "position-sizing" && <PositionSizing />}
 
-                {activeTab === "education" && <TraderEducationAny />}
+                {activeTab === "education" && <TraderEducation />}
 
                 {activeTab === "upgrade" && (
                   <div className="max-w-4xl mx-auto">
-                    <PricingPlansAny />
+                    <PricingPlans />
                   </div>
                 )}
               </>
@@ -921,16 +976,19 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
-  const { status } = useSession();
-  if (status === "loading") return <Spinner />;
-
   return (
     <ClientOnly>
-      <TradeProvider>
-        <LayoutClient>
-          <DashboardContent />
-        </LayoutClient>
-      </TradeProvider>
+      <NotificationProvider>
+        <UserProvider>
+          <TradeProvider>
+            <TradingAccountProvider>
+              <LayoutClient>
+                <DashboardContent />
+              </LayoutClient>
+            </TradingAccountProvider>
+          </TradeProvider>
+        </UserProvider>
+      </NotificationProvider>
     </ClientOnly>
   );
 }

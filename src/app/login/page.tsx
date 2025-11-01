@@ -86,48 +86,34 @@ function LoginPage(): React.ReactElement {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const result = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
       });
 
-      // defensive: only attempt to parse JSON when possible
-      let data: any = {};
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      if (!res.ok) {
-        setError(data.error || "Login failed.");
-        return;
-      }
-
-      // Remember email if chosen
-      try {
-        if (typeof window !== "undefined" && window.localStorage) {
-          if (remember) localStorage.setItem("tradia_remember_email", form.email);
-          else localStorage.removeItem("tradia_remember_email");
+      if (result?.ok) {
+        // Remember email if chosen
+        try {
+          if (typeof window !== "undefined" && window.localStorage) {
+            if (remember) localStorage.setItem("tradia_remember_email", form.email);
+            else localStorage.removeItem("tradia_remember_email");
+          }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
-      }
 
-      // success -> navigate
-      router.push("/dashboard");
+        // success -> navigate
+        router.push("/dashboard");
+      } else {
+        setError(result?.error || "Login failed.");
+      }
     } catch (err) {
       console.error("Login error:", err);
       setError((err as Error)?.message || "Login request failed.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogle = async () => {
-    // Google sign-in placeholder — keep same behaviour as before
-    setError("Google login is not yet implemented with custom auth.");
   };
 
   return (

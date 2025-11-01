@@ -10,6 +10,8 @@ import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import ActivityTracker from "@/components/analytics/ActivityTracker";
 import TrialBanner from "@/components/TrialBanner";
+import ExitIntent from "@/components/marketing/ExitIntent";
+
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -147,12 +149,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Icons */}
-        <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" />
-        <link rel="shortcut icon" href="/Tradia-logo-ONLY.png" type="image/png" />
-        <link rel="mask-icon" href="/Tradia-logo-ONLY.png" color="#0f172a" />
-        <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" />
-        <script
+        {/* Favicon and Icons - Using Tradia Logo */}
+        <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="any" />
+              <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="16x16" />
+              <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="32x32" />
+              <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="48x48" />
+              <link rel="shortcut icon" href="/Tradia-logo-ONLY.png" type="image/png" />
+              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="180x180" />
+              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="152x152" />
+              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="120x120" />
+              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="76x76" />
+              <link rel="mask-icon" href="/Tradia-logo-ONLY.png" color="#0f172a" />        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),
@@ -180,6 +187,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ActivityTracker />
           {/* Trial banner */}
           <TrialBanner />
+          {/* Exit intent popup */}
+          <ExitIntent />
+
           {children}
           {/* keep floating button available app-wide */}
           <FloatingFeedbackButton />

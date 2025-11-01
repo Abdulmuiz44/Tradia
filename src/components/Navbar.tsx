@@ -36,6 +36,7 @@ export default function Navbar() {
     { label: "Dashboard", href: "/dashboard" },
     { label: "Pricing", href: "/pricing" }, // replaced /insights -> /pricing
     { label: "About", href: "/about" },
+    { label: "Blog", href: "/blog" },
   ];
 
   interface AuthLink {

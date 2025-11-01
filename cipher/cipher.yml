@@ -1,0 +1,14 @@
+default_model: gpt-4o-mini   # You can change to gpt-4.1 or gpt-4.1-mini if you prefer
+providers:
+  openai:
+    api_key: "YOUR_OPENAI_KEY"   # 👈 put your OpenAI API key here
+
+memory:
+  type: file
+  path: ./cipher_memory.json     # Cipher will remember conversations here
+
+sessions:
+  tradia:
+    description: "AI Trading Performance Assistant for analyzing trades"
+    memory: true
+    model: gpt-4o-mini

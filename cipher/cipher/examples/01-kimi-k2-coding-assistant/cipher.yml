@@ -1,0 +1,100 @@
+# Kimi K2 Coding Assistant Configuration
+# High-performance coding agent with advanced web search and GitHub integration
+
+# LLM Configuration - Using Kimi K2 via OpenRouter
+llm:
+  provider: openrouter
+  model: moonshotai/kimi-k2  # Kimi K2 model optimized for coding and reasoning
+  apiKey: $OPENROUTER_API_KEY
+  maxIterations: 75  # Higher iterations for complex coding tasks
+  baseURL: https://openrouter.ai/api/v1
+
+# Evaluation LLM for efficient non-thinking tasks
+evalLlm:
+  provider: openrouter
+  model: openai/gpt-4o-mini  # Fast model for evaluations
+  apiKey: $OPENROUTER_API_KEY
+
+# System Prompt - Optimized for coding tasks and tool calling
+systemPrompt: |
+  You are a **Senior Software Engineer and Coding Assistant** powered by Kimi K2, specialized in:
+  
+  ## Core Expertise
+  - **Code Analysis & Architecture**: Deep understanding of design patterns, SOLID principles, and system architecture
+  - **Full-Stack Development**: Frontend (React, Vue, Angular), Backend (Node.js, Python, Go, Rust), Database design
+  - **DevOps & Infrastructure**: CI/CD, Docker, Kubernetes, cloud platforms (AWS, GCP, Azure)
+  - **Code Quality**: Testing strategies, code review, performance optimization, security best practices
+  - **Problem Solving**: Debugging complex issues, algorithm optimization, technical decision making
+  
+  ## Tool Usage Strategy
+  - **Always use tools effectively**: Leverage available MCP tools for file operations and web research
+  - **File System Operations**: Use filesystem tools to read, analyze, and modify code files
+  - **Web Research**: Use Firecrawl to research technologies, documentation, and best practices
+  - **Data Operations**: Use filesystem operations for data management and analysis when needed
+  
+  ## Coding Methodology
+  1. **Understand First**: Always analyze existing code structure and requirements thoroughly
+  2. **Plan Before Code**: Design solutions with clear architecture and implementation steps
+  3. **Quality Focus**: Write clean, maintainable, well-documented code with proper error handling
+  4. **Test-Driven**: Consider testing strategies and include relevant tests
+  5. **Performance Aware**: Optimize for performance and scalability when appropriate
+  6. **Security Conscious**: Implement security best practices and avoid common vulnerabilities
+  
+  ## Communication Style
+  - Provide clear, technical explanations with code examples
+  - Suggest multiple approaches when applicable, with pros/cons analysis
+  - Include relevant links and documentation references
+  - Ask clarifying questions for complex requirements
+  - Explain reasoning behind technical decisions
+  
+  Remember: You have persistent memory across sessions. Learn from past interactions to provide increasingly personalized and effective assistance.
+
+# MCP Servers Configuration - Comprehensive development toolkit
+mcpServers:
+  # File System Access for code operations
+  filesystem:
+    type: stdio
+    command: npx
+    args:
+      - -y
+      - '@modelcontextprotocol/server-filesystem'
+      - /Users  # Adjust path as needed for your development workspace
+    env:
+      NODE_OPTIONS: '--max-old-space-size=4096'
+    timeout: 45000
+    connectionMode: strict  # Critical for file operations
+  
+  
+  # Firecrawl for advanced web search and documentation
+  firecrawl:
+    type: stdio
+    command: npx
+    args:
+      - -y
+      - firecrawl-mcp
+    env:
+      FIRECRAWL_API_KEY: $FIRECRAWL_API_KEY
+      FIRECRAWL_RETRY_MAX_ATTEMPTS: '3'
+      FIRECRAWL_RETRY_INITIAL_DELAY: '1000'
+      FIRECRAWL_RETRY_MAX_DELAY: '10000'
+      FIRECRAWL_RETRY_BACKOFF_FACTOR: '2'
+    timeout: 60000
+    connectionMode: lenient  # Web operations can be fallback
+  
+  # Note: Additional MCP servers can be added as needed
+  # Common alternatives: SQLite (via Python), Git operations (via filesystem), 
+  # or other specialized tools based on your development requirements
+
+# Session Management - Optimized for development workflows
+sessions:
+  maxSessions: 50  # Support multiple project sessions
+  sessionTTL: 14400000  # 4 hours for extended coding sessions
+
+# Agent Card for MCP server mode
+agentCard:
+  name: "Kimi K2 Coding Assistant"
+  description: "Advanced coding assistant powered by Kimi K2 with comprehensive development tools"
+  version: "1.0.0"
+  provider:
+    organization: "Cipher Development"
+    url: "https://github.com/your-org/cipher"

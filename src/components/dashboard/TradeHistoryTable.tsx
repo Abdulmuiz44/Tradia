@@ -3,14 +3,16 @@
 
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
-import { Trash2, Pencil, Filter, DownloadCloud, FilePlus, Trash } from "lucide-react";
+import { Trash2, Pencil, Filter, DownloadCloud, FilePlus, Trash, UploadCloud } from "lucide-react";
 import { useNotification } from "@/context/NotificationContext";
-import { TradeContext } from "@/context/TradeContext";
+import { useTrade } from "@/context/TradeContext";
 import type { Trade } from "@/types/trade";
 import AddTradeModal from "@/components/modals/AddTradeModal";
 import CsvUpload from "@/components/dashboard/CsvUpload";
 import JournalModal from "@/components/modals/JournalModal";
 import { useUser } from "@/context/UserContext";
+import { useTradingAccount } from "@/context/TradingAccountContext";
+import AccountBadge from "@/components/AccountBadge";
 import Modal from "@/components/ui/Modal";
 
 /* ---------------- helpers ---------------- */
@@ -84,7 +86,6 @@ const computeResultRR = (t: Partial<Trade>): number => {
 
 /** Enforce PnL sign from outcome and fill derived fields */
 const normalizeTrade = (raw: Partial<Trade>): Trade => {
-  const id = String(raw.id ?? `${raw.symbol ?? "TRD"}-${Date.now()}`);
   const symbol = String(raw.symbol ?? "");
   const direction = String(
     raw.direction ??
@@ -131,28 +132,28 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
     : undefined;
 
   return {
-    id,
-    symbol,
-    direction,
-    orderType,
-    openTime,
-    closeTime,
-    session,
-    lotSize,
-    entryPrice,
-    stopLossPrice,
-    takeProfitPrice,
-    pnl,
-    resultRR,
-    outcome,
-    duration,
-    reasonForTrade: String(raw.reasonForTrade ?? ""),
-    strategy,
-    emotion: String(raw.emotion ?? "neutral"),
-    journalNotes: String(raw.journalNotes ?? raw.notes ?? ""),
-    notes: String(raw.notes ?? raw.journalNotes ?? ""),
-    beforeScreenshotUrl,
-    afterScreenshotUrl,
+  id: String(raw.id ?? ""),
+  symbol,
+  direction,
+  orderType,
+  openTime,
+  closeTime,
+  session,
+  lotSize,
+  entryPrice,
+  stopLossPrice,
+  takeProfitPrice,
+  pnl,
+  resultRR,
+  outcome,
+  duration,
+  reasonForTrade: String(raw.reasonForTrade ?? ""),
+  strategy,
+  emotion: String(raw.emotion ?? "neutral"),
+  journalNotes: String(raw.journalNotes ?? raw.notes ?? ""),
+  notes: String(raw.notes ?? raw.journalNotes ?? ""),
+  beforeScreenshotUrl,
+  afterScreenshotUrl,
     updated_at: new Date().toISOString(),
   } as Trade;
 };
@@ -168,13 +169,14 @@ export default function TradeHistoryTable() {
     trades,
     updateTrade,
     addTrade,
-    deleteTrade,
-    setTradesFromCsv,
     importTrades,
+    importLoading,
+    deleteTrade,
     clearTrades,
-  } = useContext(TradeContext);
+  } = useTrade();
   const { plan } = useUser();
   const { notify } = useNotification();
+  const { selected, accounts, select } = useTradingAccount();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -185,6 +187,7 @@ export default function TradeHistoryTable() {
   // CSV modal state (now opens a modal directly)
   const [csvOpen, setCsvOpen] = useState<boolean>(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState<boolean>(false);
+  const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
 
   const hasLoaded = useRef<boolean>(false);
 
@@ -206,28 +209,37 @@ export default function TradeHistoryTable() {
 
   const [query, setQuery] = useState<string>("");
   const [sortField, setSortField] = useState<
-    "openTime" | "closeTime" | "pnl" | "symbol"
+  "openTime" | "closeTime" | "pnl" | "symbol" | "direction" | "lotSize" | "entryPrice" | "stopLossPrice" | "takeProfitPrice" | "duration" | "outcome" | "resultRR" | "strategy"
   >("closeTime");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState<number>(1);
   const pageSize = 20;
+
+  // TODO: Implement full cloud migration logic
+  const migrateLocalTrades = () => {
+    notify({
+      variant: "info",
+      title: "Cloud Sync In Development",
+      description: "This feature to migrate local trades to the cloud is coming soon!",
+    });
+  };
 
   // Migrate any old 'userTrades' cache into the unified TradeContext store ('trade-history').
   useEffect(() => {
     if (!hasLoaded.current) {
       try {
         if (typeof window !== "undefined") {
-          const stored = localStorage.getItem("userTrades");
-          if (stored) {
-            const parsed = JSON.parse(stored) as unknown;
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              const normalized = (parsed as Partial<Trade>[]).map(normalizeTrade);
-              // Upsert into context-managed state
-              importTrades(normalized as unknown[]);
-              // Clear legacy key to prevent divergence
-              localStorage.removeItem("userTrades");
-            }
-          }
+        const stored = localStorage.getItem("userTrades");
+        if (stored) {
+        const parsed = JSON.parse(stored) as unknown;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+        const normalized = (parsed as Partial<Trade>[]).map(normalizeTrade);
+        // Upsert into context-managed state
+        importTrades(normalized).catch(console.error);
+        // Clear legacy key to prevent divergence
+        localStorage.removeItem("userTrades");
+        }
+        }
         }
       } catch {
         // ignore
@@ -294,22 +306,51 @@ export default function TradeHistoryTable() {
     }
 
     filtered.sort((a, b) => {
-      if (sortField === "pnl") {
-        const pa = toNumber(getField(a, "pnl") ?? getField(a, "profit") ?? getField(a, "netpl"));
-        const pb = toNumber(getField(b, "pnl") ?? getField(b, "profit") ?? getField(b, "netpl"));
-        return sortDir === "asc" ? pa - pb : pb - pa;
+    let aVal: any, bVal: any;
+
+    switch (sortField) {
+    case "pnl":
+        aVal = toNumber(getField(a, "pnl") ?? getField(a, "profit") ?? getField(a, "netpl"));
+        bVal = toNumber(getField(b, "pnl") ?? getField(b, "profit") ?? getField(b, "netpl"));
+      break;
+    case "symbol":
+    case "direction":
+    case "outcome":
+      case "strategy":
+        aVal = toStringSafe(getField(a, sortField));
+        bVal = toStringSafe(getField(b, sortField));
+        return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      case "lotSize":
+      case "entryPrice":
+        case "stopLossPrice":
+        case "takeProfitPrice":
+        case "resultRR":
+          aVal = toNumber(getField(a, sortField));
+          bVal = toNumber(getField(b, sortField));
+          break;
+        case "duration":
+          // Parse duration string like "4h 32m" to minutes
+          const parseDuration = (d: string) => {
+            const hours = d.match(/(\d+)h/) ? parseInt(d.match(/(\d+)h/)![1]) : 0;
+            const minutes = d.match(/(\d+)m/) ? parseInt(d.match(/(\d+)m/)![1]) : 0;
+            return hours * 60 + minutes;
+          };
+          aVal = parseDuration(toStringSafe(getField(a, sortField)));
+          bVal = parseDuration(toStringSafe(getField(b, sortField)));
+          break;
+        default:
+          // Handle date fields
+          const ta = toDateOrNull(getField(a, sortField));
+          const tb = toDateOrNull(getField(b, sortField));
+          aVal = ta ? ta.getTime() : 0;
+          bVal = tb ? tb.getTime() : 0;
       }
-      if (sortField === "symbol") {
-        const sa = toStringSafe(getField(a, "symbol"));
-        const sb = toStringSafe(getField(b, "symbol"));
-        const cmp = sa.localeCompare(sb);
-        return sortDir === "asc" ? cmp : -cmp;
+
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDir === "asc" ? aVal - bVal : bVal - aVal;
       }
-      const ta = toDateOrNull(getField(a, sortField));
-      const tb = toDateOrNull(getField(b, sortField));
-      const tA = ta ? ta.getTime() : 0;
-      const tB = tb ? tb.getTime() : 0;
-      return sortDir === "asc" ? tA - tB : tB - tA;
+
+      return 0;
     });
 
     return filtered;
@@ -352,19 +393,20 @@ export default function TradeHistoryTable() {
     setPage(1);
   };
 
-  const handleCsvImport = (imported: Partial<Trade>[]) => {
+  const handleCsvImport = async (imported: Partial<Trade>[]) => {
     if (!Array.isArray(imported) || imported.length === 0) return;
     const normalized = imported.map(normalizeTrade);
-    importTrades(normalized as unknown[]);
+    await importTrades(normalized);
     setCsvOpen(false);
-    try { notify({ variant: 'success', title: 'Trades imported', description: `${normalized.length} trades added.` }); } catch {}
+    // Notification is handled in importTrades
   };
 
   const exportCsv = () => {
     const hdr = [
       "symbol","direction","orderType","openTime","closeTime","session",
       "lotSize","entryPrice","stopLossPrice","takeProfitPrice","pnl",
-      "outcome","resultRR","notes"
+      "outcome","resultRR","duration","strategy","emotion","reasonForTrade",
+      "journalNotes","notes","commission","swap","tags"
     ];
     const rows = processed.map((t) => [
       toStringSafe(getField(t, "symbol")),
@@ -380,7 +422,15 @@ export default function TradeHistoryTable() {
       toStringSafe(getField(t, "pnl")),
       toStringSafe(getField(t, "outcome")),
       toStringSafe(getField(t, "resultRR")),
-      toStringSafe(getField(t, "notes") ?? getField(t, "journalNotes")),
+      toStringSafe(getField(t, "duration")),
+      toStringSafe(getField(t, "strategy")),
+      toStringSafe(getField(t, "emotion")),
+      toStringSafe(getField(t, "reasonForTrade")),
+      toStringSafe(getField(t, "journalNotes")),
+      toStringSafe(getField(t, "notes")),
+      toStringSafe(getField(t, "commission")),
+      toStringSafe(getField(t, "swap")),
+      Array.isArray(getField(t, "tags")) ? (getField(t, "tags") as string[]).join("; ") : toStringSafe(getField(t, "tags")),
     ]);
     const csv = [hdr, ...rows]
       .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
@@ -389,10 +439,13 @@ export default function TradeHistoryTable() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "trade_history_export.csv";
+    const timestamp = new Date().toISOString().split('T')[0];
+    a.download = `trades_export_${timestamp}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     setExportOpen(false);
+
+    try { notify({ variant: 'success', title: 'Export completed', description: `${processed.length} trades exported to CSV.` }); } catch {}
   };
 
   const headerCell = (
@@ -471,6 +524,7 @@ export default function TradeHistoryTable() {
       </div>
     );
   };
+
 
   return (
     <div className="space-y-6">
@@ -554,14 +608,14 @@ export default function TradeHistoryTable() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
-            onClick={() => setExportOpen(true)}
-            title="Export"
-          >
-            <DownloadCloud size={18} className="text-gray-300" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+              onClick={() => setExportOpen(true)}
+              title="Export"
+            >
+              <DownloadCloud size={18} className="text-gray-300" />
+            </button>
 
           {/* Clicking this icon now opens the CSV import modal directly (no dropdown) */}
           <button
@@ -571,6 +625,38 @@ export default function TradeHistoryTable() {
             aria-haspopup="dialog"
           >
             <FilePlus size={18} className="text-gray-300" />
+          </button>
+
+          {/* Current trading account selector */}
+          <div className="hidden md:flex items-center gap-3 mr-2">
+            <span className="text-xs text-zinc-400">Account:</span>
+            <select
+              className="px-2 py-1 bg-zinc-800 text-white text-sm rounded border border-zinc-700"
+              value={selected?.id || ''}
+              onChange={(e) => select(e.target.value || null)}
+              title="Select trading account"
+            >
+              {accounts.length === 0 && <option value="">None</option>}
+              {accounts.map(a => {
+                const isManual = a.mode === 'manual';
+                const bal = isManual ? (typeof (a as any).initial_balance === 'number' ? (a as any).initial_balance : Number((a as any).initial_balance || 0)) : null;
+                const label = isManual && Number.isFinite(bal)
+                  ? `${a.name} (Manual — $${Number(bal).toFixed(2)})`
+                  : `${a.name}${isManual ? ' (Manual)' : ''}`;
+                return (
+                  <option key={a.id} value={a.id}>{label}</option>
+                );
+              })}
+            </select>
+            <AccountBadge compact />
+          </div>
+
+          <button
+            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+            onClick={migrateLocalTrades}
+            title="Migrate to Cloud"
+          >
+            <UploadCloud size={18} className="text-gray-300" />
           </button>
 
           <button
@@ -651,39 +737,42 @@ export default function TradeHistoryTable() {
       {/* Table for desktop/tablet and Cards for mobile */}
       <div className="space-y-3">
         {/* Mobile list (cards) */}
-        <div className="sm:hidden space-y-2">
+        <div className="sm:hidden space-y-2 max-h-96 overflow-y-auto">
           {pageItems.length === 0 ? (
             <div className="p-4 text-center text-zinc-400">No trades found.</div>
           ) : (
-            pageItems.map((t, idx) => <MobileTradeCard key={String(getField(t, "id")) || idx} t={t} idx={idx} />)
+            pageItems.map((t, idx) => (
+              <MobileTradeCard key={String(getField(t, "id")) || idx} t={t} idx={idx} />
+            ))
           )}
         </div>
 
         {/* Table for sm+ */}
-        <div className="hidden sm:block overflow-x-auto bg-gray-800 rounded-xl shadow-lg">
-          <table className="min-w-full text-sm text-left">
+        <div className="hidden sm:block overflow-x-auto bg-gray-800 rounded-xl shadow-lg max-h-96 w-full">
+          {
+            <table className="min-w-full text-sm text-left table-fixed">
             <thead className="bg-gray-700 text-gray-200 sticky top-0">
               <tr>
-                {headerCell("Symbol", true, "symbol")}
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Direction</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Order Type</th>
-                {headerCell("Open Time", true, "openTime")}
-                {headerCell("Close Time", true, "closeTime")}
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Session</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Lot Size</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Entry Price</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Stop Loss</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Take Profit</th>
-                {headerCell("PNL ($)", true, "pnl")}
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Duration</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Outcome</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">RR</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Strategy</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Before</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">After</th>
-                <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
+              {headerCell("Symbol", true, "symbol")}
+              {headerCell("Direction", true, "direction")}
+              <th className="px-3 py-2 font-medium border-b border-gray-600">Order Type</th>
+              {headerCell("Open Time", true, "openTime")}
+              {headerCell("Close Time", true, "closeTime")}
+              <th className="px-3 py-2 font-medium border-b border-gray-600">Session</th>
+              {headerCell("Lot Size", true, "lotSize")}
+              {headerCell("Entry Price", true, "entryPrice")}
+              {headerCell("Stop Loss", true, "stopLossPrice")}
+              {headerCell("Take Profit", true, "takeProfitPrice")}
+              {headerCell("PNL ($)", true, "pnl")}
+              {headerCell("Duration", true, "duration")}
+              {headerCell("Outcome", true, "outcome")}
+              {headerCell("RR", true, "resultRR")}
+              {headerCell("Strategy", true, "strategy")}
+              <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
+              <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
+              <th className="px-3 py-2 font-medium border-b border-gray-600">Before</th>
+              <th className="px-3 py-2 font-medium border-b border-gray-600">After</th>
+              <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -762,17 +851,39 @@ export default function TradeHistoryTable() {
                         )}
                       </td>
                       <td className="px-3 py-2 flex items-center gap-2">
-                        <button
-                          onClick={() => setEditingTrade(t)}
-                          className="p-1 hover:text-blue-400"
-                          aria-label="Edit trade"
+                      <button
+                      onClick={() => setEditingTrade(t)}
+                      className="p-1 hover:text-blue-400"
+                      aria-label="Edit trade"
+                      >
+                      <Pencil size={16} />
+                      </button>
+                      <button
+                      onClick={() => {
+                        // Create a copy of the trade with cleared prices and P&L
+                        const duplicatedTrade = {
+                            ...t,
+                          id: `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            entryPrice: 0,
+                              exitPrice: undefined,
+                              pnl: 0,
+                              outcome: 'Breakeven' as const,
+                              openTime: new Date().toISOString(),
+                              closeTime: undefined,
+                              resultRR: 0,
+                            };
+                            addTrade(duplicatedTrade);
+                            try { notify({ variant: 'success', title: 'Trade duplicated', description: 'A copy has been created with cleared prices.' }); } catch {}
+                          }}
+                          className="p-1 hover:text-green-400"
+                          aria-label="Duplicate trade"
                         >
-                          <Pencil size={16} />
+                          <FilePlus size={16} />
                         </button>
                         <button
-                          onClick={() => { deleteTrade(String(getField(t, "id"))); try { notify({ variant: 'warning', title: 'Trade deleted' }); } catch {} }}
-                          className="p-1 hover:text-red-400"
-                          aria-label="Delete trade"
+                        onClick={() => setTradeToDelete(t)}
+                        className="p-1 hover:text-red-400"
+                        aria-label="Delete trade"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -783,6 +894,7 @@ export default function TradeHistoryTable() {
               )}
             </tbody>
           </table>
+          }
         </div>
       </div>
 
@@ -833,8 +945,7 @@ export default function TradeHistoryTable() {
         onClose={() => setIsAddOpen(false)}
         onSave={(t) => {
           const normalized = normalizeTrade(t);
-          const id = normalized.id || `${normalized.symbol}-${Date.now()}`;
-          addTrade({ ...normalized, id });
+          addTrade(normalized);
           setIsAddOpen(false);
           try { notify({ variant: 'success', title: 'Trade added' }); } catch {}
         }}
@@ -842,20 +953,28 @@ export default function TradeHistoryTable() {
 
       {/* CSV Upload modal (responsive): render a bottom-sheet on small screens, centered on larger screens */}
       {csvOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setCsvOpen(false)}
-            aria-hidden
-          />
-          <div className="relative w-full sm:max-w-3xl bg-gray-900 rounded-t-lg sm:rounded-lg p-4 max-h-[90dvh] overflow-auto">
-            {/* CsvUpload is expected to manage its own internal UI. We pass the handlers.
-                Note: we avoid inline // comments inside JSX to prevent parser issues. */}
-            <CsvUpload
-              isOpen={csvOpen}
-              onClose={() => setCsvOpen(false)}
-              onImport={handleCsvImport}
-            />
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+      <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setCsvOpen(false)}
+      aria-hidden
+      />
+      <div className="relative w-full sm:max-w-3xl bg-gray-900 rounded-t-lg sm:rounded-lg p-4 max-h-[90dvh] overflow-auto">
+      {/* CsvUpload is expected to manage its own internal UI. We pass the handlers.
+      Note: we avoid inline // comments inside JSX to prevent parser issues. */}
+      <CsvUpload
+      isOpen={csvOpen}
+      onClose={() => setCsvOpen(false)}
+      onImport={handleCsvImport}
+      />
+        {importLoading && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg sm:rounded-lg">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                  <p className="text-white">Importing trades...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -931,6 +1050,46 @@ export default function TradeHistoryTable() {
           </button>
         </div>
       </Modal>
+
+      {/* Delete trade confirmation modal */}
+      <Modal
+        isOpen={!!tradeToDelete}
+        onClose={() => setTradeToDelete(null)}
+        title="Delete Trade"
+        description={`Are you sure you want to delete this trade? This action cannot be undone.`}
+        size="sm"
+      >
+        {tradeToDelete && (
+          <div className="mt-4 p-3 bg-gray-800 rounded">
+            <div className="text-sm">
+              <div><strong>Symbol:</strong> {tradeToDelete.symbol}</div>
+              <div><strong>Direction:</strong> {tradeToDelete.direction}</div>
+              <div><strong>P&L:</strong> ${tradeToDelete.pnl?.toFixed(2) || '0.00'}</div>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-3 mt-4">
+          <button
+            onClick={() => setTradeToDelete(null)}
+            className="px-4 py-2 rounded bg-white/10 hover:bg-white/15"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (tradeToDelete) {
+                deleteTrade(String(getField(tradeToDelete, "id")));
+                try { notify({ variant: 'warning', title: 'Trade deleted' }); } catch {}
+                setTradeToDelete(null);
+              }
+            }}
+            className="px-4 py-2 rounded bg-red-600 hover:bg-red-500"
+          >
+            Delete Trade
+          </button>
+        </div>
+      </Modal>
+
     </div>
   );
 }

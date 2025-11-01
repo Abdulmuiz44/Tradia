@@ -40,8 +40,7 @@ export default function TrialBanner() {
 
   return (
     <div className="w-full bg-blue-600 text-white text-sm md:text-base p-3 text-center">
-      Free trial active{daysLeft !== null ? ` — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : ''}. <a href="/checkout" className="underline font-semibold">Upgrade anytime</a>.
+      30-day free trial active{daysLeft !== null ? ` — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : ''}. <a href="/checkout" className="underline font-semibold">Upgrade anytime</a>.
     </div>
   );
 }
-

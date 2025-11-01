@@ -1,12 +1,14 @@
 // src/app/pricing/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { AiOutlineCheck, AiOutlineArrowRight } from "react-icons/ai";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
+
 
 /**
  * Pricing page
@@ -20,39 +22,56 @@ import Footer from "@/components/Footer";
  */
 
   const PLANS = [
-    {
-      id: "starter",
-      name: "Starter",
-      monthly: 0,
-      highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import", "AI Mental Coach (basic)", "Mood tracking"],
-      cta: "Get started (Free)",
-      tag: "Free forever",
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      monthly: 9,
-      highlights: ["All Starter features", "6 months trade history", "3 account connections", "AI weekly summary", "AI Mental Coach + Coach points"],
-      cta: "Start 3-day trial",
-      tag: "Popular",
-    },
-    {
-      id: "plus",
+  {
+    id: "free",
+    name: "Starter",
+  monthly: 0,
+  highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
+  cta: "Get started (Free)",
+  tag: "Free forever",
+  },
+  {
+  id: "pro",
+  name: "Pro",
+  monthly: 9,
+  highlights: [
+    "All Starter features",
+    "6 months trade history",
+      "AI weekly summary",
+      "Personalized strategy recommendations",
+    "Risk management & market timing insights"
+  ],
+  cta: "Start 30-day trial",
+  tag: "Popular",
+  },
+  {
+    id: "plus",
       name: "Plus",
-      monthly: 19,
-      highlights: ["All Pro features", "Unlimited history", "5 account connections", "AI trade reviews & suggestions", "Guided mental resets + rewards"],
-      cta: "Start 3-day trial",
+    monthly: 19,
+    highlights: [
+      "All Pro features",
+      "Unlimited history",
+      "AI trade reviews & SL/TP suggestions",
+      "Image processing for trade screenshots",
+        "Real-time performance analytics & insights"
+      ],
+      cta: "Start 30-day trial",
       tag: "For active traders",
     },
-  {
-    id: "elite",
-    name: "Elite",
-    monthly: 39,
-    highlights: ["Everything in Plus", "Unlimited connections", "AI strategy builder", "Prop-firm dashboard"],
-    cta: "Contact sales",
-    tag: "Advanced",
-  },
-];
+    {
+      id: "elite",
+      name: "Elite",
+      monthly: 39,
+      highlights: [
+        "Everything in Plus",
+        "AI strategy builder",
+        "Prop-firm dashboard",
+        "All AI features included"
+      ],
+      cta: "Contact sales",
+      tag: "Advanced",
+    },
+  ];
 
 const FEATURES = [
   { title: "Smart Performance Tracking", desc: "Real-time metrics, charts and behavioral insights to level-up your trading." },
@@ -72,6 +91,7 @@ export default function PricingPage(): React.ReactElement {
   const [selectedPlan, setSelectedPlan] = useState<string>("pro");
   const [testimonialIdx, setTestimonialIdx] = useState<number>(0);
   const [coachPoints, setCoachPoints] = useState<number | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
@@ -106,7 +126,7 @@ export default function PricingPage(): React.ReactElement {
         "availability": "https://schema.org/InStock",
         "url": "https://tradiaai.app/checkout?plan=pro&billing=monthly",
         "category": "SoftwareApplication",
-        "description": "6 months trade history, 3 account connections, AI weekly summary",
+        "description": "6 months trade history, AI weekly summary, personalized strategy recommendations",
       },
       {
         "@type": "Offer",
@@ -116,7 +136,7 @@ export default function PricingPage(): React.ReactElement {
         "availability": "https://schema.org/InStock",
         "url": "https://tradiaai.app/checkout?plan=plus&billing=monthly",
         "category": "SoftwareApplication",
-        "description": "Unlimited history, 5 account connections, AI trade reviews & SL/TP suggestions",
+        "description": "Unlimited history, AI trade reviews, image processing for trade screenshots",
       },
       {
         "@type": "Offer",
@@ -126,7 +146,7 @@ export default function PricingPage(): React.ReactElement {
         "availability": "https://schema.org/InStock",
         "url": "https://tradiaai.app/checkout?plan=elite&billing=monthly",
         "category": "SoftwareApplication",
-        "description": "Unlimited connections, AI strategy builder, Prop-firm dashboard",
+        "description": "AI strategy builder, Prop-firm dashboard, all AI features included",
       }
     ]
   } as const;
@@ -190,7 +210,7 @@ export default function PricingPage(): React.ReactElement {
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
-                  Start free and upgrade when you need advanced AI trade analysis, longer history and multi-account features. No surprise fees — cancel anytime.
+                  Start free and upgrade when you need advanced AI trade analysis and longer trade history. No surprise fees — cancel anytime.
                 </motion.p>
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
@@ -199,7 +219,7 @@ export default function PricingPage(): React.ReactElement {
                   </Link>
 
                   <a className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20" href="#plans">
-                    See plans
+                  See plans
                   </a>
                 </div>
 
@@ -243,8 +263,8 @@ export default function PricingPage(): React.ReactElement {
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {PLANS.map((p) => {
-                const price = priceFor(p.id);
-                const selected = selectedPlan === p.id;
+              const price = priceFor(p.id);
+              const selected = selectedPlan === p.id;
                 return (
                   <motion.div
                     key={p.id}
@@ -264,7 +284,7 @@ export default function PricingPage(): React.ReactElement {
                     </div>
 
                     <ul className="mb-6 text-gray-400 space-y-2 text-left">
-                      {p.highlights.map((h, i) => (
+                    {p.highlights.map((h, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <AiOutlineCheck className="mt-1 text-indigo-400" />
                           <span>{h}</span>
@@ -274,13 +294,21 @@ export default function PricingPage(): React.ReactElement {
 
                     <div className="flex flex-col gap-3">
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           setSelectedPlan(p.id);
-                          // direct free plan to signup; paid plans start trial on signup
                           if (p.monthly === 0) {
                             window.location.href = "/signup";
-                          } else {
-                            window.location.href = "/signup";
+                            return;
+                          }
+                          try {
+                            const res = await fetch('/api/user/trial/activate', { method: 'POST' });
+                            if (res.ok) {
+                              window.location.href = "/dashboard/mt5/connect?prompt=upload-sample";
+                            } else {
+                              window.location.href = `/checkout?plan=${p.id}&billing=${billing}`;
+                            }
+                          } catch {
+                            window.location.href = `/checkout?plan=${p.id}&billing=${billing}`;
                           }
                         }}
                         className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-indigo-500 text-white" : "bg-indigo-600 text-white"}`}
@@ -369,9 +397,9 @@ export default function PricingPage(): React.ReactElement {
 
               <div className="space-y-3">
                 {[
-                  { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                  { q: "Which integrations are supported?", a: "CSV imports are supported today; direct broker connections will be added over time." },
-                  { q: "How does the trial work?", a: "Start Pro/Plus with a 3-day trial. Cancel anytime before the trial ends to avoid charges." },
+              { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
+                  { q: "Which integrations are supported?", a: "CSV imports are supported today for comprehensive trade analysis." },
+                  { q: "How does the trial work?", a: "Every new account gets a 30‑day free trial of the platform. After 30 days, upgrade to any paid plan to continue." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-white/10">
                     <summary className="font-medium text-gray-100">{fq.q}</summary>
@@ -393,6 +421,8 @@ export default function PricingPage(): React.ReactElement {
             </div>
           </div>
         </section>
+
+        
 
         <Footer />
       </main>

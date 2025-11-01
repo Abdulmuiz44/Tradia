@@ -1,196 +1,92 @@
-// src/lib/analytics.ts
-import posthog from 'posthog-js';
+import { Analytics } from '@vercel/analytics/react';
 
-export interface UserAnalytics {
-  userId: string;
-  email?: string;
-  plan?: string;
-  signupDate?: string;
-  lastActive?: string;
-}
+// Analytics event types
+export type AnalyticsEvent =
+  | 'user_signup'
+  | 'user_login'
+  | 'ai_chat_sent'
+  | 'ai_chat_received'
+  | 'file_upload'
+  | 'plan_upgrade'
+  | 'plan_downgrade'
+  | 'error_occurred'
+  | 'page_view'
+  | 'feature_used';
 
-export interface AnalyticsEvent {
-  name: string;
-  properties?: Record<string, any>;
-}
-
-class AnalyticsService {
-  private static instance: AnalyticsService;
-
-  static getInstance(): AnalyticsService {
-    if (!AnalyticsService.instance) {
-      AnalyticsService.instance = new AnalyticsService();
-    }
-    return AnalyticsService.instance;
-  }
-
-  /**
-   * Identify user for tracking
-   */
-  identifyUser(user: UserAnalytics): void {
-    if (typeof window === 'undefined' || !posthog.__loaded) return;
-
-    try {
-      posthog.identify(user.userId, {
-        email: user.email,
-        plan: user.plan,
-        signup_date: user.signupDate,
-        last_active: user.lastActive,
-        $set: {
-          user_id: user.userId,
-          email: user.email,
-          plan: user.plan
-        }
-      });
-    } catch (error) {
-      console.warn('Analytics identify failed:', error);
-    }
-  }
-
-  /**
-   * Track custom events
-   */
-  trackEvent(event: AnalyticsEvent): void {
-    if (typeof window === 'undefined' || !posthog.__loaded) return;
-
-    try {
-      posthog.capture(event.name, event.properties);
-    } catch (error) {
-      console.warn('Analytics track failed:', error);
-    }
-  }
-
-  /**
-   * Track page views
-   */
-  trackPageView(page: string, properties?: Record<string, any>): void {
-    this.trackEvent({
-      name: 'page_view',
+// Custom analytics tracking
+export const trackEvent = (event: AnalyticsEvent, properties?: Record<string, any>) => {
+  if (typeof window !== 'undefined' && (window as any).va) {
+    (window as any).va('event', {
+      name: event,
       properties: {
-        page,
-        ...properties
-      }
+        timestamp: new Date().toISOString(),
+        ...properties,
+      },
     });
+  } else {
+    console.log('Analytics event:', event, properties);
   }
+};
 
-  /**
-   * Track user signup
-   */
-  trackSignup(userId: string, method: string = 'email'): void {
-    this.trackEvent({
-      name: 'user_signup',
-      properties: {
-        user_id: userId,
-        method,
-        timestamp: new Date().toISOString()
-      }
+// User journey tracking
+export const trackUserJourney = {
+  signup: (method: string, plan?: string) => {
+    trackEvent('user_signup', { method, plan });
+  },
+
+  login: (method: string) => {
+    trackEvent('user_login', { method });
+  },
+
+  chatInteraction: (messageCount: number, plan: string) => {
+    trackEvent('ai_chat_sent', { messageCount, plan });
+  },
+
+  fileUpload: (fileType: string, fileSize: number, plan: string) => {
+    trackEvent('file_upload', { fileType, fileSize, plan });
+  },
+
+  planChange: (fromPlan: string, toPlan: string, reason?: string) => {
+    trackEvent('plan_upgrade', { fromPlan, toPlan, reason });
+  },
+
+  error: (errorType: string, errorMessage: string, context?: Record<string, any>) => {
+    trackEvent('error_occurred', {
+      errorType,
+      errorMessage,
+      ...context,
     });
-  }
+  },
 
-  /**
-   * Track user login
-   */
-  trackLogin(userId: string, method: string = 'email'): void {
-    this.trackEvent({
-      name: 'user_login',
-      properties: {
-        user_id: userId,
-        method,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }
+  featureUsage: (featureName: string, usage: Record<string, any>) => {
+    trackEvent('feature_used', { featureName, ...usage });
+  },
+};
 
-  /**
-   * Track user logout
-   */
-  trackLogout(userId: string): void {
-    this.trackEvent({
-      name: 'user_logout',
-      properties: {
-        user_id: userId,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }
+// Page view tracking
+export const trackPageView = (page: string, properties?: Record<string, any>) => {
+  trackEvent('page_view', { page, ...properties });
+};
 
-  /**
-   * Track feature usage
-   */
-  trackFeatureUsage(feature: string, userId: string, properties?: Record<string, any>): void {
-    this.trackEvent({
-      name: 'feature_used',
-      properties: {
-        feature,
-        user_id: userId,
-        ...properties
-      }
-    });
-  }
+// Performance tracking
+export const trackPerformance = (metric: string, value: number, context?: Record<string, any>) => {
+  trackEvent('performance_metric', { metric, value, ...context });
+};
 
-  /**
-   * Track MT5 connection
-   */
-  trackMT5Connection(userId: string, success: boolean, server?: string): void {
-    this.trackEvent({
-      name: 'mt5_connection',
-      properties: {
-        user_id: userId,
-        success,
-        server,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }
+// Revenue tracking
+export const trackRevenue = (amount: number, currency: string = 'USD', plan?: string) => {
+  trackEvent('revenue', { amount, currency, plan });
+};
 
-  /**
-   * Track trade import
-   */
-  trackTradeImport(userId: string, count: number, source: string = 'MT5'): void {
-    this.trackEvent({
-      name: 'trade_import',
-      properties: {
-        user_id: userId,
-        trade_count: count,
-        source,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }
+// Custom hook for analytics
+export const useAnalytics = () => {
+  return {
+    trackEvent,
+    trackUserJourney,
+    trackPageView,
+    trackPerformance,
+    trackRevenue,
+  };
+};
 
-  /**
-   * Get user stats from PostHog (requires server-side implementation)
-   */
-  async getUserStats(): Promise<{
-    totalUsers: number;
-    activeUsers: number;
-    newUsersToday: number;
-    newUsersThisWeek: number;
-    newUsersThisMonth: number;
-  }> {
-    // This would typically be implemented with PostHog's API
-    // For now, return mock data
-    return {
-      totalUsers: 0,
-      activeUsers: 0,
-      newUsersToday: 0,
-      newUsersThisWeek: 0,
-      newUsersThisMonth: 0
-    };
-  }
-
-  /**
-   * Reset user identity (logout)
-   */
-  reset(): void {
-    if (typeof window === 'undefined' || !posthog.__loaded) return;
-
-    try {
-      posthog.reset();
-    } catch (error) {
-      console.warn('Analytics reset failed:', error);
-    }
-  }
-}
-
-export const analytics = AnalyticsService.getInstance();
+// Analytics component wrapper - moved to separate component file

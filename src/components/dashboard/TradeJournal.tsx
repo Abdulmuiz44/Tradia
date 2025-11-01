@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,9 @@ import {
   Activity,
   Clock,
   Users,
+  Zap,
+  Brain,
+  Shield,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -47,6 +50,7 @@ import {
   eachDayOfInterval,
   addMonths,
   subMonths,
+  subDays,
   isSameDay,
   differenceInCalendarDays,
   parseISO,
@@ -67,7 +71,11 @@ import {
 } from "chart.js";
 import { generateInsights, Insight } from "@/utils/generateInsights";
 import type { Trade as TradeFromTypes } from "@/types/trade";
+import AccountBadge from "@/components/AccountBadge";
+import { cn } from "@/lib/utils";
+import { useTradingAccount } from "@/context/TradingAccountContext";
 
+import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 /* ChartJS registration */
 ChartJS.register(
   LineElement,
@@ -85,7 +93,7 @@ ChartJS.register(
 /* --------------------------------------------------------------------------------
    Types & helpers
 -------------------------------------------------------------------------------- */
-type Tier = "free" | "plus" | "premium" | "pro";
+
 type SubTab =
   | "journal"
   | "insights"
@@ -131,7 +139,7 @@ const parsePL = (v?: string | number | null): number => {
 };
 
 const fmtDateTime = (d?: string | Date) => {
-  if (!d) return "—";
+  if (!d) return "";
   const dt = typeof d === "string" ? new Date(d) : (d as Date);
   return isNaN(dt.getTime()) ? "Invalid Date" : format(dt, "dd MMM yyyy, HH:mm");
 };
@@ -151,6 +159,29 @@ const toCSV = (rows: Array<Record<string, any>>): string => {
 };
 
 const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
+
+const sanitizeForShare = (value: string): string => value.replace(/\b\d{6,}\b/g, '****');
+
+const toDateOrNull = (value: unknown): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  const parsed = new Date(value as any);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const resolvePlanType = (plan: unknown): PlanType => {
+  const normalized = String(plan || '').toLowerCase();
+  const aliases: Record<string, PlanType> = {
+    free: 'free',
+    starter: 'free',
+    basic: 'free',
+    pro: 'pro',
+    plus: 'plus',
+    premium: 'plus',
+    elite: 'elite',
+  };
+  return normalized in aliases ? aliases[normalized] : 'free';
+};
 
 /* --------------------------------------------------------------------------
    Subcomponents: HeuristicForecast & PropTracker
@@ -176,9 +207,9 @@ function HeuristicForecast({ trades, summary }: { trades: Trade[]; summary: any 
     <div className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30">
       <div className="text-sm text-muted-foreground">Probability next trade will be a WIN</div>
       <div className="text-3xl font-semibold my-3">{p}%</div>
-      <div className="text-xs text-zinc-400">Recent WR {(recentWinRate * 100).toFixed(1)}% • streak {streak} • expectancy {summary.expectancy.toFixed(2)}</div>
+      <div className="text-xs text-zinc-400">Recent WR {(recentWinRate * 100).toFixed(1)}% - streak {streak} - expectancy {summary.expectancy.toFixed(2)}</div>
       <div className="mt-4 flex gap-2">
-        <Button variant="secondary" onClick={() => navigator.clipboard.writeText(`${p}% — Recent WR ${(recentWinRate * 100).toFixed(1)}%`)}>
+        <Button variant="secondary" onClick={() => navigator.clipboard.writeText(sanitizeForShare(`${p}% - Recent WR ${(recentWinRate * 100).toFixed(1)}%`))}>
           Copy
         </Button>
         <Button variant="ghost" onClick={() => alert("Heuristic forecast: uses recent WR, streak, and expectancy. Replace with a trained model for production.")}>
@@ -241,7 +272,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
   }, [trades, propInitial, propTargetPercent, propMaxDrawdownPercent, propMinWinRate]);
 
   return (
-    <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+    <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Flag className="h-5 w-5" />
@@ -289,7 +320,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
             <div className="text-sm text-zinc-300">Progress</div>
             <div className="text-2xl text-white my-2">{propStatus.pctGain.toFixed(2)}%</div>
             <div className="text-xs text-zinc-400">
-              Net P/L: ${propStatus.pnl.toFixed(2)} • Current equity: ${propStatus.current.toFixed(2)}
+              Net P/L: ${propStatus.pnl.toFixed(2)} - Current equity: ${propStatus.current.toFixed(2)}
             </div>
             <div className="mt-3 text-xs text-zinc-300 mb-2">
               Max Drawdown: {propStatus.maxDD.toFixed(2)}% (limit {propMaxDrawdownPercent}%)
@@ -302,16 +333,16 @@ function PropTracker({ trades }: { trades: Trade[] }) {
             </div>
             <div className="mt-4 space-y-2">
               <div className="text-xs text-zinc-300">
-                Win Rate: {propStatus.winRate.toFixed(1)}% • Required: {propMinWinRate}%
+                Win Rate: {propStatus.winRate.toFixed(1)}% - Required: {propMinWinRate}%
               </div>
               <div className="flex gap-2 mt-2">
                 <Button
                   variant="secondary"
                   onClick={() => {
                     const status = [];
-                    if (propStatus.passedTarget) status.push("Target ✓");
-                    if (propStatus.passedDD) status.push("Drawdown ✓");
-                    if (propStatus.passedWinRate) status.push("WinRate ✓");
+                    if (propStatus.passedTarget) status.push("Target OK");
+                    if (propStatus.passedDD) status.push("Drawdown OK");
+                    if (propStatus.passedWinRate) status.push("WinRate OK");
                     alert(`Prop check:\n${status.length ? status.join("\n") : "Not passing yet."}`);
                   }}
                 >
@@ -330,13 +361,13 @@ function PropTracker({ trades }: { trades: Trade[] }) {
 
         <div>
           <h4 className="text-sm font-semibold text-white mb-2">Milestones</h4>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {propStatus.milestones.map(m => (
               <div
                 key={m.percent}
                 className={`p-3 rounded-md ${m.achieved ? "bg-green-800" : "bg-zinc-900/30"} border border-zinc-800 text-sm`}
               >
-                {m.percent}% • {m.achieved ? "Achieved" : "Pending"}
+                {m.percent}% - {m.achieved ? "Achieved" : "Pending"}
               </div>
             ))}
           </div>
@@ -351,18 +382,32 @@ function PropTracker({ trades }: { trades: Trade[] }) {
 ------------------------------------------------------------------------- */
 export default function TradeJournal(): React.ReactElement {
   const { data: session } = useSession();
-  // Plan and access control (aligned with TradeAnalytics)
-  const planStr = String((session?.user as any)?.plan || 'free').toLowerCase();
-  const roleStr = String((session?.user as any)?.role || '').toLowerCase();
-  const emailStr = String((session?.user as any)?.email || '').toLowerCase();
-  const isAdmin = roleStr === 'admin' || emailStr === 'abdulmuizproject@gmail.com';
-  const effectivePlan = (isAdmin ? 'elite' : planStr) as 'free' | 'pro' | 'plus' | 'elite';
-  const planRank: Record<'free' | 'pro' | 'plus' | 'elite', number> = { free: 0, pro: 1, plus: 2, elite: 3 };
-  const hasPlan = (min: 'free' | 'pro' | 'plus' | 'elite' = 'free') => planRank[effectivePlan] >= planRank[min];
-  const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
-  const tradesTyped = trades as Trade[];
 
-  // UI
+  const roleStr = String((session?.user as any)?.role || "").toLowerCase();
+  const emailStr = String((session?.user as any)?.email || "").toLowerCase();
+  const isAdmin = roleStr === "admin" || emailStr === "abdulmuizproject@gmail.com";
+
+  const rawPlan = (session?.user as any)?.plan;
+  const planType = resolvePlanType(rawPlan);
+  const effectivePlan: PlanType = isAdmin ? "elite" : planType;
+  const planLimits = PLAN_LIMITS[effectivePlan];
+  const planRank: Record<PlanType, number> = { free: 0, starter: 0, pro: 1, plus: 2, elite: 3 };
+  const hasPlan = (min: PlanType = "free") => planRank[effectivePlan] >= planRank[min];
+
+  const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
+
+  const canUseAdvancedAnalytics = Boolean(planLimits.advancedAnalytics);
+  const canUsePatterns = Boolean(planLimits.realTimeAnalytics);
+  const canUseForecast = Boolean(planLimits.aiMLAnalysis && planLimits.realTimeAnalytics);
+  const canUseOptimizer = Boolean(planLimits.riskManagement);
+  const canUseRiskTab = Boolean(planLimits.riskManagement);
+  const canUsePropDesk = Boolean(planLimits.customIntegrations);
+  const canUseMistakeAnalyzer = Boolean(planLimits.advancedAnalytics);
+  const canUsePlaybook = planLimits.maxTradePlans !== 0;
+  const canExportData = Boolean(planLimits.exportData);
+  const canShareReports = Boolean(planLimits.shareReports);
+
+  // UI state
   const [filter, setFilter] = useState<"all" | "win" | "loss" | "breakeven">("all");
   const [search, setSearch] = useState("");
   const [subTab, setSubTab] = useState<SubTab>("journal");
@@ -379,18 +424,809 @@ export default function TradeJournal(): React.ReactElement {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [accountBalance, setAccountBalance] = useState<number | "">("");
   const [riskPercent, setRiskPercent] = useState<number>(1);
+
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2,
+      }),
+    []
+  );
+  const projectedRisk = useMemo(() => {
+    const balance = typeof accountBalance === "number" ? accountBalance : Number(accountBalance) || 0;
+    return balance * (riskPercent / 100);
+  }, [accountBalance, riskPercent]);
+
   const storageKey = "trading_psych_note_" + (session?.user?.email ?? session?.user?.name ?? "anon");
   const [psychNote, setPsychNote] = useState<string>("");
+
   // Strategy playbooks (persisted locally, plan-limited)
   const playbookKey = "trade_playbooks_" + (session?.user?.email ?? session?.user?.name ?? "anon");
   const [playbooks, setPlaybooks] = useState<Array<{ id: string; name: string; entry: string; exit: string; notes?: string }>>([]);
   useEffect(() => {
-    try { const raw = typeof window !== 'undefined' ? localStorage.getItem(playbookKey) : null; if (raw) setPlaybooks(JSON.parse(raw)); } catch {}
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(playbookKey) : null;
+      if (raw) setPlaybooks(JSON.parse(raw));
+    } catch {
+      // ignore corrupted cache
+    }
   }, [playbookKey]);
   useEffect(() => {
-    try { if (typeof window !== 'undefined') localStorage.setItem(playbookKey, JSON.stringify(playbooks)); } catch {}
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(playbookKey, JSON.stringify(playbooks));
+      }
+    } catch {
+      // ignore write failures (private mode, etc.)
+    }
   }, [playbooks, playbookKey]);
-  const playbookLimit = effectivePlan === 'free' ? 1 : effectivePlan === 'pro' ? 3 : 10;
+
+  const playbookLimitRaw = planLimits.maxTradePlans;
+  const playbookLimit = playbookLimitRaw === -1 ? Number.POSITIVE_INFINITY : playbookLimitRaw;
+
+  const moods = ["Calm", "Confident", "Focused", "Neutral", "Curious", "Tense", "Tilted"];
+  const prompts = [
+    "What was the exact trigger for entering the trade?",
+    "How aligned was this setup with your playbook?",
+    "What emotion was strongest before taking the trade?",
+    "If you could replay this trade, what would you adjust?",
+    "Did the position size respect your risk parameters?",
+    "What confirmed the exit, and did you follow it precisely?",
+  ];
+  const randomPrompt = () => prompts[Math.floor(Math.random() * prompts.length)];
+
+  const TAB_CONFIG: { value: SubTab; label: string; icon: React.ReactNode; accent: string; locked?: boolean }[] = [
+    { value: "journal", label: "Journal", icon: <FileText className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(56,189,248,0.85), rgba(129,140,248,0.85))" },
+    { value: "insights", label: "Insights", icon: <Zap className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(251,191,36,0.85), rgba(249,115,22,0.85))", locked: !canUseAdvancedAnalytics },
+    { value: "patterns", label: "Patterns", icon: <BarChart2 className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(34,197,94,0.85), rgba(74,222,128,0.85))", locked: !canUsePatterns },
+    { value: "psychology", label: "Psychology", icon: <Brain className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(236,72,153,0.85), rgba(168,85,247,0.85))" },
+    { value: "calendar", label: "Calendar", icon: <CalendarIcon className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(34,211,238,0.85), rgba(14,165,233,0.85))" },
+    { value: "forecast", label: "Forecast", icon: <Target className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(59,130,246,0.85), rgba(129,140,248,0.85))", locked: !canUseForecast },
+    { value: "optimizer", label: "Optimizer", icon: <Sliders className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(249,115,22,0.85), rgba(253,224,71,0.85))", locked: !canUseOptimizer },
+    { value: "prop", label: "Prop Desk", icon: <Users className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(13,148,136,0.85), rgba(45,212,191,0.85))", locked: !canUsePropDesk },
+    { value: "review", label: "Review", icon: <Clipboard className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(167,139,250,0.85), rgba(233,213,255,0.85))" },
+    { value: "mistakes", label: "Mistakes", icon: <AlertTriangle className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(244,63,94,0.85), rgba(251,113,133,0.85))", locked: !canUseMistakeAnalyzer },
+    { value: "risk", label: "Risk", icon: <Shield className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(239,68,68,0.85), rgba(248,113,113,0.85))", locked: !canUseRiskTab },
+    { value: "playbook", label: "Playbook", icon: <Star className="h-4 w-4" />, accent: "linear-gradient(135deg, rgba(132,204,22,0.85), rgba(190,242,100,0.85))", locked: !canUsePlaybook },
+  ];
+
+  const activeTabConfig = TAB_CONFIG.find((tab) => tab.value === subTab) ?? TAB_CONFIG[0];
+
+  const storageLimitDays = planLimits.tradeStorageDays;
+  const storageFiltered = useMemo(() => {
+    const rawTrades = (trades as Trade[]) ?? [];
+    const cutoff = storageLimitDays && storageLimitDays > 0 ? subDays(new Date(), storageLimitDays) : null;
+    const filtered: Trade[] = [];
+    const seen = new Set<string>();
+    let trimmedOld = 0;
+    let duplicates = 0;
+
+    rawTrades.forEach((trade) => {
+      if (cutoff) {
+        const rawTimestamp = trade.closeTime ?? trade.openTime ?? (trade as any).closed_at ?? (trade as any).created_at;
+        const parsed = toDateOrNull(rawTimestamp);
+        if (parsed && parsed < cutoff) {
+          trimmedOld += 1;
+          return;
+        }
+      }
+      const id = getTradeId(trade);
+      if (seen.has(id)) {
+        duplicates += 1;
+        return;
+      }
+      seen.add(id);
+      filtered.push(trade);
+    });
+
+    return { trades: filtered, trimmedOld, duplicates, cutoff };
+  }, [trades, storageLimitDays]);
+
+  const tradesTyped = storageFiltered.trades;
+  const trimmedCount = storageFiltered.trimmedOld;
+  const duplicateCount = storageFiltered.duplicates;
+  const storageCutoff = storageFiltered.cutoff;
+  const storageLimitLabel = storageLimitDays === -1 ? 'unlimited' : `${storageLimitDays} day${storageLimitDays === 1 ? '' : 's'}`;
+type NormalizedTrade = Trade & {
+    openAt: Date | null;
+    closeAt: Date | null;
+    durationMinutes: number | null;
+    pnlValue: number;
+    outcomeKey: string;
+    symbolKey: string;
+    riskReward?: number | null;
+  };
+
+  const normalizedTrades: NormalizedTrade[] = useMemo(() => {
+    return tradesTyped.map((trade) => {
+      const openAtRaw = trade.openTime || (trade as any).opened_at || (trade as any).created_at;
+      const closeAtRaw = trade.closeTime || (trade as any).closed_at;
+      const openAt = toDateOrNull(openAtRaw);
+      const closeAt = toDateOrNull(closeAtRaw);
+      const durationMinutes = openAt && closeAt ? Math.max(0, (closeAt.getTime() - openAt.getTime()) / 60000) : null;
+      const pnlValue = parsePL(trade.pnl);
+      const outcomeKey = (trade.outcome ?? '').toLowerCase();
+      const symbolKey = (trade.symbol ?? (trade as any).instrument ?? 'Unknown').toUpperCase();
+      const riskReward = trade.rr ? Number(trade.rr) : undefined;
+      return { ...trade, openAt, closeAt, durationMinutes, pnlValue, outcomeKey, symbolKey, riskReward };
+    });
+  }, [tradesTyped]);
+
+  const JournalRow = ({ trade }: { trade: NormalizedTrade }) => {
+    const id = getTradeId(trade);
+    const isSelected = Boolean(selected[id]);
+    const isPinned = Boolean(pinnedMap[id]);
+    const toggleSelect = () => {
+      setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+    const togglePin = () => {
+      setPinnedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+      updateTrade({ ...(trade as Trade), pinned: !isPinned } as Trade);
+    };
+    const handleDelete = () => {
+      deleteTrade(id);
+    };
+
+    return (
+      <div className="py-3 grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-sm">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleSelect}
+              className={`h-5 w-5 rounded-full border ${isSelected ? "border-emerald-400 bg-emerald-500/20" : "border-zinc-600"}`}
+              aria-pressed={isSelected}
+            />
+            <div>
+              <div className="text-xs text-zinc-400">{fmtDateTime(trade.openAt ?? trade.openTime)}</div>
+              <div className="text-xs text-zinc-500">
+                {trade.durationMinutes ? `${trade.durationMinutes.toFixed(0)} min` : ""}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col">
+          <span className="font-semibold text-zinc-200">{trade.symbol}</span>
+          <span className="text-xs text-zinc-400">{trade.strategy || ""}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className={`font-semibold ${trade.pnlValue >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {currencyFormatter.format(trade.pnlValue)}
+          </span>
+          <span className="text-xs text-zinc-400">{trade.outcome}</span>
+        </div>
+        <div className="text-xs text-zinc-300 space-y-1">
+          <div>{Array.isArray(trade.tags) ? trade.tags.join(", ") : trade.tags || ""}</div>
+          {trade.riskReward ? <div className="text-amber-300">RR: {trade.riskReward}</div> : null}
+        </div>
+        <div className="text-xs text-zinc-400 line-clamp-3 break-words">
+          {trade.note || trade.journalNotes || "—"}
+        </div>
+        <div className="flex flex-wrap justify-end gap-2 text-xs">
+          <Button variant="ghost" size="sm" onClick={togglePin}>
+            {isPinned ? "Unpin" : "Pin"}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => updateTrade({ ...(trade as Trade), rr: trade.riskReward ?? 1 } as Trade)}
+          >
+            Apply RR
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete}>
+            Delete
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const applySltpToSelected = useCallback(
+    (rr: number) => {
+      const ratio = Number(rr);
+      if (!Number.isFinite(ratio) || ratio <= 0) return;
+      const targets = Object.entries(selected)
+        .filter(([, isSelected]) => isSelected)
+        .map(([id]) => id);
+      if (!targets.length) return;
+      targets.forEach((id) => {
+        const match = normalizedTrades.find((trade) => getTradeId(trade) === id);
+        if (!match) return;
+        updateTrade({ ...(match as Trade), rr: ratio });
+      });
+    },
+    [normalizedTrades, selected, updateTrade]
+  );
+
+  const addMoodStamp = useCallback(
+    (mood: string) => {
+      if (!mood) return;
+      const stamp = `[${format(new Date(), "PP p")}] Mood: ${mood}`;
+      setPsychNote((prev) => (prev ? `${prev}\n${stamp}` : stamp));
+    },
+    []
+  );
+
+  useEffect(() => {
+    setPinnedMap((prev) => {
+      const next: Record<string, boolean> = {};
+      normalizedTrades.forEach((trade) => {
+        const id = getTradeId(trade);
+        next[id] = prev[id] ?? Boolean((trade as any).pinned);
+      });
+      return next;
+    });
+  }, [normalizedTrades]);
+
+  useEffect(() => {
+    if (!tradesTyped.length) {
+      setSelected({});
+      return;
+    }
+    setSelected((prev) => {
+      const keys = Object.keys(prev);
+      if (!keys.length) return prev;
+      const valid = new Set(tradesTyped.map((trade) => getTradeId(trade)));
+      const next: Record<string, boolean> = {};
+      let changed = false;
+      keys.forEach((id) => {
+        if (prev[id] && valid.has(id)) {
+          next[id] = true;
+        } else if (prev[id]) {
+          changed = true;
+        }
+      });
+      if (!changed && keys.length === Object.keys(next).length) {
+        return prev;
+      }
+      return next;
+    });
+  }, [tradesTyped]);
+
+  const filteredTrades = useMemo(() => {
+    const searchLower = search.trim().toLowerCase();
+    return normalizedTrades
+      .filter((trade) => {
+        if (filter !== 'all' && trade.outcomeKey !== filter) return false;
+        if (pinnedOnly && !pinnedMap[getTradeId(trade)]) return false;
+        if (tagFilter && !(Array.isArray(trade.tags) && trade.tags.includes(tagFilter))) return false;
+        if (selectedDay && trade.openAt) {
+          if (!isSameDay(trade.openAt, selectedDay)) return false;
+        }
+        if (searchLower) {
+          const haystack = [
+            trade.symbolKey,
+            trade.outcomeKey,
+            trade.strategy ?? '',
+            trade.note ?? '',
+            ...(Array.isArray(trade.tags) ? trade.tags.join(' ') : ''),
+          ]
+            .join(' ')
+            .toLowerCase();
+          if (!haystack.includes(searchLower)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const aTime = a.openAt ? a.openAt.getTime() : 0;
+        const bTime = b.openAt ? b.openAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }, [normalizedTrades, filter, pinnedOnly, pinnedMap, tagFilter, selectedDay, search]);
+
+  const sorted = filteredTrades;
+  const totalPinned = useMemo(() => Object.values(pinnedMap).filter(Boolean).length, [pinnedMap]);
+  const selectedCount = useMemo(() => Object.values(selected).filter(Boolean).length, [selected]);
+
+  const handleExportCsv = useCallback(() => {
+    if (!canExportData) return;
+    const target = selectedCount ? normalizedTrades.filter((trade) => selected[getTradeId(trade)]) : normalizedTrades;
+    if (!target.length || typeof window === 'undefined') return;
+    const rows = target.map((trade) => ({
+      date: trade.openAt ? format(trade.openAt, 'yyyy-MM-dd HH:mm') : '',
+      symbol: trade.symbol ?? '',
+      outcome: trade.outcome ?? '',
+      pnl: trade.pnlValue?.toFixed(2) ?? '0.00',
+      note: sanitizeForShare((trade.note ?? '').slice(0, 240)),
+      tags: Array.isArray(trade.tags) ? trade.tags.join(' ') : ''
+    }));
+    const csv = toCSV(rows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tradia-journal-${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }, [canExportData, normalizedTrades, selected, selectedCount]);
+
+  const Toolbar = (
+    <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { label: 'All', value: 'all' },
+            { label: 'Wins', value: 'win' },
+            { label: 'Losses', value: 'loss' },
+            { label: 'B/E', value: 'breakeven' }
+          ].map((item) => (
+            <Button
+              key={item.value}
+              size="sm"
+              variant={filter === item.value ? 'secondary' : 'ghost'}
+              onClick={() => setFilter(item.value as typeof filter)}
+            >
+              {item.label}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant={pinnedOnly ? 'secondary' : 'ghost'}
+            onClick={() => setPinnedOnly((val) => !val)}
+          >
+            {pinnedOnly ? 'Pinned only' : 'All trades'}
+          </Button>
+          {tagFilter && (
+            <Button size="sm" variant="outline" onClick={() => setTagFilter(null)}>
+              Clear tag: {tagFilter}
+            </Button>
+          )}
+          {selectedCount > 0 && (
+            <Badge variant="outline" className="border-emerald-500/60 text-emerald-300">{selectedCount} selected</Badge>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search journal..."
+              className="h-9 w-48 rounded-md border border-white/10 bg-black/30 pl-7 pr-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
+              type="search"
+            />
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => refreshTrades()}>
+            <RefreshCw className="mr-1 h-4 w-4" /> Refresh
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleExportCsv}
+            disabled={!canExportData || (!selectedCount && !normalizedTrades.length)}
+          >
+            <Download className="mr-1 h-4 w-4" /> Export CSV
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const analytics = useMemo(() => {
+    if (!normalizedTrades.length) {
+      const emptyPatterns = { stratMap: {}, topSymbols: [], byDOW: {}, sessions: {}, hours: Array.from({ length: 24 }, (_, hour) => ({ hour, trades: 0, pl: 0 })), calMap: {} as Record<string, { trades: number; net: number }> };
+      return {
+        summary: {
+          total: 0,
+          win: 0,
+          loss: 0,
+          breakeven: 0,
+          netPL: 0,
+          avgPL: 0,
+          winRate: 0,
+          expectancy: 0,
+          avgWin: 0,
+          avgLoss: 0,
+          consistency: 0,
+          avgLengthMin: 0,
+          sharpe: 0,
+          bestTrade: null,
+          worstTrade: null,
+          drawdown: 0,
+          volatility: 0,
+          var95: 0,
+          pnlSeries: [],
+        },
+        patterns: emptyPatterns,
+        charts: {
+          pnp: { labels: [], datasets: [] },
+          rollingWinData: { labels: [], datasets: [] },
+          pnlHistogram: { labels: [], datasets: [] },
+        },
+        computedInsights: [],
+        streaks: { maxWinStreak: 0, maxLossStreak: 0, currentStreak: 0, currentDirection: 'flat' },
+        revengeDetector: { flagged: false, reason: '' },
+      };
+    }
+
+    let wins = 0;
+    let losses = 0;
+    let breakeven = 0;
+    let netPL = 0;
+    let winPnL = 0;
+    let lossPnL = 0;
+    const pnlSeries: number[] = [];
+    const durations: number[] = [];
+    const equitySeries: number[] = [];
+    const equityLabels: string[] = [];
+    let equity = 0;
+    let peak = 0;
+    let maxDrawdown = 0;
+    const dailyMap = new Map<string, { trades: number; net: number }>();
+
+    let bestTrade: NormalizedTrade | null = null;
+    let worstTrade: NormalizedTrade | null = null;
+
+    const stratMap: Record<string, { trades: number; wins: number; losses: number; breakeven: number; netPL: number; rrTotal: number }> = {};
+    const symbolMap: Record<string, { trades: number; wins: number; netPL: number }> = {};
+    const dowMap: Record<string, { trades: number; pl: number }> = {};
+    const sessionMap: Record<string, { count: number; pl: number }> = {};
+    const hourStats = Array.from({ length: 24 }, () => ({ trades: 0, pl: 0 }));
+    const calMap: Record<string, { trades: number; net: number }> = {};
+
+    const sessionForHour = (hour: number) => {
+      if (hour >= 0 && hour < 7) return 'Asia';
+      if (hour >= 7 && hour < 12) return 'London';
+      if (hour >= 12 && hour < 17) return 'New York';
+      return 'Sydney';
+    };
+
+    const ordered = [...normalizedTrades].sort((a, b) => {
+      const aTime = a.openAt ? a.openAt.getTime() : 0;
+      const bTime = b.openAt ? b.openAt.getTime() : 0;
+      return aTime - bTime;
+    });
+
+    ordered.forEach((trade) => {
+      const { pnlValue, outcomeKey, durationMinutes, symbolKey, strategy, riskReward } = trade;
+      netPL += pnlValue;
+      pnlSeries.push(pnlValue);
+
+      equity += pnlValue;
+      equitySeries.push(equity);
+      peak = Math.max(peak, equity);
+      if (peak) {
+        const dd = ((peak - equity) / peak) * 100;
+        if (dd > maxDrawdown) maxDrawdown = dd;
+      }
+
+      const labelDate = trade.closeAt ?? trade.openAt;
+      equityLabels.push(labelDate ? format(labelDate, 'dd MMM') : 'Trade ' + (equityLabels.length + 1));
+
+      if (durationMinutes != null) durations.push(durationMinutes);
+
+      if (outcomeKey === 'win') {
+        wins += 1;
+        winPnL += pnlValue;
+      } else if (outcomeKey === 'loss') {
+        losses += 1;
+        lossPnL += pnlValue;
+      } else {
+        breakeven += 1;
+      }
+
+      if (!bestTrade || pnlValue > (bestTrade.pnlValue ?? -Infinity)) bestTrade = trade;
+      if (!worstTrade || pnlValue < (worstTrade.pnlValue ?? Infinity)) worstTrade = trade;
+
+      const stratKey = (strategy ?? 'Unclassified').trim() || 'Unclassified';
+      stratMap[stratKey] = stratMap[stratKey] || { trades: 0, wins: 0, losses: 0, breakeven: 0, netPL: 0, rrTotal: 0 };
+      stratMap[stratKey].trades += 1;
+      stratMap[stratKey].netPL += pnlValue;
+      if (riskReward) stratMap[stratKey].rrTotal += riskReward;
+      if (outcomeKey === 'win') stratMap[stratKey].wins += 1;
+      else if (outcomeKey === 'loss') stratMap[stratKey].losses += 1;
+      else stratMap[stratKey].breakeven += 1;
+
+      symbolMap[symbolKey] = symbolMap[symbolKey] || { trades: 0, wins: 0, netPL: 0 };
+      symbolMap[symbolKey].trades += 1;
+      symbolMap[symbolKey].netPL += pnlValue;
+      if (outcomeKey === 'win') symbolMap[symbolKey].wins += 1;
+
+      const dayKey = trade.openAt ? format(trade.openAt, 'yyyy-MM-dd') : 'unknown';
+      const dayEntry = dailyMap.get(dayKey) || { trades: 0, net: 0 };
+      dayEntry.trades += 1;
+      dayEntry.net += pnlValue;
+      dailyMap.set(dayKey, dayEntry);
+      calMap[dayKey] = { trades: dayEntry.trades, net: dayEntry.net };
+
+      const dowKey = trade.openAt ? format(trade.openAt, 'EEEE') : 'Unknown';
+      dowMap[dowKey] = dowMap[dowKey] || { trades: 0, pl: 0 };
+      dowMap[dowKey].trades += 1;
+      dowMap[dowKey].pl += pnlValue;
+
+      if (trade.openAt) {
+        const hour = trade.openAt.getUTCHours();
+        hourStats[hour].trades += 1;
+        hourStats[hour].pl += pnlValue;
+        const sessionKey = sessionForHour(hour);
+        sessionMap[sessionKey] = sessionMap[sessionKey] || { count: 0, pl: 0 };
+        sessionMap[sessionKey].count += 1;
+        sessionMap[sessionKey].pl += pnlValue;
+      }
+    });
+
+    const total = normalizedTrades.length;
+    const avgPL = total ? netPL / total : 0;
+    const avgWin = wins ? winPnL / wins : 0;
+    const avgLoss = losses ? lossPnL / losses : 0;
+    const winRate = total ? (wins / total) * 100 : 0;
+    const expectancy = winRate / 100 * avgWin + (1 - winRate / 100) * avgLoss;
+    const avgLengthMin = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+
+    const pnlMean = pnlSeries.length ? pnlSeries.reduce((a, b) => a + b, 0) / pnlSeries.length : 0;
+    const variance = pnlSeries.length ? pnlSeries.reduce((acc, val) => acc + Math.pow(val - pnlMean, 2), 0) / pnlSeries.length : 0;
+    const stdDev = Math.sqrt(variance);
+    const sharpe = stdDev ? (avgPL / (stdDev || 1)) * Math.sqrt(Math.max(total, 1)) : 0;
+
+    const dailyValues = Array.from(dailyMap.values());
+    const profitableDays = dailyValues.filter((d) => d.net > 0).length;
+    const consistency = dailyValues.length ? (profitableDays / dailyValues.length) * 100 : 0;
+
+    const volatility = stdDev;
+    const var95 = pnlMean - 1.65 * stdDev;
+
+    const stratEntries = Object.entries(stratMap).reduce<Record<string, { trades: number; wins: number; losses: number; breakeven: number; netPL: number; avgRR: number | null }>>((acc, [key, value]) => {
+      const avgRR = value.trades ? value.rrTotal / value.trades : null;
+      acc[key] = {
+        trades: value.trades,
+        wins: value.wins,
+        losses: value.losses,
+        breakeven: value.breakeven,
+        netPL: value.netPL,
+        avgRR,
+      };
+      return acc;
+    }, {});
+
+    const topSymbols = Object.entries(symbolMap)
+      .map(([symbol, data]) => ({
+        symbol,
+        trades: data.trades,
+        winRate: data.trades ? (data.wins / data.trades) * 100 : 0,
+        netPL: data.netPL,
+      }))
+      .sort((a, b) => b.netPL - a.netPL)
+      .slice(0, 5);
+
+    const rollingWindow = Math.min(10, normalizedTrades.length);
+    const rollingLabels: string[] = [];
+    const rollingValues: number[] = [];
+    ordered.forEach((trade, idx) => {
+      const slice = ordered.slice(Math.max(0, idx - rollingWindow + 1), idx + 1);
+      const winsInSlice = slice.filter((t) => t.outcomeKey === 'win').length;
+      const rate = slice.length ? (winsInSlice / slice.length) * 100 : 0;
+      const label = trade.closeAt ? format(trade.closeAt, 'dd MMM') : '#' + (idx + 1);
+      rollingLabels.push(label);
+      rollingValues.push(Number(rate.toFixed(1)));
+    });
+
+    const pnlHistogram = {
+      labels: ['Wins', 'Losses'],
+      datasets: [
+        {
+          label: 'Total PnL',
+          data: [Math.max(winPnL, 0), Math.abs(Math.min(lossPnL, 0))],
+          backgroundColor: ['rgba(34,197,94,0.6)', 'rgba(239,68,68,0.6)'],
+          borderRadius: 6,
+        },
+      ],
+    };
+
+    const summary = {
+      total,
+      win: wins,
+      loss: losses,
+      breakeven,
+      netPL,
+      avgPL,
+      winRate,
+      expectancy,
+      avgWin,
+      avgLoss,
+      consistency,
+      avgLengthMin,
+      sharpe,
+      bestTrade,
+      worstTrade,
+      drawdown: maxDrawdown,
+      volatility,
+      var95,
+      pnlSeries,
+    };
+
+    const hours = hourStats.map((h, hour) => ({ hour, trades: h.trades, pl: h.pl }));
+
+    const patterns = {
+      stratMap: stratEntries,
+      topSymbols,
+      byDOW: dowMap,
+      sessions: sessionMap,
+      hours,
+      calMap,
+    };
+
+    const charts = {
+      pnp: {
+        labels: equityLabels,
+        datasets: [
+          {
+            label: 'Equity curve',
+            data: equitySeries,
+            fill: true,
+            borderColor: 'rgba(129,140,248,0.9)',
+            backgroundColor: 'rgba(129,140,248,0.15)',
+            tension: 0.35,
+          },
+        ],
+      },
+      rollingWinData: {
+        labels: rollingLabels,
+        datasets: [
+          {
+            label: 'Rolling win %',
+            data: rollingValues,
+            borderColor: 'rgba(236,72,153,0.9)',
+            backgroundColor: 'rgba(236,72,153,0.2)',
+            fill: true,
+            tension: 0.25,
+          },
+        ],
+      },
+      pnlHistogram,
+    };
+
+    const insightItems = [] as { id: string; title: string; detail: string; score: number }[];
+    insightItems.push({
+      id: 'equity-momentum',
+      title: netPL >= 0 ? 'Equity momentum positive' : 'Equity under pressure',
+      detail: netPL >= 0 ? 'Up ${currencyFormatter.format(netPL)} across ' + total + ' trades. Maintain discipline.' : 'Down ' + currencyFormatter.format(Math.abs(netPL)) + '. Reinforce playbook-only setups.',
+      score: Math.min(100, Math.max(0, (netPL / (Math.abs(netPL) + 1)) * 100 + 50)),
+    });
+    if (topSymbols[0]) {
+      insightItems.push({
+        id: 'top-symbol',
+        title: 'Best performing symbol: ' + topSymbols[0].symbol,
+        detail: topSymbols[0].trades + ' trades with ' + topSymbols[0].winRate.toFixed(1) + '% win rate producing ' + currencyFormatter.format(topSymbols[0].netPL) + '.',
+        score: Math.min(100, Math.max(0, topSymbols[0].winRate)),
+      });
+    }
+    const toughestHour = hours.reduce((worst, hour) => (hour.pl < worst.pl ? hour : worst), { hour: 0, trades: 0, pl: Infinity });
+    insightItems.push({
+      id: 'challenging-hour',
+      title: 'Tricky hour: ' + toughestHour.hour + ':00 UTC',
+      detail: currencyFormatter.format(toughestHour.pl) + ' across ' + toughestHour.trades + ' trades. Consider standing aside at this time unless setup quality is exceptional.',
+      score: Math.min(100, Math.max(0, 100 - Math.abs(toughestHour.pl))),
+    });
+
+    const streaks = (() => {
+      let maxWinStreak = 0;
+      let maxLossStreak = 0;
+      let current = 0;
+      let currentDirection: 'up' | 'down' | 'flat' = 'flat';
+      ordered.forEach((trade) => {
+        if (trade.outcomeKey === 'win') {
+          if (current >= 0) current += 1; else current = 1;
+          currentDirection = 'up';
+        } else if (trade.outcomeKey === 'loss') {
+          if (current <= 0) current -= 1; else current = -1;
+          currentDirection = 'down';
+        } else {
+          current = 0;
+          currentDirection = 'flat';
+        }
+        if (current > maxWinStreak) maxWinStreak = current;
+        if (current < maxLossStreak) maxLossStreak = current;
+      });
+      return { maxWinStreak, maxLossStreak: Math.abs(maxLossStreak), currentStreak: Math.abs(current), currentDirection };
+    })();
+
+    const revengeDetector = (() => {
+      let flagged = false;
+      let reason = '';
+      for (let i = 1; i < ordered.length; i += 1) {
+        const prev = ordered[i - 1];
+        const curr = ordered[i];
+        if (prev.pnlValue < 0 && curr.openAt && prev.closeAt) {
+          const minutesApart = (curr.openAt.getTime() - prev.closeAt.getTime()) / 60000;
+          if (minutesApart <= 20 && curr.pnlValue < 0) {
+            flagged = true;
+            reason = 'Back-to-back losses within 20 minutes detected. Pause and review before next trade.';
+            break;
+          }
+        }
+      }
+      return { flagged, reason };
+    })();
+
+    return { summary, patterns, charts, computedInsights: insightItems, streaks, revengeDetector };
+  }, [normalizedTrades, currencyFormatter]);
+
+  const { summary, patterns, charts, computedInsights, streaks, revengeDetector } = analytics;
+
+  const copyInsightsMarkdown = useCallback(() => {
+    const lines: string[] = [
+      '## Performance Summary',
+      `- Net PnL: ${currencyFormatter.format(summary.netPL)}`,
+      `- Win rate: ${summary.winRate.toFixed(1)}%`,
+      `- Expectancy: ${currencyFormatter.format(summary.expectancy)}`
+    ];
+    if (computedInsights.length) {
+      lines.push('', '### Highlights');
+      computedInsights.slice(0, 6).forEach((ins) => {
+        lines.push(`- **${sanitizeForShare(ins.title)}** � ${sanitizeForShare(ins.detail)}`);
+      });
+    }
+    const payload = lines.join('\n');
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(payload).catch(() => {
+        console.warn('Failed to copy insights to clipboard');
+      });
+    }
+  }, [computedInsights, currencyFormatter, summary.expectancy, summary.netPL, summary.winRate]);
+
+  const retentionStats = useMemo(() => {
+    if (!normalizedTrades.length) return null;
+    const ordered = [...normalizedTrades].sort((a, b) => {
+      const aTime = (a.closeAt ?? a.openAt)?.getTime() ?? 0;
+      const bTime = (b.closeAt ?? b.openAt)?.getTime() ?? 0;
+      return bTime - aTime;
+    });
+    const latest = ordered[0];
+    const lastDate = latest?.closeAt ?? latest?.openAt ?? null;
+    const daysSince = lastDate ? differenceInCalendarDays(new Date(), lastDate) : null;
+    const consistencyScore = Number.isFinite(summary.consistency) ? Number(summary.consistency.toFixed(1)) : 0;
+    const streakLength = streaks.currentStreak;
+    const direction = streaks.currentDirection;
+    const suggestions: string[] = [];
+    if (daysSince !== null && daysSince > 3) {
+      suggestions.push(`No journal entries for ${daysSince} day${daysSince === 1 ? '' : 's'}. Schedule a short review to stay engaged.`);
+    }
+    if (direction === 'down' && streakLength >= 2) {
+      suggestions.push('Loss streak spotted. Pause and run your post-trade checklist before the next entry.');
+    }
+    if (consistencyScore < 60) {
+      suggestions.push('Consistency under 60%. Lock in only A-setup trades to lift profitable days.');
+    }
+    if (canShareReports) {
+      suggestions.push('Share a quick recap with your mentor or team to reinforce accountability.');
+    } else {
+      suggestions.push('Upgrade to enable sharing weekly recaps with accountability partners.');
+    }
+    return {
+      daysSinceLast: daysSince,
+      consistencyScore,
+      streakDirection: direction,
+      streakLength,
+      suggestions: suggestions.slice(0, 3),
+    };
+  }, [normalizedTrades, summary.consistency, streaks.currentDirection, streaks.currentStreak, canShareReports]);
+
+  const sltpSuggestion = useMemo(() => {
+    if (!normalizedTrades.length) return null;
+    const rr = summary.avgLoss ? Math.max(0.5, Number((Math.abs(summary.avgLoss) ? summary.avgWin / Math.abs(summary.avgLoss || 1) : 1).toFixed(2))) : 1;
+    const note = rr >= 1.5
+      ? 'Your winners already cover risk. Focus on repeating high-quality setups.'
+      : 'Aim for higher reward-to-risk entries (>1.5R) to lift expectancy.';
+    return { recommendedRR: rr, note };
+  }, [normalizedTrades.length, summary.avgLoss, summary.avgWin]);
+
+  const monthDays = useMemo(() => {
+    const start = startOfMonth(calendarMonth);
+    const end = endOfMonth(calendarMonth);
+    return eachDayOfInterval({ start, end });
+  }, [calendarMonth]);
+
+  const daySummary = useMemo(() => {
+    return (date: Date) => {
+      const key = format(date, 'yyyy-MM-dd');
+      return patterns.calMap[key] ?? { trades: 0, net: 0 };
+    };
+  }, [patterns.calMap]);
+
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
     if (saved) setPsychNote(saved);
@@ -404,1160 +1240,206 @@ export default function TradeJournal(): React.ReactElement {
   const [suggestedTagsMap, setSuggestedTagsMap] = useState<Record<string, string[]>>({});
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-
-  /* ---------------------------
-     Derived / filtered trades
-     --------------------------- */
-  const filtered = useMemo(() => {
-    let list = tradesTyped;
-    if (filter !== "all") list = list.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === filter);
-    if (pinnedOnly) list = list.filter((t: Trade) => pinnedMap[getTradeId(t)] || (t as any).pinned);
-    if (tagFilter) list = list.filter((t: Trade) => Array.isArray(t.tags) && t.tags.includes(tagFilter));
-    if (selectedDay) {
-      list = list.filter((t: Trade) => {
-        try {
-          const dt = new Date(t.openTime as any);
-          return isSameDay(dt, selectedDay);
-        } catch {
-          return false;
-        }
-      });
-    }
-    const s = search.trim().toLowerCase();
-    if (!s) return list;
-    return list.filter((t: Trade) => {
-      const fields = [
-        t.symbol,
-        t.outcome,
-        t.note,
-        t.strategy,
-        ...(Array.isArray(t.tags) ? t.tags.join(" | ") : []),
-      ]
-        .filter(Boolean)
-        .map((x: any) => String(x).toLowerCase())
-        .join(" ");
-      return fields.includes(s);
-    });
-  }, [trades, filter, pinnedOnly, pinnedMap, tagFilter, selectedDay, search]);
-
-  const sorted = useMemo(() => [...filtered].sort((a, b) => {
-    const A = new Date(a.openTime as any).getTime() || 0;
-    const B = new Date(b.openTime as any).getTime() || 0;
-    return B - A;
-  }), [filtered]);
-
-  /* ---------------------------
-     Stats & analytics
-     --------------------------- */
-  const summary = useMemo(() => {
-    const plValues = tradesTyped.map((t: Trade) => parsePL(t.pnl));
-    const total = plValues.length;
-    const win = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").length;
-    const loss = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
-    const breakeven = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "breakeven").length;
-    const netPL = plValues.reduce((s: number, v: number) => s + v, 0);
-    const avgPL = total ? netPL / total : 0;
-    const winRate = total ? (win / total) * 100 : 0;
-    const winsArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").map((t: Trade) => parsePL(t.pnl));
-    const lossesArr = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").map((t: Trade) => parsePL(t.pnl));
-    const avgWin = winsArr.length ? winsArr.reduce((s: number, v: number) => s + v, 0) / winsArr.length : 0;
-    const avgLoss = lossesArr.length ? lossesArr.reduce((s: number, v: number) => s + v, 0) / lossesArr.length : 0;
-    const expectancy = (winRate / 100) * avgWin - ((lossesArr.length / (total || 1)) * Math.abs(avgLoss));
-    const variance = total ? plValues.reduce((sum: number, v: number) => sum + Math.pow(v - avgPL, 2), 0) / total : 0;
-    const stdev = Math.sqrt(variance);
-    const consistentCount = plValues.filter((v: number) => Math.abs(v - avgPL) <= stdev).length;
-    const consistency = total ? (consistentCount / total) * 100 : 0;
-    const sharpe = stdev ? (avgPL / stdev) : 0;
-
-    const lengths = tradesTyped.map((t: Trade) => {
-      try {
-        const o = new Date(t.openTime as any).getTime();
-        const c = new Date(t.closeTime as any).getTime();
-        if (!o || !c) return 0;
-        return Math.max(0, (c - o) / (1000 * 60));
-      } catch { return 0; }
-    });
-    const avgLengthMin = lengths.length ? lengths.reduce((s: number, v: number) => s + v, 0) / lengths.length : 0;
-
-    return { total, win, loss, breakeven, netPL, avgPL, winRate, consistency, expectancy, avgWin, avgLoss, stdev, sharpe, avgLengthMin };
-  }, [trades]);
-
-  /* ---------------------------
-     Generate insights
-     --------------------------- */
-  const computedInsights = useMemo<Insight[]>(() => {
-    try {
-      const base = generateInsights(tradesTyped || []);
-      const extra: Insight[] = [];
-
-      if (trades.length >= 10) {
-        const recent = tradesTyped.slice(-8);
-        const recentLosses = recent.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").length;
-        if (recentLosses >= 4) {
-          extra.push({
-            id: "tilt-warning",
-            title: "Potential Tilt / Bad Run",
-            detail: `You had ${recentLosses} losses in your last ${recent.length} trades. Consider stepping away or reviewing setups before trading more.`,
-            score: 90,
-          });
-        }
-      }
-
-      const bigLoss = tradesTyped.map((t: Trade) => parsePL(t.pnl)).filter((v: number) => v < 0).sort((a, b) => a - b)[0];
-      if (bigLoss && Math.abs(bigLoss) > Math.abs(summary.avgWin) * 3) {
-        extra.push({
-          id: "big-loss",
-          title: "Outlier Loss Detected",
-          detail: `You have an outlier loss of $${Math.abs(bigLoss).toFixed(2)} which is much larger than your avg win. Consider reviewing sizing and SL rules.`,
-          score: 85,
-        });
-      }
-
-      if (summary.sharpe < 0.5) {
-        extra.push({
-          id: "sharpe-low",
-          title: "Low Reward-to-Volatility",
-          detail: `Sharpe-like ratio is low (${summary.sharpe.toFixed(2)}). Consider improving edge or reducing variability.`,
-          score: 80,
-        });
-      }
-
-      const combined = [...(base || []), ...extra].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-      return combined;
-    } catch (err) {
-      console.error("generateInsights error:", err);
-      return [{
-        id: "insight-error",
-        title: "Error",
-        detail: "Failed to generate insights",
-        score: 0
-      }];
-    }
-  }, [trades, summary]);
-
-  /* ---------------------------
-     Patterns
-     --------------------------- */
-  const patterns = useMemo(() => {
-    const bySymbol: Record<string, { count: number; win: number; loss: number; pl: number }> = {};
-    const byDOW: Record<string, { count: number; pl: number }> = {};
-    const sessions: Record<"asia" | "london" | "newyork" | "other", { count: number; pl: number }> = {
-      asia: { count: 0, pl: 0 },
-      london: { count: 0, pl: 0 },
-      newyork: { count: 0, pl: 0 },
-      other: { count: 0, pl: 0 },
-    };
-    const hours = Array.from({ length: 24 }, () => ({ trades: 0, pl: 0 }));
-    const calMap: Record<string, { trades: number; net: number }> = {};
-    const stratMap: Record<string, { trades: number; wins: number; losses: number; netPL: number }> = {};
-
-    for (const t of tradesTyped) {
-      const sym = t.symbol ?? "N/A";
-      bySymbol[sym] ??= { count: 0, win: 0, loss: 0, pl: 0 };
-      bySymbol[sym].count += 1;
-      const outcome = (t.outcome ?? "").toLowerCase();
-      if (outcome === "win") bySymbol[sym].win += 1;
-      if (outcome === "loss") bySymbol[sym].loss += 1;
-      bySymbol[sym].pl += parsePL(t.pnl);
-
-      const dt = new Date(t.openTime as any);
-      const valid = !isNaN(dt.getTime());
-      const dow = valid ? format(dt, "EEE") : "—";
-      byDOW[dow] ??= { count: 0, pl: 0 };
-      byDOW[dow].count += 1;
-      byDOW[dow].pl += parsePL(t.pnl);
-
-      if (valid) {
-        const h = dt.getUTCHours();
-        hours[h].trades += 1;
-        hours[h].pl += parsePL(t.pnl);
-        const bucket: "asia" | "london" | "newyork" | "other" = h >= 0 && h < 7 ? "asia" : h >= 7 && h < 12 ? "london" : h >= 12 && h < 20 ? "newyork" : "other";
-        sessions[bucket].count += 1;
-        sessions[bucket].pl += parsePL(t.pnl);
-        const dayKey = format(dt, "yyyy-MM-dd");
-        calMap[dayKey] ??= { trades: 0, net: 0 };
-        calMap[dayKey].trades += 1;
-        calMap[dayKey].net += parsePL(t.pnl);
-      }
-
-      const strat = (t.strategy ?? "Unassigned").trim() || "Unassigned";
-      stratMap[strat] ??= { trades: 0, wins: 0, losses: 0, netPL: 0 };
-      stratMap[strat].trades += 1;
-      if (outcome === "win") stratMap[strat].wins += 1;
-      if (outcome === "loss") stratMap[strat].losses += 1;
-      stratMap[strat].netPL += parsePL(t.pnl);
-    }
-
-    const topSymbols = Object.entries(bySymbol)
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 8)
-      .map(([sym, s]) => ({
-        symbol: sym,
-        trades: s.count,
-        winRate: s.count ? (s.win / s.count) * 100 : 0,
-        netPL: s.pl
-      }));
-
-    return { bySymbol, byDOW, sessions, hours, calMap, topSymbols, stratMap };
-  }, [trades]);
-
-  /* ---------------------------
-     Charts data
-     --------------------------- */
-  const charts = useMemo(() => {
-    const ordered = [...tradesTyped].sort((a, b) => {
-      const aTime = new Date(a.openTime as any);
-      const bTime = new Date(b.openTime as any);
-      const aValid = !isNaN(aTime.getTime()) ? aTime.getTime() : 0;
-      const bValid = !isNaN(bTime.getTime()) ? bTime.getTime() : 0;
-      return aValid - bValid;
-    });
-
-    const labels = ordered.map(t => {
-      let dateToFormat: Date;
-      const openTime = t.openTime;
-      if (openTime && openTime.trim() !== '') {
-        dateToFormat = new Date(openTime);
-      } else {
-        dateToFormat = new Date();
-      }
-      if (isNaN(dateToFormat.getTime())) {
-        dateToFormat = new Date();
-      }
-      return format(dateToFormat, "MMM d");
-    });
-
-    const cumPnlArr: number[] = [];
-    let cum = 0;
-    for (const t of ordered) {
-      cum += parsePL(t.pnl);
-      cumPnlArr.push(cum);
-    }
-
-    const winArr: number[] = ordered.map((t: Trade) => (String(t.outcome).toLowerCase() === "win" ? 1 : 0));
-    const rollingWindow = 20;
-    const rolling = winArr.map((_, idx) => {
-      const start = Math.max(0, idx - rollingWindow + 1);
-      const slice = winArr.slice(start, idx + 1);
-      const avg = slice.reduce((s: number, v: number) => s + v, 0) / (slice.length || 1);
-      return +(avg * 100).toFixed(2);
-    });
-
-    const pnlOverTime = {
-      labels,
-      datasets: [
-        {
-          label: "Cumulative PnL",
-          data: cumPnlArr,
-          borderColor: "#60a5fa",
-          backgroundColor: "#60a5fa44",
-          fill: true,
-          tension: 0.2,
-        }
-      ]
-    };
-
-    const rollingWinData = {
-      labels,
-      datasets: [
-        {
-          label: `Rolling WR (${rollingWindow})`,
-          data: rolling,
-          borderColor: "#34d399",
-          backgroundColor: "#34d39933",
-          fill: true,
-          tension: 0.2,
-        }
-      ]
-    };
-
-    const pnls = ordered.map((t: Trade) => parsePL(t.pnl));
-    const bucketCount = 12;
-    const min = Math.min(...(pnls.length ? pnls : [0]));
-    const max = Math.max(...(pnls.length ? pnls : [0]));
-    const range = Math.max(1, max - min);
-    const buckets = Array.from({ length: bucketCount }, () => 0);
-    const bucketLabels = Array.from({ length: bucketCount }).map((_, i) => {
-      const low = (min + (i / bucketCount) * range);
-      const high = (min + ((i + 1) / bucketCount) * range);
-      return `${Math.round(low)}..${Math.round(high)}`;
-    });
-    pnls.forEach(v => {
-      const idx = Math.min(bucketCount - 1, Math.floor(((v - min) / range) * bucketCount));
-      buckets[idx] += 1;
-    });
-
-    const pnlHistogram = {
-      labels: bucketLabels,
-      datasets: [{ label: "Trades", data: buckets, backgroundColor: "#f472b6" }]
-    };
-
-    return { pnp: pnlOverTime, rollingWinData, pnlHistogram };
-  }, [trades]);
-
-  /* ---------------------------
-     RR parsing & SL/TP optimizer
-     --------------------------- */
-  const parseRR = (t: Trade): number => {
-    const keys = ["rr", "RR", "riskReward", "risk_reward", "rrRatio", "rr_ratio", "R_R", "risk_reward_ratio", "riskRewardRatio"];
-    for (const k of keys) {
-      const c = (t as any)[k];
-      if (c === undefined || c === null) continue;
-      if (typeof c === "number" && Number.isFinite(c)) return c;
-      if (typeof c === "string") {
-        const s = c.trim();
-        const sClean = s.replace(/\s+/g, "");
-        if (sClean.includes(":")) {
-          const parts = sClean.split(":");
-          if (parts.length === 2) {
-            const a = parseFloat(parts[0]!);
-            const b = parseFloat(parts[1]!);
-            if (!isNaN(a) && !isNaN(b) && a !== 0) return b / a;
-          }
-        }
-        if (sClean.includes("/")) {
-          const parts = sClean.split("/");
-          if (parts.length === 2) {
-            const a = parseFloat(parts[0]!);
-            const b = parseFloat(parts[1]!);
-            if (!isNaN(a) && !isNaN(b) && a !== 0) return b / a;
-          }
-        }
-        const withoutR = sClean.replace(/R$/i, "");
-        const n = parseFloat(withoutR);
-        if (!isNaN(n)) return n;
-        const m = s.match(/-?\d+(?:\.\d+)?/);
-        if (m) return parseFloat(m[0]!);
-      }
-    }
-    return NaN;
-  };
-
-  const [sltpSuggestion, setSltpSuggestion] = useState<{ recommendedRR: number; note: string } | null>(null);
+  // Initialize local accountBalance (used for risk calc UI) from selected trading account when available
+  const { selected: selectedAccount } = useTradingAccount();
   useEffect(() => {
-    const wins = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "win").map((t: Trade) => parsePL(t.pnl));
-    const losses = tradesTyped.filter((t: Trade) => (t.outcome ?? "").toLowerCase() === "loss").map((t: Trade) => parsePL(t.pnl));
-    const avgWin = wins.length ? wins.reduce((s, v) => s + v, 0) / wins.length : 0;
-    const avgLoss = losses.length ? losses.reduce((s, v) => s + v, 0) / losses.length : 0;
-    let recommendedRR = 1;
-    if (Math.abs(avgLoss) > 0) recommendedRR = Math.max(1, Math.abs(avgWin) / Math.abs(avgLoss));
-    recommendedRR = Math.round(recommendedRR * 10) / 10;
-    setSltpSuggestion({
-      recommendedRR,
-      note: `Based on historic avgWin ${avgWin.toFixed(2)} and avgLoss ${avgLoss.toFixed(2)} recommend ${recommendedRR}R target.`
-    });
-  }, [trades]);
-
-  const applySltpToSelected = (rr: number) => {
-    const ids = Object.entries(selected).filter(([_, v]) => v).map(([id]) => id);
-    if (!ids.length) { alert("No selected trades"); return; }
-    ids.forEach(id => {
-      const t = tradesTyped.find((x: Trade) => getTradeId(x) === id);
-      if (!t) return;
-      setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), rr: String(rr) } }));
-      try { (updateTrade as any)?.(id, { ...(t as any), rr: String(rr) }); } catch { }
-    });
-    alert(`Applied ${rr}R to ${ids.length} trades (attempted server update).`);
-  };
-
-  /* ---------------------------
-     Streak & behavioral detectors
-     --------------------------- */
-  const streaks = useMemo(() => {
-    let maxWinStreak = 0, maxLossStreak = 0, currWin = 0, currLoss = 0;
-    for (const t of trades) {
-      const o = (t.outcome ?? "").toLowerCase();
-      if (o === "win") { currWin++; currLoss = 0; }
-      else if (o === "loss") { currLoss++; currWin = 0; }
-      else { currWin = 0; currLoss = 0; }
-      maxWinStreak = Math.max(maxWinStreak, currWin);
-      maxLossStreak = Math.max(maxLossStreak, currLoss);
+    if (accountBalance === "" && selectedAccount && selectedAccount.mode === 'manual') {
+      const init = Number(selectedAccount.initial_balance || 0);
+      if (Number.isFinite(init) && init > 0) setAccountBalance(init);
     }
-    return { maxWinStreak, maxLossStreak };
-  }, [trades]);
-
-  const revengeDetector = useMemo(() => {
-    if (tradesTyped.length < 5) return { flagged: false, reason: "" };
-    const last: Trade[] = tradesTyped.slice(-6);
-    const lossConsec = (() => {
-      let c = 0, max = 0;
-      for (const t of last) {
-        if (parsePL(t.pnl) < 0) { c++; max = Math.max(max, c); } else c = 0;
-      }
-      return max;
-    })();
-    const increasedRisk = last.some((t: Trade) => Math.abs(parsePL(t.pnl)) > Math.abs(summary.avgLoss) * 1.5);
-    if (lossConsec >= 3 && increasedRisk) {
-      return { flagged: true, reason: `Detected ${lossConsec} consecutive losses and one or more larger-than-average trades — possible revenge trading.` };
-    }
-    return { flagged: false, reason: "" };
-  }, [trades, summary]);
-
-  /* ---------------------------
-     Psychology extras
-     --------------------------- */
-  const moods = ["Calm", "Focused", "Hesitant", "Revengeful", "Overconfident", "Tired", "Distracted", "Confident"];
-  const addMoodStamp = (mood: string) => setPsychNote(prev => prev ? `${prev}\n[${format(new Date(), "yyyy-MM-dd HH:mm")}] Mood: ${mood}` : `[${format(new Date(), "yyyy-MM-dd HH:mm")}] Mood: ${mood}`);
-
-  const prompts = [
-    "What was my edge on the last trade?",
-    "What could I have done to reduce risk?",
-    "Which patterns repeated today?",
-    "What emotional state influenced my entries?",
-    "How did I follow my plan?",
-    "What will I change tomorrow?"
-  ];
-  const randomPrompt = () => prompts[Math.floor(Math.random() * prompts.length)];
-
-  /* ---------------------------
-     CSV import/export & PDF
-     --------------------------- */
-  const csvFileRef = useRef<HTMLInputElement | null>(null);
-  const onImportCSVClick = () => csvFileRef.current?.click();
-
-  const parseCSV = (text: string): Trade[] => {
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    if (!lines.length) return [];
-    const headers = lines[0]!.split(",").map((h) => h.trim());
-    const rows = lines.slice(1).map((line) => {
-      const cols = line.split(",").map((c) => c.trim());
-      const obj: any = {};
-      headers.forEach((h, i) => (obj[h] = cols[i] ?? ""));
-      return {
-        id: `${obj.id ?? obj.ticket ?? obj.tradeId ?? Date.now()}-${Math.random()}`,
-        symbol: obj.Symbol ?? obj.symbol ?? "UNKNOWN",
-        entryPrice: parsePL(obj.EntryPrice ?? obj.entryPrice ?? 1.0),
-        exitPrice: parsePL(obj.ExitPrice ?? obj.exitPrice ?? 1.0),
-        lotSize: parsePL(obj.LotSize ?? obj.lotSize ?? obj.Volume ?? 1.0),
-        openTime: obj.Date ?? obj.openTime ?? "",
-        closeTime: obj.CloseTime ?? obj.closeTime ?? "",
-        outcome: (obj.Outcome ?? obj.outcome ?? "Breakeven").toLowerCase() === "win" ? "Win" : 
-                 (obj.Outcome ?? obj.outcome ?? "Breakeven").toLowerCase() === "loss" ? "Loss" : "Breakeven",
-        pnl: parsePL(obj.PnL ?? obj.pnl ?? 0),
-        strategy: obj.Strategy ?? obj.strategy ?? "",
-        SL: obj.SL ?? undefined,
-        TP: obj.TP ?? undefined,
-        note: obj.Note ?? obj.note ?? "",
-        tags: obj.Tags ? String(obj.Tags).split("|").map((s: string) => s.trim()).filter(Boolean) : [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    });
-    return rows;
-  };
-
-  const onImportCSV = async (files: FileList | null) => {
-    if (!files || !files.length) return;
-    const f = files[0]!;
-    const text = await f.text();
-    const parsed = parseCSV(text);
-    if (!parsed.length) { alert("No rows found."); return; }
-    setImportPreview(parsed);
-    const fn = updateTrade as unknown as (...args: any[]) => Promise<any>;
-    if (fn) {
-      for (const r of parsed) {
-        try {
-          try { await fn(r); } catch { await fn(getTradeId(r), r); }
-        } catch (err) { console.warn("import failed", err); }
-      }
-      try { await (refreshTrades as any)?.(); } catch {}
-      setImportPreview(null);
-      alert("Import attempted.");
-    } else {
-      alert("Preview generated. No programmatic import available.");
-    }
-  };
-
-  const onExportCSV = () => {
-    const rows = sorted.map((t) => ({
-      Date: fmtDateTime(t.openTime),
-      Symbol: t.symbol ?? "",
-      Outcome: t.outcome ?? "",
-      PnL: parsePL(t.pnl).toFixed(2),
-      Strategy: t.strategy ?? "",
-      SL: t.SL ?? "",
-      TP: t.TP ?? "",
-      Note: t.note ?? "",
-      Tags: Array.isArray(t.tags) ? t.tags.join("|") : "",
-    }));
-    const csv = toCSV(rows);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "trades.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const onExportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Trade Journal", 14, 16);
-    const head = [["Date", "Symbol", "Outcome", "PnL", "Strategy", "SL", "TP", "Tags", "Note"]];
-    const body = sorted.map((t) => [
-      fmtDateTime(t.openTime),
-      t.symbol ?? "",
-      (t.outcome ?? "").toUpperCase(),
-      `$${parsePL(t.pnl).toFixed(2)}`,
-      t.strategy ?? "",
-      String(t.SL ?? ""),
-      String(t.TP ?? ""),
-      Array.isArray(t.tags) ? t.tags.join(", ") : "",
-      t.note ?? "",
-    ]);
-    (doc as any).autoTable({
-      head,
-      body,
-      startY: 22,
-      styles: { fontSize: 8, cellWidth: "wrap" },
-      headStyles: { fillColor: [30, 41, 59] },
-    });
-    doc.save("trade-journal.pdf");
-  };
-
-  /* ---------------------------
-     Row component
-     --------------------------- */
-  function Row({ t }: { t: Trade }) {
-    const id = getTradeId(t);
-    const patch = rowEdits[id] || {};
-    const pending = !!savingMap[id];
-    const fileRef = useRef<HTMLInputElement | null>(null);
-    const tags: string[] = Array.isArray(t.tags) ? t.tags : [];
-    const mergedTags = Array.from(new Set([...tags, ...((patch.tags as string[]) || [])])).filter(Boolean);
-    const addTag = () => {
-      const tag = prompt("Add tag:");
-      if (!tag) return;
-      setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), tags: [...mergedTags, tag] } }));
-    };
-    const removeTag = (tg: string) => {
-      setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), tags: mergedTags.filter(x => x !== tg) } }));
-    };
-    const togglePin = () => {
-      const next = !pinnedMap[id];
-      setPinnedMap(s => ({ ...s, [id]: next }));
-      try { (updateTrade as any)?.(id, { ...(t as any), pinned: next }); } catch { }
-    };
-    const applySuggestedTags = () => {
-      const sug = suggestedTagsMap[id] ?? [];
-      if (!sug.length) { alert("No suggestions"); return; }
-      setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), tags: Array.from(new Set([...(t.tags ?? []), ...sug])) } }));
-      alert(`Applied ${sug.length} suggested tags`);
-    };
-    const quickReview = () => {
-      const checklist = [
-        "Entry matched plan",
-        "SL placed",
-        "Emotion checked",
-        "Size OK",
-        "Exit planned"
-      ];
-      const ok = confirm(`Quick checklist:\n- ${checklist.join("\n- ")}\nMark as reviewed?`);
-      if (!ok) return;
-      setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), reviewed: true } }));
-      onSaveRow({ ...(t as any), reviewed: true });
-    };
-    const toggleSelect = () => setSelected(prev => ({ ...prev, [id]: !prev[id] }));
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 items-center border-b border-zinc-800 py-3">
-        <div className="text-xs md:text-sm text-zinc-300">{fmtDateTime(t.openTime)}</div>
-        <div className="text-sm">
-          {editMode ? (
-            <input
-              className="w-full rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
-              defaultValue={String(patch.symbol ?? t.symbol ?? "")}
-              onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), symbol: e.target.value } }))}
-            />
-          ) : <span className="font-medium">{t.symbol ?? "�"}</span>}
-        </div>
-        <div>
-          {editMode ? (
-            <select
-              className="w-full rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
-              defaultValue={String(patch.outcome ?? t.outcome ?? "").toLowerCase()}
-              onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), outcome: e.target.value } }))}
-            >
-              <option value="">�</option>
-              <option value="win">WIN</option>
-              <option value="loss">LOSS</option>
-              <option value="breakeven">BREAKEVEN</option>
-            </select>
-          ) : (
-            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${t.outcome?.toLowerCase() === "win" ? "bg-green-600/20 text-green-400" : t.outcome?.toLowerCase() === "loss" ? "bg-red-600/20 text-red-400" : "bg-yellow-600/20 text-yellow-300"}`}>
-              {(t.outcome ?? "�").toString().toUpperCase()}
-            </span>
-          )}
-        </div>
-        <div className="text-sm">
-          {editMode ? (
-            <input
-              type="number"
-              step="0.01"
-              className="w-full rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
-              defaultValue={String(patch.pnl ?? t.pnl ?? 0)}
-              onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), pnl: e.target.value as any } }))}
-            />
-          ) : (
-            <span className={`${parsePL(t.pnl) >= 0 ? "text-green-400" : "text-red-400"} font-semibold`}>${parsePL(t.pnl).toFixed(2)}</span>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            {editMode ? (
-              <input
-                placeholder="Strategy"
-                className="rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm w-44"
-                defaultValue={String(patch.strategy ?? t.strategy ?? "")}
-                onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), strategy: e.target.value } }))}
-              />
-            ) : (
-              <span className="text-xs text-zinc-300">{t.strategy ?? <span className="text-zinc-500">—</span>}</span>
-            )}
-            <div className="flex flex-wrap gap-1">
-              {mergedTags.length ? mergedTags.map(tg => (
-                <span
-                  key={tg}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-200 text-[11px] border border-zinc-700"
-                >
-                  <TagIcon className="h-3 w-3 opacity-70" />
-                  {tg}
-                  {editMode && (
-                    <button
-                      className="opacity-60 hover:opacity-100"
-                      onClick={() => removeTag(tg)}
-                      title="Remove tag"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </span>
-              )) : <span className="text-xs text-zinc-500">No tags</span>}
-              {suggestedTagsMap[id]?.length ? (
-                <button
-                  onClick={applySuggestedTags}
-                  className="text-xs text-zinc-300 ml-2 underline"
-                >
-                  Apply suggested ({suggestedTagsMap[id].length})
-                </button>
-              ) : null}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {editMode ? (
-              <>
-                <input
-                  placeholder="SL"
-                  className="rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-xs w-20"
-                  defaultValue={String(patch.SL ?? t.SL ?? "")}
-                  onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), SL: e.target.value } }))}
-                />
-                <input
-                  placeholder="TP"
-                  className="rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-xs w-20"
-                  defaultValue={String(patch.TP ?? t.TP ?? "")}
-                  onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), TP: e.target.value } }))}
-                />
-              </>
-            ) : (
-              <div className="text-xs text-zinc-400">
-                {t.SL ? `SL:${t.SL}` : "SL:—"} • {t.TP ? `TP:${t.TP}` : "TP:—"}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="text-xs">
-          {editMode ? (
-            <input
-              className="w-full rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
-              placeholder="Add note"
-              defaultValue={String(patch.note ?? t.note ?? "")}
-              onChange={(e) => setRowEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), note: e.target.value } }))}
-            />
-          ) : (
-            <p className="text-xs text-zinc-300 whitespace-pre-wrap">{t.note || <span className="text-zinc-500">—</span>}</p>
-          )}
-        </div>
-        <div className="flex items-center justify-end gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                setAttachments(prev => ({
-                  ...prev,
-                  [id]: [...(prev[id] || []), ...Array.from(e.target.files as FileList)]
-                }));
-              }
-            }}
-            multiple
-          />
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 text-zinc-300 hover:text-white"
-            onClick={() => fileRef.current?.click()}
-            title="Attach image"
-          >
-            <ImageIcon className="h-4 w-4" />
-          </Button>
-          {attachments[id]?.length ? (
-            <span className="text-[10px] text-zinc-400">{attachments[id]!.length} file(s)</span>
-          ) : null}
-          <Button
-            variant="ghost"
-            className={`h-8 w-8 p-0 ${pinnedMap[id] || (t as any).pinned ? "text-yellow-400" : "text-zinc-300"} hover:text-white`}
-            onClick={togglePin}
-            title={pinnedMap[id] || (t as any).pinned ? "Unpin" : "Pin trade"}
-          >
-            <Star className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 text-emerald-300 hover:text-emerald-200"
-            onClick={quickReview}
-            title="Quick review"
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 text-zinc-300"
-            onClick={toggleSelect}
-            title="Select for bulk"
-          >
-            <Sliders className={`h-4 w-4 ${selected[id] ? "text-indigo-400" : "text-zinc-300"}`} />
-          </Button>
-          {editMode ? (
-            <Button
-              variant="secondary"
-              className="h-8 px-2 bg-emerald-600 hover:bg-emerald-500 text-white"
-              onClick={() => onSaveRow(t)}
-              disabled={pending || !rowEdits[id]}
-              title="Save"
-            >
-              <Save className="h-4 w-4" />
-            </Button>
-          ) : null}
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
-            onClick={() => onDelete(t)}
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ---------------------------
-     Save/Delete helpers
-     --------------------------- */
-  const onSaveRow = async (base: Trade) => {
-    const id = getTradeId(base);
-    const patch = rowEdits[id] || {};
-    if (!Object.keys(patch).length) return;
-    setSavingMap(m => ({ ...m, [id]: true }));
-    try {
-      const payload = { ...base, ...patch };
-      const fn = updateTrade as unknown as (...args: any[]) => Promise<any>;
-      if (fn) {
-        try { await fn(id, payload); } catch { await fn(payload); }
-      }
-      setRowEdits(prev => { const { [id]: _, ...rest } = prev; return rest; });
-    } catch (e: any) {
-      console.error(e);
-      alert(`Save failed: ${e?.message ?? e}`);
-    } finally {
-      setSavingMap(m => ({ ...m, [id]: false }));
-    }
-  };
-
-  const onSaveAll = async () => {
-    const ids = Object.keys(rowEdits);
-    if (!ids.length) return;
-    for (const id of ids) {
-      const base = trades.find((t: any) => getTradeId(t) === id);
-      if (!base) continue;
-      // eslint-disable-next-line no-await-in-loop
-      await onSaveRow(base);
-    }
-  };
-
-  const onDelete = async (t: Trade) => {
-    const id = getTradeId(t);
-    if (!id) return;
-    const timeoutId = window.setTimeout(async () => {
-      try { await (deleteTrade as any)?.(id); } catch (err) { console.error("final delete failed:", err); }
-      finally { setPendingDeletes(p => p.filter(q => q.id !== id)); setUndoVisible(false); }
-    }, 7000);
-    setPendingDeletes(p => [...p, { id, trade: t, timeoutId }]);
-    setUndoVisible(true);
-  };
-
-  const undoDelete = (id?: string) => {
-    if (!id) {
-      const last = pendingDeletes[pendingDeletes.length - 1];
-      if (!last) return;
-      clearTimeout(last.timeoutId);
-      setPendingDeletes(p => p.slice(0, -1));
-    } else {
-      const found = pendingDeletes.find(q => q.id === id);
-      if (!found) return;
-      clearTimeout(found.timeoutId);
-      setPendingDeletes(p => p.filter(x => x.id !== id));
-    }
-    if (pendingDeletes.length <= 1) setUndoVisible(false);
-  };
-
-  /* ---------------------------
-     Small helpers
-     --------------------------- */
-  const allTags = useMemo(() => {
-    const set = new Set<string>();
-    for (const t of trades as Trade[]) if (Array.isArray(t.tags)) t.tags.forEach(x => x && set.add(x));
-    return Array.from(set).sort();
-  }, [trades]);
-
-  useEffect(() => {
-    const map: Record<string, string[]> = {};
-    for (const t of trades as Trade[]) {
-      const id = getTradeId(t);
-      const note = String(t.note ?? "").toLowerCase();
-      const found: string[] = [];
-      const look = ["breakout", "reversal", "scalp", "swing", "earnings", "momentum", "gap", "trend", "rejection", "stop", "overbought", "oversold"];
-      for (const k of look) if (note.includes(k)) found.push(k);
-      if (found.length) map[id] = found;
-    }
-    setSuggestedTagsMap(map);
-  }, [trades]);
-
-  const copyInsightsMarkdown = async () => {
-    const md = computedInsights.map(i => `### ${i.title}\n${i.detail}\nScore: ${i.score}\n---`).join("\n");
-    try {
-      await navigator.clipboard.writeText(md);
-      alert("Insights copied to clipboard as markdown.");
-    } catch {
-      alert("Failed to copy.");
-    }
-  };
-
-  const monthDays = useMemo(() => {
-    const start = startOfMonth(calendarMonth);
-    const end = endOfMonth(calendarMonth);
-    return eachDayOfInterval({ start, end });
-  }, [calendarMonth]);
-
-  const daySummary = (d: Date) => {
-    const key = format(d, "yyyy-MM-dd");
-    return patterns.calMap[key] ?? { trades: 0, net: 0 };
-  };
-
-  /* ---------------------------
-     Toolbar
-     --------------------------- */
-  const Toolbar = (
-    <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-      <div className="flex flex-1 items-center gap-2">
-        <div className="relative">
-          <Filter className="absolute left-2 top-2.5 h-4 w-4 opacity-70" />
-          <select
-            className="pl-8 pr-3 py-2 rounded-md bg-zinc-800 text-white border border-zinc-700 text-sm"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
-          >
-            <option value="all">All</option>
-            <option value="win">Wins</option>
-            <option value="loss">Losses</option>
-            <option value="breakeven">Breakevens</option>
-          </select>
-        </div>
-        <div className="relative">
-          <select
-            className="pl-3 pr-3 py-2 rounded-md bg-zinc-800 text-white border border-zinc-700 text-sm"
-            value={tagFilter ?? ""}
-            onChange={(e) => setTagFilter(e.target.value || null)}
-            title="Filter by tag"
-          >
-            <option value="">�</option>
-            {allTags.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 opacity-70" />
-          <input
-            className="w-full pl-8 pr-3 py-2 rounded-md bg-zinc-800 text-white border border-zinc-700 text-sm"
-            placeholder="Search symbol, tag, note, strategy"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            placeholder="Account"
-            className="w-28 rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
-            value={accountBalance === "" ? "" : String(accountBalance)}
-            onChange={(e) => setAccountBalance(e.target.value === "" ? "" : Number(e.target.value))}
-          />
-          <input
-            type="number"
-            placeholder="% risk"
-            className="w-20 rounded-md bg-zinc-800 text-white border border-zinc-700 px-2 py-1 text-sm"
-            value={String(riskPercent)}
-            onChange={(e) => setRiskPercent(Number(e.target.value))}
-          />
-        </div>
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={async () => { try { await (refreshTrades as any)?.(); alert("Trades refreshed."); } catch (e: any) { alert("Refresh failed: " + (e?.message ?? e)); } }}
-          title="Refresh trades"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-        </Button>
-        <Button
-          variant="secondary"
-          className={`${editMode ? "bg-amber-600 hover:bg-amber-500" : "bg-zinc-800 hover:bg-zinc-700"} text-white`}
-          onClick={() => { setEditMode(s => !s); setRowEdits({}); }}
-          title={editMode ? "Exit edit mode" : "Enter edit mode"}
-        >
-          {editMode ? <X className="h-4 w-4 mr-2" /> : <Pencil className="h-4 w-4 mr-2" />}
-          {editMode ? "Done" : "Edit"}
-        </Button>
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={onSaveAll}
-          disabled={!Object.keys(rowEdits).length}
-        >
-          <Save className="h-4 w-4 mr-2" /> Save All
-        </Button>
-        <input
-          ref={csvFileRef}
-          type="file"
-          accept=".csv"
-          className="hidden"
-          onChange={(e) => onImportCSV(e.target.files)}
-        />
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={onImportCSVClick}
-        >
-          <Upload className="h-4 w-4 mr-2" /> Import
-        </Button>
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={onExportCSV}
-        >
-          <FileText className="h-4 w-4 mr-2" /> CSV
-        </Button>
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={onExportPDF}
-        >
-          <Download className="h-4 w-4 mr-2" /> PDF
-        </Button>
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={() => setPinnedOnly(s => !s)}
-        >
-          <Star className="h-4 w-4 mr-2" /> {pinnedOnly ? "Pinned only" : "Pins"}
-        </Button>
-        <Button
-          variant="secondary"
-          className="bg-zinc-800 text-white hover:bg-zinc-700"
-          onClick={copyInsightsMarkdown}
-        >
-          <Clipboard className="h-4 w-4 mr-2" /> Copy Insights
-        </Button>
-      </div>
-    </div>
-  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount]);
 
   /* ---------------------------
      Main JSX
      --------------------------- */
   return (
-    <div className="space-y-4">
-      {/* Summary card */}
-      <Card className="rounded-2xl shadow-md border bg-gray-900 dark:bg-gray-900 dark:border-gray-800 transition duration-300">
-        <CardContent className="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 text-center text-sm">
-          {[
-            ["Total Trades", summary.total],
-            ["Wins", summary.win, "text-green-500"],
-            ["Losses", summary.loss, "text-red-500"],
-            ["Breakevens", summary.breakeven, "text-yellow-500"],
-            ["Net P/L", `$${summary.netPL.toFixed(2)}`, summary.netPL >= 0 ? "text-green-500" : "text-red-500"],
-            ["Avg P/L", `$${summary.avgPL.toFixed(2)}`, summary.avgPL >= 0 ? "text-green-500" : "text-red-500"],
-            ["Win Rate", `${summary.winRate.toFixed(1)}%`, "text-indigo-500"],
-            ["Consistency", `${summary.consistency.toFixed(1)}%`, "text-blue-500"],
-            ["Expectancy", `${summary.expectancy.toFixed(2)}`, summary.expectancy >= 0 ? "text-green-500" : "text-red-500"],
-          ].map(([lbl, val, clr], i) => (
-            <div key={i}>
-              <p className="text-muted-foreground">{lbl}</p>
-              <p className={`font-bold ${clr || ""}`}>{val}</p>
+  <div className="space-y-6 pb-10 max-h-full overflow-y-auto max-w-full overflow-x-hidden">
+      <Card className="overflow-hidden border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-xl">
+        <div className="h-1 w-full" style={{ backgroundImage: activeTabConfig.accent }} />
+        <CardContent className="flex flex-col gap-5 py-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-slate-400">
+              <span>Journal</span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white">{activeTabConfig.label}</span>
             </div>
-          ))}
+            <h1 className="text-2xl font-semibold text-white sm:text-3xl">Trading Journal</h1>
+            <p className="max-w-2xl text-sm text-slate-300">
+              Keep every execution, reflection, and improvement in sync with your analytics, playbook, and risk dashboards.
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+            <AccountBadge className="w-full justify-between rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white sm:w-auto" />
+            <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-slate-300 sm:w-auto">
+              <span className="uppercase tracking-wide text-slate-500">Projected risk</span>
+              <span className="text-sm font-semibold text-white">{currencyFormatter.format(projectedRisk || 0)}</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Undo banner */}
-      {undoVisible && pendingDeletes.length > 0 && (
-        <div className="bg-yellow-900/40 border border-yellow-800 text-yellow-100 p-3 rounded flex items-center justify-between">
-          <div>
-            Pending deletion of {pendingDeletes.length} trade{pendingDeletes.length > 1 ? "s" : ""}.{" "}
-            <span className="italic">You have 7s to undo.</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" className="bg-yellow-700 text-black" onClick={() => undoDelete()}>Undo last</Button>
-            <Button variant="ghost" className="bg-transparent text-yellow-200" onClick={() => { pendingDeletes.forEach(p => clearTimeout(p.timeoutId)); setPendingDeletes([]); setUndoVisible(false); }}>Cancel All</Button>
-          </div>
-        </div>
-      )}
-
-      {/* Strategy Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] dark:bg-[#0b1220] dark:border-[#202830]">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-blue-500" />
-              <h3 className="font-semibold text-sm">Top Strategy</h3>
-            </div>
-            <p className="text-2xl font-bold text-blue-600">
-              {patterns.stratMap && Object.keys(patterns.stratMap).length > 0
-                ? Object.entries(patterns.stratMap).reduce((best, [name, data]) =>
-                    data.netPL > (best?.data?.netPL || 0) ? { name, data } : best,
-                    { name: 'None', data: { netPL: 0 } }
-                  ).name
-                : 'No Data'
-              }
-            </p>
-            <p className="text-xs text-muted-foreground">Highest performing strategy</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] dark:bg-[#0b1220] dark:border-[#202830]">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-green-500" />
-              <h3 className="font-semibold text-sm">Strategy Win Rate</h3>
-            </div>
-            <p className="text-2xl font-bold text-green-600">
-              {patterns.stratMap && Object.keys(patterns.stratMap).length > 0
-                ? (Object.values(patterns.stratMap).reduce((sum, data) => sum + (data.wins / Math.max(1, data.trades)) * 100, 0) / Object.keys(patterns.stratMap).length).toFixed(1)
-                : '0.0'
-              }%
-            </p>
-            <p className="text-xs text-muted-foreground">Average across all strategies</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] dark:bg-[#0b1220] dark:border-[#202830]">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart2 className="w-5 h-5 text-purple-500" />
-              <h3 className="font-semibold text-sm">Active Strategies</h3>
-            </div>
-            <p className="text-2xl font-bold text-purple-600">
-              {patterns.stratMap ? Object.keys(patterns.stratMap).length : 0}
-            </p>
-            <p className="text-xs text-muted-foreground">Different strategies used</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top toolbar */}
       {Toolbar}
 
-      {/* Subtabs */}
       <Tabs value={subTab} onValueChange={(v) => setSubTab(v as SubTab)} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-12">
-          <TabsTrigger value="journal">Journal</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-          <TabsTrigger value="patterns">Patterns</TabsTrigger>
-          <TabsTrigger value="psychology">Psychology</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="forecast">Forecast</TabsTrigger>
-          <TabsTrigger value="optimizer">Optimizer</TabsTrigger>
-          <TabsTrigger value="prop">Prop-Firm</TabsTrigger>
-          <TabsTrigger value="review">Review</TabsTrigger>
-          <TabsTrigger value="risk">Risk</TabsTrigger>
-          <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-          <TabsTrigger value="playbook">Playbook</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2">
+          <TabsList className="flex w-max gap-2 pr-4 sm:flex-wrap">
+            {TAB_CONFIG.map((tab) => {
+              const isActive = subTab === tab.value;
+              return (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="group flex min-w-[140px] items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/10 data-[state=active]:border-white/20 data-[state=active]:bg-white/15 data-[state=active]:text-white data-[state=active]:shadow-lg"
+                >
+                  <span
+                    className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-800/40 text-slate-300 transition group-data-[state=active]:text-white"
+                    style={isActive ? { backgroundImage: tab.accent } : undefined}
+                  >
+                    {tab.icon}
+                  </span>
+                  <span className="truncate flex min-w-0 items-center gap-1">
+                    {tab.label}
+                    {tab.locked ? <span className="text-[9px] uppercase tracking-wide text-amber-400">Upgrade</span> : null}
+                  </span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
       </Tabs>
 
       {/* Journal */}
       {subTab === "journal" && (
-        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
-          <CardContent className="p-0">
+        <>
+          {(trimmedCount > 0 || duplicateCount > 0) && (
+            <Card className="border border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10">
+              <CardContent className="flex flex-col gap-3 p-4">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-amber-200">
+                    <Shield className="h-4 w-4" /> Data hygiene applied
+                  </div>
+                  <p className="text-xs text-amber-100/80">
+                    {trimmedCount > 0 ? `${trimmedCount} older trade${trimmedCount === 1 ? '' : 's'} hidden to honour your ${storageLimitLabel} retention window.` : null}
+                    {trimmedCount > 0 && duplicateCount > 0 ? ' ' : ''}
+                    {duplicateCount > 0 ? `${duplicateCount} duplicate journal entr${duplicateCount === 1 ? 'y' : 'ies'} ignored to keep analytics accurate.` : null}
+                  </p>
+                  {trimmedCount > 0 && storageCutoff && (
+                    <p className="text-[10px] text-amber-200/70">
+                      Oldest visible entry from {format(storageCutoff, 'dd MMM yyyy')}.
+                    </p>
+                  )}
+                </div>
+                {planLimits.tradeStorageDays > 0 && (
+                  <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Extended journal history" onUpgrade={() => {}} className="bg-transparent p-0" />
+                )}
+              </CardContent>
+            </Card>
+          )}
+          {retentionStats && (
+            <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+                      <Activity className="h-4 w-4" /> Retention coach
+                    </div>
+                    <p className="text-xs text-zinc-400">
+                      Stay consistent to lift trader retention and keep your analytics trustworthy.
+                    </p>
+                    <div className="flex flex-wrap gap-3 text-xs text-zinc-300">
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {retentionStats.daysSinceLast === null ? 'No trades logged yet' : retentionStats.daysSinceLast === 0 ? 'Last entry today' : `${retentionStats.daysSinceLast} day${retentionStats.daysSinceLast === 1 ? '' : 's'} since last entry`}</span>
+                      <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Consistency {retentionStats.consistencyScore.toFixed(1)}%</span>
+                      <span className="flex items-center gap-1"><Flag className="h-3 w-3" /> Streak {retentionStats.streakDirection === 'down' ? '-' : ''}{retentionStats.streakLength}</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <ul className="space-y-2 text-xs text-zinc-300">
+                      {retentionStats.suggestions.map((tip, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+            <CardContent className="p-0">
             <div className="px-4 pt-4 pb-2 text-xs text-zinc-400">
-              Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `• filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
+              Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `- filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
             </div>
             <div className="px-4 pb-2 text-[11px] text-zinc-500">
               Tip: Use strategy tags, SL/TP optimizer, bulk actions and the quick review checklist to speed up journaling.
             </div>
-            <div className="px-4">
-              <div className="hidden md:grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-muted-foreground text-xs border-b border-white/10 py-2">
-                <div>Date</div>
-                <div>Symbol</div>
-                <div>Outcome</div>
-                <div>Strategy / Tags</div>
-                <div>Note</div>
-                <div className="text-right">Actions</div>
-              </div>
-              <div className="divide-y divide-white/10">
-                {sorted.length ? sorted.map(t => <Row key={getTradeId(t)} t={t} />) : <div className="py-10 text-center text-zinc-400">No trades found.</div>}
+            <div className="px-4 overflow-x-auto">
+              <div className="min-w-[720px]">
+                <div className="hidden md:grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-muted-foreground text-xs border-b border-white/10 py-2">
+                  <div>Date</div>
+                  <div>Symbol</div>
+                  <div>Outcome</div>
+                  <div>Strategy / Tags</div>
+                  <div>Note</div>
+                  <div className="text-right">Actions</div>
+                </div>
+                <div className="divide-y divide-white/10">
+                  {sorted.length ? (
+                    sorted.map((t) => <JournalRow key={getTradeId(t)} trade={t} />)
+                  ) : (
+                    <div className="py-10 text-center text-zinc-400">No trades found.</div>
+                  )}
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+        </>
       )}
 
       {/* Insights */}
       {subTab === "insights" && (
-        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
-          <CardContent className="p-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <BarChart2 className="h-5 w-5" />
-              <h3 className="font-semibold">AI & Heuristic Insights</h3>
-              <div className="ml-auto flex items-center gap-2">
-                <Button variant="ghost" onClick={copyInsightsMarkdown}>
-                  <Clipboard className="h-4 w-4 mr-2" /> Copy MD
-                </Button>
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {computedInsights.map(ins => (
-                <div key={ins.id} className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30 flex flex-col gap-2">
-                  <div className="text-sm font-semibold">{ins.title}</div>
-                  <p className="text-xs text-muted-foreground">{ins.detail}</p>
-                  <div className="h-2 w-full bg-white/10 rounded">
-                    <div className="h-2 rounded bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, ins.score ?? 0))}%` }} />
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <Button variant="ghost" onClick={() => navigator.clipboard.writeText(`${ins.title} — ${ins.detail}`)}>Copy</Button>
-                    <Button variant="secondary" onClick={() => setPinnedTips(p => p.includes(ins.detail) ? p : [ins.detail, ...p])}>Pin</Button>
-                  </div>
+        canUseAdvancedAnalytics ? (
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <BarChart2 className="h-5 w-5" />
+                <h3 className="font-semibold">AI & Heuristic Insights</h3>
+                <div className="ml-auto flex items-center gap-2">
+                  <Button variant="ghost" onClick={copyInsightsMarkdown}>
+                    <Clipboard className="h-4 w-4 mr-2" /> Copy MD
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {computedInsights.map(ins => (
+                  <div key={ins.id} className="min-w-0 rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30 flex flex-col gap-2">
+                    <div className="text-sm font-semibold">{ins.title}</div>
+                    <p className="text-xs text-muted-foreground">{ins.detail}</p>
+                    <div className="h-2 w-full bg-white/10 rounded">
+                      <div className="h-2 rounded bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, ins.score ?? 0))}%` }} />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="ghost" onClick={() => navigator.clipboard.writeText(sanitizeForShare(`${ins.title} - ${ins.detail}`))}>Copy</Button>
+                      <Button variant="secondary" onClick={() => setPinnedTips(p => p.includes(ins.detail) ? p : [ins.detail, ...p])}>Pin</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </CardContent>
+          </Card>
+        ) : (
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Advanced analytics" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        )
       )}
 
       {/* Patterns */}
       {subTab === "patterns" && (
-        <div className="space-y-6">
-          <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+        canUsePatterns ? (
+          <div className="space-y-6">
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
@@ -1570,7 +1452,7 @@ export default function TradeJournal(): React.ReactElement {
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {patterns.stratMap && Object.entries(patterns.stratMap).map(([strategy, data]) => (
-                  <div key={strategy} className="p-4 bg-muted/50 rounded-lg border">
+                  <div key={strategy} className="min-w-0 p-4 bg-muted/50 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-sm">{strategy}</h4>
                       <Badge variant={data.netPL >= 0 ? "default" : "destructive"}>
@@ -1603,18 +1485,18 @@ export default function TradeJournal(): React.ReactElement {
                   </div>
                 )}
               </div>
-            </CardContent>
+              </CardContent>
           </Card>
-          <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+          <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
             <CardContent className="p-5 space-y-6">
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
                   <h4 className="text-sm font-semibold text-white mb-2">Top Symbols</h4>
                   <div className="space-y-2">
                     {patterns.topSymbols.length ? patterns.topSymbols.map(s => (
-                      <div key={s.symbol} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                      <div key={s.symbol} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
                         <span className="font-medium">{s.symbol}</span>
-                        <span className="text-xs text-zinc-300">{s.trades} trades • {s.winRate.toFixed(0)}% WR • <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
+                        <span className="text-xs text-zinc-300">{s.trades} trades - {s.winRate.toFixed(0)}% WR - <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
                       </div>
                     )) : <p className="text-zinc-400 text-sm">No data</p>}
                   </div>
@@ -1622,10 +1504,10 @@ export default function TradeJournal(): React.ReactElement {
                 <div>
                   <h4 className="text-sm font-semibold text-white mb-2">By Day of Week</h4>
                   <div className="space-y-2">
-                    {Object.entries(patterns.byDOW || {}).map(([dow,s]) => (
-                      <div key={dow} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                    {(Object.entries(patterns.byDOW ?? {}) as Array<[string, { trades: number; pl: number }]>).map(([dow, stats]) => (
+                      <div key={dow} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
                         <span className="font-medium">{dow}</span>
-                        <span className={s.pl >= 0 ? "text-green-400" : "text-red-400"}>${s.pl.toFixed(2)}</span>
+                        <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -1633,10 +1515,10 @@ export default function TradeJournal(): React.ReactElement {
                 <div>
                   <h4 className="text-sm font-semibold text-white mb-2">Session Performance (UTC)</h4>
                   <div className="space-y-2">
-                    {Object.entries(patterns.sessions || {}).map(([name,s]) => (
-                      <div key={name} className="flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm capitalize">
+                    {(Object.entries(patterns.sessions ?? {}) as Array<[string, { count: number; pl: number }]>).map(([name, stats]) => (
+                      <div key={name} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm capitalize">
                         <span className="font-medium">{name}</span>
-                        <span className="text-xs text-zinc-300">{s.count} trades • <span className={s.pl >= 0 ? "text-green-400" : "text-red-400"}>${s.pl.toFixed(2)}</span></span>
+                        <span className="text-xs text-zinc-300">{stats.count} trades - <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span></span>
                       </div>
                     ))}
                   </div>
@@ -1671,17 +1553,20 @@ export default function TradeJournal(): React.ReactElement {
                 <h5 className="text-sm text-zinc-200 mb-2">PnL Distribution</h5>
                 {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.pnlHistogram} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
               </div>
-            </CardContent>
+              </CardContent>
           </Card>
         </div>
+        ) : (
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Pattern analytics" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        )
       )}
 
       {/* Forecast */}
-      {!hasPlan('pro') && subTab === 'forecast' && (
+      {!canUseForecast && subTab === 'forecast' && (
         <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="AI Forecast" onUpgrade={() => {}} className="max-w-xl mx-auto" />
       )}
-      {subTab === "forecast" && hasPlan('pro') && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+      {subTab === "forecast" && canUseForecast && (
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200">
               <ArrowUpRight className="h-5 w-5" />
@@ -1691,7 +1576,7 @@ export default function TradeJournal(): React.ReactElement {
               <HeuristicForecast trades={trades as Trade[]} summary={summary} />
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <h5 className="text-sm text-zinc-300">Actionable suggestion</h5>
-                <p className="mt-2 text-white">Combine the probability shown with your plan — do not rely only on this. This is not financial advice.</p>
+                <p className="mt-2 text-white">Combine the probability shown with your plan " do not rely only on this. This is not financial advice.</p>
                 <div className="mt-4 text-xs text-zinc-400">For a production-grade forecast, integrate a trained model server-side and surface calibrated probabilities here.</div>
               </div>
             </div>
@@ -1700,17 +1585,17 @@ export default function TradeJournal(): React.ReactElement {
       )}
 
       {/* Optimizer */}
-      {!hasPlan('pro') && subTab === 'optimizer' && (
+      {!canUseOptimizer && subTab === 'optimizer' && (
         <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="SL/TP Optimizer" onUpgrade={() => {}} className="max-w-xl mx-auto" />
       )}
-      {subTab === "optimizer" && hasPlan('pro') && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+            {subTab === "optimizer" && canUseOptimizer && (
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200"><Target className="h-5 w-5" /><h3 className="font-semibold">SL/TP Optimization</h3></div>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <div className="text-sm text-zinc-300">Global suggested RR</div>
-                <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : "—"}</div>
+                <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : ""}</div>
                 <div className="text-xs text-zinc-400">{sltpSuggestion?.note}</div>
                 <div className="mt-4 flex gap-2">
                   <Button variant="secondary" onClick={()=> applySltpToSelected(sltpSuggestion?.recommendedRR ?? 1)}>Apply to selected</Button>
@@ -1720,13 +1605,15 @@ export default function TradeJournal(): React.ReactElement {
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <div className="text-sm text-zinc-300">Per-strategy suggestions</div>
                 <div className="mt-2 space-y-2">
-                  {Object.entries(patterns.stratMap || {}).map(([name,s]) => {
-                    const recommended = Math.max(1, Math.round(((s.netPL / Math.max(1, s.trades || 1)) / (Math.abs(summary.avgLoss) || 1)) * 10) / 10 || 1);
+                  {(Object.entries(patterns.stratMap ?? {}) as Array<[string, { trades?: number; wins?: number; losses?: number; netPL?: number; avgRR?: number | null }]>).map(([name, stats]) => {
+                    const tradeCount = stats.trades ?? 0;
+                    const netPl = stats.netPL ?? 0;
+                    const recommended = Math.max(1, Math.round(((netPl / Math.max(1, tradeCount)) / (Math.abs(summary.avgLoss) || 1)) * 10) / 10 || 1);
                     return (
                       <div key={name} className="rounded p-2 bg-zinc-900/40 border border-zinc-800 flex justify-between items-center text-sm">
                         <div>
                           <div className="font-medium">{name}</div>
-                          <div className="text-xs text-zinc-400">{s.trades} trades • WR: {s.trades ? ((s.wins/s.trades)*100).toFixed(1) : "0"}%</div>
+                          <div className="text-xs text-zinc-400">{tradeCount} trades - WR: {tradeCount ? (((stats.wins ?? 0) / tradeCount) * 100).toFixed(1) : "0"}%</div>
                         </div>
                         <div className="flex gap-2">
                           <div className="text-xs text-zinc-200">Suggest {recommended}R</div>
@@ -1743,14 +1630,14 @@ export default function TradeJournal(): React.ReactElement {
       )}
 
       {/* Prop-Firm */}
-      {!hasPlan('plus') && subTab === 'prop' && (
+      {!canUsePropDesk && subTab === 'prop' && (
         <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop-Firm Dashboard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
       )}
-      {subTab === "prop" && hasPlan('plus') && <PropTracker trades={trades as Trade[]} />}
+      {subTab === "prop" && canUsePropDesk && <PropTracker trades={trades as Trade[]} />}
 
       {/* Psychology */}
       {subTab === "psychology" && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><Activity className="h-5 w-5" /><h3 className="font-semibold">Psychology & Behavior</h3></div>
             <div className="flex flex-wrap gap-2">
@@ -1767,9 +1654,9 @@ export default function TradeJournal(): React.ReactElement {
               <div>
                 <div className="bg-zinc-900/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Behavioral Insights</h5>
-                  <div className="mt-2 text-xs text-zinc-400">Max win streak: {streaks.maxWinStreak} • Max loss streak: {streaks.maxLossStreak}</div>
-                  <div className="mt-2 text-xs text-zinc-400">Avg trade time: {summary.avgLengthMin.toFixed(1)} min • Sharpe-like: {summary.sharpe.toFixed(2)}</div>
-                  {revengeDetector.flagged ? <div className="mt-3 p-2 bg-red-900/30 rounded text-xs text-red-300">⚠️ {revengeDetector.reason}</div> : null}
+                  <div className="mt-2 text-xs text-zinc-400">Max win streak: {streaks.maxWinStreak} - Max loss streak: {streaks.maxLossStreak}</div>
+                  <div className="mt-2 text-xs text-zinc-400">Avg trade time: {summary.avgLengthMin.toFixed(1)} min - Sharpe-like: {summary.sharpe.toFixed(2)}</div>
+                  {revengeDetector.flagged ? <div className="mt-3 p-2 bg-red-900/30 rounded text-xs text-red-300">! {revengeDetector.reason}</div> : null}
                 </div>
                 <div className="mt-4 bg-zinc-900/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Guided Prompts</h5>
@@ -1784,7 +1671,7 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Calendar */}
       {subTab === "calendar" && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-3"><CalendarIcon /><h3 className="font-semibold">Calendar & Timeline</h3>
               <div className="ml-auto flex items-center gap-2">
@@ -1842,7 +1729,7 @@ export default function TradeJournal(): React.ReactElement {
                     className={`p-1 sm:p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`}
                     data-track="journal_calendar_day_click"
                     data-track-meta={`{"date":"${format(d, "yyyy-MM-dd")}","trades":${ds.trades}}`}
-                    title={`${ds.trades} trade(s) • ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}
+                    title={`${ds.trades} trade(s) - ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}
                   >
                     <div className="text-[10px] sm:text-xs text-zinc-300">{format(d,"dd")}</div>
                     <div className="text-[9px] sm:text-[11px] text-zinc-200">{ds.trades} trades</div>
@@ -1858,8 +1745,8 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Review */}
       {subTab === "review" && (
-        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
-          <CardContent className="p-5 space-y-4">
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+            <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><FileText className="h-5 w-5" /><h3 className="font-semibold">Weekly Review</h3></div>
             {(() => {
               const now = new Date();
@@ -1894,8 +1781,8 @@ export default function TradeJournal(): React.ReactElement {
                     </div>
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-1">Best / Worst</div>
-                      <div className="text-sm">{best ? `${best.symbol ?? '—'} $${parsePL(best.pnl).toFixed(2)}` : '—'}</div>
-                      <div className="text-sm">{worst ? `${worst.symbol ?? '-'} $${parsePL(worst.pnl).toFixed(2)}` : '—'}</div>
+                      <div className="text-sm">{best ? `${best.symbol ?? 'N/A'} $${parsePL(best.pnl).toFixed(2)}` : '--'}</div>
+                      <div className="text-sm">{worst ? `${worst.symbol ?? 'N/A'} $${parsePL(worst.pnl).toFixed(2)}` : '--'}</div>
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
@@ -1921,8 +1808,9 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Risk */}
       {subTab === "risk" && (
-        <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
-          <CardContent className="p-5 space-y-4">
+        canUseRiskTab ? (
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+            <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><Target className="h-5 w-5" /><h3 className="font-semibold">Risk Budget</h3></div>
             {effectivePlan === 'free' && (accountBalance === '' || typeof accountBalance !== 'number') && (
               <div className="p-3 rounded border border-yellow-600 bg-yellow-900/30 text-yellow-200 text-sm">
@@ -1961,12 +1849,16 @@ export default function TradeJournal(): React.ReactElement {
             </div>
           </CardContent>
         </Card>
+        ) : (
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Risk management toolkit" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        )
+
       )}
 
       {/* Mistakes (Pro) */}
       {subTab === "mistakes" && (
-        hasPlan('pro') ? (
-          <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+        canUseMistakeAnalyzer ? (
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
             <CardContent className="p-5 space-y-4">
               <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" /><h3 className="font-semibold">Mistake Analyzer</h3></div>
               {(() => {
@@ -2005,7 +1897,7 @@ export default function TradeJournal(): React.ReactElement {
                   </div>
                 );
               })()}
-            </CardContent>
+              </CardContent>
           </Card>
         ) : (
           <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Mistake Analyzer" onUpgrade={() => {}} className="max-w-xl mx-auto" />
@@ -2014,8 +1906,8 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Playbook (Plus) */}
       {subTab === "playbook" && (
-        hasPlan('plus') ? (
-          <Card className="border border-white/10 bg-white/5 dark:bg-black/30">
+        canUsePlaybook ? (
+          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
             <CardContent className="p-5 space-y-4">
               <div className="flex items-center gap-2 justify-between">
                 <div className="flex items-center gap-2"><Star className="h-5 w-5" /><h3 className="font-semibold">Strategy Playbook</h3></div>
@@ -2037,14 +1929,14 @@ export default function TradeJournal(): React.ReactElement {
                     <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.exit} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, exit: e.target.value }: pb))} />
                     <div className="text-xs text-muted-foreground mb-1">Notes</div>
                     <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm" rows={2} value={p.notes || ''} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, notes: e.target.value }: pb))} />
-                    <div className="mt-3 text-xs text-muted-foreground">Tip: Pin one setup and focus until it’s consistent.</div>
+                    <div className="mt-3 text-xs text-muted-foreground">Tip: Pin one setup and focus until it's consistent.</div>
                   </div>
                 ))}
               </div>
               {playbooks.length >= playbookLimit && (
                 <div className="text-xs text-yellow-400">Reached playbook limit for your plan. Upgrade to add more.</div>
               )}
-            </CardContent>
+              </CardContent>
           </Card>
         ) : (
           <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Strategy Playbook" onUpgrade={() => {}} className="max-w-xl mx-auto" />
@@ -2053,7 +1945,7 @@ export default function TradeJournal(): React.ReactElement {
 
       {/* Import preview */}
       {importPreview && (
-        <Card className="rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm text-zinc-200">Import preview ({importPreview.length} rows)</div>
@@ -2091,6 +1983,27 @@ export default function TradeJournal(): React.ReactElement {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

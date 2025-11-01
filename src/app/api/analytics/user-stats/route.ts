@@ -162,12 +162,12 @@ export async function GET() {
 
       // avg open hour and most active weekday
       const r4 = await client.query(
-        "SELECT AVG(EXTRACT(HOUR FROM open_time)) AS avg_hour FROM trades WHERE open_time IS NOT NULL"
+        "SELECT AVG(EXTRACT(HOUR FROM opentime)) AS avg_hour FROM trades WHERE opentime IS NOT NULL"
       );
       avgOpenHour = r4.rows?.[0]?.avg_hour !== null ? Number(r4.rows[0].avg_hour) : null;
 
       const r5 = await client.query(
-        "SELECT EXTRACT(DOW FROM open_time)::int AS dow, COUNT(*)::int AS c FROM trades WHERE open_time IS NOT NULL GROUP BY dow ORDER BY c DESC LIMIT 1"
+        "SELECT EXTRACT(DOW FROM opentime)::int AS dow, COUNT(*)::int AS c FROM trades WHERE opentime IS NOT NULL GROUP BY dow ORDER BY c DESC LIMIT 1"
       );
       mostActiveDOW = r5.rows?.[0]?.dow ?? null;
 
@@ -179,7 +179,7 @@ export async function GET() {
 
       // average duration (seconds)
       const r7 = await client.query(
-        "SELECT AVG(EXTRACT(EPOCH FROM (close_time - open_time))) AS avg_sec FROM trades WHERE close_time IS NOT NULL AND open_time IS NOT NULL"
+        "SELECT AVG(EXTRACT(EPOCH FROM (closetime - opentime))) AS avg_sec FROM trades WHERE closetime IS NOT NULL AND opentime IS NOT NULL"
       );
       avgDurationSec = r7.rows?.[0]?.avg_sec !== null ? Number(r7.rows[0].avg_sec) : null;
     } catch (e) {
@@ -216,8 +216,8 @@ export async function GET() {
       if (!totalTrades || avgOpenHour === null || mostActiveDOW === null) {
         const { data } = await supabase
           .from('trades')
-          .select('open_time, close_time, pnl, profit, source, deal_id')
-          .order('open_time', { ascending: false })
+          .select('opentime, closetime, pnl, profit, source, deal_id')
+          .order('opentime', { ascending: false })
           .limit(10000);
         if (data && data.length) {
           // Basic counts
@@ -243,8 +243,8 @@ export async function GET() {
           const sessMap: Record<string, number> = { asian: 0, london: 0, newyork: 0, sydney: 0 };
           let durSum = 0, durN = 0;
           for (const r of data as any[]) {
-            const ot = r?.open_time ? new Date(r.open_time) : null;
-            const ct = r?.close_time ? new Date(r.close_time) : null;
+            const ot = r?.opentime ? new Date(r.opentime) : null;
+            const ct = r?.closetime ? new Date(r.closetime) : null;
             if (ot && !isNaN(ot.getTime())) {
               const h = ot.getUTCHours();
               hours.push(h);

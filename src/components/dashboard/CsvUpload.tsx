@@ -2,7 +2,6 @@
 
 import React, {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -11,7 +10,7 @@ import React, {
 // @ts-ignore
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { TradeContext } from "@/context/TradeContext";
+import { useTrade } from "@/context/TradeContext";
 import { useUser } from "@/context/UserContext";
 import type { Trade } from "@/types/trade";
 import { Button } from "@/components/ui/button";
@@ -210,7 +209,7 @@ export default function CsvUpload({
   onClose: controlledOnClose,
   onImport: controlledOnImport,
 }: CsvUploadProps): React.ReactElement {
-  const { setTradesFromCsv } = useContext(TradeContext) as { setTradesFromCsv: (arr: unknown[]) => void };
+  const { setTradesFromCsv } = useTrade();
   const { plan } = useUser();
 
   const [open, setOpen] = useState<boolean>(false);
@@ -447,9 +446,23 @@ export default function CsvUpload({
         }
       }
 
+      const tradesToImport = mappedForImport.map((row, idx) => {
+        const trade: Partial<Trade> = {};
+        for (const key in row) {
+          const value = row[key];
+          if (key === 'lotSize' || key === 'entryPrice' || key === 'stopLossPrice' || key === 'takeProfitPrice' || key === 'pnl') {
+            (trade as any)[key] = Number(value) || 0;
+          } else {
+            (trade as any)[key] = value;
+          }
+        }
+        trade.id = trade.id || `imported-${idx}-${Date.now()}`;
+        return trade;
+      });
+
       setParsing(true);
       setProgress(60);
-      setTradesFromCsv(mappedForImport as unknown[]);
+      setTradesFromCsv(tradesToImport as Trade[]);
       setProgress(100);
       toast.success(`Imported ${mappedForImport.length} rows`);
       setTimeout(() => {

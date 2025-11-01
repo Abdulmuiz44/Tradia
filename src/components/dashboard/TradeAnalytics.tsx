@@ -1,38 +1,33 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import ShareButtons from "@/components/ShareButtons";
 import ExportButtons from "@/components/dashboard/ExportButtons";
-import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  AreaChart,
-  Area,
-  ScatterChart,
-  Scatter,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  ComposedChart,
+ResponsiveContainer,
+LineChart,
+Line,
+BarChart,
+Bar,
+PieChart,
+Pie,
+Cell,
+XAxis,
+YAxis,
+Tooltip,
+Legend,
+AreaChart,
+Area,
+RadarChart,
+PolarGrid,
+PolarAngleAxis,
+PolarRadiusAxis,
+Radar,
+ComposedChart,
 } from "recharts";
 import {
   TrendingUp,
@@ -43,19 +38,12 @@ import {
   Target,
   Zap,
   Award,
-  AlertTriangle,
-  CheckCircle,
-  Star,
   Crown,
   Lock,
   Download,
   Share2,
   Settings,
-  Filter,
-  Calendar,
-  Clock,
   DollarSign,
-  Percent,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
@@ -71,8 +59,8 @@ import {
   Brain,
   Gauge,
   Compass,
+  Star,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WeeklyCoachRecap from "@/components/analytics/WeeklyCoachRecap";
 import ProInsights from "@/components/analytics/ProInsights";
@@ -82,15 +70,16 @@ import TiltModeDetector from "@/components/analytics/TiltModeDetector";
 import PropFirmDashboard from "@/components/analytics/PropFirmDashboard";
 import OptimalStrategyMatcher from "@/components/analytics/OptimalStrategyMatcher";
 import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
-import { format, subDays, startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Trade } from "@/types/trade";
+import AccountBadge from "@/components/AccountBadge";
 
 // Types
 interface AnalyticsMetric {
   label: string;
   value: string | number;
   change?: number;
-  trend?: 'up' | 'down' | 'neutral';
+  trend?: "up" | "down" | "neutral";
   icon?: React.ReactNode;
   color?: string;
   premium?: boolean;
@@ -102,6 +91,7 @@ interface PerformanceData {
   pnl: number;
   trades: number;
   winRate: number;
+  drawdown?: number;
 }
 
 interface RiskMetrics {
@@ -113,19 +103,12 @@ interface RiskMetrics {
   informationRatio: number;
 }
 
-// Lazy-load AI chat to keep bundle lean
-const AIChatInterface = dynamic(() => import("@/components/ai/AIChatInterface"), { ssr: false });
-const AIForecastWidget = dynamic(() => import("@/components/ai/AIForecastWidget"), { ssr: false });
 
-interface TradeAnalyticsProps {
-  className?: string;
-}
 
-export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) {
-  const { data: session } = useSession();
-  const { trades = [] } = useTrade();
-  const [accountBalance, setAccountBalance] = useState<number | null>(null);
-  const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'coach' | 'controls'>('overview');
+export default function TradeAnalytics({ trades, session, isAdmin, className = "" }: { trades: any[], session: any, isAdmin: boolean, className?: string }) {
+const router = useRouter();
+  const [accountBalance, setAccountBalance] = useState<number>(0);
+  const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'controls'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
   const [showPremium, setShowPremium] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -134,10 +117,8 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   const [showQuickActions, setShowQuickActions] = useState(false);
 
   // Plan/role from session
-  const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
-  const role = String((session?.user as any)?.role || '').toLowerCase();
-  const email = String((session?.user as any)?.email || '').toLowerCase();
-  const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
+  const rawPlan = String((session?.user as any)?.plan || 'free').toLowerCase();
+  const plan = rawPlan === 'starter' ? 'free' : rawPlan;
   const effectivePlan = (isAdmin ? 'elite' : plan) as 'free' | 'pro' | 'plus' | 'elite';
   const planRank: Record<'free' | 'pro' | 'plus' | 'elite', number> = { free: 0, pro: 1, plus: 2, elite: 3 };
   const hasPlan = (min: 'free' | 'pro' | 'plus' | 'elite' = 'free') => planRank[effectivePlan] >= planRank[min];
@@ -173,7 +154,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
       }
     };
     fetchAccounts();
-  }, []);
+  }, [session?.user?.id]);
 
   // Touch gesture handling for mobile navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -192,7 +173,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
-    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'coach' | 'controls')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast', 'guard', 'tilt', 'prop', 'matcher', 'coach', 'controls'];
+    const views: ('overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'controls')[] = ['overview', 'performance', 'risk', 'patterns', 'forecast', 'guard', 'tilt', 'prop', 'matcher', 'controls'];
     const currentIndex = views.indexOf(activeView);
 
     if (isLeftSwipe && currentIndex < views.length - 1) {
@@ -247,7 +228,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     const metrics: AnalyticsMetric[] = [
       {
         label: "Account Balance",
-        value: accountBalance == null ? '—' : `$${accountBalance.toFixed(2)}`,
+        value: `$${accountBalance.toFixed(2)}`,
         icon: <DollarSign className="w-4 h-4" />,
         color: "text-emerald-400"
       },
@@ -296,6 +277,65 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     ];
     return metrics;
   }, [filteredTrades, accountBalance]);
+
+  // Monthly P&L data
+  const monthlyPnLData = useMemo(() => {
+    const monthlyData: { [key: string]: number } = {};
+    const now = new Date();
+    const months = eachMonthOfInterval({
+      start: subMonths(now, 11),
+      end: now
+    });
+
+    months.forEach(month => {
+      const monthKey = format(month, 'MMM yyyy');
+      monthlyData[monthKey] = 0;
+    });
+
+    filteredTrades.forEach(trade => {
+      const tradeDate = new Date(trade.openTime || trade.closeTime || '');
+      if (tradeDate) {
+        const monthKey = format(tradeDate, 'MMM yyyy');
+        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + (trade.pnl || 0);
+      }
+    });
+
+    return Object.entries(monthlyData).map(([month, pnl]) => ({
+      month,
+      pnl: Math.round(pnl * 100) / 100
+    }));
+  }, [filteredTrades]);
+
+  // Weekly activity data
+  const weeklyActivityData = useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayCounts = days.map(day => ({ day, trades: 0 }));
+
+    filteredTrades.forEach(trade => {
+      const tradeDate = new Date(trade.openTime || trade.closeTime || '');
+      if (tradeDate) {
+        const dayIndex = tradeDate.getDay();
+        dayCounts[dayIndex].trades += 1;
+      }
+    });
+
+    return dayCounts;
+  }, [filteredTrades]);
+
+  // Symbol performance data
+  const symbolPerformanceData = useMemo(() => {
+    const symbolData: { [key: string]: number } = {};
+
+    filteredTrades.forEach(trade => {
+      const symbol = trade.symbol || 'Unknown';
+      symbolData[symbol] = (symbolData[symbol] || 0) + (trade.pnl || 0);
+    });
+
+    return Object.entries(symbolData)
+      .map(([symbol, pnl]) => ({ symbol, pnl: Math.round(pnl * 100) / 100 }))
+      .sort((a, b) => b.pnl - a.pnl)
+      .slice(0, 10); // Top 10 symbols
+  }, [filteredTrades]);
 
   // Risk metrics (Premium feature)
   const riskMetrics = useMemo((): RiskMetrics => {
@@ -349,7 +389,8 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           equity: 0,
           pnl: 0,
           trades: 0,
-          winRate: 0
+          winRate: 0,
+          drawdown: 0
         };
       }
 
@@ -359,9 +400,16 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
     // Calculate cumulative equity and win rates
     let cumulativeEquity = 0;
+    let peakEquity = 0;
     Object.values(dailyData).forEach(day => {
       cumulativeEquity += day.pnl;
       day.equity = cumulativeEquity;
+
+      // Calculate drawdown
+      if (cumulativeEquity > peakEquity) {
+        peakEquity = cumulativeEquity;
+      }
+      day.drawdown = peakEquity > 0 ? ((peakEquity - cumulativeEquity) / peakEquity) * 100 : 0;
 
       const dayTrades = filteredTrades.filter(t =>
         format(new Date(t.openTime || t.closeTime || ''), 'yyyy-MM-dd') === day.date
@@ -440,79 +488,188 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
   );
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {performanceMetrics.map(renderMetricCard)}
+  <div className="space-y-6">
+  {/* Key Metrics Grid */}
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+  {performanceMetrics.map(renderMetricCard)}
+  </div>
+
+  {/* Equity Curve - PRIMARY CHART */}
+  <Card>
+  <CardHeader>
+  <CardTitle className="flex items-center gap-2">
+  <TrendingUp className="w-5 h-5" />
+  Equity Curve
+  </CardTitle>
+  </CardHeader>
+  <CardContent>
+  <div className="h-80">
+  <ResponsiveContainer width="100%" height="100%">
+  <AreaChart data={performanceData}>
+  <XAxis dataKey="date" />
+  <YAxis />
+  <Tooltip formatter={(value) => [`$${value}`, 'Equity']} />
+  <Area
+    type="monotone"
+    dataKey="equity"
+  stroke="#10b981"
+  fill="url(#equityGradient)"
+  strokeWidth={2}
+  />
+  <defs>
+  <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+  </linearGradient>
+  </defs>
+  </AreaChart>
+  </ResponsiveContainer>
+  </div>
+  </CardContent>
+  </Card>
+
+  {/* Charts Grid */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {/* Drawdown Chart */}
+  <Card>
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+        <TrendingDown className="w-5 h-5" />
+          Drawdown Analysis
+            </CardTitle>
+      </CardHeader>
+      <CardContent>
+      <div className="h-64">
+      <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={performanceData}>
+            <XAxis dataKey="date" />
+          <YAxis />
+        <Tooltip formatter={(value) => [`${value}%`, 'Drawdown']} />
+      <Area
+      type="monotone"
+      dataKey="drawdown"
+      stroke="#ef4444"
+      fill="url(#drawdownGradient)"
+    strokeWidth={2}
+  />
+  <defs>
+    <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+        </linearGradient>
+        </defs>
+        </AreaChart>
+        </ResponsiveContainer>
+        </div>
+        </CardContent>
+        </Card>
+
+        {/* Win/Loss Distribution Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChartIcon className="w-5 h-5" />
+              Win/Loss Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Wins', value: filteredTrades.filter(t => (t.outcome || '').toLowerCase() === 'win').length, fill: '#10b981' },
+                      { name: 'Losses', value: filteredTrades.filter(t => (t.outcome || '').toLowerCase() === 'loss').length, fill: '#ef4444' },
+                      { name: 'Breakeven', value: filteredTrades.filter(t => (t.outcome || '').toLowerCase() === 'breakeven').length, fill: '#6b7280' }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="#10b981" />
+                    <Cell fill="#ef4444" />
+                    <Cell fill="#6b7280" />
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Performance Chart */}
+      {/* Monthly P&L Bar Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Performance Overview
+            <BarChart3 className="w-5 h-5" />
+            Monthly P&L
           </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={performanceData}>
-                <XAxis dataKey="date" />
-                <YAxis yAxisId="equity" orientation="left" />
-                <YAxis yAxisId="pnl" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Area
-                  yAxisId="equity"
-                  type="monotone"
-                  dataKey="equity"
-                  fill="url(#equityGradient)"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                />
-                <Bar
-                  yAxisId="pnl"
-                  dataKey="pnl"
-                  fill="#3b82f6"
-                  opacity={0.6}
-                />
-                <defs>
-                  <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Win Rate Trend */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Win Rate Trend</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData}>
-                <XAxis dataKey="date" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip formatter={(value) => [`${value}%`, 'Win Rate']} />
-                <Line
-                  type="monotone"
-                  dataKey="winRate"
-                  stroke="#f59e0b"
-                  strokeWidth={3}
-                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
+              <BarChart data={monthlyPnLData}>
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value) => [`$${value}`, 'P&L']} />
+              <Bar dataKey="pnl" fill="#10b981" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
+
+      {/* Additional Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Trades Per Day of Week */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Trading Activity by Day
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyActivityData}>
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="trades" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Instrument Performance Bar Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Performance by Symbol
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={symbolPerformanceData} layout="horizontal">
+                  <XAxis type="number" />
+                  <YAxis dataKey="symbol" type="category" width={60} />
+                  <Tooltip formatter={(value) => [`$${value}`, 'P&L']} />
+                  <Bar dataKey="pnl" fill="#8b5cf6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
@@ -713,84 +870,21 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
     </div>
   );
 
-  const renderForecast = () => {
-    if (plan === 'free') {
-      return (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Zap className="w-16 h-16 mx-auto mb-4 text-blue-500" />
-            <h3 className="text-xl font-semibold mb-2">AI-Powered Forecasting</h3>
-            <p className="text-muted-foreground mb-4">
-              Get personalized trading forecasts, market predictions, and AI-driven insights with PRO.
-            </p>
-            <Button
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-              onClick={() => {
-                try { (window as any).location.href = '/checkout?plan=plus&billing=monthly'; } catch {}
-              }}
-            >
-              Upgrade to PRO
-            </Button>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5" />
-              AI Trading Forecast
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-4 bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600 mb-1">68%</div>
-                <div className="text-sm text-muted-foreground">Win Probability</div>
-              </div>
-              <div className="text-center p-4 bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600 mb-1">$245</div>
-                <div className="text-sm text-muted-foreground">Expected P&L</div>
-              </div>
-              <div className="text-center p-4 bg-purple-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600 mb-1">2.1R</div>
-                <div className="text-sm text-muted-foreground">Risk/Reward</div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <AIForecastWidget userId={(session?.user as any)?.id || (session?.user as any)?.email || 'unknown'} symbol="BTCUSD" />
-              <Separator className="my-4" />
-              <div>
-                <h4 className="font-medium mb-2">Recommended Actions</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-3 bg-gray-800 rounded-lg">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span className="text-sm">Consider EUR/USD long position</span>
-                  </div>
-                  <div className="flex items-center gap-2 p-3 bg-gray-800 rounded-lg">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm">Monitor GBP/USD for breakout signals</span>
-                  </div>
-                  <div className="flex items-center gap-2 p-3 bg-gray-800 rounded-lg">
-                    <Target className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm">Set stop loss at 1.0850 for EUR/USD</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
+  const renderForecast = () => (
+    <Card>
+      <CardContent className="p-8 text-center">
+        <Brain className="w-16 h-16 mx-auto mb-4 text-blue-500" />
+        <h3 className="text-xl font-semibold mb-2">AI Forecast Panel</h3>
+        <p className="text-muted-foreground mb-4">
+          Smart Money Concepts forecast panel coming soon. This feature will provide AI-powered market predictions.
+        </p>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div
-      className={`space-y-6 ${className}`}
+      className={`space-y-6 pb-6 max-w-full overflow-x-hidden ${className}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -813,17 +907,18 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
 
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Trade Analytics</h2>
-          <p className="text-muted-foreground">
-            Comprehensive analysis of your trading performance
-          </p>
-          {isMobile && (
-            <div className="mt-2 text-sm text-blue-400 font-medium">
-              Current View: {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
-            </div>
-          )}
-        </div>
+       <div>
+         <h2 className="text-2xl font-bold">Trade Analytics</h2>
+         <p className="text-muted-foreground">
+           Comprehensive analysis of your trading performance
+         </p>
+          <div className="mt-2"><AccountBadge compact /></div>
+         {isMobile && (
+           <div className="mt-2 text-sm text-blue-400 font-medium">
+             Current View: {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
+           </div>
+         )}
+       </div>
 
         <div className="flex flex-wrap gap-2">
           {/* Timeframe Selector */}
@@ -902,8 +997,21 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
         </Card>
       )}
 
+      <div className="grid gap-6">
+        {(effectivePlan !== 'free') && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <WeeklyCoachRecap trades={filteredTrades as any} plan={effectivePlan} />
+            <ProInsights trades={filteredTrades as any} plan={effectivePlan} />
+          </div>
+        )}
+        {(effectivePlan === 'free') && (
+            <CompactUpgradePrompt currentPlan={'free' as any} feature="Weekly Coach Recap and Pro Insights" onUpgrade={() => {}} className="mb-4" />
+        )}
+      </div>
+
       {/* View Tabs */}
-      <div className="flex flex-wrap gap-2 border-b">
+      <div className="overflow-x-auto border-b">
+        <div className="flex gap-2 min-w-max pb-2">
         {[
           { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
           { id: 'performance', label: 'Performance', icon: <TrendingUp className="w-4 h-4" /> },
@@ -923,7 +1031,13 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
               key={tab.id}
               variant={activeView === (tab as any).id ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setActiveView((tab as any).id as any)}
+              onClick={() => {
+                if ((tab as any).id === 'coach') {
+                  router.push('/chat'); // Tradia AI
+                } else {
+                  setActiveView((tab as any).id as any);
+                }
+              }}
               className={['flex items-center gap-2', !allowed ? 'opacity-70' : ''].filter(Boolean).join(' ')}
             >
               {tab.icon}
@@ -932,6 +1046,7 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
             </Button>
           );
         })}
+        </div>
       </div>
 
       {/* Content */}
@@ -968,46 +1083,6 @@ export default function TradeAnalytics({ className = "" }: TradeAnalyticsProps) 
           ) : (
             <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Optimal Strategy Matcher" onUpgrade={() => {}} className="max-w-xl mx-auto" />
           )
-        )}
-        {activeView === 'coach' && (
-          <div className="min-h-[480px]">
-            <Tabs defaultValue={(effectivePlan === 'free') ? 'chat' : 'weekly'}>
-              <TabsList className="mb-3">
-                <TabsTrigger value="weekly">Weekly Recap</TabsTrigger>
-                <TabsTrigger value="pro">Pro Insights</TabsTrigger>
-                <TabsTrigger value="builder">Strategy Builder</TabsTrigger>
-                <TabsTrigger value="chat">AI Coach</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="weekly">
-                {(effectivePlan === 'free') ? (
-                  <CompactUpgradePrompt currentPlan={'free' as any} feature="Weekly Coach Recap" onUpgrade={() => {}} className="mb-4" />
-                ) : (
-                  <WeeklyCoachRecap trades={filteredTrades as any} plan={effectivePlan} />
-                )}
-              </TabsContent>
-
-              <TabsContent value="pro">
-                {(effectivePlan === 'free') ? (
-                  <CompactUpgradePrompt currentPlan={'free' as any} feature="Pro Insights" onUpgrade={() => {}} className="mb-4" />
-                ) : (
-                  <ProInsights trades={filteredTrades as any} plan={effectivePlan} />
-                )}
-              </TabsContent>
-
-              <TabsContent value="builder">
-                {(effectivePlan !== 'elite') ? (
-                  <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Strategy Builder" onUpgrade={() => {}} className="mb-4" />
-                ) : (
-                  <StrategyBuilder trades={filteredTrades as any} plan={effectivePlan} />
-                )}
-              </TabsContent>
-
-              <TabsContent value="chat">
-                <AIChatInterface />
-              </TabsContent>
-            </Tabs>
-          </div>
         )}
         {activeView === 'controls' && (
           <RiskControlsAndPropSim plan={effectivePlan} accountBalance={accountBalance} filteredTrades={filteredTrades} />
@@ -1049,7 +1124,7 @@ function RiskControlsAndPropSim({
   filteredTrades,
 }: {
   plan: PlanTier;
-  accountBalance: number | null;
+  accountBalance: number;
   filteredTrades: any[];
 }) {
   const [autoGuard, setAutoGuard] = useState(false);
@@ -1124,6 +1199,14 @@ function RiskControlsAndPropSim({
   const [propMaxTotalLossPct, setPropMaxTotalLossPct] = useState<number>(10);
   const [propDays, setPropDays] = useState<number>(20);
   const [propPhases, setPropPhases] = useState<number>(plan === 'elite' ? 2 : 1);
+
+  useEffect(() => {
+    if (accountBalance && accountBalance > 0) {
+      setMaxDailyLoss(Math.max(25, accountBalance * 0.02));
+      setMaxWeeklyLoss(Math.max(50, accountBalance * 0.05));
+      setPropBalance(accountBalance);
+    }
+  }, [accountBalance]);
 
   const canEditBasic = plan !== 'free';
   const canEditPhases = plan === 'plus' || plan === 'elite';

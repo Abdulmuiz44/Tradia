@@ -23,5 +23,15 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "cipher",
+    "cipher/**",
+    "backend",
+    "backend/**",
+    "tradia-backend",
+    "tradia-backend/**",
+    "tradia-smc-forecaster",
+    "tradia-smc-forecaster/**"
+  ]
 }

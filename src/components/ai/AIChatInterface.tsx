@@ -1,8 +1,8 @@
 // src/components/ai/AIChatInterface.tsx
 "use client";
 
-import React, { useState, useRef, useEffect, useContext } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import React, { useState, useRef, useEffect, useContext, useCallback } from "react";
+import { useTrade } from "@/context/TradeContext";
 import {
   analyzeTradingPerformance,
   generatePersonalizedGreeting,
@@ -29,10 +29,12 @@ import {
   Square,
   Settings,
   Crown,
-  Lock
+  Lock,
+  Sparkles
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
+import { PLAN_LIMITS } from "@/lib/planAccess";
+import { cn } from "@/lib/utils";
 
 // Web Speech API type declarations
 declare global {
@@ -96,6 +98,8 @@ interface Message {
   attachments?: File[];
   isTyping?: boolean;
   isVoice?: boolean;
+  mode?: 'coach' | 'grok';
+  variant?: 'default' | 'upgrade' | 'system';
 }
 
 interface VoiceSettings {
@@ -110,17 +114,17 @@ interface AIChatInterfaceProps {
   className?: string;
 }
 
-function normalizeTier(p: string | undefined): 'free' | 'starter' | 'pro' | 'plus' | 'elite' {
+function normalizeTier(p: string | undefined): 'free' | 'pro' | 'plus' | 'elite' {
   if (!p) return 'free';
   const v = p.toLowerCase();
-  if (v === 'starter' || v === 'free' || v === 'pro' || v === 'plus' || v === 'elite') return v as any;
+  if (v === 'free' || v === 'pro' || v === 'plus' || v === 'elite') return v as any;
   return 'free';
 }
 
 export default function AIChatInterface({ className = "" }: AIChatInterfaceProps) {
-  const { trades } = useContext(TradeContext);
+  const { trades } = useTrade();
   const { plan } = useUser();
-  const [userTier, setUserTier] = useState<'free' | 'starter' | 'pro' | 'plus' | 'elite'>('free');
+  const [userTier, setUserTier] = useState<'free' | 'pro' | 'plus' | 'elite'>('free');
 
   // Sync tier with actual user plan
   useEffect(() => {
@@ -128,15 +132,59 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
   }, [plan]);
 
   const limits = PLAN_LIMITS[((userTier as PlanType) in PLAN_LIMITS ? (userTier as PlanType) : 'free')];
+  const grokUnlocked = userTier === 'plus' || userTier === 'elite';
+  const [assistantMode, setAssistantMode] = useState<'coach' | 'grok'>(() => (grokUnlocked ? 'grok' : 'coach'));
 
-  const [messages, setMessages] = useState<Message[]>([
+  const getOnboardingMessage = useCallback((tier: 'free' | 'pro' | 'plus' | 'elite', mode: 'coach' | 'grok', tradeCount: number) => {
+    const hasTrades = tradeCount > 0;
+
+    if (mode === 'grok' && (tier === 'plus' || tier === 'elite')) {
+      return [
+        '### Grok mode is live',
+        hasTrades
+          ? `I just ran anomaly checks across ${tradeCount} recent trades.`
+          : 'Drop a question or upload a chart and Grok will break it down instantly.',
+        'Ask for a bias sweep, forward view, or say "build a playbook" for action steps.'
+      ].join("\n\n");
+    }
+
+    if (tier === 'plus' || tier === 'elite') {
+      return [
+        'Welcome back to Tradia Coach.',
+        hasTrades
+          ? `I already scanned ${tradeCount} recent trades so we can set the focus for today.`
+          : 'Share what you are tackling and we will map the next best move.',
+        'Flip into Grok mode whenever you want deep explainability or predictive signals.'
+      ].join("\n\n");
+    }
+
+    if (tier === 'pro') {
+      return [
+        'Hey! I am Tradia Coach.',
+        hasTrades
+          ? `Your last ${tradeCount} trades are queued for a fast performance pulse.`
+          : 'Ask for a scorecard, risk tune-up, or mindset reset to get a tailored plan.',
+        'Upgrade to Plus when you are ready for Grok anomaly detection and screenshot breakdowns.'
+      ].join("\n\n");
+    }
+
+    return [
+      'Welcome to Tradia Coach.',
+      hasTrades
+        ? `I pulled highlights from ${tradeCount} recent trades so you can build momentum faster.`
+        : 'Ask anything about performance, risk, or setups and I will respond with a game plan.',
+      'Upgrading unlocks Grok mode for explainable deep dives and predictive prompts.'
+    ].join("\n\n");
+  }, []);
+
+  const [messages, setMessages] = useState<Message[]>(() => [
     {
-      id: '1',
+      id: 'ai-welcome',
       type: 'assistant',
-      content: (userTier === 'free' || userTier === 'starter')
-        ? "Hey there! I'm Tradia AI, your trading coach. I can analyze your recent trades and give basic advice. Upgrade to Pro for advanced analytics, image analysis, and personalized strategies."
-        : "Hey there! I'm Tradia AI, your trading coach and mentor. I’ll help analyze your performance, optimize strategies, and support your trading goals. What’s on your mind today?",
+      content: getOnboardingMessage('free', grokUnlocked ? 'grok' : 'coach', trades.length),
       timestamp: new Date(),
+      mode: grokUnlocked ? 'grok' : 'coach',
+      variant: 'system',
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -152,6 +200,28 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     voicePitch: 1,
     selectedVoice: null
   });
+
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (!prev.length) return prev;
+      const [first, ...rest] = prev;
+      if (first.id === 'ai-welcome' && first.type === 'assistant') {
+        return [
+          {
+            ...first,
+            content: getOnboardingMessage(userTier, assistantMode, trades.length),
+            mode: assistantMode,
+          },
+          ...rest,
+        ];
+      }
+      return prev;
+    });
+    if (!grokUnlocked) {
+      setAssistantMode('coach');
+    }
+  }, [userTier, grokUnlocked, assistantMode, trades.length, getOnboardingMessage]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -206,6 +276,18 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     }
   };
 
+  const pushUpgradeMessage = useCallback((content: string) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: `${Date.now()}-upgrade`,
+        type: 'assistant',
+        content,
+        timestamp: new Date(),
+      },
+    ]);
+  }, [setMessages]);
+
   const cleanForSpeech = (raw: string): string => {
     try {
       let t = raw;
@@ -254,6 +336,13 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     setInputMessage('');
     setIsTyping(true);
 
+    if (assistantMode === 'grok' && !grokUnlocked) {
+      setIsTyping(false);
+      pushUpgradeMessage('Tradia Grok Fast Mode is available on Plus and Elite plans. Upgrade to unlock real-time Grok summaries, predictive signals, and conversational explainability.');
+      setUploadedFiles([]);
+      return;
+    }
+
     try {
       const conversationHistory = messages.slice(-5).map(msg => ({
         role: msg.type,
@@ -261,13 +350,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       }));
 
       if ((userTier === 'free' || userTier === 'starter') && (uploadedFiles.length > 0 || inputMessage.toLowerCase().includes('screenshot'))) {
-        const upgradeMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: "PRO feature: Advanced AI and image analysis are available for Pro and above. Upgrade to unlock screenshot reviews and deeper analytics.",
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, upgradeMessage]);
+        pushUpgradeMessage('PRO feature: Image analysis is available for Pro and above. Upgrade to unlock advanced chart analysis and visual insights.');
         setIsTyping(false);
         setUploadedFiles([]);
         return;
@@ -279,16 +362,16 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         body: JSON.stringify({
           message: userMessage.content,
           tradeHistory: trades,
-          // Send metadata only, not raw File objects
           attachments: uploadedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })),
-          conversationHistory
+          conversationHistory,
+          mode: assistantMode
         }),
       });
 
       if (!response.ok) throw new Error(`API request failed: ${response.status}`);
 
       const data = await response.json();
-      const aiResponse: string = data.response || generateIntelligentCoachingResponse(userMessage.content, trades, uploadedFiles, userTier);
+      const aiResponse: string = data.response || generateIntelligentCoachingResponse(userMessage.content, trades, uploadedFiles, userTier, assistantMode);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -300,13 +383,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       if (voiceSettings.voiceEnabled && voiceSettings.autoSpeak) speakText(aiMessage.content);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        type: 'assistant',
-        content: "Sorry, I encountered an error processing your request. Please try again.",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      pushUpgradeMessage('Sorry, I encountered an issue processing that. Please try again in a moment.');
     } finally {
       setIsTyping(false);
       setUploadedFiles([]);
@@ -330,7 +407,13 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
   };
 
   return (
-    <div className={`bg-[#161B22] border border-[#2a2f3a] rounded-lg flex flex-col h-full min-h-[500px] max-h-[calc(100vh-200px)] ${className}`}>
+    <div
+      className={cn(
+        'relative mx-auto flex h-full w-full max-w-5xl flex-col rounded-2xl border border-[#2a2f3a] bg-[#161B22] shadow-xl',
+        'min-h-[520px]',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-3 md:p-4 border-b border-[#2a2f3a] bg-[#0D1117]">
         <div className="flex items-center gap-2 md:gap-3">
@@ -458,15 +541,62 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         </div>
       )}
 
+      {/* Mode Switcher */}
+      <div className="border-b border-[#2a2f3a] bg-[#101521] px-3 md:px-4 py-3">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAssistantMode('coach')}
+              className={cn(
+                'rounded-full px-3 py-1.5 text-xs md:text-sm font-medium transition-all',
+                assistantMode === 'coach'
+                  ? 'bg-blue-600/80 text-white shadow shadow-blue-500/40'
+                  : 'bg-[#161B22] text-slate-300 border border-[#2a2f3a] hover:border-blue-500/50'
+              )}
+            >
+              Tradia Coach
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!grokUnlocked) {
+                  pushUpgradeMessage('Tradia Grok Fast Mode unlocks with Plus. Upgrade to unleash explainable AI callouts, predictive bias detection, and instant playbooks.');
+                  return;
+                }
+                setAssistantMode('grok');
+              }}
+              className={cn(
+                'flex items-center gap-1 rounded-full px-3 py-1.5 text-xs md:text-sm font-medium transition-all',
+                grokUnlocked
+                  ? assistantMode === 'grok'
+                    ? 'bg-purple-600 text-white shadow shadow-purple-500/40'
+                    : 'bg-[#1f1233] text-purple-200 border border-purple-500/40 hover:bg-purple-600/80 hover:text-white'
+                  : 'bg-[#1a1f2e] text-gray-400 border border-[#2a2f3a] cursor-not-allowed'
+              )}
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Tradia Grok
+              {!grokUnlocked && <Lock className="w-3 h-3" />}
+            </button>
+          </div>
+          <div className="text-xs text-slate-400 leading-relaxed">
+            {assistantMode === 'grok' && grokUnlocked
+              ? 'Grok Fast Mode delivers XAI summaries, anomaly detection, and story-driven playbooks in seconds.'
+              : 'Coach Mode keeps things structured with coaching prompts and gentle nudges. Switch to Grok after upgrading for XAI-powered depth.'}
+          </div>
+        </div>
+      </div>
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 md:px-4 py-4">
+        <div className="mx-auto flex w-full max-w-3xl flex-col space-y-3 md:space-y-4">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-3 md:p-4 shadow-lg ${
+              className={`w-full rounded-2xl border border-[#2a2f3a] p-3 md:p-4 shadow-lg transition-all ${
                 message.type === 'user'
-                  ? 'bg-blue-600 text-white border border-blue-500/30'
-                  : 'bg-[#1a1f2e] text-gray-100 border border-[#2a2f3a]'
+                  ? 'bg-blue-600 text-white border-blue-500/30'
+                  : 'bg-[#1a1f2e] text-gray-100 backdrop-blur'
               }`}
             >
               {message.type === 'assistant' && (
@@ -498,7 +628,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-[#1a1f2e] rounded-lg p-3 md:p-4 max-w-[85%] sm:max-w-[80%] border border-[#2a2f3a]">
+            <div className="w-full rounded-2xl border border-[#2a2f3a] bg-[#1a1f2e] p-3 md:p-4 shadow-lg transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <Bot className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-medium text-blue-400">Tradia AI</span>
@@ -515,8 +645,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           </div>
         )}
 
-        <div ref={messagesEndRef} />
-      </div>
+        <div ref={messagesEndRef} />\r\n        </div>\r\n      </div>
 
       {/* Composer */}
       <div className="px-3 md:px-4 pb-2 border-t border-[#2a2f3a]">
@@ -631,14 +760,72 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 }
 
 // Intelligent Coaching Response Generator - uses advancedAnalysis helpers
-function generateIntelligentCoachingResponse(userMessage: string, trades: any[], uploadedFiles: File[], userTier: string = 'free'): string {
+function generateIntelligentCoachingResponse(
+  userMessage: string,
+  trades: any[],
+  uploadedFiles: File[],
+  userTier: string = 'free',
+  mode: 'coach' | 'grok' = 'coach'
+): string {
   const lowerMessage = userMessage.toLowerCase();
-
   const tradeAnalysis = analyzeTradingPerformance(trades);
+  const focusTopic = tradeAnalysis.tradingStyle
+    ? `${tradeAnalysis.tradingStyle} performance lens`
+    : 'Trading performance pulse';
 
-  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-    const personalizedGreeting = generatePersonalizedGreeting(tradeAnalysis);
-    return `${personalizedGreeting}\n\nYour Trading Snapshot:\n${generateTradingSnapshot(tradeAnalysis)}\n\nWhat would you like to focus on today?\n• Performance Review — "How's my trading been?"\n• Strategy Optimization — "What's my strongest pattern?"\n• Risk Management — "How can I improve my risk control?"\n• Market Insights — "What's the best setup right now?"\n• Trading Recommendations — "What should I trade next?"\n\nI'm here to help you level up your trading game!`;
+  const warmCoachIntro = () => {
+    const greeting = generatePersonalizedGreeting(tradeAnalysis);
+    const snapshot = generateTradingSnapshot(tradeAnalysis);
+    return `${greeting}
+
+**Quick Pulse**
+${snapshot}
+
+Ask for a deep-dive, a risk tune-up, or ideas to stay in flow.`;
+  };
+
+  const grokHeading = () =>
+    [
+      '## Tradia Grok Fast Insight',
+      '**Signal Blend:** XAI Grok — Explainability Mode',
+      `**Focus:** ${focusTopic}`,
+    ].join('\n');
+
+  if (mode === 'grok') {
+    const summaryBlocks: string[] = [
+      grokHeading(),
+      '',
+      '### Performance Snapshot',
+      generateAdvancedPerformanceAnalysis(tradeAnalysis),
+      '',
+      '### Strategy Alpha Highlights',
+      generateStrategyRecommendations(tradeAnalysis),
+      '',
+      '### Risk Radar',
+      generateRiskManagementAnalysis(tradeAnalysis),
+      '',
+      '### Grok Next Moves',
+      '- Ask for `playbook` to turn this into a checklist.',
+      '- Upload a chart screenshot and I will annotate the setup.',
+      '- Say `predict next` for a probabilistic outlook on upcoming trades.',
+      "I'm ready when you are — what should Grok spotlight next?",
+    ];
+    return summaryBlocks.join('\n');
+  }
+
+  if (
+    lowerMessage.includes('hello') ||
+    lowerMessage.includes('hi') ||
+    lowerMessage.includes('hey')
+  ) {
+    return `${warmCoachIntro()}
+
+- Performance Review — "How's my trading been?"
+- Strategy Tune-Up — "What's my strongest pattern?"
+- Risk Refinement — "How can I protect capital better?"
+- Market Pulse — "What's the best setup right now?"
+
+Let's get after it.`;
   }
 
   if (lowerMessage.includes('performance') || lowerMessage.includes('how am i doing') || lowerMessage.includes('win rate')) {
@@ -673,6 +860,11 @@ function generateIntelligentCoachingResponse(userMessage: string, trades: any[],
     return generateAdvancedScreenshotAnalysis(uploadedFiles, tradeAnalysis);
   }
 
-  return generateDefaultIntelligentResponse(tradeAnalysis);
+  const defaultResponse = generateDefaultIntelligentResponse(tradeAnalysis);
+  return `${defaultResponse}
+
+Need help with mindset, strategy, or risk? Just ask.`;
 }
+
+
 

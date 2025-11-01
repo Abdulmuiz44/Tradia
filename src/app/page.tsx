@@ -54,7 +54,7 @@ const BENEFITS = [
   { title: "Trade Timeline", desc: "Visualize your performance over time." },
   { title: "AI Hints", desc: "Automated notes on recurring mistakes (Pro)." },
   { title: "Strategy Tags", desc: "Label trades and filter performance per strategy." },
-  { title: "Multi-Account View", desc: "Aggregate accounts into a single portfolio view." },
+  { title: "Performance Analytics", desc: "Comprehensive charts and metrics for better trading decisions." },
 ];
 
 const PLANS = [
@@ -67,18 +67,17 @@ const PLANS = [
     tag: "Free forever",
   },
   {
-    id: "pro",
-    name: "Pro",
-    monthly: 9,
-    highlights: [
+  id: "pro",
+  name: "Pro",
+  monthly: 9,
+  highlights: [
       "All Starter features",
       "6 months trade history",
-      "3 account connections",
       "AI weekly summary",
       "Personalized strategy recommendations",
       "Risk management & market timing insights"
     ],
-    cta: "Start 3-day trial",
+    cta: "Start 30-day trial",
     tag: "Popular",
   },
   {
@@ -88,12 +87,11 @@ const PLANS = [
     highlights: [
       "All Pro features",
       "Unlimited history",
-      "5 account connections",
       "AI trade reviews & SL/TP suggestions",
       "Image processing for trade screenshots",
       "Real-time performance analytics & insights"
     ],
-    cta: "Start 3-day trial",
+    cta: "Start 30-day trial",
     tag: "For active traders",
   },
   {
@@ -102,7 +100,6 @@ const PLANS = [
     monthly: 39,
     highlights: [
       "Everything in Plus",
-      "Unlimited connections",
       "AI strategy builder",
       "Prop-firm dashboard",
       "All AI features included"
@@ -199,11 +196,11 @@ export default function Home(): React.ReactElement {
                   transition={{ duration: 0.5 }}
                   className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white"
                 >
-                  Tradia — AI Trading Performance Assistant
+                  Stop Guessing Trades — AI Uncovers Your Winning Edge in 30 Seconds
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
-                  Transform your trading performance with AI-powered analysis. Track every trade, discover your edge, and scale with confidence. For now, add trades manually or import your trades via CSV to see your overall performance, risk, and AI insights.
+                  Traders like you boosted win rates 20% — upload a sample trade to see yours free.
                 </motion.p>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-400 max-w-2xl">
@@ -212,13 +209,27 @@ export default function Home(): React.ReactElement {
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
                   <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
-                    Create free account <AiOutlineArrowRight />
+                    Get Your Free AI Review <AiOutlineArrowRight />
                   </motion.button>
 
-                  <Link href="/pricing" className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20">
-                    View plans\n                  </Link>\n\n                  <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 text-xs font-semibold">\n                    New: AI Mental Coach\n                  </span>
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20"
+                  >
+                    View plans
+                  </Link>
 
-                  {/* stats intentionally removed — nothing visible here */}
+                  <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 text-xs font-semibold">
+                    New: AI Mental Coach
+                  </span>
+
+                  {/* ROI widget */}
+                  <div className="w-full">
+                    {(() => {
+                      const ROICalc = require("@/components/marketing/ROICalculator").default;
+                      return <ROICalc />;
+                    })()}
+                  </div>
                 </div>
 
                 {/* trust metrics removed per request */}
@@ -347,12 +358,12 @@ export default function Home(): React.ReactElement {
               <div className="text-center">
                 <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AiOutlineGlobal className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3">Multi-Platform Trading Support</h3>
+               </div>
+                <h3 className="text-xl font-semibold mb-3">Comprehensive Trading Analytics</h3>
                 <p className="text-gray-400">
-                  Connect multiple trading accounts and analyze your performance across different brokers and platforms.
-                  Whether you trade forex, stocks, commodities, or cryptocurrencies, Tradia supports various
-                  data formats and provides unified analytics for your entire trading portfolio.
+                  Get detailed insights into your trading performance with advanced analytics and AI-powered recommendations.
+                  Whether you trade forex, stocks, commodities, or cryptocurrencies, Tradia provides
+                  comprehensive analysis to help you improve your trading strategies.
                 </p>
               </div>
 
@@ -571,15 +582,14 @@ export default function Home(): React.ReactElement {
               <h3 className="text-2xl font-bold mb-4">Frequently asked questions</h3>
 
               <div className="space-y-3">
-                {[
-                  { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                  { q: "Which brokers are supported?", a: "Right now you can import trades via CSV from any broker, or add trades manually. Direct connections will be added over time." },
-                  { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons." },
-                ].map((fq, i) => (
-                  <details key={i} className="p-4 rounded-xl border border-white/10">
-                    <summary className="font-medium text-gray-100">{fq.q}</summary>
-                    <p className="mt-2 text-gray-400">{fq.a}</p>
-                  </details>
+                 {[
+                   { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
+                   { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons." },
+                 ].map((fq, i) => (
+                <details key={i} className="p-4 rounded-xl border border-white/10">
+                <summary className="font-medium text-gray-100">{fq.q}</summary>
+                <p className="mt-2 text-gray-400">{fq.a}</p>
+                 </details>
                 ))}
               </div>
             </div>

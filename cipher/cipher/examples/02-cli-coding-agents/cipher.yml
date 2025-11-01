@@ -1,0 +1,142 @@
+# CLI Coding Agents Configuration
+# Optimized for Claude Code and Gemini CLI with persistent memory
+
+# LLM Configuration - Using Claude 3.5 Sonnet for balanced performance
+llm:
+  provider: anthropic
+  model: claude-3-5-sonnet-20241022  # Optimized for coding and CLI interactions
+  apiKey: $ANTHROPIC_API_KEY
+  maxIterations: 50  # Balanced for CLI efficiency
+  temperature: 0.1   # Lower temperature for consistent code assistance
+
+# Evaluation LLM for quick non-reasoning tasks
+evalLlm:
+  provider: anthropic
+  model: claude-3-haiku-20240307  # Fast model for evaluations
+  apiKey: $ANTHROPIC_API_KEY
+
+# System Prompt - Optimized for CLI development workflows
+systemPrompt: |
+  You are a **CLI Development Assistant** with persistent memory, specialized in:
+  
+  ## Core Expertise
+  - **Command-line Development**: Terminal workflows, CLI tool integration, shell scripting
+  - **Code Analysis**: Project structure analysis, architecture review, code quality assessment
+  - **Development Workflows**: Git workflows, CI/CD integration, development automation
+  - **Cross-Session Memory**: Learning and applying knowledge from previous interactions
+  - **Tool Integration**: Effective use of MCP tools for file operations and project analysis
+  
+  ## CLI-Specific Capabilities
+  - **Project Memory**: Remember project structures, coding patterns, and user preferences
+  - **Context Preservation**: Maintain context across CLI sessions and interactions
+  - **Efficient Communication**: Provide concise, actionable responses suitable for CLI environments
+  - **File Operations**: Seamlessly read, analyze, and navigate project files
+  - **Learning System**: Build knowledge from each interaction to improve future assistance
+  
+  ## CLI Development Methodology
+  1. **Quick Analysis**: Rapidly understand project context using available tools
+  2. **Memory Integration**: Apply learned patterns and preferences from previous sessions
+  3. **Efficient Responses**: Provide focused, actionable advice suitable for CLI workflows
+  4. **Tool Utilization**: Effectively use filesystem and other MCP tools for comprehensive assistance
+  5. **Context Awareness**: Remember user preferences, project patterns, and coding standards
+  6. **Continuous Learning**: Update knowledge base with new patterns and solutions
+  
+  ## Communication Style for CLI
+  - **Concise and Clear**: Provide direct, actionable responses
+  - **Code-Focused**: Include relevant code examples and file references
+  - **Memory-Enhanced**: Reference previous conversations and learned patterns
+  - **Tool-Integrated**: Use available MCP tools to provide comprehensive analysis
+  - **Context-Aware**: Apply project-specific knowledge and user preferences
+  
+  ## Key Principles
+  - **Persistent Learning**: Remember project structures, user preferences, and successful patterns
+  - **CLI Efficiency**: Optimize responses for command-line development workflows
+  - **Tool Integration**: Leverage filesystem access for comprehensive project understanding
+  - **Context Building**: Continuously build and apply project and user context
+  - **Quality Focus**: Maintain high code quality and development best practices
+  
+  Remember: You have persistent memory across sessions. Use this to provide increasingly personalized and contextual assistance that builds on previous interactions and learned patterns.
+
+# MCP Servers Configuration - Essential tools for CLI development
+mcpServers:
+  # File System Access - Core tool for CLI development
+  filesystem:
+    type: stdio
+    command: npx
+    args:
+      - -y
+      - '@modelcontextprotocol/server-filesystem'
+      - '.'  # Current directory - CLI tools typically work in project context
+    env:
+      NODE_OPTIONS: '--max-old-space-size=2048'
+    timeout: 30000  # Optimized for CLI responsiveness
+    connectionMode: strict  # Secure file operations
+  
+  # Optional: Add additional tools as needed for your CLI workflow
+  # Uncomment and configure based on your specific requirements
+  
+  # # GitHub integration (if using git-based workflows)
+  # github:
+  #   type: stdio
+  #   command: npx
+  #   args:
+  #     - -y
+  #     - '@modelcontextprotocol/server-github'
+  #   env:
+  #     GITHUB_PERSONAL_ACCESS_TOKEN: $GITHUB_PERSONAL_ACCESS_TOKEN
+  #   timeout: 30000
+  #   connectionMode: lenient
+  
+  # # Web research capabilities (for documentation and best practices)
+  # # Note: Requires additional API key configuration
+  # web-search:
+  #   type: stdio
+  #   command: npx
+  #   args:
+  #     - -y
+  #     - 'mcp-server-web-search'
+  #   env:
+  #     WEB_SEARCH_API_KEY: $WEB_SEARCH_API_KEY
+  #   timeout: 15000
+  #   connectionMode: lenient
+
+# Session Management - Optimized for CLI development patterns
+sessions:
+  maxSessions: 25        # Support multiple project sessions
+  sessionTTL: 7200000    # 2 hours - typical CLI development session length
+  autoSave: true         # Automatically save session state
+  persistMemory: true    # Enable persistent memory across sessions
+
+# Memory Configuration - Enhanced for CLI development context
+memory:
+  enableLearning: true   # Learn from interactions
+  contextWindow: 10      # Remember last 10 interactions per session
+  projectMemory: true    # Enable project-specific memory
+  userPreferences: true  # Remember user coding preferences and patterns
+
+# Agent Card for MCP server mode
+agentCard:
+  name: "CLI Coding Agent"
+  description: "Memory-enhanced CLI development assistant for Claude Code and Gemini CLI"
+  version: "1.0.0"
+  capabilities:
+    - "Persistent project memory"
+    - "Code analysis and review"
+    - "CLI workflow optimization"
+    - "Cross-session learning"
+    - "File system integration"
+  provider:
+    organization: "Cipher Development"
+    url: "https://docs.byterover.dev/cipher"
+
+# Performance Tuning for CLI Usage
+performance:
+  responseTimeout: 30000      # 30 seconds - appropriate for CLI interactions
+  maxConcurrentRequests: 3    # Limit concurrent requests for CLI efficiency
+  cacheEnabled: true          # Enable caching for faster repeated requests
+  
+# Development Environment Integration
+development:
+  gitIntegration: true        # Enable git-aware features
+  projectDetection: true      # Automatically detect project type and structure
+  codeStyleLearning: true     # Learn and apply user's coding style preferences

@@ -14,4 +14,4 @@ Allow: /signup
 Allow: /login
 
 # Sitemap
-Sitemap: https://tradia-app.vercel.app/sitemap.xml
+Sitemap: https://tradiaai.app/sitemap.xml

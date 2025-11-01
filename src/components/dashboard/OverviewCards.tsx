@@ -1,9 +1,12 @@
 // src/components/dashboard/OverviewCards.tsx
 "use client";
 
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import React, { useEffect, useMemo, useState } from "react";
+import { useTrade } from "@/context/TradeContext";
 import type { Trade as TradeType } from "@/types/trade";
+import { useTradingAccount } from "@/context/TradingAccountContext";
+import { generateSampleTrades } from "@/lib/sampleTrades";
 import { differenceInCalendarDays, format } from "date-fns";
 import {
   BarChart2,
@@ -53,6 +56,7 @@ interface OverviewCardsProps {
   trades?: TradeType[];
   fromDate?: string;
   toDate?: string;
+  session: any;
 }
 
 /* ---------- Helpers (robust parsing & safety) ---------- */
@@ -233,9 +237,10 @@ const getGreeting = (name = "Trader") => {
   return `Good Evening ${name}`;
 };
 
-export default function OverviewCards({ trades: propTrades, fromDate, toDate }: OverviewCardsProps) {
-  const ctx = useContext(TradeContext) as any;
-  const contextTrades = Array.isArray(ctx?.trades) ? (ctx.trades as TradeType[]) : [];
+export default function OverviewCards({ trades: propTrades, fromDate, toDate, session }: OverviewCardsProps) {
+  const { trades: contextTradesFromHook, importTrades } = useTrade();
+  const contextTrades = Array.isArray(contextTradesFromHook) ? (contextTradesFromHook as TradeType[]) : [];
+  const { selected: selectedAccount } = useTradingAccount();
 
   const [mounted, setMounted] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
@@ -254,19 +259,16 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
     (async () => {
       try {
         let name: string | null =
-          (ctx?.user?.name as string | undefined) ??
-          (ctx?.userName as string | undefined) ??
-          (ctx?.name as string | undefined) ??
-          (ctx?.profile?.name as string | undefined) ??
+          (session?.user?.name as string | undefined) ??
           null;
 
         // If there's a supabase client in context (or exported globally on window), try to fetch from users table
-        const supabaseClient = ctx?.supabase ?? (typeof window !== "undefined" ? (window as any).supabase : null);
+        const supabaseClient = createClientComponentClient();
 
         if (!name && supabaseClient && typeof supabaseClient.from === "function") {
           try {
             // try user id from context first
-            const userId = ctx?.user?.id ?? ctx?.userId ?? null;
+            const userId = session?.user?.id ?? null;
             let targetId = userId;
 
             // if no id from ctx try auth methods (supports multiple supabase auth versions)
@@ -321,9 +323,23 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         setUserName("Trader");
       }
     })();
-  }, [ctx]);
+  }, []);
 
   const allTrades: TradeType[] = Array.isArray(propTrades) ? propTrades : Array.isArray(contextTrades) ? contextTrades : [];
+
+  // Manual account balance wiring: estimate current balance as initial + all-time PnL
+  const accountBalance = useMemo(() => {
+    if (!selectedAccount) return null;
+    const currency = selectedAccount.currency || 'USD';
+    const initial = selectedAccount.mode === 'manual' ? Number(selectedAccount.initial_balance || 0) : null;
+    if (initial === null) return { currency, initial: null, current: null, name: selectedAccount.name };
+    const totalPnlAll = allTrades.reduce((s, t) => {
+      const v = toNumber((t as any).pnl ?? (t as any).profit ?? (t as any).netpl);
+      return s + v;
+    }, 0);
+    const current = initial + totalPnlAll;
+    return { currency, initial, current, name: selectedAccount.name };
+  }, [selectedAccount, allTrades]);
 
   const metrics = useMemo(() => {
     const from = fromDate && !Number.isNaN(new Date(fromDate).getTime()) ? new Date(fromDate) : new Date(-8640000000000000);
@@ -936,8 +952,77 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate }: 
         </div>
       </div>
 
+      {/* Sample Data Banner - Show when no trades exist */}
+      {allTrades.length === 0 && (
+        <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="text-2xl">📊</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Welcome to Tradia!</h3>
+                  <p className="text-sm text-gray-300">Ready to start analyzing your trading performance?</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3 mt-4">
+                <button
+                onClick={async () => {
+                try {
+                const sampleTrades = generateSampleTrades();
+                await importTrades(sampleTrades);
+                } catch (error) {
+                console.error('Failed to load sample data:', error);
+                }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Load Sample Data
+                </button>
+                <button
+                  onClick={() => {
+                    // Navigate to trade history or show import modal
+                    if (window && window.dispatchEvent) {
+                      window.dispatchEvent(new CustomEvent('showImportModal'));
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Import Your Trades
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-3">
+                Sample data includes realistic EUR/USD, BTC/USDT, and ETH/USDT trades to explore Tradia's features.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* KPI cards (including avg pnl & avg duration inline among them) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {accountBalance && (
+          renderMetricCard({
+            keyId: "accountBalance",
+            icon: <DollarSign size={16} className="text-emerald-400" />,
+            title: `Current Balance (${accountBalance.currency})`,
+            value:
+              accountBalance.current === null
+                ? "N/A"
+                : `$${Number(accountBalance.current).toFixed(2)}`,
+            small:
+              accountBalance.initial === null
+                ? (accountBalance.name || "")
+                : `${accountBalance.name || "Account"} · Start $${Number(accountBalance.initial).toFixed(2)}`,
+            color:
+              accountBalance.current !== null && accountBalance.initial !== null && accountBalance.current >= accountBalance.initial
+                ? "#10b981"
+                : "#ef4444",
+            valueClass:
+              accountBalance.current !== null && accountBalance.initial !== null && accountBalance.current >= accountBalance.initial
+                ? "text-green-400"
+                : "text-red-400",
+          })
+        )}
         {renderMetricCard({
           keyId: "totalTrades",
           icon: <BarChart2 size={16} className="text-sky-400" />,

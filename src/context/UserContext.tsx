@@ -14,7 +14,6 @@ interface UserData {
   country?: string;
   emailVerified: boolean;
   createdAt: string;
-  lastLogin?: string;
 }
 
 interface UserContextType {
@@ -52,23 +51,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
 
-      // Fetch user data from Supabase
+      // Use session user ID as the primary ID (this is the Supabase auth user ID)
+      const authUserId = session.user.id;
+
+      // Fetch user data from Supabase using auth user ID
       const { data: userData, error } = await supabase
         .from('users')
-        .select('id, name, email, plan, country, email_verified, created_at, last_login')
-        .eq('email', session.user.email)
+        .select('id, name, email, plan, country, email_verified, created_at')
+        .eq('id', authUserId)
         .single();
 
       if (!error && userData) {
         const userInfo: UserData = {
-          id: userData.id,
+          id: authUserId, // Use the auth user ID, not the custom table ID
           name: userData.name,
           email: userData.email,
           plan: userData.plan || "free",
           country: userData.country,
           emailVerified: userData.email_verified || false,
           createdAt: userData.created_at,
-          lastLogin: userData.last_login,
         };
 
         // Admin hard-elevation: ensure admin is always Elite in state and DB
@@ -89,41 +90,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         console.error('Error fetching user data:', error);
-        // Fallback: try server API which uses server session context
-        try {
-          const res = await fetch('/api/user/profile', { cache: 'no-store' });
-          if (res.ok) {
-            const json = await res.json();
-            const p = json?.profile as any;
-            if (p?.email) {
-              const { data: planRow } = await supabase.from('users').select('plan').eq('email', p.email).single();
-              const planVal = (planRow?.plan as PlanType) || 'free';
-              setUser({
-                id: p.id || (session.user.id || ''),
-                name: p.name || session.user.name || null,
-                email: p.email,
-                plan: planVal,
-                emailVerified: false,
-                createdAt: p.createdAt || '',
-                lastLogin: p.lastLogin || undefined,
-              });
-              setPlanState(planVal);
-              return;
-            }
-          }
-        } catch (e) {
-          console.warn('Fallback /api/user/profile failed:', e);
-        }
-        // Final fallback to session data without fabricating createdAt
+        // Use session user ID as fallback (this should be the auth user ID)
         setUser({
           id: session.user.id || '',
           name: session.user.name || null,
-          email: session.user.email,
+          email: session.user.email || '',
           plan: 'free',
           emailVerified: false,
           createdAt: '',
         });
-        setPlanState(session.user.email === 'abdulmuizproject@gmail.com' ? 'elite' : 'free');
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);

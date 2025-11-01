@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import { mergeTradeSecret } from "@/lib/secure-store";
 import { aiService } from "@/lib/ai/AIService";
 import type { UserPlan as AIUserPlan } from "@/lib/ai/AIService";
 
@@ -15,13 +16,16 @@ interface ChatRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
+  mode?: 'coach' | 'grok';
 }
 
 export async function POST(req: NextRequest) {
   try {
     // Read body first so we can support guest mode when tradeHistory is provided
     const body: ChatRequest = await req.json();
-    const { message, tradeHistory, attachments, conversationHistory } = body || {} as ChatRequest;
+    const { message, tradeHistory, attachments, conversationHistory, mode } = body || {} as ChatRequest;
+
+    const requestedMode: 'coach' | 'grok' = mode === 'grok' ? 'grok' : 'coach';
 
     if (!message && (!attachments || attachments.length === 0)) {
       return NextResponse.json({ error: "Message or attachments required" }, { status: 400 });
@@ -58,12 +62,12 @@ export async function POST(req: NextRequest) {
           .from("trades")
           .select("*")
           .eq("user_id", userId)
-          .order("open_time", { ascending: false })
+          .order("opentime", { ascending: false })
           .limit(100);
         if (error) {
           console.error("Error fetching trades:", error);
         } else {
-          userTrades = trades || [];
+          userTrades = (trades || []).map((r: any) => mergeTradeSecret(userId!, r));
         }
       } catch (dbErr) {
         console.error("Supabase client/query failed:", dbErr);
@@ -71,6 +75,8 @@ export async function POST(req: NextRequest) {
         userTrades = [];
       }
     }
+
+    let assignedPlan: AIUserPlan | null = null;
 
     // Configure AIService plan from user (admins => elite)
     try {
@@ -83,6 +89,7 @@ export async function POST(req: NextRequest) {
       };
       const id = normalizePlan(userPlanStr, userEmail);
       const plan: AIUserPlan = {
+      
         id,
         name: id.charAt(0).toUpperCase() + id.slice(1),
         limits: {
@@ -100,9 +107,17 @@ export async function POST(req: NextRequest) {
           propFirmDashboard: id === 'elite',
         }
       };
+      assignedPlan = plan;
       aiService.setUserPlan(plan);
     } catch (planErr) {
       console.warn('AI plan configuration failed:', planErr);
+    }
+
+    const planId = assignedPlan?.id ?? 'starter';
+    if (requestedMode === 'grok' && planId !== 'plus' && planId !== 'elite') {
+      return NextResponse.json({
+        response: "Tradia Grok Fast Mode is available on Plus and Elite plans. Upgrade to unlock explainable AI callouts, predictive bias detection, and instant playbooks."
+      });
     }
 
     // Analyze uploaded images if any (metadata only)
@@ -126,7 +141,8 @@ export async function POST(req: NextRequest) {
         {
           recentTrades: userTrades?.slice(-10),
           uploadedImages: attachments as any,
-          marketCondition: 'General market analysis'
+          marketCondition: 'General market analysis',
+          mode: requestedMode
         }
       );
     } catch (aiErr) {
@@ -134,6 +150,12 @@ export async function POST(req: NextRequest) {
       // Fall back to a simple deterministic message so the client does not show a hard error
       const total = Array.isArray(userTrades) ? userTrades.length : 0;
       aiResponse = `Here's a quick look: you have ${total} trades available. Ask me about performance, risk, or patterns.`;
+    }
+
+    // Ensure we always have a response
+    if (!aiResponse || aiResponse.trim().length === 0) {
+      const total = Array.isArray(userTrades) ? userTrades.length : 0;
+      aiResponse = `🤖 **Tradia AI Assistant**\n\nI need trading data to provide personalized insights. You currently have ${total} trades in your account.\n\n**To get started, you can:**\n• **Connect your MT5 account**: Go to Settings → MT5 Connection to sync your live trading data\n• **Upload trade history**: Click the upload button (📤) to import CSV/XLSX files\n• **Add trades manually**: Use the upload button to enter trades one by one\n\nOnce you have trades loaded, I can analyze your performance, risk management, and provide personalized recommendations!\n\nWhat would you like to do first?`;
     }
 
     return NextResponse.json({

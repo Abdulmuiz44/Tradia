@@ -11,6 +11,32 @@ function skipAuthDb(): boolean {
   return v === '1' || v === 'true' || v === 'off' || v === 'disable' || v === 'disabled';
 }
 
+// Check if database is reachable (simple connectivity test)
+async function isDbReachable(): Promise<boolean> {
+  try {
+    // Try a simple query that should work if DB is reachable
+    await safeQuery('SELECT 1', [], 1000);
+    return true;
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.warn('Database connectivity check failed:', errorMsg);
+
+    // Log helpful information for debugging
+    if (errorMsg.includes('ENOTFOUND') || errorMsg.includes('ECONNREFUSED')) {
+      console.warn('💡 Database connectivity issue detected. Consider setting FORCE_SKIP_DB_LOOKUPS=1 in .env.local');
+      console.warn('💡 See DATABASE_CONNECTIVITY_FIX.md for more options');
+    }
+
+    return false;
+  }
+}
+
+// Force skip database operations if explicitly disabled
+function forceSkipDb(): boolean {
+  const forceSkip = (process.env.FORCE_SKIP_DB_LOOKUPS || '').toLowerCase();
+  return forceSkip === '1' || forceSkip === 'true' || forceSkip === 'yes';
+}
+
 /** Environment warnings (kept from original file) */
 if (!process.env.NEXTAUTH_URL) {
   console.warn(
@@ -265,7 +291,13 @@ export const authOptions: NextAuthOptions = {
           if (getString(user, "name")) token.name = getString(user, "name");
           if (getString(user, "plan")) (token as any).plan = getString(user, "plan");
           if (getString(user, "role")) (token as any).role = getString(user, "role");
-        } else if (!skipAuthDb() && !("userId" in token) && typeof token.email === "string") {
+        }
+        // Check database connectivity before attempting lookups (skip if forced)
+        const shouldForceSkip = forceSkipDb();
+        const dbReachable = shouldForceSkip ? false : await isDbReachable();
+        const shouldSkipDb = skipAuthDb() || shouldForceSkip || !dbReachable;
+
+        if (!shouldSkipDb && !("userId" in token) && typeof token.email === "string") {
           try {
             const r = await safeQuery<{ id: string }>(`SELECT id FROM users WHERE email=$1 LIMIT 1`, [String(token.email)], 2000);
             const row = getFirstRow<{ id: string }>(r);
@@ -275,7 +307,7 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        if (!skipAuthDb() && typeof token.userId === "string") {
+        if (!shouldSkipDb && typeof token.userId === "string") {
           try {
             const r2 = await safeQuery<{ id: string; name?: string | null; email?: string | null; image?: string | null; role?: string | null; plan?: string | null }>(
               `SELECT id, name, email, image, role, plan FROM users WHERE id=$1 LIMIT 1`,

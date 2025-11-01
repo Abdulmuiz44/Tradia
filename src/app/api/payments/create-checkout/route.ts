@@ -93,7 +93,8 @@ export async function POST(req: Request) {
       successUrl,
       cancelUrl,
       currency = 'USD',
-      billingCycle = 'monthly'
+      billingCycle = 'monthly',
+      trialDays
     } = body;
 
     // Validate plan type
@@ -123,7 +124,8 @@ export async function POST(req: Request) {
       cancelUrlFinal,
       paymentMethod || 'card',
       (String(billingCycle).toLowerCase() as 'monthly' | 'yearly'),
-      currency
+      currency,
+      typeof trialDays === 'number' ? trialDays : undefined
     );
 
     // Log success for observability

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import { PlanType, PLAN_LIMITS } from "@/lib/planAccess";
+import { PlanType, PLAN_LIMITS, PlanLimits } from "@/lib/planAccess";
 
 export async function GET() {
   try {
@@ -37,9 +37,9 @@ export async function GET() {
 
     // Get plan features
     const features = Object.keys(PLAN_LIMITS[planType]).filter(key =>
-      PLAN_LIMITS[planType][key as keyof typeof PLAN_LIMITS.starter] === true ||
-      (typeof PLAN_LIMITS[planType][key as keyof typeof PLAN_LIMITS.starter] === 'number' &&
-        PLAN_LIMITS[planType][key as keyof typeof PLAN_LIMITS.starter] as number > 0)
+      PLAN_LIMITS[planType][key as keyof PlanLimits] === true ||
+      (typeof PLAN_LIMITS[planType][key as keyof PlanLimits] === 'number' &&
+        (PLAN_LIMITS[planType][key as keyof PlanLimits] as number) > 0)
     );
 
     return NextResponse.json({

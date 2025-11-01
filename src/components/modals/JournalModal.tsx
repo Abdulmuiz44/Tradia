@@ -236,7 +236,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
 
     try {
       const updated: Trade = {
-        id: trade?.id ?? `${symbol}-${Date.now()}`,
+        id: trade?.id, // Should already be a valid UUID from database
         symbol: String(symbol),
         direction: direction ?? "Buy",
         orderType: String(orderType),

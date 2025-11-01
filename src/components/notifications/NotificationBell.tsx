@@ -112,10 +112,10 @@ export default function NotificationBell() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="relative p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+        className="relative p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
         aria-label="Notifications"
       >
-        <Bell className="h-5 w-5 text-gray-200" />
+        <Bell className="h-5 w-5 text-black dark:text-gray-200" />
         {unread.length > 0 && (
           <span
             className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 shadow"
@@ -138,34 +138,34 @@ export default function NotificationBell() {
             <motion.div
               role="dialog"
               aria-modal="true"
-              className="absolute right-4 top-16 w-[95%] max-w-lg bg-[#111827] text-white border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+              className="absolute right-4 top-16 w-[95%] max-w-lg bg-white dark:bg-[#111827] text-black dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-[#0B1220]">
-                <div className="font-semibold">Inbox</div>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0B1220]">
+                <div className="font-light text-black dark:text-white">Inbox</div>
                 <div className="flex items-center gap-2">
                   {unread.length > 0 && (
                     <button
                       onClick={() => markAllRead()}
-                      className="text-xs px-2 py-1 rounded bg-blue-600 hover:bg-blue-500"
+                      className="text-xs font-light px-2 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white"
                     >
                       Mark all read
                     </button>
                   )}
-                  <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-white/10" aria-label="Close">
-                    <X className="w-4 h-4" />
+                  <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10" aria-label="Close">
+                    <X className="w-4 h-4 text-black dark:text-white" />
                   </button>
                 </div>
               </div>
 
-              <div className="max-h-[70vh] overflow-y-auto divide-y divide-gray-800">
+              <div className="max-h-[70vh] overflow-y-auto divide-y divide-gray-200 dark:divide-gray-800">
                 {all.map((n) => {
                   const isUnread = unread.some((u) => u.id === n.id);
                   return (
-                    <div key={n.id} className="p-4 hover:bg-white/5">
+                    <div key={n.id} className="p-4 hover:bg-gray-50 dark:hover:bg-white/5">
                       <div className="flex items-start gap-3">
                         <div className="mt-1">
                           {isUnread ? (
@@ -175,24 +175,24 @@ export default function NotificationBell() {
                           )}
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium">{n.title}</div>
-                          <div className="text-sm text-gray-300 mt-1">{n.body}</div>
-                          <div className="text-xs text-gray-500 mt-2">{new Date(n.date).toLocaleString()}</div>
+                          <div className="font-light text-black dark:text-white">{n.title}</div>
+                          <div className="text-sm font-light text-gray-600 dark:text-gray-300 mt-1">{n.body}</div>
+                          <div className="text-xs font-light text-gray-500 mt-2">{new Date(n.date).toLocaleString()}</div>
                           <div className="mt-2 flex items-center gap-2">
                             {isUnread && (
                               <button
                                 onClick={() => markRead(n.id)}
-                                className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-300 hover:bg-blue-500/10"
+                                className="text-xs font-light px-2 py-1 rounded border border-blue-500 text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
                               >
                                 Mark as read
                               </button>
                             )}
                             <button
                               onClick={() => removeItem(n.id)}
-                              className="text-xs px-2 py-1 rounded border border-red-500 text-red-300 hover:bg-red-500/10 inline-flex items-center gap-1"
+                              className="text-xs font-light px-2 py-1 rounded border border-red-500 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 inline-flex items-center gap-1"
                               title="Delete notification"
                             >
-                              <Trash2 className="w-3.5 h-3.5" /> Delete
+                              <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-300" /> Delete
                             </button>
                           </div>
                         </div>
@@ -201,7 +201,7 @@ export default function NotificationBell() {
                   );
                 })}
                 {all.length === 0 && (
-                  <div className="p-6 text-center text-gray-400">No messages yet.</div>
+                  <div className="p-6 text-center text-gray-500 dark:text-gray-400 font-light">No messages yet.</div>
                 )}
               </div>
             </motion.div>

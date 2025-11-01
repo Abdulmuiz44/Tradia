@@ -345,6 +345,8 @@ export class AIService {
       recentTrades?: Trade[];
       marketCondition?: string;
       uploadedImages?: File[];
+      mode?: 'coach' | 'grok';
+      riskBias?: 'conservative' | 'balanced' | 'aggressive';
     }
   ): Promise<string> {
     try {
@@ -436,63 +438,15 @@ export class AIService {
   }
 
   private async callMultipleHF(models: string[], prompt: string): Promise<Array<{ model: string; text: string }>> {
-    const promises = models.map(m => this.callHuggingFace(m, prompt)
-      .then(text => ({ model: m, text }))
-      .catch(() => ({ model: m, text: '' }))
-    );
-    const results = await Promise.all(promises);
-    // Filter empty results
-    return results.filter(r => r.text && r.text.trim().length > 0);
+    // Disabled: Using OpenAI only
+    console.warn('HuggingFace calls disabled - using OpenAI only');
+    return [];
   }
 
   private async callHuggingFace(model: string, prompt: string): Promise<string> {
-    const url = `https://api-inference.huggingface.co/models/${model}`;
-    const headersBase: Record<string, string> = { 'Content-Type': 'application/json' };
-    const rawKey = (process.env.HUGGINGFACE_API_KEY || process.env.HF_API_KEY || '').trim();
-    const cleaned = rawKey.replace(/^['"]|['"]$/g, ''); // strip quotes if present
-    const hfKey = /^hf_[A-Za-z0-9-]+/.test(cleaned) ? cleaned : '';
-    const authedHeaders = hfKey ? { ...headersBase, Authorization: `Bearer ${hfKey}` } : headersBase;
-
-    // Prefer text-generation; many instruct models support it via Inference API
-    const body = {
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: Number(process.env.HF_MAX_NEW_TOKENS || 400),
-        temperature: Number(process.env.HF_TEMPERATURE || 0.3),
-        return_full_text: false,
-      }
-    } as any;
-
-    let res = await fetch(url, { method: 'POST', headers: authedHeaders, body: JSON.stringify(body) });
-    if (!res.ok) {
-      const firstTxt = await res.text().catch(() => '');
-      // If we used a key and received 401, retry once without Authorization (some models allow public access)
-      if (res.status === 401 && hfKey) {
-        try {
-          res = await fetch(url, { method: 'POST', headers: headersBase, body: JSON.stringify(body) });
-        } catch (_) {}
-        if (!res.ok) {
-          const secondTxt = await res.text().catch(() => '');
-          console.warn(`HF API error for ${model}:`, res.status, (secondTxt || firstTxt)?.slice(0, 300));
-          throw new Error(`HF-${res.status}`);
-        }
-        // retry succeeded; do not log the 401 spam
-      } else {
-        console.warn(`HF API error for ${model}:`, res.status, firstTxt?.slice(0, 300));
-        throw new Error(`HF-${res.status}`);
-      }
-    }
-    const data: any = await res.json();
-    // Possible response shapes: Array<{generated_text:string}> or string or object
-    if (Array.isArray(data) && data.length > 0) {
-      const first = data[0];
-      if (typeof first === 'string') return first;
-      if (typeof (first as any)?.generated_text === 'string') return (first as any).generated_text;
-      if (typeof (first as any)?.summary_text === 'string') return (first as any).summary_text;
-    }
-    if (typeof data === 'string') return data;
-    const asText = (data as any)?.generated_text || (data as any)?.data?.[0]?.generated_text || '';
-    return typeof asText === 'string' && asText.length > 0 ? asText : JSON.stringify(data);
+    // Disabled: Using OpenAI only
+    console.warn('HuggingFace calls disabled - using OpenAI only');
+    return '';
   }
 
   private mergeModelOutputs(outputs: Array<{ model: string; text: string }>): string {
@@ -533,6 +487,17 @@ export class AIService {
       return `🔍 **Mistake Analysis:**\n\nBased on your trading data, here are the main areas to focus on:\n\n${analysis.insights.filter(i => i.priority === 'high').map(i => `• ${i.insight}\n  💡 ${i.recommendation}`).join('\n\n')}\n\nRemember, every trader makes mistakes - the key is learning from them!`;
     }
 
+    if (lowerQuery.includes('risk') || lowerQuery.includes('money management')) {
+      const riskInsights = analysis.insights?.filter(i => i.category === 'risk_management') || [];
+      const riskProfile = analysis.riskProfile || { riskScore: 0, riskTolerance: 'unknown', recommendations: ['Unable to analyze risk profile'] };
+      const insightsText = riskInsights.length > 0
+        ? riskInsights.slice(0, 3).map(i => `• ${i.insight}\n  💡 ${i.recommendation}`).join('\n\n')
+        : '• No specific risk insights available at this time';
+      const recommendationsText = riskProfile.recommendations?.slice(0, 2).map(r => `• ${r}`).join('\n') || '• Review your position sizing and stop losses';
+
+      return `🛡️ **Risk Management Analysis:**\n\nBased on your trading data, here's how your risk management is performing:\n\n**Current Risk Profile:** ${riskProfile.riskScore}/100\n• Risk Tolerance: ${riskProfile.riskTolerance}\n\n**Key Risk Insights:**\n${insightsText}\n\n**Recommendations:**\n${recommendationsText}`;
+    }
+
     if (lowerQuery.includes('improve') || lowerQuery.includes('better')) {
       return `🚀 **Improvement Plan:**\n\nHere are your top improvement opportunities:\n\n${analysis.insights.slice(0, 3).map(i => `• ${i.recommendation}`).join('\n')}\n\nStart with one improvement at a time for the best results!`;
     }
@@ -544,7 +509,25 @@ export class AIService {
    * Build system prompt for AI model
    */
   private buildSystemPrompt(tradeSummary: any, analysis: MLTradeAnalysis, reasoning: AIReasoningProcess): string {
-    return `You are Tradia AI, an expert trading assistant specializing in forex and financial markets analysis.
+  return `You are Tradia AI, a skilled and friendly trading coach built into the Tradia app. Your role is to help users deeply understand, analyze, and improve their trading performance. You are powered with advanced analytics and coding abilities to answer any trading-related question naturally and helpfully.
+
+Always respond in a friendly, encouraging, and professional manner. Accept and answer questions in plain English like "How did I perform this week?", "Which pair is my most profitable?", "What's my win rate over the past month?", etc.
+
+Use the user's data, metrics, and charts from Tradia for answers. For complex queries, use coding logic to filter, calculate, and explain clearly.
+
+When you don't have enough data, politely ask the user to import more trades or clarify.
+
+Focus strictly on trade analytics, behavior insights, AI coaching, and relevant trading advice. Place special emphasis on actionable insights, accountability, and building good habits.
+
+If asked about trading concepts (e.g., Sharpe Ratio), provide clear, beginner-friendly definitions.
+
+After each insight, offer brief comments, tips, or actionable suggestions.
+
+Personality: Always positive, insightful, supportive, non-judgmental. Encourage questions and exploration to make traders feel confident and informed.
+
+Example responses:
+- For "How did I perform this week?": "Hey! Looking at your trades from this week, you had 15 trades with a 60% win rate and $250 in profit. That's solid consistency! Keep focusing on your entry timing to push that win rate higher."
+- For "Which pair is my most profitable?": "Your top performer is EUR/USD with $1,200 in profits over 50 trades. That's impressive! Consider allocating more capital to this pair while maintaining your risk management."
 
 USER CONTEXT:
 - Plan: ${this.userPlan.name} (${this.userPlan.id})

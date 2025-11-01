@@ -1,0 +1,80 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build outputs (exclude from build context, but keep for multi-stage build)
+*.tsbuildinfo
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Test files
+test/
+tests/
+**/*.test.ts
+**/*.test.js
+**/__test__/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Development files
+.husky/
+vitest.config.ts
+eslint.config.js
+
+# Python files (if any)
+*.py
+__pycache__/
+*.pyc
+poetry/
+
+# Docker files
+Dockerfile*
+docker-compose*
+compose.y*ml
+
+# Temporary files
+tmp/
+temp/

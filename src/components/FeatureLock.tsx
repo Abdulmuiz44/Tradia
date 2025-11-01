@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/context/UserContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,26 @@ export default function FeatureLock({
 }: Props) {
   const { plan } = useUser();
   const [open, setOpen] = useState(false);
+  const [trialActive, setTrialActive] = useState<boolean>(false);
+
+  // Check trial status once on mount; unlock features during active trial
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/user/trial-status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!mounted || !data?.info) return;
+        const info = data.info as { expired: boolean; isPaid: boolean; isGrandfathered: boolean };
+        const active = !info.isPaid && !info.isGrandfathered && info.expired === false;
+        setTrialActive(active);
+      })
+      .catch(() => {})
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      .finally(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const planLevels = {
     free: 0,
@@ -31,7 +51,7 @@ export default function FeatureLock({
   const userLevel = planLevels[plan];
   const requiredLevel = planLevels[requiredPlan];
 
-  const isLocked = userLevel < requiredLevel;
+  const isLocked = !trialActive && userLevel < requiredLevel;
 
   if (!isLocked) return <>{children}</>;
 

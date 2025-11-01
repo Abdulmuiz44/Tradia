@@ -48,34 +48,37 @@ export async function getOrCreatePlanOnFlutterwave(
 ) {
   // planKey e.g. "pro_monthly"
   const supabase = createClient();
-  const { data } = await supabase
-    .from("flutterwave_plans")
-    .select("*")
-    .eq("plan_key", planKey)
-    .maybeSingle();
 
-  if (data && (data as any).flutterwave_plan_id) {
-    return (data as any).flutterwave_plan_id as string;
+  // Check if we already have this plan stored
+  const { data: existing } = await supabase
+    .from("flutterwave_plans")
+    .select("fw_plan_id")
+    .eq("plan_key", planKey)
+    .single();
+
+  if (existing?.fw_plan_id) {
+    return existing.fw_plan_id;
   }
 
-  // create plan on Flutterwave
-  const createBody = {
-    name: `Tradia ${planKey}`,
+  // Create plan on Flutterwave
+  const fwResp = await callFlutterwave("/payment-plans", "POST", {
     amount,
+    name: planKey,
     interval: intervalFromBilling(billing),
     currency,
-  };
+  });
 
-  const resp = await callFlutterwave("/payment-plans", "POST", createBody);
-  const fwPlanId =
-    resp?.data?.id || resp?.data?.plan_id || resp?.id || resp?.data?._id;
+  const fwPlanId = fwResp?.data?.id;
+  if (!fwPlanId) {
+    throw new Error("Failed to create Flutterwave plan");
+  }
 
-  // persist mapping (use upsert to avoid invalid .onConflict chaining)
+  // Store in our DB
   await supabase.from("flutterwave_plans").upsert(
     [
       {
         plan_key: planKey,
-        flutterwave_plan_id: String(fwPlanId),
+        fw_plan_id: fwPlanId,
         amount,
         billing_cycle: billing,
         currency,
@@ -88,15 +91,6 @@ export async function getOrCreatePlanOnFlutterwave(
   return String(fwPlanId);
 }
 
-const PAYMENT_OPTION_MAP: Record<string, string> = {
-  card: "card",
-  bank: "banktransfer",
-  banktransfer: "banktransfer",
-  ussd: "ussd",
-  qr: "qr",
-  mobilemoney: "mobilemoney",
-};
-
 export async function createCheckoutForPlan(
   planType: "pro" | "plus" | "elite",
   userEmail: string,
@@ -105,7 +99,8 @@ export async function createCheckoutForPlan(
   cancelUrl: string,
   paymentMethod: string,
   billingCycle: BillingCycle,
-  currency = "USD"
+  currency = "USD",
+  trialDays?: number
 ) {
   // compute amount
   const price = PLAN_PRICE_MAP[planType][billingCycle];
@@ -121,9 +116,6 @@ export async function createCheckoutForPlan(
 
   const txRef = `${planKey}_${userId || 'guest'}_${Date.now()}`;
 
-  // Resolve Flutterwave payment option from UI choice
-  const fwPaymentOption = PAYMENT_OPTION_MAP[String(paymentMethod).toLowerCase()] || "card";
-
   // Create payment (first payment that will subscribe the customer to the plan)
   const payload: any = {
     tx_ref: txRef,
@@ -131,14 +123,13 @@ export async function createCheckoutForPlan(
     currency,
     redirect_url: successUrl,
     customer: { email: userEmail },
-    // Restrict to the option selected by the user so the checkout matches their choice
-    payment_options: fwPaymentOption,
+    payment_options: "card,bank,ussd,qr", // let Flutterwave pick allowed methods
     customizations: {
       title: "Tradia subscription",
       description: `${planType} (${billingCycle})`,
     },
     payment_plan: fwPlanId, // important: include plan ID so the customer is subscribed after first payment
-    meta: { user_id: userId, plan_type: planType, billing_cycle: billingCycle, payment_method: fwPaymentOption },
+    meta: { user_id: userId, plan_type: planType, billing_cycle: billingCycle },
   };
 
   const resp = await callFlutterwave("/payments", "POST", payload);
@@ -163,118 +154,17 @@ export async function createCheckoutForPlan(
 
     if (error) {
       console.error("Failed to insert pending user_plan:", error);
-      // not fatal for checkout, but log
     }
   }
 
-  return {
-    checkoutUrl: link,
-    paymentId: resp?.data?.id || resp?.data?.payment_id || null,
-    txRef,
-  };
+  return link;
 }
 
-export async function verifyTransactionById(txId: string) {
-  const resp = await callFlutterwave(`/transactions/${txId}/verify`, "GET");
-  return resp;
+export async function verifyTransactionById(transactionId: string) {
+  return await callFlutterwave(`/transactions/${transactionId}/verify`);
 }
 
 export async function verifyTransactionByReference(txRef: string) {
-  const resp = await callFlutterwave(
-    `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(
-      txRef
-    )}`,
-    "GET"
-  );
-  return resp;
-}
-
-export async function cancelFlutterwaveSubscription(subscriptionId: string) {
-  // Best-effort: Flutterwave subscription cancel endpoint
-  try {
-    const resp = await callFlutterwave(`/subscriptions/${subscriptionId}/cancel`, "POST");
-    return resp;
-  } catch (err) {
-    // Some accounts/plans may not support this; log and continue
-    throw err;
-  }
-}
-
-/* ----------------------------
-   Payment method helpers (exported for UI)
-   ---------------------------- */
-
-/**
- * PaymentMethod - exported type used by UI components.
- * - icon: optional short emoji/string fallback
- * - iconSvg: optional inline SVG markup (string) which UI can render
- */
-export type PaymentMethod = {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  iconSvg?: string;
-};
-
-/**
- * Returns available payment method options for the UI.
- * The list is static here but can be adapted to read from config or Flutterwave API if needed.
- */
-export function getPaymentMethodOptions(): PaymentMethod[] {
-  return [
-    {
-      id: "card",
-      name: "Card",
-      description: "Pay with debit or credit card",
-      icon: "💳",
-      iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
-  <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
-  <path d="M2 10h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-</svg>`,
-    },
-    {
-      id: "bank",
-      name: "Bank Transfer",
-      description: "Pay via bank transfer",
-      icon: "🏦",
-      iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
-  <path d="M3 10h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-  <path d="M12 3l9 7H3l9-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
-  <rect x="4" y="14" width="16" height="6" rx="1" stroke="currentColor" stroke-width="1.5"></rect>
-</svg>`,
-    },
-    {
-      id: "ussd",
-      name: "USSD",
-      description: "Pay using USSD (Nigeria)",
-      icon: "📲",
-      iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
-  <rect x="6" y="3" width="12" height="18" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
-  <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
-</svg>`,
-    },
-    {
-      id: "qr",
-      name: "QR",
-      description: "Scan QR code to pay",
-      icon: "🔲",
-      iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
-  <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"></rect>
-  <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5"></rect>
-  <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"></rect>
-  <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5"></rect>
-</svg>`,
-    },
-    {
-      id: "mobilemoney",
-      name: "Mobile Money",
-      description: "Mobile wallet payments",
-      icon: "📱",
-      iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
-  <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
-  <circle cx="12" cy="18" r="0.6" fill="currentColor"></circle>
-</svg>`,
-    },
-  ];
+  const url = `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`;
+  return await callFlutterwave(url);
 }

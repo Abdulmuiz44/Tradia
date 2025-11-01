@@ -83,7 +83,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!user) {
+  if (!loading && !user) {
     router.push('/login');
     return null;
   }
