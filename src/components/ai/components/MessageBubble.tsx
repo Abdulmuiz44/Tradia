@@ -123,16 +123,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
       <div className="relative max-w-[70%]">
         <div
           className={cn(
-            "p-3 rounded-xl",
-            message.type === 'user'
-              ? "bg-blue-600 text-white rounded-br-none"
-              : "bg-gray-800 text-gray-100 rounded-bl-none",
-            message.variant === 'upgrade' && "bg-yellow-800/30 border border-yellow-600 text-yellow-100",
-            message.variant === 'system' && "bg-gray-700/30 border border-gray-600 text-gray-200 text-sm italic",
-            isEditing && "ring-2 ring-blue-500"
+          "p-3 rounded-xl",
+          message.type === 'user'
+          ? "bg-[#1D9BF0] text-[#FFFFFF] rounded-br-none"
+          : "bg-[#15202B] text-[#FFFFFF] rounded-bl-none",
+          message.variant === 'upgrade' && "bg-[#17BF63]/30 border border-[#17BF63] text-[#FFFFFF]",
+          message.variant === 'system' && "bg-[#15202B]/30 border border-[#15202B] text-[#71767B] text-sm italic",
+          isEditing && "ring-2 ring-[#1D9BF0]"
           )}
         >
-          {message.variant === 'upgrade' && <Crown className="w-4 h-4 inline-block mr-2 text-yellow-400" />}
+          {message.variant === 'upgrade' && <Crown className="w-4 h-4 inline-block mr-2 text-[#FFFFFF]" />}
           {isEditing ? (
             <Textarea
               value={editContent}
@@ -155,28 +155,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
           )}
           <div className="flex items-center justify-between mt-2">
             <span
-              className={cn(
-                "text-xs",
-                message.type === 'user' ? "text-blue-200" : "text-gray-400"
-              )}
+            className={cn(
+            "text-xs text-[#71767B]"
+            )}
             >
               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {isEditing && (
               <div className="flex gap-1">
                 <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleSaveEdit}
-                  className="h-6 w-6 p-0 text-green-400 hover:text-green-300"
+                size="sm"
+                variant="ghost"
+                onClick={handleSaveEdit}
+                className="h-6 w-6 p-0 text-[#17BF63] hover:text-[#FFFFFF]"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
                 <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleCancelEdit}
-                  className="h-6 w-6 p-0 text-red-400 hover:text-red-300"
+                size="sm"\                  variant="ghost"
+                onClick={handleCancelEdit}
+                className="h-6 w-6 p-0 text-[#F4212E] hover:text-[#FFFFFF]"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -190,30 +188,30 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0 text-gray-400 hover:text-white"
-                  aria-label="Message actions"
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0 text-[#71767B] hover:text-[#FFFFFF]"
+                aria-label="Message actions"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
-                <DropdownMenuItem onClick={handleCopy} className="text-gray-300 hover:text-white">
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy
+              <DropdownMenuContent align="end" className="bg-[#15202B] border-[#15202B]">
+                <DropdownMenuItem onClick={handleCopy} className="text-[#71767B] hover:text-[#FFFFFF]">
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
                 </DropdownMenuItem>
                 {canEdit && (
-                  <DropdownMenuItem onClick={handleEdit} className="text-gray-300 hover:text-white">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEdit} className="text-[#71767B] hover:text-[#FFFFFF]">
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit
+                </DropdownMenuItem>
                 )}
                 {canDelete && (
-                  <DropdownMenuItem
-                    onClick={() => onDelete?.(message.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
+                <DropdownMenuItem
+                onClick={() => onDelete?.(message.id)}
+                className="text-[#F4212E] hover:text-[#FFFFFF]"
+                >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete
                   </DropdownMenuItem>

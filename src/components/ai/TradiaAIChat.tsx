@@ -4,12 +4,13 @@
 import React, {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
-import * as TradeContextModule from '../../context/TradeContext';
+import * as TradeContextModule from '@/context/TradeContext';
 import { useUser } from '@/context/UserContext';
 import { ChatLayout } from '../chat/ChatLayout';
-import { Message, Conversation, TradiaAIRequest } from '@/types/chat';
+import { AssistantMode, Message, Conversation, TradiaAIRequest } from '@/types/chat';
 import { Trade } from '@/types/trade';
 
 
@@ -27,6 +28,19 @@ interface TradiaAIChatProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
+const MODE_PROMPTS: Record<AssistantMode, string> = {
+  coach:
+    "You are Tradia Coach. Deliver direct accountability, focus on habit building, and turn every response into a clear action plan with measurable next steps.",
+  mentor:
+    "You are Tradia Mentor. Provide high-level strategic guidance, share trading wisdom, and relate insights to long-term trader growth.",
+  analysis:
+    "You are Tradia Trade Analyst. Break down trades with data-driven reasoning, highlight risk management, and surface performance patterns.",
+  journal:
+    "You are Tradia Journal Companion. Encourage reflection, extract lessons learned, and organise notes into a structured trading journal entry.",
+  grok:
+    "You are Tradia Grok. Blend sharp humour with insightful market context while keeping explanations concise and data-backed.",
+};
+
 const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
   className = "",
   activeConversationId: externalActiveId,
@@ -34,7 +48,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
   onConversationsChange,
   onLoadingChange,
 }) => {
-  const tradeContext = TradeContextModule.useTrade();
+  const tradeContext = (TradeContextModule as { useTrade: () => any }).useTrade();
   const trades: Trade[] = tradeContext.trades;
   const { user, loading } = useUser();
 
@@ -46,7 +60,11 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
   const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [tradeSummary, setTradeSummary] = useState<any>(null);
-  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingConversations, setLoadingConversations] = useState(false);
+  const [assistantMode, setAssistantMode] = useState<AssistantMode>('coach');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isGuest = !user;
 
   // Load conversations and trade summary on mount
   useEffect(() => {
@@ -105,6 +123,9 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
 
   // Conversation handlers
   const handleCreateConversation = useCallback(async () => {
+    if (!user) {
+      return;
+    }
     try {
       const response = await fetch('/api/conversations', {
         method: 'POST',
@@ -112,6 +133,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         body: JSON.stringify({
           title: 'New Conversation',
           model,
+          mode: assistantMode,
         }),
         credentials: 'include',
       });
@@ -135,9 +157,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     } catch (error) {
       console.error('Failed to create conversation:', error);
     }
-  }, [model, onActiveConversationChange]);
+  }, [model, assistantMode, onActiveConversationChange, user]);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
+    if (!user) {
+      return;
+    }
     try {
       const response = await fetch(`/api/conversations/${conversationId}`, {
         credentials: 'include',
@@ -151,16 +176,23 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
           type: msg.type,
           content: msg.content,
           timestamp: new Date(msg.timestamp),
+          mode: msg.mode as AssistantMode | undefined,
           attachedTrades: [], // Will be populated if needed
         })));
         setModel(data.conversation.model || 'gpt-4o-mini');
+        if (data.conversation.mode) {
+          setAssistantMode(data.conversation.mode as AssistantMode);
+        }
       }
     } catch (error) {
       console.error('Failed to load conversation:', error);
     }
-  }, []);
+  }, [user]);
 
   const handleDeleteConversation = useCallback(async (conversationId: string) => {
+    if (!user) {
+      return;
+    }
     try {
       const response = await fetch(`/api/conversations/${conversationId}`, {
         method: 'DELETE',
@@ -178,9 +210,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     } catch (error) {
       console.error('Failed to delete conversation:', error);
     }
-  }, [activeConversationId, onActiveConversationChange]);
+  }, [activeConversationId, onActiveConversationChange, user]);
 
   const handleRenameConversation = useCallback(async (conversationId: string, newTitle: string) => {
+    if (!user) {
+      return;
+    }
     try {
       const response = await fetch(`/api/conversations/${conversationId}`, {
         method: 'PATCH',
@@ -197,9 +232,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     } catch (error) {
       console.error('Failed to rename conversation:', error);
     }
-  }, []);
+  }, [user]);
 
   const handlePinConversation = useCallback(async (conversationId: string) => {
+    if (!user) {
+      return;
+    }
     try {
       const currentConversation = conversations.find(c => c.id === conversationId);
       const newPinned = !currentConversation?.pinned;
@@ -219,9 +257,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     } catch (error) {
       console.error('Failed to pin conversation:', error);
     }
-  }, [conversations]);
+  }, [conversations, user]);
 
   const handleExportConversation = useCallback((conversationId?: string) => {
+    if (!user) {
+      return;
+    }
     const targetId = conversationId ?? activeConversationId;
     if (!targetId) {
       return;
@@ -238,10 +279,13 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
     }
-  }, [conversations, activeConversationId]);
+  }, [conversations, activeConversationId, user]);
 
   // Message handlers
   const handleSendMessage = useCallback(async (content: string) => {
+    if (!user || isProcessing) {
+      return;
+    }
     if (!content.trim()) return;
 
     const userMessage: Message = {
@@ -250,11 +294,15 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       content: content.trim(),
       timestamp: new Date(),
       attachedTrades: selectedTrades,
+      mode: assistantMode,
     };
 
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setSelectedTradeIds([]); // Clear selected trades after sending
+    setIsProcessing(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     // Update conversation
     if (activeConversationId) {
@@ -278,8 +326,17 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         options: {
           model,
           max_tokens: 1024,
-        }
+        },
+        mode: assistantMode,
       };
+
+      const systemPrompt = MODE_PROMPTS[assistantMode];
+      if (systemPrompt) {
+        request.messages = [
+          { role: 'system', content: systemPrompt },
+          ...request.messages,
+        ];
+      }
 
       if (activeConversationId) {
         request.conversationId = activeConversationId;
@@ -290,6 +347,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
         credentials: 'include',
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -324,6 +382,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         type: 'assistant',
         content: aiContent,
         timestamp: new Date(),
+        mode: assistantMode,
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -343,6 +402,9 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       }
 
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
       console.error('Error sending message:', error);
       let errorContent = 'Sorry, I encountered an error. Please try again.';
       let canRetry = false;
@@ -368,6 +430,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         timestamp: new Date(),
         canRetry,
         originalContent: content, // Store for retry
+        mode: assistantMode,
       };
 
       const finalMessages = [...newMessages, errorMessage];
@@ -382,10 +445,16 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
           )
         );
       }
+    } finally {
+      setIsProcessing(false);
+      abortControllerRef.current = null;
     }
-  }, [messages, selectedTrades, activeConversationId, model, conversations, onActiveConversationChange, loadConversations]);
+  }, [user, isProcessing, selectedTrades, assistantMode, messages, activeConversationId, model, conversations, onActiveConversationChange, loadConversations]);
 
   const handleRegenerateMessage = useCallback((messageId: string) => {
+    if (!user) {
+      return;
+    }
     // Find the user message before the assistant message
     const messageIndex = messages.findIndex(m => m.id === messageId);
     if (messageIndex > 0 && messages[messageIndex].type === 'assistant') {
@@ -397,9 +466,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         handleSendMessage(userMessage.content);
       }
     }
-  }, [messages, handleSendMessage]);
+  }, [messages, handleSendMessage, user]);
 
   const handleEditMessage = useCallback((messageId: string, newContent: string) => {
+    if (!user) {
+      return;
+    }
     setMessages(prev =>
       prev.map(m => m.id === messageId ? { ...m, content: newContent } : m)
     );
@@ -419,9 +491,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         )
       );
     }
-  }, [activeConversationId]);
+  }, [activeConversationId, user]);
 
   const handleDeleteMessage = useCallback((messageId: string) => {
+    if (!user) {
+      return;
+    }
     const newMessages = messages.filter(m => m.id !== messageId);
     setMessages(newMessages);
 
@@ -434,39 +509,66 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         )
       );
     }
-  }, [messages, activeConversationId]);
+  }, [messages, activeConversationId, user]);
 
   const handleCopyMessage = useCallback((content: string) => {
+    if (!user) {
+      return;
+    }
     navigator.clipboard.writeText(content);
-  }, []);
+  }, [user]);
 
   const handleRateMessage = useCallback((messageId: string, rating: 'up' | 'down') => {
+    if (!user) {
+      return;
+    }
     // In a real app, this would send feedback to the server
     console.log(`Rated message ${messageId}: ${rating}`);
-  }, []);
+  }, [user]);
 
   const handlePinMessage = useCallback((messageId: string) => {
+    if (!user) {
+      return;
+    }
     // In a real app, this would pin the message
     console.log(`Pinned message ${messageId}`);
-  }, []);
+  }, [user]);
 
   const handleRetryMessage = useCallback(async (messageId: string) => {
+    if (!user) {
+      return;
+    }
     const errorMessage = messages.find(m => m.id === messageId);
     if (errorMessage?.originalContent) {
       // Remove the error message and retry
       setMessages(prev => prev.filter(m => m.id !== messageId));
       await handleSendMessage(errorMessage.originalContent);
     }
-  }, [messages, handleSendMessage]);
+  }, [messages, handleSendMessage, user]);
 
   const handleAttachTrades = useCallback((tradeIds: string[]) => {
+    if (!user) {
+      return;
+    }
     setSelectedTradeIds(tradeIds);
-  }, []);
+  }, [user]);
 
   const handleVoiceInput = useCallback(() => {
+    if (!user) {
+      return;
+    }
     setIsListening(!isListening);
     // In a real app, this would integrate with speech recognition
-  }, [isListening]);
+  }, [isListening, user]);
+
+  const handleStopGeneration = useCallback(() => {
+    if (!isProcessing) {
+      return;
+    }
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsProcessing(false);
+  }, [isProcessing]);
 
   // Create initial conversation if none exists and loaded
   useEffect(() => {
@@ -498,21 +600,12 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
 
   // Note: forwardRef functionality removed for simplicity
 
-  if (loading || !user) {
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-950 text-white">
-        <div className="text-center">
-          <p className="text-gray-400 mb-4">Loading Tradia AI...</p>
-        </div>
-      </div>
-    );
-  }
-
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
   return (
     <ChatLayout
       hideSidebar={false}
+      isGuest={isGuest}
       conversations={conversations}
       loadingConversations={loadingConversations}
       activeConversationId={activeConversationId || undefined}
@@ -528,6 +621,8 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       onModelChange={setModel}
       onSendMessage={handleSendMessage}
       onAttachTrades={handleAttachTrades}
+      assistantMode={assistantMode}
+      onAssistantModeChange={setAssistantMode}
       onRegenerateMessage={handleRegenerateMessage}
       onEditMessage={handleEditMessage}
       onDeleteMessage={handleDeleteMessage}
@@ -538,6 +633,8 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       onExportChat={handleExportConversation}
       onVoiceInput={handleVoiceInput}
       isListening={isListening}
+      isProcessing={isProcessing}
+      onStopGeneration={handleStopGeneration}
       trades={trades}
       selectedTradeIds={selectedTradeIds}
       onTradeSelect={setSelectedTradeIds}

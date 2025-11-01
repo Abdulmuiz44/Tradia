@@ -4,7 +4,7 @@
 
 /* Global theme tokens inspired by ChatGPT light mode */
 :root {
-  --font-sans: "Söhne", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: 'Geist', sans-serif;
   --font-mono: "IBM Plex Mono", "Menlo", monospace;
 
   --surface-primary: #f7f7f8;

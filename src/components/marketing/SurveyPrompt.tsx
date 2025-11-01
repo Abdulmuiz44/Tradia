@@ -61,22 +61,32 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const sessionDuration = Math.floor((Date.now() - sessionStart) / 1000); // seconds
+  e.preventDefault();
+  try {
+  const sessionDuration = Math.floor((Date.now() - sessionStart) / 1000); // seconds
 
-      await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          focus,
-          rating,
-          comment,
+  // Use Supabase client to insert into user_feedback table
+  const supabase = (await import("@supabase/auth-helpers-nextjs")).createClientComponentClient();
+  const user = await supabase.auth.getUser();
+  const uid = user?.data?.user?.id ?? null;
+  const userEmail = user?.data?.user?.email ?? null;
+
+  const feedbackData = {
+  user_id: uid,
+  user_email: userEmail,
+  feedback_text: comment || `Focus: ${focus}, Rating: ${rating}/10`,
+  page: window.location.pathname,
+    created_at: new Date().toISOString(),
+      additional_data: {
+      focus,
+        rating,
+        sessionDuration,
           userAgent: navigator.userAgent,
-          pageUrl: window.location.href,
-          sessionDuration
-        }),
-      });
+          pageUrl: window.location.href
+        }
+      };
+
+      await supabase.from("user_feedback").insert(feedbackData);
     } catch (error) {
       console.error("Failed to submit feedback:", error);
     }

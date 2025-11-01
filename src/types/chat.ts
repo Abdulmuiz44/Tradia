@@ -1,11 +1,13 @@
 // src/types/chat.ts
 
+export type AssistantMode = 'coach' | 'mentor' | 'analysis' | 'journal' | 'grok';
+
 export interface Message {
   id: string;
   type: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
-  mode?: 'coach' | 'grok';
+  mode?: AssistantMode;
   attachedTrades?: Trade[];
   canRetry?: boolean;
   originalContent?: string;
@@ -34,6 +36,7 @@ export interface TradiaAIRequest {
   }>;
   attachedTradeIds?: string[];
   options?: Partial<ChatOptions>;
+  mode?: AssistantMode;
 }
 
 export interface TradiaAIResponse {

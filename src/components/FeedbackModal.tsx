@@ -11,19 +11,20 @@ export default function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; on
   if (!isOpen) return null;
 
   const submit = async () => {
-    setSaving(true);
-    try {
-      const user = await supabase.auth.getUser();
-      const uid = user?.data?.user?.id ?? null;
-      await supabase.from("feedback").insert({ user_id: uid, message, page: window.location.pathname });
-      setMessage("");
-      onClose();
-      // optional: show toast
-    } catch (e) {
-      console.error(e);
-      // show error toast
-    } finally {
-      setSaving(false);
+  setSaving(true);
+  try {
+  const user = await supabase.auth.getUser();
+  const uid = user?.data?.user?.id ?? null;
+  const userEmail = user?.data?.user?.email ?? null;
+  await supabase.from("user_feedback").insert({ user_id: uid, user_email: userEmail, feedback_text: message, page: window.location.pathname, created_at: new Date().toISOString() });
+  setMessage("");
+  onClose();
+    // optional: show toast
+  } catch (e) {
+  console.error(e);
+    // show error toast
+  } finally {
+    setSaving(false);
     }
   };
 

@@ -143,12 +143,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+  <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Settings</h1>
-          <p className="text-gray-400">Customize your trading experience</p>
+          <h1 className="text-3xl font-bold mb-2 text-[#FFFFFF]">Settings</h1>
+          <p className="text-[#71767B]">Customize your trading experience</p>
         </div>
 
         <div className="space-y-6">
@@ -156,7 +156,7 @@ export default function SettingsPage() {
           <TrialStatusCard />
 
           {/* Appearance Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div className="bg-[#15202B] rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Settings className="w-6 h-6" />
               Appearance
@@ -230,11 +230,11 @@ export default function SettingsPage() {
           </div>
 
           {/* Notification Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Bell className="w-6 h-6" />
-              Notifications
-            </h2>
+          <div className="bg-[#15202B] rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <Bell className="w-6 h-6" />
+          Notifications
+          </h2>
 
             <div className="space-y-4">
               {[
@@ -263,11 +263,11 @@ export default function SettingsPage() {
           </div>
 
           {/* Privacy Settings */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Shield className="w-6 h-6" />
-              Privacy & Analytics
-            </h2>
+          <div className="bg-[#15202B] rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <Shield className="w-6 h-6" />
+          Privacy & Analytics
+          </h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
@@ -289,10 +289,10 @@ export default function SettingsPage() {
           </div>
 
           {/* Risk Controls */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Shield className="w-6 h-6" />
-              Risk Controls
+          <div className="bg-[#15202B] rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <Shield className="w-6 h-6" />
+          Risk Controls
             </h2>
 
             <FeatureLock requiredPlan={plan === 'free' ? 'plus' : undefined}>

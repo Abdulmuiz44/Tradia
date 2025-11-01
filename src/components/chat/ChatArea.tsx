@@ -1,18 +1,38 @@
 // src/components/chat/ChatArea.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-Select,
-SelectContent,
-SelectItem,
-SelectTrigger,
-SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mic, MicOff, Paperclip, Send } from "lucide-react";
-import { Message } from "@/types/chat";
+import {
+  ArrowUp,
+  BarChart3,
+  Mic,
+  MicOff,
+  NotebookPen,
+  Plus,
+  Sparkles,
+  Square,
+  Upload,
+  GraduationCap,
+  X,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { AssistantMode, Message } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 
 interface ChatAreaProps {
@@ -35,6 +55,12 @@ interface ChatAreaProps {
   onVoiceInput?: () => void;
   isListening?: boolean;
   voiceTranscript?: string;
+  assistantMode?: AssistantMode;
+  onAssistantModeChange?: (mode: AssistantMode) => void;
+  isProcessing?: boolean;
+  onStopGeneration?: () => void;
+  isGuest?: boolean;
+  onRequestAuth?: () => void;
 }
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
@@ -57,6 +83,10 @@ onAttachTrades,
   onVoiceInput,
   isListening = false,
   voiceTranscript = "",
+  assistantMode = "coach",
+  onAssistantModeChange,
+  isProcessing = false,
+  onStopGeneration,
 }) => {
   const [inputMessage, setInputMessage] = useState(voiceTranscript);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -74,6 +104,10 @@ onAttachTrades,
   }, [voiceTranscript]);
 
   const handleSendMessage = () => {
+    if (isProcessing) {
+      onStopGeneration?.();
+      return;
+    }
     const trimmed = inputMessage.trim();
     if (!trimmed) return;
     onSendMessage?.(trimmed);
@@ -94,10 +128,43 @@ onAttachTrades,
     }
   };
 
+  const currentModeLabel = useMemo(() => {
+    switch (assistantMode) {
+      case "mentor":
+        return "Mentor";
+      case "analysis":
+        return "Trade Analysis";
+      case "journal":
+        return "Trade Journal";
+      case "grok":
+        return "Grok";
+      default:
+        return "Coach";
+    }
+  }, [assistantMode]);
+
+  const modeDescription = useMemo(() => {
+    switch (assistantMode) {
+      case "mentor":
+        return "Guides strategic decisions";
+      case "analysis":
+        return "Dissects trades and metrics";
+      case "journal":
+        return "Reflects on trading habits";
+      case "grok":
+        return "Adds wit to market insight";
+      default:
+        return "Keeps you accountable";
+    }
+  }, [assistantMode]);
+
+  const sendDisabled = !inputMessage.trim() && !isProcessing;
+  const showStopIcon = isProcessing;
+
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white text-slate-900 dark:bg-transparent dark:text-white">
+    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
       <ScrollArea className="flex-1">
-        <div className="mx-auto w-full max-w-3xl space-y-6 px-6 py-8">
+        <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-12">
           {messages.map((message, index) => (
             <MessageBubble
               key={message.id}
@@ -116,11 +183,11 @@ onAttachTrades,
         </div>
       </ScrollArea>
 
-      <div className="px-4 py-6">
+      <div className="relative px-4 pb-10 pt-6">
         <div className="mx-auto w-full max-w-3xl space-y-4">
           {selectedTradeIds.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-sky-500/30 bg-sky-50 px-4 py-2 text-sm text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
-              <Paperclip className="h-4 w-4" />
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(5,11,24,0.55)]">
+              <Upload className="h-4 w-4" />
               <span>
                 {selectedTradeIds.length} trade{selectedTradeIds.length !== 1 ? "s" : ""} attached
               </span>
@@ -128,7 +195,7 @@ onAttachTrades,
                 variant="ghost"
                 size="sm"
                 onClick={() => onTradeSelect?.([])}
-                className="h-6 rounded-full px-3 text-xs text-sky-700 hover:bg-sky-100 dark:text-white/70 dark:hover:bg-white/10"
+                className="h-6 rounded-full border border-indigo-500/40 bg-[#050b18] px-3 text-xs text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
               >
                 Clear
               </Button>
@@ -136,7 +203,7 @@ onAttachTrades,
                 variant="outline"
                 size="sm"
                 onClick={handleAttachTrades}
-                className="h-6 rounded-full border-sky-500/40 bg-white px-3 text-xs text-sky-700 hover:bg-sky-100 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+                className="h-6 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 text-xs font-semibold text-white transition hover:border-indigo-300 hover:bg-indigo-500/20"
               >
                 Attach to next prompt
               </Button>
@@ -144,105 +211,167 @@ onAttachTrades,
           )}
 
           <div className="relative">
-            <div className="flex items-center gap-3 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-3 shadow-lg">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleAttachTrades}
-                className="h-10 w-10 rounded-full text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                title="Attach trades"
-              >
-                <Paperclip className="h-5 w-5" />
-              </Button>
+            <div className="flex flex-col gap-3 rounded-3xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 shadow-[0_18px_38px_rgba(5,11,24,0.6)]">
+              <div className="flex items-start gap-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 rounded-full border border-indigo-500/40 bg-transparent p-0 text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
+                      title="Customize Tradia AI"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-60 border border-indigo-500/40 bg-[#050b18] p-2 text-sm text-white shadow-[0_20px_48px_rgba(5,11,24,0.65)]">
+                    <DropdownMenuGroup>
+                      <div className="px-2 pb-2 text-[11px] uppercase tracking-wide text-white/60">
+                        Assistant mode
+                      </div>
+                      <DropdownMenuItem
+                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "coach" ? "bg-indigo-500/20 text-white" : ""}`}
+                        onSelect={() => onAssistantModeChange?.("coach")}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Coach mode
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "mentor" ? "bg-indigo-500/20 text-white" : ""}`}
+                        onSelect={() => onAssistantModeChange?.("mentor")}
+                      >
+                        <GraduationCap className="h-4 w-4" />
+                        Mentor mode
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "analysis" ? "bg-indigo-500/20 text-white" : ""}`}
+                        onSelect={() => onAssistantModeChange?.("analysis")}
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                        Trade analysis
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "journal" ? "bg-indigo-500/20 text-white" : ""}`}
+                        onSelect={() => onAssistantModeChange?.("journal")}
+                      >
+                        <NotebookPen className="h-4 w-4" />
+                        Trade journal
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator className="my-2 bg-indigo-500/30" />
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white"
+                      onSelect={handleAttachTrades}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Attach selected trades
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white"
+                      onSelect={() => onTradeSelect?.([])}
+                    >
+                      <X className="h-4 w-4" />
+                      Clear attached trades
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-              <textarea
-                ref={textareaRef}
-                value={inputMessage}
-                onChange={(event) => {
-                  setInputMessage(event.target.value);
-                  const target = event.target as HTMLTextAreaElement;
-                  target.style.height = "auto";
-                  target.style.height = Math.min(target.scrollHeight, 180) + "px";
-                }}
-                onKeyDown={handleKeyDown}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  const data = event.dataTransfer.getData("application/json");
-                  if (!data) return;
-                  try {
-                    const trade = JSON.parse(data);
-                    if (trade?.id) {
-                      const ids = new Set(selectedTradeIds);
-                      ids.add(trade.id);
-                      onTradeSelect?.(Array.from(ids));
+                <textarea
+                  ref={textareaRef}
+                  value={inputMessage}
+                  onChange={(event) => {
+                    setInputMessage(event.target.value);
+                    const target = event.target as HTMLTextAreaElement;
+                    target.style.height = "auto";
+                    target.style.height = Math.min(target.scrollHeight, 180) + "px";
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    const data = event.dataTransfer.getData("application/json");
+                    if (!data) return;
+                    try {
+                      const trade = JSON.parse(data);
+                      if (trade?.id) {
+                        const ids = new Set(selectedTradeIds);
+                        ids.add(trade.id);
+                        onTradeSelect?.(Array.from(ids));
+                      }
+                    } catch (error) {
+                      console.error("Failed to parse dropped trade:", error);
                     }
-                  } catch (error) {
-                    console.error("Failed to parse dropped trade:", error);
-                  }
-                }}
-                onDragOver={(event) => event.preventDefault()}
-                placeholder="Ask about your trading performance..."
-                className="flex-1 min-h-[44px] resize-none bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none"
-                rows={1}
-                style={{ height: "auto", minHeight: "44px" }}
-              />
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  placeholder="Ask Tradia AI"
+                  className="flex-1 min-h-[44px] resize-none bg-transparent px-4 py-2 text-sm text-white placeholder:text-white/60 focus:outline-none"
+                  rows={1}
+                  style={{ height: "auto", minHeight: "44px" }}
+                />
+              </div>
 
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onVoiceInput}
-                  className={`h-10 w-10 rounded-full p-0 transition-colors ${
-                    isListening
-                      ? "text-rose-500 hover:text-rose-400"
-                      : "text-slate-500 hover:text-slate-900 dark:text-white/60 dark:hover:text-white/80"
-                  }`}
-                >
-                  {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                </Button>
-
-                <Select value={model} onValueChange={onModelChange}>
-                  <SelectTrigger className="h-8 w-[110px] rounded-full border border-slate-200 bg-white px-3 text-xs text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-0 dark:border-0 dark:bg-transparent dark:text-white/70 dark:hover:bg-white/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent
-                    side="top"
-                    className="border border-slate-200 bg-white text-slate-800 shadow-[0_12px_40px_rgba(15,23,42,0.2)] backdrop-blur dark:border-white/10 dark:bg-[#040A18]/95 dark:text-white"
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onVoiceInput}
+                    className={`h-10 w-10 rounded-full border border-indigo-500/40 bg-transparent p-0 transition-colors ${
+                      isListening
+                        ? "text-white hover:text-white/80"
+                        : "text-white/80 hover:text-white"
+                    }`}
                   >
-                    <SelectItem
-                      value="gpt-4o-mini"
-                      className="rounded-lg text-sm text-slate-700 focus:bg-slate-100 focus:text-slate-900 dark:text-white/80 dark:focus:bg-white/10 dark:focus:text-white"
+                    {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  </Button>
+
+                  <div className="hidden flex-col pr-2 text-right text-[10px] uppercase tracking-[0.18em] text-white/80 sm:flex">
+                    <span>{currentModeLabel}</span>
+                    <span className="text-white/60">{modeDescription}</span>
+                  </div>
+
+                  <Select value={model} onValueChange={onModelChange}>
+                    <SelectTrigger className="h-9 min-w-[150px] rounded-full border border-indigo-500/40 bg-[#050b18]/80 px-4 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:border-indigo-300 hover:bg-indigo-500/10 focus:outline-none focus:ring-0">
+                      <SelectValue placeholder="Model" />
+                    </SelectTrigger>
+                    <SelectContent
+                      side="top"
+                      className="border border-indigo-500/40 bg-[#050b18] text-white shadow-[0_20px_48px_rgba(5,11,24,0.65)]"
                     >
-                      GPT-4o Mini
-                    </SelectItem>
-                    <SelectItem
-                      value="gpt-4"
-                      className="rounded-lg text-sm text-slate-700 focus:bg-slate-100 focus:text-slate-900 dark:text-white/80 dark:focus:bg-white/10 dark:focus:text-white"
-                    >
-                      GPT-4
-                    </SelectItem>
-                    <SelectItem
-                      value="gpt-3.5-turbo"
-                      className="rounded-lg text-sm text-slate-700 focus:bg-slate-100 focus:text-slate-900 dark:text-white/80 dark:focus:bg-white/10 dark:focus:text-white"
-                    >
-                      GPT-3.5 Turbo
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                      <SelectItem
+                        value="gpt-4o-mini"
+                        className="rounded-lg text-sm text-white focus:bg-indigo-500/15"
+                      >
+                        GPT-4o Mini
+                      </SelectItem>
+                      <SelectItem
+                        value="gpt-4"
+                        className="rounded-lg text-sm text-white focus:bg-indigo-500/15"
+                      >
+                        GPT-4
+                      </SelectItem>
+                      <SelectItem
+                        value="gpt-3.5-turbo"
+                        className="rounded-lg text-sm text-white focus:bg-indigo-500/15"
+                      >
+                        GPT-3.5 Turbo
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputMessage.trim()}
-                  className="h-10 w-10 rounded-full bg-sky-500 p-0 text-white shadow-[0_8px_24px_rgba(56,189,248,0.35)] transition hover:bg-sky-400 hover:shadow-[0_8px_24px_rgba(56,189,248,0.5)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/10 dark:disabled:text-white/40"
+                  disabled={sendDisabled}
+                  className="h-10 w-10 self-end rounded-full border border-transparent bg-transparent p-0 text-white transition hover:text-indigo-200 disabled:cursor-not-allowed disabled:text-white/40 sm:self-auto"
                 >
-                  <Send className="h-4 w-4" />
+                  {showStopIcon ? <Square className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
                 </Button>
               </div>
             </div>
 
             <div className="mt-2 flex items-center justify-between px-1">
-              <span className="text-xs text-white/50">Shift + Enter for new line</span>
-              <span className="text-xs text-white/50">{inputMessage.length} characters</span>
+            <span className="text-xs text-white/60">Shift + Enter for new line</span>
+            <span className="text-xs text-white/60">{inputMessage.length} characters</span>
             </div>
           </div>
         </div>

@@ -10,7 +10,6 @@ import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import ActivityTracker from "@/components/analytics/ActivityTracker";
 import TrialBanner from "@/components/TrialBanner";
-import ExitIntent from "@/components/marketing/ExitIntent";
 
 
 // SEO Metadata
@@ -173,8 +172,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <link rel="canonical" href="https://tradiaai.app" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        <meta name="theme-color" content="#061226" />
-        <meta name="msapplication-TileColor" content="#061226" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet" />
       </head>
       <body className="text-[15px] sm:text-[16px] md:text-[17px] leading-[1.45] md:leading-normal">
         <Providers>
@@ -187,9 +187,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ActivityTracker />
           {/* Trial banner */}
           <TrialBanner />
-          {/* Exit intent popup */}
-          <ExitIntent />
-
           {children}
           {/* keep floating button available app-wide */}
           <FloatingFeedbackButton />

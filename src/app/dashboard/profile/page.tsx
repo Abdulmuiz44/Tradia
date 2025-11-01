@@ -97,12 +97,38 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
-      <div className="max-w-4xl mx-auto p-6">
+  <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
+      <header className="sticky top-0 z-30 h-[60px] border-b border-[#15202B] bg-[#000000]/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/Tradia-logo-ONLY.png"
+                alt="Tradia logo"
+                className="h-9 w-auto select-none"
+              />
+              <div className="leading-tight">
+              <p className="text-sm font-semibold tracking-tight text-[#FFFFFF]">Dashboard</p>
+              <p className="text-xs text-[#71767B]">Manage your trading account</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden items-center gap-3 md:flex">
+            <button
+              onClick={() => router.push('/chat')}
+              className="h-9 rounded-[6px] bg-[#1D9BF0] px-8 text-xs font-semibold text-[#FFFFFF] shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition hover:bg-[#15202B] hover:scale-105"
+            >
+              AI Chat
+            </button>
+          </div>
+        </div>
+      </header>
+  <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Profile</h1>
-          <p className="text-gray-400">Manage your account information</p>
+        <h1 className="text-3xl font-bold mb-2 text-[#FFFFFF]">Profile</h1>
+        <p className="text-[#71767B]">Manage your account information</p>
         </div>
 
         <div className="mb-6">
@@ -112,13 +138,13 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Overview */}
           <div className="lg:col-span-2">
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-[#15202B] rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Account Information</h2>
                 {!isEditing && (
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1D9BF0] text-[#FFFFFF] rounded-lg hover:bg-[#17BF63]"
                   >
                     <Edit3 className="w-4 h-4" />
                     Edit Profile
@@ -135,11 +161,11 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-[#15202B] border border-[#15202B] rounded-lg focus:ring-2 focus:ring-[#1D9BF0] focus:border-transparent text-[#FFFFFF]"
                       placeholder="Enter your full name"
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-3 p-3 bg-[#15202B] rounded-lg">
                       <User className="w-5 h-5 text-gray-400" />
                       <span>{user.name || 'Not provided'}</span>
                     </div>
