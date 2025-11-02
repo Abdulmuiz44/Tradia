@@ -44,19 +44,8 @@ const xaiClient = createOpenAI({
 
 const DEFAULT_MODEL = "openai:gpt-4o-mini";
 
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    let userId = session?.user?.id as string | undefined;
-
-    if (!userId) {
-      const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET ?? authOptions.secret,
-      });
-
 interface SystemMessageInput {
-  accountSummary: any;
+  accountSummary: Record<string, any>;
   attachedTrades: any[];
   mode: string;
 }
@@ -78,21 +67,25 @@ ACCOUNT SNAPSHOT:
 `;
 
   if (attachedTrades.length > 0) {
-    context += `RECENT OR ATTACHED TRADES:
-`;
+    context += "RECENT OR ATTACHED TRADES:\n";
+
     attachedTrades.forEach((trade, index) => {
       const entryTime = getTradeOpenTime(trade) || "Unknown entry";
       const exitTime = getTradeCloseTime(trade) || "Unknown exit";
       const pnlLabel = typeof trade.pnl === "number" ? `$${trade.pnl}` : "N/A";
-      context += `${index + 1}. ${trade.symbol} — ${trade.outcome?.toUpperCase() ?? "N/A"} ${pnlLabel} (${entryTime} → ${exitTime})
-      });
-      if (trade.notes) context += `   Notes: ${trade.notes}
-      userId = (token?.userId as string | undefined) ?? (token?.sub as string | undefined);
-      if (trade.strategy_tags) context += `   Tags: ${trade.strategy_tags.join(", ")}
-    }
-    });
-    context += `
 
+      context += `${index + 1}. ${trade.symbol} — ${trade.outcome?.toUpperCase() ?? "N/A"} ${pnlLabel} (${entryTime} → ${exitTime})\n`;
+
+      if (trade.notes) {
+        context += `   Notes: ${trade.notes}\n`;
+      }
+
+      if (Array.isArray(trade.strategy_tags) && trade.strategy_tags.length > 0) {
+        context += `   Tags: ${trade.strategy_tags.join(", ")}\n`;
+      }
+
+      context += "\n";
+    });
   }
 
   context += `GUIDELINES:
@@ -109,7 +102,23 @@ ACCOUNT SNAPSHOT:
 
   return context;
 }
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    let userId = session?.user?.id as string | undefined;
+
     if (!userId) {
+      const token = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET ?? authOptions.secret,
+      });
+
+      userId = (token?.userId as string | undefined) ?? (token?.sub as string | undefined);
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -120,6 +129,12 @@ ACCOUNT SNAPSHOT:
       options = {},
       mode = "coach",
     } = body ?? {};
+
+    const validAttachedTradeIds = Array.isArray(attachedTradeIds)
+      ? attachedTradeIds.filter((id: unknown) =>
+          typeof id === "string" && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)
+        )
+      : [];
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "Messages array required" }, { status: 400 });
@@ -161,7 +176,7 @@ ACCOUNT SNAPSHOT:
           user_id: userId,
           type: "user",
           content: lastMessage.content,
-          attached_trade_ids: attachedTradeIds,
+          attached_trade_ids: validAttachedTradeIds,
           mode,
         });
 
@@ -173,7 +188,7 @@ ACCOUNT SNAPSHOT:
     const attachedTrades = await fetchRelevantTrades({
       supabase,
       userId,
-      attachedTradeIds,
+      attachedTradeIds: validAttachedTradeIds,
       normalizeTrade,
     });
 
@@ -340,7 +355,7 @@ async function persistAssistantMessage({
 async function fetchRelevantTrades({
   supabase,
   userId,
-  attachedTradeIds,
+  attachedTradeIds: validAttachedTradeIds,
   normalizeTrade,
 }: {
   supabase: ReturnType<typeof createAdminClient>;

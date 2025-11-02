@@ -116,6 +116,8 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   const requestAuth = React.useCallback(() => {
   signIn(undefined, { callbackUrl: "/chat" }).catch(() => {});
   }, []);
+  const email = session?.user?.email || "";
+  const userDisplayName = (user?.name?.trim?.() || session?.user?.name?.trim?.() || (email ? email.split("@")[0] : "Trader")) as string;
 
   // Fetch conversations from Supabase
   React.useEffect(() => {
@@ -133,12 +135,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
         });
     }
   }, [session?.user?.id, supabase]);
-  const authButtonLabel = React.useMemo(() => {
-    if (isAuthenticated) {
-      return "Dashboard";
-    }
-    return Math.random() < 0.5 ? "Login" : "Sign In";
-  }, [isAuthenticated]);
+  const authButtonLabel = isAuthenticated ? "Dashboard" : "Login";
   const PrimaryIcon = isAuthenticated ? Home : LogIn;
   const handlePrimaryAction = React.useCallback(() => {
     if (isAuthenticated) {
@@ -429,6 +426,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             onStopGeneration={onStopGeneration}
             isGuest={isGuest}
             onRequestAuth={requestAuth}
+            userName={userDisplayName}
           />
         </main>
 

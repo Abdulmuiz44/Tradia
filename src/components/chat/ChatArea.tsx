@@ -76,6 +76,7 @@ interface ChatAreaProps {
   conversationId?: string;
   isGuest?: boolean;
   onRequestAuth?: () => void;
+  userName?: string;
 }
 
 export const ChatArea = ({
@@ -105,6 +106,7 @@ onStopGeneration,
 conversationId,
 isGuest,
 onRequestAuth,
+userName,
 }: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState(voiceTranscript);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -234,7 +236,7 @@ onRequestAuth,
           isLast={index === messages.length - 1}
           />
           ))}
-          {isProcessing && <TypingIndicator />}
+          {isProcessing && <TypingIndicator userName={userName} />}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
@@ -268,53 +270,54 @@ onRequestAuth,
           )}
 
           <div className="relative">
-            <div className="flex items-center gap-3 rounded-3xl border border-[#15202B] bg-[#15202B] px-4 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
-              <DropdownMenu>
+            <div className="rounded-3xl border border-indigo-500/30 bg-[#050b18] px-4 py-4 shadow-[0_12px_32px_rgba(5,11,24,0.6)]">
+              <div className="flex w-full items-end gap-3">
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 rounded-full border border-indigo-500/40 bg-transparent p-0 text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
+                      className="h-11 w-11 rounded-full border border-indigo-500/40 bg-transparent p-0 text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
                       title="Customize Tradia AI"
                     >
                       <Plus className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-60 border border-indigo-500/40 bg-[#050b18] p-2 text-sm text-white shadow-[0_20px_48px_rgba(5,11,24,0.65)]">
-                  <div className="px-2 pb-2 text-[11px] uppercase tracking-wide text-white/60">
-                  Assistant mode
-                  </div>
-                  <DropdownMenuItem
-                  className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "coach" ? "bg-indigo-500/20 text-white" : ""}`}
-                  onSelect={() => onAssistantModeChange?.("coach")}
-                  >
-                  <Sparkles className="h-4 w-4" />
-                  Coach mode
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                  className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "mentor" ? "bg-indigo-500/20 text-white" : ""}`}
-                  onSelect={() => onAssistantModeChange?.("mentor")}
-                  >
-                  <GraduationCap className="h-4 w-4" />
-                  Mentor mode
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                  className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "assistant" ? "bg-indigo-500/20 text-white" : ""}`}
-                  onSelect={() => onAssistantModeChange?.("assistant")}
-                  >
-                  <Bot className="h-4 w-4" />
-                  Assistant mode
-                  </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-2 bg-indigo-500/30" />
+                  <DropdownMenuContent className="w-60 border border-indigo-500/40 bg-[#050b18] p-3 text-sm font-semibold text-white shadow-[0_24px_48px_rgba(5,11,24,0.65)]">
+                    <div className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                      Assistant mode
+                    </div>
                     <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white"
+                      className={`flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white ${assistantMode === "coach" ? "bg-indigo-500/20 text-white" : ""}`}
+                      onSelect={() => onAssistantModeChange?.("coach")}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Coach mode
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className={`flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white ${assistantMode === "mentor" ? "bg-indigo-500/20 text-white" : ""}`}
+                      onSelect={() => onAssistantModeChange?.("mentor")}
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      Mentor mode
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className={`flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white ${assistantMode === "assistant" ? "bg-indigo-500/20 text-white" : ""}`}
+                      onSelect={() => onAssistantModeChange?.("assistant")}
+                    >
+                      <Bot className="h-4 w-4" />
+                      Assistant mode
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-3 bg-indigo-500/30" />
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
                       onSelect={handleAttachTrades}
                     >
                       <Upload className="h-4 w-4" />
                       Attach selected trades
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white"
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
                       onSelect={() => onTradeSelect?.([])}
                     >
                       <X className="h-4 w-4" />
@@ -323,128 +326,133 @@ onRequestAuth,
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <textarea
-                  ref={textareaRef}
-                  value={inputMessage}
-                onChange={(event) => {
-                  setInputMessage(event.target.value);
-                  const target = event.target as HTMLTextAreaElement;
-                target.style.height = "auto";
-                target.style.height = Math.min(target.scrollHeight, 180) + "px";
-                }}
-                onKeyDown={handleKeyDown}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  const data = event.dataTransfer.getData("application/json");
-                if (!data) return;
-                try {
-                  const trade = JSON.parse(data);
-                  if (trade?.id) {
-                  const ids = new Set(selectedTradeIds);
-                  ids.add(trade.id);
-                onTradeSelect?.(Array.from(ids));
-                }
-                } catch (error) {
-                console.error("Failed to parse dropped trade:", error);
-                }
-                }}
-                onDragOver={(event) => event.preventDefault()}
-                placeholder={`${currentModeLabel}: Ask Tradia AI`}
-                className="flex-1 min-h-[44px] resize-none bg-transparent px-4 py-2 text-sm text-[#FFFFFF] placeholder:text-[#71767B] focus:outline-none"
-                rows={1}
-                style={{ height: "auto", minHeight: "44px" }}
-                />
-              </div>
+                <div className="flex-1">
+                  <textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={(event) => {
+                      setInputMessage(event.target.value);
+                      const target = event.target as HTMLTextAreaElement;
+                      target.style.height = "auto";
+                      target.style.height = Math.min(target.scrollHeight, 220) + "px";
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const data = event.dataTransfer.getData("application/json");
+                      if (!data) return;
+                      try {
+                        const trade = JSON.parse(data);
+                        if (trade?.id) {
+                          const ids = new Set(selectedTradeIds);
+                          ids.add(trade.id);
+                          onTradeSelect?.(Array.from(ids));
+                        }
+                      } catch (error) {
+                        console.error("Failed to parse dropped trade:", error);
+                      }
+                    }}
+                    onDragOver={(event) => event.preventDefault()}
+                    placeholder={`${currentModeLabel}: Ask Tradia AI${userName ? ", " + userName : ""}`}
+                    className="w-full min-h-[68px] resize-none bg-transparent px-4 py-3 text-sm text-[#FFFFFF] placeholder:text-[#71767B] focus:outline-none"
+                    rows={1}
+                    style={{ height: "auto", minHeight: "68px" }}
+                  />
+                  <div className="mt-2 hidden text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80 sm:block">
+                    <span>{currentModeLabel}</span>
+                    <span className="ml-2 text-white/60">{modeDescription}</span>
+                  </div>
+                </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 pb-1">
                   <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
-                  className={`h-10 w-10 rounded-full border border-[#15202B] bg-transparent p-0 transition-colors ${
-                  isListening
-                  ? "text-[#FFFFFF] hover:text-[#71767B]"
-                  : "text-[#71767B] hover:text-[#FFFFFF]"
-                  }`}
+                    variant="ghost"
+                    size="sm"
+                    onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
+                    className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-transparent p-0 transition-colors ${
+                      isListening
+                        ? "text-[#FFFFFF] hover:text-[#71767B]"
+                        : "text-[#71767B] hover:text-[#FFFFFF]"
+                    }`}
+                    title={isListening ? "Stop voice input" : "Start voice input"}
                   >
                     {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                   </Button>
-
-                  <div className="hidden flex-col pr-2 text-right text-[10px] uppercase tracking-[0.18em] text-white/80 sm:flex">
-                    <span>{currentModeLabel}</span>
-                    <span className="text-white/60">{modeDescription}</span>
-                  </div>
 
                   <Dialog open={modelDialogOpen} onOpenChange={setModelDialogOpen}>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 rounded-full border border-[#15202B] bg-[#15202B] p-0 text-[#FFFFFF] transition hover:bg-[#1D9BF0]"
-                      title="Select Model"
-                    >
-                    <Bot className="h-5 w-5" />
-                  </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-[#15202B] border-[#15202B] text-[#FFFFFF]">
-                  <DialogHeader>
-                    <DialogTitle>Select AI Model</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-2">
-                    <Button
-                      variant={model === 'openai:gpt-4o-mini' ? 'default' : 'ghost'}
-                      onClick={() => { onModelChange?.('openai:gpt-4o-mini'); setModelDialogOpen(false); }}
-                      className="justify-start"
-                    >
-                      OpenAI · GPT-4o mini (fast)
-                    </Button>
-                    <Button
-                      variant={model === 'openai:gpt-4o' ? 'default' : 'ghost'}
-                      onClick={() => { onModelChange?.('openai:gpt-4o'); setModelDialogOpen(false); }}
-                      className="justify-start"
-                    >
-                      OpenAI · GPT-4o (balanced)
-                    </Button>
-                    <Button
-                      variant={model === 'openai:gpt-4.1-mini' ? 'default' : 'ghost'}
-                      onClick={() => { onModelChange?.('openai:gpt-4.1-mini'); setModelDialogOpen(false); }}
-                      className="justify-start"
-                    >
-                      OpenAI · GPT-4.1 mini (analysis)
-                    </Button>
-                    <Button
-                      variant={model === 'xai:grok-beta' ? 'default' : 'ghost'}
-                      onClick={() => { onModelChange?.('xai:grok-beta'); setModelDialogOpen(false); }}
-                      className="justify-start"
-                    >
-                      xAI · Grok Beta (creative)
-                    </Button>
-                    <Button
-                      variant={model === 'gateway:meta-llama-3-70b-instruct' ? 'default' : 'ghost'}
-                      onClick={() => { onModelChange?.('gateway:meta-llama-3-70b-instruct'); setModelDialogOpen(false); }}
-                      className="justify-start"
-                    >
-                      Vercel Gateway · Llama 3 70B (structured)
-                    </Button>
+                        size="sm"
+                        className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-transparent p-0 text-[#FFFFFF] transition hover:bg-indigo-500/10 ${isProcessing ? 'animate-pulse' : ''}`}
+                        title="Select Model"
+                      >
+                        <Bot className="h-5 w-5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="border border-indigo-500/40 bg-[#050b18] text-[#FFFFFF]">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-white">Select AI Model</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-2 text-sm font-semibold">
+                        <Button
+                          variant={model === 'openai:gpt-4o-mini' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('openai:gpt-4o-mini'); setModelDialogOpen(false); }}
+                          className="justify-start"
+                        >
+                          OpenAI · GPT-4o mini (fast)
+                        </Button>
+                        <Button
+                          variant={model === 'openai:gpt-4o' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('openai:gpt-4o'); setModelDialogOpen(false); }}
+                          className="justify-start"
+                        >
+                          OpenAI · GPT-4o (balanced)
+                        </Button>
+                        <Button
+                          variant={model === 'openai:gpt-4.1-mini' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('openai:gpt-4.1-mini'); setModelDialogOpen(false); }}
+                          className="justify-start"
+                        >
+                          OpenAI · GPT-4.1 mini (analysis)
+                        </Button>
+                        <Button
+                          variant={model === 'xai:grok-beta' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('xai:grok-beta'); setModelDialogOpen(false); }}
+                          className="justify-start"
+                        >
+                          xAI · Grok Beta (creative)
+                        </Button>
+                        <Button
+                          variant={model === 'gateway:meta-llama-3-70b-instruct' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('gateway:meta-llama-3-70b-instruct'); setModelDialogOpen(false); }}
+                          className="justify-start"
+                        >
+                          Vercel Gateway · Llama 3 70B (structured)
+                        </Button>
                       </div>
                     </DialogContent>
                   </Dialog>
-                </div>
 
-                <Button
-                onClick={isProcessing ? onStopGeneration : handleSendMessage}
-                disabled={sendDisabled}
-                className="h-12 w-12 self-end rounded-full border border-transparent bg-[#1D9BF0] p-0 text-[#FFFFFF] transition hover:bg-[#15202B] disabled:cursor-not-allowed disabled:bg-[#15202B] disabled:text-[#71767B] sm:self-auto"
-                >
-                  {showStopIcon ? <Square className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={isProcessing ? onStopGeneration : handleSendMessage}
+                    disabled={sendDisabled}
+                    title={isProcessing ? 'Stop generation' : 'Send'}
+                    className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-[#1D9BF0] p-0 text-white transition-transform duration-200 hover:scale-110 active:animate-bounce disabled:opacity-50`}
+                  >
+                    {showStopIcon ? <Square className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between px-1">
-            <span className="text-xs text-white/60">Shift + Enter for new line</span>
-            <span className="text-xs text-white/60">{inputMessage.length} characters</span>
+            <div className="mt-3 flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center justify-between text-xs text-white/60">
+                <span>Shift + Enter for new line</span>
+                <span>{inputMessage.length} characters</span>
+              </div>
             </div>
           </div>
         </div>

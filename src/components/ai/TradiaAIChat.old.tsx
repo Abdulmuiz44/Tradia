@@ -1,3 +1,4 @@
+/* eslint-disable */
 // src/components/ai/TradiaAIChat.tsx
 "use client";
 

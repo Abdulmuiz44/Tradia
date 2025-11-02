@@ -1,7 +1,7 @@
 // src/components/chat/MessageBubble.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -18,6 +18,76 @@ import {
 } from "lucide-react";
 import { Message } from "@/types/chat";
 import { Trade } from "@/types/trade";
+
+type ParsedSection =
+  | { type: "heading"; text: string }
+  | { type: "paragraph"; text: string }
+  | { type: "list"; ordered: boolean; items: string[] }
+  | { type: "spacer" };
+
+const parseMessageContent = (content: string): ParsedSection[] => {
+  const lines = content.split("\n");
+  const sections: ParsedSection[] = [];
+  let listBuffer: { ordered: boolean; items: string[] } | null = null;
+
+  const commitList = () => {
+    if (listBuffer && listBuffer.items.length > 0) {
+      sections.push({ type: "list", ordered: listBuffer.ordered, items: [...listBuffer.items] });
+    }
+    listBuffer = null;
+  };
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim();
+
+    if (!line) {
+      commitList();
+      sections.push({ type: "spacer" });
+      return;
+    }
+
+    const headingMatch = line.match(/^\*\*(.+)\*\*$/);
+    if (headingMatch) {
+      commitList();
+      sections.push({ type: "heading", text: headingMatch[1].trim() });
+      return;
+    }
+
+    const bulletMatch = line.match(/^[-*]\s+(.*)$/);
+    if (bulletMatch) {
+      if (!listBuffer || listBuffer.ordered) {
+        commitList();
+        listBuffer = { ordered: false, items: [] };
+      }
+      listBuffer.items.push(bulletMatch[1].trim());
+      return;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.*)$/);
+    if (orderedMatch) {
+      if (!listBuffer || !listBuffer.ordered) {
+        commitList();
+        listBuffer = { ordered: true, items: [] };
+      }
+      listBuffer.items.push(orderedMatch[1].trim());
+      return;
+    }
+
+    commitList();
+    sections.push({ type: "paragraph", text: line });
+  });
+
+  commitList();
+
+  return sections.filter((section, index, array) => {
+    if (section.type !== "spacer") {
+      return true;
+    }
+    const prev = array[index - 1];
+    const next = array[index + 1];
+    return Boolean(prev && prev.type !== "spacer") || Boolean(next && next.type !== "spacer");
+  });
+};
 
 interface MessageBubbleProps {
   message: Message;
@@ -45,9 +115,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [showActions, setShowActions] = useState(false);
+  const parsedSections = useMemo(() => parseMessageContent(message.content), [message.content]);
 
   const isUser = message.type === "user";
   const isAssistant = message.type === "assistant";
+
+  const bubbleClass = isUser
+    ? "rounded-2xl border border-indigo-500/40 bg-gradient-to-r from-indigo-500/40 via-blue-500/40 to-purple-500/40 px-5 py-4 text-white shadow-[0_18px_42px_rgba(5,11,24,0.65)]"
+    : "bg-transparent px-1 py-1 text-white shadow-none";
 
   const handleSaveEdit = () => {
     const trimmed = editContent.trim();
@@ -96,30 +171,40 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
 
     return (
-      <div className="prose max-w-none prose-invert text-white">
-        {message.content.split("\n").map((line, index) => {
-          if (line.startsWith("**") && line.endsWith("**")) {
+      <div className="space-y-3 text-sm leading-6 text-white">
+        {parsedSections.map((section, index) => {
+          if (section.type === "heading") {
             return (
-              <h3 key={index} className="mb-2 text-lg font-semibold text-white">
-                {line.slice(2, -2)}
+              <h3 key={`heading-${index}`} className="text-base font-semibold text-white">
+                {section.text}
               </h3>
             );
           }
-          if (line.startsWith("* ") || line.startsWith("- ")) {
+
+          if (section.type === "paragraph") {
             return (
-              <li key={index} className="ml-4 text-white">
-                {line.slice(2)}
-              </li>
+              <p key={`paragraph-${index}`} className="text-white/90">
+                {section.text}
+              </p>
             );
           }
-          if (line.trim() === "") {
-            return <br key={index} />;
+
+          if (section.type === "list") {
+            const ListTag = section.ordered ? "ol" : "ul";
+            const listClass = section.ordered ? "list-decimal" : "list-disc";
+            return (
+              <ListTag
+                key={`list-${index}`}
+                className={`${listClass} space-y-2 pl-5 text-white/90 marker:text-white/60`}
+              >
+                {section.items.map((item, itemIndex) => (
+                  <li key={`list-${index}-${itemIndex}`}>{item}</li>
+                ))}
+              </ListTag>
+            );
           }
-          return (
-            <p key={index} className="mb-2 text-white/90">
-              {line}
-            </p>
-          );
+
+          return <div key={`spacer-${index}`} className="h-2" />;
         })}
       </div>
     );
@@ -146,16 +231,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div
-        className={`rounded-2xl border px-5 py-4 shadow-[0_18px_42px_rgba(5,11,24,0.65)] transition-all duration-200 ${
-          isUser
-            ? "border-indigo-400/70 bg-gradient-to-r from-indigo-500/40 via-blue-500/40 to-purple-500/40 text-white"
-            : "border-indigo-500/40 bg-[#050b18] text-white"
-        }`}
-      >
+      <div className={`${bubbleClass} transition-all duration-200`}>
         {renderContent()}
         {renderAttachedTrades()}
-        <div className={`mt-3 text-xs font-medium ${isUser ? "text-white/80" : "text-white/60"}`}>
+        <div className={`mt-3 text-xs font-medium ${isUser ? "text-white/80" : "text-white/50"}`}>
           {message.timestamp.toLocaleTimeString()}
         </div>
       </div>
@@ -277,7 +356,7 @@ const TradeCard: React.FC<TradeCardProps> = ({ trade }) => {
   const strategyTags = trade.strategy_tags?.filter(Boolean).join(", ");
 
   return (
-    <div className="rounded-xl border border-indigo-500/40 bg-[#050b18] p-3 text-white">
+    <div className="rounded-xl border border-white/15 bg-transparent p-3 text-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <span className="font-medium text-white">{trade.symbol}</span>
