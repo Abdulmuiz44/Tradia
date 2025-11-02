@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Menu, Plus, X, Home, LogIn, ChevronDown } from "lucide-react";
 import { ConversationsSidebar } from "./ConversationsSidebar";
 import { ChatArea } from "./ChatArea";
@@ -263,9 +264,11 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             )}
 
             <div className="flex items-center gap-3">
-              <img
+              <Image
                 src="/Tradia-logo-ONLY.png"
                 alt="Tradia logo"
+                width={36}
+                height={36}
                 className="h-9 w-auto select-none"
               />
               <div className="leading-tight">
