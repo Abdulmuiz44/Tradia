@@ -160,7 +160,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
   // use permissive `any` parameter types for callbacks to avoid strict NextAuth
   // type incompatibilities with the project's DB/user shapes
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async signIn({ user, account, profile }: any) {
       try {
         if (account?.provider === "google") {
@@ -281,7 +280,6 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async jwt({ token, user }: any) {
       try {
         const incomingUserId = getString(user, "id");
@@ -332,7 +330,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async session({ session, token }: any) {
       try {
         if (!session.user || typeof session.user !== "object") session.user = {};
