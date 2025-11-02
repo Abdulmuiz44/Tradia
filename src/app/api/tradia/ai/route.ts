@@ -234,9 +234,6 @@ export async function POST(req: NextRequest) {
         "X-Conversation-Id": currentConversationId!,
         "Cache-Control": "no-store",
       },
-      onError(error) {
-        console.error("AI stream error:", error);
-      },
     });
   } catch (error) {
     console.error("Tradia AI API Error:", error);
