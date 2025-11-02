@@ -39,6 +39,12 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [loading, user, router]);
+
   const handleSave = async () => {
     if (!user?.id) return;
 
@@ -83,18 +89,36 @@ export default function ProfilePage() {
     );
   }
 
-  if (!loading && !user) {
-    router.push('/login');
-    return null;
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#000000] text-[#FFFFFF]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1D9BF0]"></div>
+          <p className="text-sm text-[#71767B]">Redirecting to login…</p>
+        </div>
+      </div>
+    );
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) {
+      return 'Not available';
+    }
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
   };
+
+  const planBadgeStyles: Record<string, string> = {
+    free: 'bg-gray-600',
+    pro: 'bg-blue-600',
+    plus: 'bg-purple-600',
+    elite: 'bg-emerald-600'
+  };
+
+  const lastLogin = (user as { lastLogin?: string | null }).lastLogin ?? null;
 
   return (
   <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
@@ -215,10 +239,7 @@ export default function ProfilePage() {
                     <CreditCard className="w-5 h-5 text-gray-400" />
                     <span className="capitalize">{user.plan} Plan</span>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      user.plan === 'free' ? 'bg-gray-600' :
-                      user.plan === 'pro' ? 'bg-blue-600' :
-                      user.plan === 'plus' ? 'bg-purple-600' :
-                      'bg-yellow-600'
+                      planBadgeStyles[user.plan] ?? 'bg-gray-600'
                     }`}>
                       {user.plan.toUpperCase()}
                     </span>
@@ -235,12 +256,12 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Last Login */}
-                {user.lastLogin && (
+                {lastLogin && (
                   <div>
                     <label className="block text-sm font-medium mb-2">Last Login</label>
                     <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
                       <Shield className="w-5 h-5 text-gray-400" />
-                      <span>{formatDate(user.lastLogin)}</span>
+                      <span>{formatDate(lastLogin)}</span>
                     </div>
                   </div>
                 )}

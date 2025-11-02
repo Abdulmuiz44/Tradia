@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Menu, Plus, X, Home, LogIn } from "lucide-react";
+import { Menu, Plus, X, Home, LogIn, ChevronDown } from "lucide-react";
 import { ConversationsSidebar } from "./ConversationsSidebar";
 import { ChatArea } from "./ChatArea";
 import { TradePickerPanel } from "./TradePickerPanel";
@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 
 interface ChatLayoutProps {
@@ -62,8 +69,8 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   className,
   isGuest = false,
   hideSidebar = false,
-  conversations = [],
-  loadingConversations = false,
+  conversations: initialConversations = [],
+  loadingConversations: initialLoading = false,
   activeConversationId,
   onCreateConversation,
   onSelectConversation,
@@ -99,13 +106,33 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 }) => {
   const showTradePanel = trades.length > 0;
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
+  const [conversations, setConversations] = React.useState(initialConversations);
+  const [loadingConversations, setLoadingConversations] = React.useState(initialLoading);
   const { user, plan } = useUser();
   const { data: session } = useSession();
   const router = useRouter();
+  const supabase = createClientComponentClient();
   const isAuthenticated = Boolean(session);
   const requestAuth = React.useCallback(() => {
-    signIn(undefined, { callbackUrl: "/chat" }).catch(() => {});
+  signIn(undefined, { callbackUrl: "/chat" }).catch(() => {});
   }, []);
+
+  // Fetch conversations from Supabase
+  React.useEffect(() => {
+    if (session?.user?.id) {
+      setLoadingConversations(true);
+      supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('updated_at', { ascending: false })
+        .then(({ data, error }) => {
+          if (error) console.error('Error fetching conversations:', error);
+          else setConversations(data || []);
+          setLoadingConversations(false);
+        });
+    }
+  }, [session?.user?.id, supabase]);
   const authButtonLabel = React.useMemo(() => {
     if (isAuthenticated) {
       return "Dashboard";
@@ -131,13 +158,84 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 
   const closeMobileSidebar = () => setIsMobileSidebarOpen(false);
 
-  const handleCreateConversation = () => {
+  const handleCreateConversationWithMode = async (mode: string) => {
     if (!isAuthenticated) {
       requestAuth();
       return;
     }
-    onCreateConversation?.();
-    closeMobileSidebar();
+
+    // Check mode access based on plan
+    const allowedModes = plan === 'plus' || plan === 'elite' ? ['assistant', 'coach', 'mentor'] : plan === 'pro' ? ['assistant', 'coach'] : ['assistant'];
+    if (!allowedModes.includes(mode)) {
+      alert(`Your ${plan} plan doesn't include ${mode} mode. Upgrade to access more modes.`);
+      return;
+    }
+
+    // Check plan limits
+    const maxConversations = plan === 'plus' ? Infinity : plan === 'pro' ? 50 : 10;
+    if (conversations.length >= maxConversations) {
+      alert(`You've reached the maximum number of conversations for your ${plan} plan. Upgrade to create more.`);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: session?.user?.id,
+          title: `New ${mode.charAt(0).toUpperCase() + mode.slice(1)} Conversation`,
+          messages: [],
+          mode,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setConversations(prev => [data, ...prev]);
+      onCreateConversation?.();
+      closeMobileSidebar();
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  };
+
+  const handleCreateConversation = async () => {
+    if (!isAuthenticated) {
+      requestAuth();
+      return;
+    }
+
+    // Check plan limits
+    const maxConversations = plan === 'plus' ? Infinity : plan === 'pro' ? 50 : 10;
+    if (conversations.length >= maxConversations) {
+      alert(`You've reached the maximum number of conversations for your ${plan} plan. Upgrade to create more.`);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: session?.user?.id,
+          title: 'New Conversation',
+          messages: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setConversations(prev => [data, ...prev]);
+      onCreateConversation?.();
+      closeMobileSidebar();
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
   };
 
   const handleSelectConversation = (id: string) => {
@@ -190,14 +288,29 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
               <PrimaryIcon className="mr-2 h-4 w-4" />
               {authButtonLabel}
             </Button>
-            <Button
-            size="sm"
-            onClick={handleCreateConversation}
-            className="h-10 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 px-8 text-xs font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-[1.03] hover:shadow-indigo-400/40"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {secondaryLabel}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  className="h-10 rounded-xl bg-[#1D9BF0] px-8 text-xs font-semibold text-[#FFFFFF] shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition hover:bg-[#15202B] hover:scale-105"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                  {secondaryLabel}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#15202B] border-[#15202B] text-[#FFFFFF]">
+                <DropdownMenuItem onClick={() => handleCreateConversationWithMode('coach')} className="hover:bg-[#1D9BF0]">
+                  Coach Mode
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCreateConversationWithMode('mentor')} className="hover:bg-[#1D9BF0]">
+                  Mentor Mode
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCreateConversationWithMode('assistant')} className="hover:bg-[#1D9BF0]">
+                  Assistant Mode
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Mobile buttons */}

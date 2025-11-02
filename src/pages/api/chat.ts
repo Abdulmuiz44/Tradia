@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import { createClient } from '@supabase/supabase-js';
 import { checkDailyLimit, incrementUsage } from '../../../lib/supabase-utils';
 
@@ -13,17 +15,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session?.user?.id) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const token = authHeader.substring(7);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+    // For Supabase, we might need to get the Supabase user ID if different
+    const userId = session.user.id;
 
     const { message, tradeHistory, mode } = req.body;
 
@@ -32,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check daily message limit
-    const hasLimit = await checkDailyLimit(user.id, 'messages');
+    const hasLimit = await checkDailyLimit(userId, 'messages');
     if (!hasLimit) {
       return res.status(429).json({
         error: 'Daily message limit exceeded. Please upgrade your plan.',
@@ -90,8 +88,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const aiResponse = aiData.choices?.[0]?.message?.content || 'I apologize, but I encountered an issue generating a response.';
 
     // Increment usage counter
-    await incrementUsage(user.id, 'messages');
-    await incrementUsage(user.id, 'api_calls');
+    await incrementUsage(userId, 'messages');
+    await incrementUsage(userId, 'api_calls');
 
     // Return the AI response
     res.status(200).json({

@@ -2,6 +2,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+
+// Web Speech API types
+declare global {
+interface Window {
+SpeechRecognition: any;
+webkitSpeechRecognition: any;
+  SpeechRecognitionEvent: any;
+    SpeechRecognitionErrorEvent: any;
+  }
+}
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,11 +23,12 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  ArrowUp,
-  BarChart3,
-  Mic,
-  MicOff,
-  NotebookPen,
+ArrowUp,
+BarChart3,
+Bot,
+Mic,
+MicOff,
+NotebookPen,
   Plus,
   Sparkles,
   Square,
@@ -32,8 +44,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { AssistantMode, Message } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface ChatAreaProps {
   conversationTitle?: string;
@@ -59,6 +79,7 @@ interface ChatAreaProps {
   onAssistantModeChange?: (mode: AssistantMode) => void;
   isProcessing?: boolean;
   onStopGeneration?: () => void;
+  conversationId?: string;
   isGuest?: boolean;
   onRequestAuth?: () => void;
 }
@@ -87,10 +108,14 @@ onAttachTrades,
   onAssistantModeChange,
   isProcessing = false,
   onStopGeneration,
+  conversationId,
 }) => {
   const [inputMessage, setInputMessage] = useState(voiceTranscript);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const supabase = createClientComponentClient();
+  const recognitionRef = useRef<any>(null);
+  const [modelDialogOpen, setModelDialogOpen] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -125,6 +150,40 @@ onAttachTrades,
   const handleAttachTrades = () => {
     if (selectedTradeIds.length > 0) {
       onAttachTrades?.(selectedTradeIds);
+    }
+  };
+
+  const startVoiceRecognition = () => {
+    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.lang = 'en-US';
+
+    recognitionRef.current.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInputMessage(prev => prev + transcript);
+    };
+
+    recognitionRef.current.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+    };
+
+    recognitionRef.current.onend = () => {
+      // Auto-send if configured, or just append
+    };
+
+    recognitionRef.current.start();
+  };
+
+  const stopVoiceRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
     }
   };
 
@@ -166,24 +225,26 @@ onAttachTrades,
       <ScrollArea className="flex-1">
         <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-12">
           {messages.map((message, index) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              onEdit={(newContent) => onEditMessage?.(message.id, newContent)}
-              onDelete={() => onDeleteMessage?.(message.id)}
-              onRegenerate={() => onRegenerateMessage?.(message.id)}
-              onCopy={() => onCopyMessage?.(message.content)}
-              onRate={(rating) => onRateMessage?.(message.id, rating)}
-              onPin={() => onPinMessage?.(message.id)}
-              onRetry={() => onRetryMessage?.(message.id)}
-              isLast={index === messages.length - 1}
-            />
+          <MessageBubble
+          key={message.id}
+          message={message}
+          onEdit={(newContent) => onEditMessage?.(message.id, newContent)}
+          onDelete={() => onDeleteMessage?.(message.id)}
+          onRegenerate={() => onRegenerateMessage?.(message.id)}
+          onCopy={() => onCopyMessage?.(message.content)}
+          onRate={(rating) => onRateMessage?.(message.id, rating)}
+          onPin={() => onPinMessage?.(message.id)}
+          onRetry={() => onRetryMessage?.(message.id)}
+          isLast={index === messages.length - 1}
+          />
           ))}
+          {isProcessing && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
       <div className="relative px-4 pb-10 pt-6">
+        
         <div className="mx-auto w-full max-w-3xl space-y-4">
           {selectedTradeIds.length > 0 && (
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(5,11,24,0.55)]">
@@ -211,9 +272,8 @@ onAttachTrades,
           )}
 
           <div className="relative">
-            <div className="flex flex-col gap-3 rounded-3xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 shadow-[0_18px_38px_rgba(5,11,24,0.6)]">
-              <div className="flex items-start gap-3">
-                <DropdownMenu>
+            <div className="flex items-center gap-3 rounded-3xl border border-[#15202B] bg-[#15202B] px-4 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
+              <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
@@ -312,14 +372,14 @@ onAttachTrades,
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onVoiceInput}
-                    className={`h-10 w-10 rounded-full border border-indigo-500/40 bg-transparent p-0 transition-colors ${
-                      isListening
-                        ? "text-white hover:text-white/80"
-                        : "text-white/80 hover:text-white"
-                    }`}
+                  variant="ghost"
+                  size="sm"
+                  onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
+                  className={`h-10 w-10 rounded-full border border-[#15202B] bg-transparent p-0 transition-colors ${
+                  isListening
+                  ? "text-[#FFFFFF] hover:text-[#71767B]"
+                  : "text-[#71767B] hover:text-[#FFFFFF]"
+                  }`}
                   >
                     {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                   </Button>
@@ -329,40 +389,52 @@ onAttachTrades,
                     <span className="text-white/60">{modeDescription}</span>
                   </div>
 
-                  <Select value={model} onValueChange={onModelChange}>
-                    <SelectTrigger className="h-9 min-w-[150px] rounded-full border border-indigo-500/40 bg-[#050b18]/80 px-4 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:border-indigo-300 hover:bg-indigo-500/10 focus:outline-none focus:ring-0">
-                      <SelectValue placeholder="Model" />
-                    </SelectTrigger>
-                    <SelectContent
-                      side="top"
-                      className="border border-indigo-500/40 bg-[#050b18] text-white shadow-[0_20px_48px_rgba(5,11,24,0.65)]"
+                  <Dialog open={modelDialogOpen} onOpenChange={setModelDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 rounded-full border border-[#15202B] bg-[#15202B] p-0 text-[#FFFFFF] transition hover:bg-[#1D9BF0]"
+                      title="Select Model"
                     >
-                      <SelectItem
-                        value="gpt-4o-mini"
-                        className="rounded-lg text-sm text-white focus:bg-indigo-500/15"
-                      >
-                        GPT-4o Mini
-                      </SelectItem>
-                      <SelectItem
-                        value="gpt-4"
-                        className="rounded-lg text-sm text-white focus:bg-indigo-500/15"
-                      >
-                        GPT-4
-                      </SelectItem>
-                      <SelectItem
-                        value="gpt-3.5-turbo"
-                        className="rounded-lg text-sm text-white focus:bg-indigo-500/15"
-                      >
-                        GPT-3.5 Turbo
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Bot className="h-5 w-5" />
+                  </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#15202B] border-[#15202B] text-[#FFFFFF]">
+                  <DialogHeader>
+                    <DialogTitle>Select AI Model</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-2">
+                  <Button
+                      variant={model === 'gpt-4o-mini' ? 'default' : 'ghost'}
+                    onClick={() => { onModelChange?.('gpt-4o-mini'); setModelDialogOpen(false); }}
+                      className="justify-start"
+                    >
+                    GPT-4o Mini
+                  </Button>
+                    <Button
+                    variant={model === 'gpt-4' ? 'default' : 'ghost'}
+                      onClick={() => { onModelChange?.('gpt-4'); setModelDialogOpen(false); }}
+                        className="justify-start"
+                        >
+                          GPT-4
+                        </Button>
+                        <Button
+                          variant={model === 'gpt-3.5-turbo' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('gpt-3.5-turbo'); setModelDialogOpen(false); }}
+                          className="justify-start"
+                        >
+                          GPT-3.5 Turbo
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
 
                 <Button
-                  onClick={handleSendMessage}
-                  disabled={sendDisabled}
-                  className="h-10 w-10 self-end rounded-full border border-transparent bg-transparent p-0 text-white transition hover:text-indigo-200 disabled:cursor-not-allowed disabled:text-white/40 sm:self-auto"
+                onClick={isProcessing ? onStopGeneration : handleSendMessage}
+                disabled={sendDisabled}
+                className="h-12 w-12 self-end rounded-full border border-transparent bg-[#1D9BF0] p-0 text-[#FFFFFF] transition hover:bg-[#15202B] disabled:cursor-not-allowed disabled:bg-[#15202B] disabled:text-[#71767B] sm:self-auto"
                 >
                   {showStopIcon ? <Square className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
                 </Button>
