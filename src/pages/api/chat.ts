@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
+import { authOptions } from '../../lib/authOptions';
 import { createClient } from '@supabase/supabase-js';
-import { checkDailyLimit, incrementUsage } from '../../../lib/supabase-utils';
+import { checkDailyLimit, incrementUsage } from '../../lib/supabase-utils';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

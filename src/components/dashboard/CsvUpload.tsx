@@ -16,6 +16,12 @@ import type { Trade } from "@/types/trade";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "sonner";
+import {
+  validateTrades,
+  formatImportSummary,
+  formatValidationErrors,
+  type ImportValidationSummary,
+} from "@/lib/trade-validation";
 
 /* =========================
    Header heuristics / utils
@@ -221,6 +227,8 @@ export default function CsvUpload({
   const [mappedHeaders, setMappedHeaders] = useState<Record<string, string>>({});
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [previewAll, setPreviewAll] = useState(false);
+  const [validationSummary, setValidationSummary] = useState<ImportValidationSummary | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
 
   useEffect(() => {
     if (typeof controlledOpen === "boolean") {
@@ -237,6 +245,8 @@ export default function CsvUpload({
       setMappedHeaders({});
       setRows([]);
       setPreviewAll(false);
+      setValidationSummary(null);
+      setShowValidation(false);
     }
   }, [open]);
 
@@ -410,12 +420,74 @@ export default function CsvUpload({
     });
   }, [rows, mappedHeaders]);
 
+  const handleValidate = useCallback(() => {
+    if (!mappedForImport || mappedForImport.length === 0) {
+      toast.error("No rows to validate.");
+      return;
+    }
+
+    // Convert mapped rows to Trade objects
+    const tradesToValidate = mappedForImport.map((row, idx) => {
+      const trade: Partial<Trade> = {};
+      for (const key in row) {
+        const value = row[key];
+        if (key === 'lotSize' || key === 'entryPrice' || key === 'stopLossPrice' || key === 'takeProfitPrice' || key === 'pnl') {
+          (trade as any)[key] = Number(value) || 0;
+        } else {
+          (trade as any)[key] = value;
+        }
+      }
+      trade.id = trade.id || `imported-${idx}-${Date.now()}`;
+      return trade;
+    });
+
+    // Validate all trades
+    const summary = validateTrades(tradesToValidate);
+    setValidationSummary(summary);
+    setShowValidation(true);
+
+    if (summary.errors.length > 0) {
+      toast.warning(`Validation found ${summary.skipped} invalid row${summary.skipped !== 1 ? 's' : ''}. Review errors below.`);
+    } else {
+      toast.success(`All ${summary.total} row${summary.total !== 1 ? 's' : ''} validated successfully!`);
+    }
+  }, [mappedForImport]);
+
   const handleImport = useCallback(() => {
     if (!mappedForImport || mappedForImport.length === 0) {
       toast.error("No rows to import.");
       return;
     }
     try {
+      // Convert mapped rows to Trade objects
+      const tradesToImport = mappedForImport.map((row, idx) => {
+        const trade: Partial<Trade> = {};
+        for (const key in row) {
+          const value = row[key];
+          if (key === 'lotSize' || key === 'entryPrice' || key === 'stopLossPrice' || key === 'takeProfitPrice' || key === 'pnl') {
+            (trade as any)[key] = Number(value) || 0;
+          } else {
+            (trade as any)[key] = value;
+          }
+        }
+        trade.id = trade.id || `imported-${idx}-${Date.now()}`;
+        return trade;
+      });
+
+      // Validate trades
+      const summary = validateTrades(tradesToImport);
+      
+      // Only import valid trades
+      const validTrades = tradesToImport.filter((_, idx) => {
+        const rowNumber = idx + 1;
+        return !summary.errors.some(e => e.rowNumber === rowNumber);
+      });
+
+      if (validTrades.length === 0) {
+        toast.error("No valid trades to import. Please fix validation errors.");
+        return;
+      }
+
       // Enforce plan-based time-window limits
       const now = new Date();
       let cutoff: Date | null = null;
@@ -427,10 +499,9 @@ export default function CsvUpload({
 
       // If user attempts to import beyond their plan window, force upgrade
       if (cutoff) {
-        const violates = mappedForImport.some((row) => {
-          const r = row as Record<string, unknown>;
-          const ot = r.openTime ?? (r as any).open_time ?? (r as any).entered_at ?? r.time ?? null;
-          const ct = r.closeTime ?? (r as any).close_time ?? (r as any).closed_at ?? null;
+        const violates = validTrades.some((trade) => {
+          const ot = trade.openTime ?? trade.entry_time ?? null;
+          const ct = trade.closeTime ?? trade.exit_time ?? null;
           const raw = (ct as string) || (ot as string) || "";
           if (!raw) return false;
           const d = new Date(String(raw));
@@ -446,31 +517,25 @@ export default function CsvUpload({
         }
       }
 
-      const tradesToImport = mappedForImport.map((row, idx) => {
-        const trade: Partial<Trade> = {};
-        for (const key in row) {
-          const value = row[key];
-          if (key === 'lotSize' || key === 'entryPrice' || key === 'stopLossPrice' || key === 'takeProfitPrice' || key === 'pnl') {
-            (trade as any)[key] = Number(value) || 0;
-          } else {
-            (trade as any)[key] = value;
-          }
-        }
-        trade.id = trade.id || `imported-${idx}-${Date.now()}`;
-        return trade;
-      });
-
       setParsing(true);
       setProgress(60);
-      setTradesFromCsv(tradesToImport as Trade[]);
+      setTradesFromCsv(validTrades as Trade[]);
       setProgress(100);
-      toast.success(`Imported ${mappedForImport.length} rows`);
+      
+      // Show import summary
+      const summaryMessage = formatImportSummary(summary);
+      if (summary.errors.length > 0) {
+        toast.warning(summaryMessage);
+      } else {
+        toast.success(summaryMessage);
+      }
+
       setTimeout(() => {
         setOpen(false);
         setParsing(false);
         if (typeof controlledOnImport === "function") {
           try {
-            controlledOnImport(mappedForImport as Partial<Trade>[]);
+            controlledOnImport(validTrades as Partial<Trade>[]);
           } catch (e) {
             // continue
             // eslint-disable-next-line no-console
@@ -673,6 +738,35 @@ export default function CsvUpload({
               <div className="text-sm font-semibold text-zinc-200 mb-2">Preview rows</div>
               {PreviewTable}
             </div>
+
+            {/* Validation Results */}
+            {showValidation && validationSummary && (
+              <div className="mt-4">
+                <div className="text-sm font-semibold text-zinc-200 mb-2">Validation Results</div>
+                <div className={`p-3 rounded border ${
+                  validationSummary.errors.length === 0
+                    ? "bg-green-900/20 border-green-700/40 text-green-200"
+                    : "bg-yellow-900/20 border-yellow-700/40 text-yellow-200"
+                }`}>
+                  <div className="text-sm font-medium mb-2">
+                    {formatImportSummary(validationSummary)}
+                  </div>
+                  {validationSummary.errors.length > 0 && (
+                    <div className="mt-3 space-y-2 max-h-48 overflow-auto">
+                      <div className="text-xs font-semibold">Errors:</div>
+                      {validationSummary.errors.map((error) => (
+                        <div key={error.rowNumber} className="text-xs bg-black/20 rounded p-2">
+                          <div className="font-medium">Row {error.rowNumber}:</div>
+                          <div className="ml-2 text-zinc-300">
+                            {formatValidationErrors(error.errors)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer actions */}
@@ -688,11 +782,18 @@ export default function CsvUpload({
               Cancel
             </button>
             <button
+              onClick={handleValidate}
+              disabled={parsing || rows.length === 0}
+              className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50"
+            >
+              Validate ({rows.length})
+            </button>
+            <button
               onClick={handleImport}
               disabled={parsing || rows.length === 0}
               className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm disabled:opacity-50"
             >
-              Import ({rows.length})
+              Import {validationSummary ? `(${validationSummary.imported})` : `(${rows.length})`}
             </button>
           </div>
         </div>

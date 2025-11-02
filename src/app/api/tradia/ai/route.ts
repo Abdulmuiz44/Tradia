@@ -229,13 +229,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return result.toAIStreamResponse({
+    return result.toTextStreamResponse({
       headers: {
         "X-Conversation-Id": currentConversationId!,
         "Cache-Control": "no-store",
-      },
-      onError(error) {
-        console.error("AI stream error:", error);
       },
     });
   } catch (error) {
@@ -355,7 +352,7 @@ async function persistAssistantMessage({
 async function fetchRelevantTrades({
   supabase,
   userId,
-  attachedTradeIds: validAttachedTradeIds,
+  attachedTradeIds,
   normalizeTrade,
 }: {
   supabase: ReturnType<typeof createAdminClient>;
