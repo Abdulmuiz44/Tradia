@@ -502,6 +502,40 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
           ? `${accumulatedText}\n\n_Generation stopped by user._`
           : 'Generation stopped.';
         updateAssistantContent(stopMessage);
+
+        if (resolvedConversationId) {
+          const updatedAt = new Date();
+          const stoppedMessage: Message = {
+            id: pendingAssistantId,
+            type: 'assistant',
+            content: stopMessage,
+            timestamp: assistantPlaceholder.timestamp ?? updatedAt,
+            mode: assistantMode,
+          };
+
+          setConversations((prev) => {
+            const updatedMessages = [...requestMessages, stoppedMessage];
+            const existing = prev.find((conversation) => conversation.id === resolvedConversationId);
+
+            if (existing) {
+              return prev.map((conversation) =>
+                conversation.id === resolvedConversationId
+                  ? { ...conversation, updatedAt, messages: updatedMessages }
+                  : conversation
+              );
+            }
+
+            const seedConversation: Conversation = {
+              id: resolvedConversationId,
+              title: 'New Conversation',
+              createdAt: updatedAt,
+              updatedAt,
+              messages: updatedMessages,
+            };
+
+            return [seedConversation, ...prev];
+          });
+        }
         return;
       }
 

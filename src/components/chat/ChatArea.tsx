@@ -3,15 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-// Web Speech API types
-declare global {
-interface Window {
-SpeechRecognition: any;
-webkitSpeechRecognition: any;
-  SpeechRecognitionEvent: any;
-    SpeechRecognitionErrorEvent: any;
-  }
-}
+
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +47,8 @@ import { AssistantMode, Message } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 import { TypingIndicator } from "./TypingIndicator";
 
+
+
 interface ChatAreaProps {
   conversationTitle?: string;
   messages?: Message[];
@@ -84,32 +78,34 @@ interface ChatAreaProps {
   onRequestAuth?: () => void;
 }
 
-export const ChatArea: React.FC<ChatAreaProps> = ({
-  conversationTitle = "New Conversation",
-  messages = [],
-  model = "openai:gpt-4o-mini",
-  onModelChange,
-  onSendMessage,
+export const ChatArea = ({
+conversationTitle = "New Conversation",
+messages = [],
+model = "openai:gpt-4o-mini",
+onModelChange,
+onSendMessage,
 onAttachTrades,
-  selectedTradeIds = [],
-  onTradeSelect,
-  onRegenerateMessage,
-  onEditMessage,
-  onDeleteMessage,
-  onCopyMessage,
-  onRateMessage,
-  onPinMessage,
-  onRetryMessage,
-  onExportConversation,
-  onVoiceInput,
-  isListening = false,
-  voiceTranscript = "",
-  assistantMode = "coach",
-  onAssistantModeChange,
-  isProcessing = false,
-  onStopGeneration,
-  conversationId,
-}) => {
+selectedTradeIds = [],
+onTradeSelect,
+onRegenerateMessage,
+onEditMessage,
+onDeleteMessage,
+onCopyMessage,
+onRateMessage,
+onPinMessage,
+onRetryMessage,
+onExportConversation,
+onVoiceInput,
+isListening = false,
+voiceTranscript = "",
+assistantMode = "coach",
+onAssistantModeChange,
+isProcessing = false,
+onStopGeneration,
+conversationId,
+isGuest,
+onRequestAuth,
+}: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState(voiceTranscript);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);

@@ -51,8 +51,9 @@ export async function POST(req: NextRequest) {
 
     if (!userId) {
       const token = await getToken({
-        req,
-        secret: process.env.NEXTAUTH_SECRET ?? authOptions.secret,
+      req,
+      secret: process.env.NEXTAUTH_SECRET ?? authOptions.secret,
+      });
 
 interface SystemMessageInput {
   accountSummary: any;
@@ -192,8 +193,6 @@ ACCOUNT SNAPSHOT:
         content: msg.content,
       }));
 
-    let streamedText = "";
-
     const result = await streamText({
       model: resolveModel(modelId),
       system: systemMessage,
@@ -201,7 +200,6 @@ ACCOUNT SNAPSHOT:
       temperature: options.temperature ?? 0.25,
       maxOutputTokens: options.max_tokens ?? 1024,
       onFinish: async ({ text }) => {
-        streamedText = text;
         try {
           await persistAssistantMessage({
             supabase,
