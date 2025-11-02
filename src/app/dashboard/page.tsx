@@ -511,7 +511,7 @@ function DashboardContent() {
       isAdmin,
       adminChecked,
       tabCount: finalTabs.length,
-      tabs: finalTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, ...(t.href && { href: t.href }) })),
+      tabs: finalTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, ...('href' in t && t.href ? { href: t.href } : {}) })),
       hasUserAnalytics: finalTabs.some(t => t.value === 'user-analytics')
     });
     return finalTabs;
@@ -922,7 +922,7 @@ function DashboardContent() {
                   </>
                 )}
 
-                {activeTab === "history" && <TradeHistoryTable trades={filteredTrades} />}
+                {activeTab === "history" && <TradeHistoryTable />}
 
                 
 
