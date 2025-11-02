@@ -25,28 +25,28 @@ export async function checkDailyLimit(userId: string, limitType: string): Promis
 
     const currentCount = usageData?.[`${limitType}_count`] || 0;
 
-    // Get plan limits
-    const { data: planData, error: planError } = await supabase
-      .rpc('get_user_plan_limits', { user_id: userId });
+    // Get user plan
+    const { data: userData, error: userError } = await supabase
+    .from('user_profiles')
+      .select('plan')
+      .eq('id', userId)
+    .single();
 
-    if (planError || !planData || planData.length === 0) {
-      console.error('Plan limits error:', planError);
+    if (userError || !userData) {
+      console.error('User plan error:', userError);
       return false;
     }
 
-    const planLimits = planData[0];
+    const plan = userData.plan || 'free';
     let limit: number;
 
     switch (limitType) {
       case 'messages':
-        limit = planLimits.ai_chats_per_day;
+        limit = plan === 'free' ? 20 : plan === 'pro' ? 100 : plan === 'plus' ? 500 : Infinity;
         break;
       case 'uploads':
-        // For uploads, use a default limit based on plan
-        limit = planLimits.plan === 'free' ? 0 :
-               planLimits.plan === 'pro' ? 5 :
-               planLimits.plan === 'plus' ? 20 : 100;
-        break;
+      limit = plan === 'free' ? 0 : plan === 'pro' ? 5 : plan === 'plus' ? 20 : 100;
+      break;
       case 'api_calls':
         limit = 1000; // Default API call limit
         break;

@@ -172,7 +172,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
     }
 
     // Check plan limits
-    const maxConversations = plan === 'plus' ? Infinity : plan === 'pro' ? 50 : 10;
+    const maxConversations = plan === 'plus' ? 100 : plan === 'pro' ? 25 : 5;
     if (conversations.length >= maxConversations) {
       alert(`You've reached the maximum number of conversations for your ${plan} plan. Upgrade to create more.`);
       return;
@@ -209,7 +209,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
     }
 
     // Check plan limits
-    const maxConversations = plan === 'plus' ? Infinity : plan === 'pro' ? 50 : 10;
+    const maxConversations = plan === 'plus' ? 100 : plan === 'pro' ? 25 : 5;
     if (conversations.length >= maxConversations) {
       alert(`You've reached the maximum number of conversations for your ${plan} plan. Upgrade to create more.`);
       return;

@@ -87,7 +87,7 @@ interface ChatAreaProps {
 export const ChatArea: React.FC<ChatAreaProps> = ({
   conversationTitle = "New Conversation",
   messages = [],
-  model = "gpt-4o-mini",
+  model = "openai:gpt-4o-mini",
   onModelChange,
   onSendMessage,
 onAttachTrades,
@@ -285,39 +285,30 @@ onAttachTrades,
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-60 border border-indigo-500/40 bg-[#050b18] p-2 text-sm text-white shadow-[0_20px_48px_rgba(5,11,24,0.65)]">
-                    <DropdownMenuGroup>
-                      <div className="px-2 pb-2 text-[11px] uppercase tracking-wide text-white/60">
-                        Assistant mode
-                      </div>
-                      <DropdownMenuItem
-                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "coach" ? "bg-indigo-500/20 text-white" : ""}`}
-                        onSelect={() => onAssistantModeChange?.("coach")}
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        Coach mode
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "mentor" ? "bg-indigo-500/20 text-white" : ""}`}
-                        onSelect={() => onAssistantModeChange?.("mentor")}
-                      >
-                        <GraduationCap className="h-4 w-4" />
-                        Mentor mode
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "analysis" ? "bg-indigo-500/20 text-white" : ""}`}
-                        onSelect={() => onAssistantModeChange?.("analysis")}
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                        Trade analysis
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "journal" ? "bg-indigo-500/20 text-white" : ""}`}
-                        onSelect={() => onAssistantModeChange?.("journal")}
-                      >
-                        <NotebookPen className="h-4 w-4" />
-                        Trade journal
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
+                  <div className="px-2 pb-2 text-[11px] uppercase tracking-wide text-white/60">
+                  Assistant mode
+                  </div>
+                  <DropdownMenuItem
+                  className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "coach" ? "bg-indigo-500/20 text-white" : ""}`}
+                  onSelect={() => onAssistantModeChange?.("coach")}
+                  >
+                  <Sparkles className="h-4 w-4" />
+                  Coach mode
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                  className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "mentor" ? "bg-indigo-500/20 text-white" : ""}`}
+                  onSelect={() => onAssistantModeChange?.("mentor")}
+                  >
+                  <GraduationCap className="h-4 w-4" />
+                  Mentor mode
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                  className={`flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white ${assistantMode === "assistant" ? "bg-indigo-500/20 text-white" : ""}`}
+                  onSelect={() => onAssistantModeChange?.("assistant")}
+                  >
+                  <Bot className="h-4 w-4" />
+                  Assistant mode
+                  </DropdownMenuItem>
                     <DropdownMenuSeparator className="my-2 bg-indigo-500/30" />
                     <DropdownMenuItem
                       className="flex items-center gap-2 rounded-lg text-sm text-white/90 focus:bg-indigo-500/15 focus:text-white"
@@ -339,33 +330,33 @@ onAttachTrades,
                 <textarea
                   ref={textareaRef}
                   value={inputMessage}
-                  onChange={(event) => {
-                    setInputMessage(event.target.value);
-                    const target = event.target as HTMLTextAreaElement;
-                    target.style.height = "auto";
-                    target.style.height = Math.min(target.scrollHeight, 180) + "px";
-                  }}
-                  onKeyDown={handleKeyDown}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    const data = event.dataTransfer.getData("application/json");
-                    if (!data) return;
-                    try {
-                      const trade = JSON.parse(data);
-                      if (trade?.id) {
-                        const ids = new Set(selectedTradeIds);
-                        ids.add(trade.id);
-                        onTradeSelect?.(Array.from(ids));
-                      }
-                    } catch (error) {
-                      console.error("Failed to parse dropped trade:", error);
-                    }
-                  }}
-                  onDragOver={(event) => event.preventDefault()}
-                  placeholder="Ask Tradia AI"
-                  className="flex-1 min-h-[44px] resize-none bg-transparent px-4 py-2 text-sm text-white placeholder:text-white/60 focus:outline-none"
-                  rows={1}
-                  style={{ height: "auto", minHeight: "44px" }}
+                onChange={(event) => {
+                  setInputMessage(event.target.value);
+                  const target = event.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = Math.min(target.scrollHeight, 180) + "px";
+                }}
+                onKeyDown={handleKeyDown}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const data = event.dataTransfer.getData("application/json");
+                if (!data) return;
+                try {
+                  const trade = JSON.parse(data);
+                  if (trade?.id) {
+                  const ids = new Set(selectedTradeIds);
+                  ids.add(trade.id);
+                onTradeSelect?.(Array.from(ids));
+                }
+                } catch (error) {
+                console.error("Failed to parse dropped trade:", error);
+                }
+                }}
+                onDragOver={(event) => event.preventDefault()}
+                placeholder={`${currentModeLabel}: Ask Tradia AI`}
+                className="flex-1 min-h-[44px] resize-none bg-transparent px-4 py-2 text-sm text-[#FFFFFF] placeholder:text-[#71767B] focus:outline-none"
+                rows={1}
+                style={{ height: "auto", minHeight: "44px" }}
                 />
               </div>
 
@@ -405,27 +396,41 @@ onAttachTrades,
                     <DialogTitle>Select AI Model</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-2">
-                  <Button
-                      variant={model === 'gpt-4o-mini' ? 'default' : 'ghost'}
-                    onClick={() => { onModelChange?.('gpt-4o-mini'); setModelDialogOpen(false); }}
+                    <Button
+                      variant={model === 'openai:gpt-4o-mini' ? 'default' : 'ghost'}
+                      onClick={() => { onModelChange?.('openai:gpt-4o-mini'); setModelDialogOpen(false); }}
                       className="justify-start"
                     >
-                    GPT-4o Mini
-                  </Button>
+                      OpenAI · GPT-4o mini (fast)
+                    </Button>
                     <Button
-                    variant={model === 'gpt-4' ? 'default' : 'ghost'}
-                      onClick={() => { onModelChange?.('gpt-4'); setModelDialogOpen(false); }}
-                        className="justify-start"
-                        >
-                          GPT-4
-                        </Button>
-                        <Button
-                          variant={model === 'gpt-3.5-turbo' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('gpt-3.5-turbo'); setModelDialogOpen(false); }}
-                          className="justify-start"
-                        >
-                          GPT-3.5 Turbo
-                        </Button>
+                      variant={model === 'openai:gpt-4o' ? 'default' : 'ghost'}
+                      onClick={() => { onModelChange?.('openai:gpt-4o'); setModelDialogOpen(false); }}
+                      className="justify-start"
+                    >
+                      OpenAI · GPT-4o (balanced)
+                    </Button>
+                    <Button
+                      variant={model === 'openai:gpt-4.1-mini' ? 'default' : 'ghost'}
+                      onClick={() => { onModelChange?.('openai:gpt-4.1-mini'); setModelDialogOpen(false); }}
+                      className="justify-start"
+                    >
+                      OpenAI · GPT-4.1 mini (analysis)
+                    </Button>
+                    <Button
+                      variant={model === 'xai:grok-beta' ? 'default' : 'ghost'}
+                      onClick={() => { onModelChange?.('xai:grok-beta'); setModelDialogOpen(false); }}
+                      className="justify-start"
+                    >
+                      xAI · Grok Beta (creative)
+                    </Button>
+                    <Button
+                      variant={model === 'gateway:meta-llama-3-70b-instruct' ? 'default' : 'ghost'}
+                      onClick={() => { onModelChange?.('gateway:meta-llama-3-70b-instruct'); setModelDialogOpen(false); }}
+                      className="justify-start"
+                    >
+                      Vercel Gateway · Llama 3 70B (structured)
+                    </Button>
                       </div>
                     </DialogContent>
                   </Dialog>

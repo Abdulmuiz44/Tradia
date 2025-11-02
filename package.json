@@ -41,6 +41,8 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.56.0",
+    "@ai-sdk/openai": "^0.1.6",
+    "@ai-sdk/xai": "^0.1.6",
     "@tanstack/react-table": "^8.21.3",
     "@types/plotly.js": "^3.0.3",
     "@types/react-plotly.js": "^2.6.3",

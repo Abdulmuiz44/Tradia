@@ -28,19 +28,6 @@ interface TradiaAIChatProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
-const MODE_PROMPTS: Record<AssistantMode, string> = {
-  coach:
-    "You are Tradia Coach. Deliver direct accountability, focus on habit building, and turn every response into a clear action plan with measurable next steps.",
-  mentor:
-    "You are Tradia Mentor. Provide high-level strategic guidance, share trading wisdom, and relate insights to long-term trader growth.",
-  analysis:
-    "You are Tradia Trade Analyst. Break down trades with data-driven reasoning, highlight risk management, and surface performance patterns.",
-  journal:
-    "You are Tradia Journal Companion. Encourage reflection, extract lessons learned, and organise notes into a structured trading journal entry.",
-  grok:
-    "You are Tradia Grok. Blend sharp humour with insightful market context while keeping explanations concise and data-backed.",
-};
-
 const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
   className = "",
   activeConversationId: externalActiveId,
@@ -56,7 +43,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [model, setModel] = useState('openai:gpt-4o-mini');
   const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [tradeSummary, setTradeSummary] = useState<any>(null);
@@ -179,7 +166,8 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
           mode: msg.mode as AssistantMode | undefined,
           attachedTrades: [], // Will be populated if needed
         })));
-        setModel(data.conversation.model || 'gpt-4o-mini');
+        const storedModel = data.conversation.model || 'openai:gpt-4o-mini';
+        setModel(storedModel.includes(':') ? storedModel : `openai:${storedModel}`);
         if (data.conversation.mode) {
           setAssistantMode(data.conversation.mode as AssistantMode);
         }
@@ -286,43 +274,90 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     if (!user || isProcessing) {
       return;
     }
-    if (!content.trim()) return;
 
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const timestamp = Date.now();
     const userMessage: Message = {
-      id: `msg_${Date.now()}`,
+      id: `msg_${timestamp}`,
       type: 'user',
-      content: content.trim(),
+      content: trimmed,
       timestamp: new Date(),
       attachedTrades: selectedTrades,
       mode: assistantMode,
     };
 
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
-    setSelectedTradeIds([]); // Clear selected trades after sending
+    const pendingAssistantId = `msg_${timestamp + 1}`;
+    const assistantPlaceholder: Message = {
+      id: pendingAssistantId,
+      type: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      mode: assistantMode,
+    };
+
+    const requestMessages = [...messages, userMessage];
+    const tradeIdsForRequest = selectedTrades.map((trade) => trade.id);
+
+    setMessages((prev) => [...prev, userMessage, assistantPlaceholder]);
+    setSelectedTradeIds([]);
     setIsProcessing(true);
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // Update conversation
     if (activeConversationId) {
-      setConversations(prev =>
-        prev.map(c =>
-          c.id === activeConversationId
-            ? { ...c, messages: newMessages, updatedAt: new Date() }
-            : c
+      setConversations((prev) =>
+        prev.map((conversation) =>
+          conversation.id === activeConversationId
+            ? { ...conversation, updatedAt: new Date() }
+            : conversation
         )
       );
     }
 
-    // Send to AI
+    let resolvedConversationId = activeConversationId ?? undefined;
+    let accumulatedText = '';
+
+    const updateAssistantContent = (text: string) => {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === pendingAssistantId ? { ...message, content: text } : message
+        )
+      );
+    };
+
+    const handlePayload = (payload: any) => {
+      if (!payload) return;
+      if (payload.type === 'error') {
+        throw new Error(payload.error ?? 'AI stream error');
+      }
+      if (payload.type === 'text-delta') {
+        accumulatedText += payload.delta ?? '';
+        updateAssistantContent(accumulatedText);
+        return;
+      }
+      if (payload.type === 'text') {
+        accumulatedText = payload.text ?? accumulatedText;
+        updateAssistantContent(accumulatedText);
+        return;
+      }
+      if (payload.type === 'finish' && typeof payload.text === 'string') {
+        accumulatedText = payload.text;
+        updateAssistantContent(accumulatedText);
+      }
+    };
+
     try {
-      const request: TradiaAIRequest = {
-        messages: newMessages.map(msg => ({
+      const requestPayload: TradiaAIRequest = {
+        messages: requestMessages.map((msg) => ({
           role: msg.type === 'user' ? 'user' : 'assistant',
-          content: msg.content
+          content: msg.content,
         })),
-        attachedTradeIds: selectedTrades.map(t => t.id),
+        attachedTradeIds: tradeIdsForRequest,
         options: {
           model,
           max_tokens: 1024,
@@ -330,23 +365,15 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         mode: assistantMode,
       };
 
-      const systemPrompt = MODE_PROMPTS[assistantMode];
-      if (systemPrompt) {
-        request.messages = [
-          { role: 'system', content: systemPrompt },
-          ...request.messages,
-        ];
-      }
-
-      if (activeConversationId) {
-        request.conversationId = activeConversationId;
+      if (resolvedConversationId) {
+        requestPayload.conversationId = resolvedConversationId;
       }
 
       const response = await fetch('/api/tradia/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
         credentials: 'include',
+        body: JSON.stringify(requestPayload),
         signal: controller.signal,
       });
 
@@ -354,102 +381,209 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         let errorMessage = `API request failed: ${response.status}`;
         try {
           const errorData = await response.json();
-          if (errorData.error) {
+          if (errorData?.error) {
             errorMessage = errorData.error;
           }
         } catch (e) {
-          // Ignore
+          // ignore parsing errors and use default error text
         }
         throw new Error(errorMessage);
       }
 
-      // Handle JSON response
-      const data = await response.json();
-      const aiContent = data.response;
-      const conversationId = data.conversationId;
-
-      // Update active conversation ID if it was newly created
-      if (conversationId && !activeConversationId) {
-        setActiveConversationId(conversationId);
-        onActiveConversationChange?.(conversationId);
-        // Also update the conversations list to reflect the new conversation
-        loadConversations();
+      const headerConversationId = response.headers.get('X-Conversation-Id');
+      if (headerConversationId && headerConversationId !== resolvedConversationId) {
+        resolvedConversationId = headerConversationId;
+        setActiveConversationId(headerConversationId);
+        onActiveConversationChange?.(headerConversationId);
       }
 
-      // Create the assistant message
-      const aiMessage: Message = {
-        id: `msg_${Date.now() + 1}`,
+      if (!response.body) {
+        throw new Error('AI service returned an empty response stream.');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const processChunk = (chunk: string) => {
+        buffer += chunk;
+        const segments = buffer.split('\n');
+        buffer = segments.pop() ?? '';
+
+        segments.forEach((segment) => {
+          const line = segment.trim();
+          if (!line || line === 'data: [DONE]') {
+            return;
+          }
+          if (line.startsWith('event:')) {
+            return;
+          }
+          if (!line.startsWith('data:')) {
+            return;
+          }
+
+          const dataStr = line.slice(5).trim();
+          if (!dataStr || dataStr === '[DONE]') {
+            return;
+          }
+
+          let parsed: any;
+          try {
+            parsed = JSON.parse(dataStr);
+          } catch {
+            accumulatedText += dataStr;
+            updateAssistantContent(accumulatedText);
+            return;
+          }
+
+          handlePayload(parsed);
+        });
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        processChunk(decoder.decode(value, { stream: true }));
+      }
+
+      const finalChunk = decoder.decode();
+      if (finalChunk) {
+        processChunk(finalChunk);
+      }
+      if (buffer.length > 0) {
+        processChunk('\n');
+      }
+
+      if (!accumulatedText.trim()) {
+        accumulatedText = 'I was unable to generate a response. Please try again.';
+        updateAssistantContent(accumulatedText);
+      }
+
+      const assistantTimestamp = assistantPlaceholder.timestamp ?? new Date();
+      const finalAssistantMessage: Message = {
+        id: pendingAssistantId,
         type: 'assistant',
-        content: aiContent,
-        timestamp: new Date(),
+        content: accumulatedText,
+        timestamp: assistantTimestamp,
         mode: assistantMode,
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      if (resolvedConversationId) {
+        const updatedAt = new Date();
+        setConversations((prev) => {
+          const updatedMessages = [...requestMessages, finalAssistantMessage];
+          const existing = prev.find((conversation) => conversation.id === resolvedConversationId);
 
-      // Update conversation with final messages (but messages are already saved to DB)
-      const finalMessages = [...newMessages, aiMessage];
+          if (existing) {
+            return prev.map((conversation) =>
+              conversation.id === resolvedConversationId
+                ? { ...conversation, updatedAt, messages: updatedMessages }
+                : conversation
+            );
+          }
 
-      if (activeConversationId || conversationId) {
-        const convId = activeConversationId || conversationId;
-        setConversations(prev =>
-          prev.map(c =>
-            c.id === convId
-              ? { ...c, updatedAt: new Date() }
-              : c
-          )
-        );
+          const seedConversation: Conversation = {
+            id: resolvedConversationId,
+            title: 'New Conversation',
+            createdAt: updatedAt,
+            updatedAt,
+            messages: updatedMessages,
+          };
+
+          return [seedConversation, ...prev];
+        });
       }
 
+      // Refresh conversation metadata after streaming completes to keep titles in sync.
+      await loadConversations();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
+        const stopMessage = accumulatedText
+          ? `${accumulatedText}\n\n_Generation stopped by user._`
+          : 'Generation stopped.';
+        updateAssistantContent(stopMessage);
         return;
       }
+
       console.error('Error sending message:', error);
       let errorContent = 'Sorry, I encountered an error. Please try again.';
       let canRetry = false;
 
       if (error instanceof Error) {
-        if (error.message.includes('AI service temporarily unavailable')) {
+        const message = error.message;
+        if (message.includes('temporarily busy') || message.includes('rate')) {
           errorContent = '🤖 AI service is currently busy. Please wait a moment and try again.';
           canRetry = true;
-        } else if (error.message.includes('Authentication error')) {
+        } else if (message.includes('Authentication')) {
           errorContent = '🔐 Authentication error. Please refresh the page and log in again.';
-        } else if (error.message.includes('Database error')) {
+        } else if (message.includes('Database')) {
           errorContent = '💾 Database connection issue. Please try again in a few seconds.';
           canRetry = true;
         } else {
-          errorContent = error.message;
+          errorContent = message;
         }
       }
 
-      const errorMessage: Message = {
-        id: `msg_${Date.now() + 2}`,
-        type: 'assistant',
-        content: errorContent,
-        timestamp: new Date(),
-        canRetry,
-        originalContent: content, // Store for retry
-        mode: assistantMode,
-      };
+      updateAssistantContent(errorContent);
 
-      const finalMessages = [...newMessages, errorMessage];
-      setMessages(finalMessages);
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === pendingAssistantId
+            ? { ...message, canRetry, originalContent: content }
+            : message
+        )
+      );
 
-      if (activeConversationId) {
-        setConversations(prev =>
-          prev.map(c =>
-            c.id === activeConversationId
-              ? { ...c, messages: finalMessages, updatedAt: new Date() }
-              : c
-          )
-        );
+      if (resolvedConversationId) {
+        const updatedAt = new Date();
+        const assistantErrorMessage: Message = {
+          id: pendingAssistantId,
+          type: 'assistant',
+          content: errorContent,
+          timestamp: assistantPlaceholder.timestamp ?? updatedAt,
+          canRetry,
+          originalContent: content,
+          mode: assistantMode,
+        };
+
+        setConversations((prev) => {
+          const updatedMessages = [...requestMessages, assistantErrorMessage];
+          const existing = prev.find((conversation) => conversation.id === resolvedConversationId);
+
+          if (existing) {
+            return prev.map((conversation) =>
+              conversation.id === resolvedConversationId
+                ? { ...conversation, updatedAt, messages: updatedMessages }
+                : conversation
+            );
+          }
+
+          const seedConversation: Conversation = {
+            id: resolvedConversationId,
+            title: 'New Conversation',
+            createdAt: updatedAt,
+            updatedAt,
+            messages: updatedMessages,
+          };
+
+          return [seedConversation, ...prev];
+        });
       }
     } finally {
       setIsProcessing(false);
       abortControllerRef.current = null;
     }
-  }, [user, isProcessing, selectedTrades, assistantMode, messages, activeConversationId, model, conversations, onActiveConversationChange, loadConversations]);
+  }, [
+    user,
+    isProcessing,
+    selectedTrades,
+    assistantMode,
+    messages,
+    activeConversationId,
+    model,
+    onActiveConversationChange,
+    loadConversations,
+  ]);
 
   const handleRegenerateMessage = useCallback((messageId: string) => {
     if (!user) {
