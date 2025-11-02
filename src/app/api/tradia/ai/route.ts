@@ -352,7 +352,7 @@ async function persistAssistantMessage({
 async function fetchRelevantTrades({
   supabase,
   userId,
-  attachedTradeIds: validAttachedTradeIds,
+  attachedTradeIds,
   normalizeTrade,
 }: {
   supabase: ReturnType<typeof createAdminClient>;
