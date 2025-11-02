@@ -33,7 +33,6 @@ export default function FeatureLock({
         setTrialActive(active);
       })
       .catch(() => {})
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       .finally(() => {});
     return () => {
       mounted = false;
