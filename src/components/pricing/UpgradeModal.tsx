@@ -111,7 +111,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 </div>
 
                 <p className="text-sm text-gray-600 mb-3">
-                  Key AI features you'll unlock:
+                  Key AI features you&apos;ll unlock:
                 </p>
 
                 <div className="grid grid-cols-2 gap-2 mb-4">

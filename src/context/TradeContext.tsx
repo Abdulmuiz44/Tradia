@@ -16,7 +16,7 @@ import { useUser } from "@/context/UserContext"; // Assuming UserContext is avai
 import { PLAN_LIMITS } from "@/lib/planAccess";
 import { generateSampleTrades, shouldLoadSampleData, markSampleDataAsSeen } from "@/lib/sampleTrades";
 
-const coalesce = <T>(...values: (T | null | undefined)[]): T | undefined => {
+const coalesce = <T,>(...values: (T | null | undefined)[]): T | undefined => {
   for (const value of values) {
     if (value !== null && value !== undefined) {
       return value;
