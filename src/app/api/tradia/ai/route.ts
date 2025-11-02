@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return result.toAIStreamResponse({
+    return result.toTextStreamResponse({
       headers: {
         "X-Conversation-Id": currentConversationId!,
         "Cache-Control": "no-store",
