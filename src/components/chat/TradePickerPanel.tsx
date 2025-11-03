@@ -63,9 +63,9 @@ export const TradePickerPanel: React.FC<TradePickerPanelProps> = ({
     .sort((a, b) => {
       switch (sortBy) {
         case 'date-desc':
-          return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime();
+          return new Date(b.entry_time || 0).getTime() - new Date(a.entry_time || 0).getTime();
         case 'date-asc':
-          return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime();
+          return new Date(a.entry_time || 0).getTime() - new Date(b.entry_time || 0).getTime();
         case 'pnl-desc':
           return b.pnl - a.pnl;
         case 'pnl-asc':

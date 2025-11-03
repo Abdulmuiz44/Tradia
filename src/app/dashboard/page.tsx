@@ -945,7 +945,7 @@ function DashboardContent() {
                 {activeTab === "risk" && (
                   <>
                     <RiskGuard />
-                    <RiskMetrics trades={filteredTrades} />
+                    <RiskMetrics />
                   </>
                 )}
 
