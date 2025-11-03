@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Menu, Plus, X, Home, LogIn, ChevronDown } from "lucide-react";
+import { Menu, Plus, X, Home, LogIn, ChevronDown, Share2, NotebookPen, BarChart3, Crown, ShieldCheck } from "lucide-react";
 import { ConversationsSidebar } from "./ConversationsSidebar";
 import { ChatArea } from "./ChatArea";
 import { TradePickerPanel } from "./TradePickerPanel";
@@ -18,6 +18,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -108,16 +109,66 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [conversations, setConversations] = React.useState(initialConversations);
   const [loadingConversations, setLoadingConversations] = React.useState(initialLoading);
-  const { user, plan } = useUser();
+  const { user, plan, setPlan } = useUser();
   const { data: session } = useSession();
   const router = useRouter();
   const supabase = createClientComponentClient();
   const isAuthenticated = Boolean(session);
   const requestAuth = React.useCallback(() => {
-  signIn(undefined, { callbackUrl: "/chat" }).catch(() => {});
+    signIn(undefined, { callbackUrl: "/chat" }).catch(() => {});
   }, []);
   const email = session?.user?.email || "";
   const userDisplayName = (user?.name?.trim?.() || session?.user?.name?.trim?.() || (email ? email.split("@")[0] : "Trader")) as string;
+  const isAdmin = React.useMemo(() => user?.email?.toLowerCase() === "abdulmuizproject@gmail.com", [user?.email]);
+  const planDisplay = React.useMemo(() => (plan || "free").toUpperCase(), [plan]);
+  const activeConversation = React.useMemo(() => {
+    if (!activeConversationId) return null;
+    return conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
+  }, [activeConversationId, conversations]);
+  const requireActiveConversation = React.useCallback(() => {
+    if (!activeConversationId || !activeConversation) {
+      alert("Please select a conversation first.");
+      return false;
+    }
+    return true;
+  }, [activeConversationId, activeConversation]);
+  const handleShareActiveConversation = React.useCallback(() => {
+    if (!requireActiveConversation()) return;
+    if (activeConversationId) {
+      onExportConversation?.(activeConversationId);
+    }
+  }, [requireActiveConversation, activeConversationId, onExportConversation]);
+  const renameActiveConversation = React.useCallback((newTitle: string) => {
+    if (!activeConversationId) return;
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === activeConversationId ? { ...conversation, title: newTitle } : conversation,
+      ),
+    );
+    onRenameConversation?.(activeConversationId, newTitle);
+  }, [activeConversationId, onRenameConversation]);
+  const promptRenameActiveConversation = React.useCallback(() => {
+    if (!requireActiveConversation()) return;
+    const proposed = prompt("Rename conversation", activeConversation?.title ?? "Conversation");
+    const trimmed = proposed?.trim();
+    if (trimmed) {
+      renameActiveConversation(trimmed);
+    }
+  }, [requireActiveConversation, activeConversation?.title, renameActiveConversation]);
+  const handleShowPlanInfo = React.useCallback(() => {
+    alert(`Current plan: ${planDisplay}`);
+  }, [planDisplay]);
+  const handleUpgradePlanNavigation = React.useCallback(() => {
+    router.push("/dashboard/billing");
+  }, [router]);
+  const handleAdminEliteUpgrade = React.useCallback(async () => {
+    if (!isAdmin) {
+      alert("Only administrators can upgrade to the Elite plan.");
+      return;
+    }
+    await setPlan("elite");
+    alert("Admin plan upgraded to Elite.");
+  }, [isAdmin, setPlan]);
 
   // Fetch conversations from Supabase
   React.useEffect(() => {

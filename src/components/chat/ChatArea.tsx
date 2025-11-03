@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,13 +15,16 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-ArrowUp,
-BarChart3,
-Bot,
-Mic,
-MicOff,
-NotebookPen,
+  ArrowUp,
+  BarChart3,
+  Bot,
+  Crown,
+  Mic,
+  MicOff,
+  NotebookPen,
   Plus,
+  Share2,
+  ShieldCheck,
   Sparkles,
   Square,
   Upload,
@@ -46,6 +49,7 @@ import {
 import { AssistantMode, Message } from "@/types/chat";
 import { MessageBubble } from "./MessageBubble";
 import { TypingIndicator } from "./TypingIndicator";
+import { useUser } from "@/context/UserContext";
 
 
 
@@ -74,6 +78,7 @@ interface ChatAreaProps {
   isProcessing?: boolean;
   onStopGeneration?: () => void;
   conversationId?: string;
+  onRenameCurrentConversation?: (newTitle: string) => void;
   isGuest?: boolean;
   onRequestAuth?: () => void;
   userName?: string;
@@ -104,6 +109,7 @@ onAssistantModeChange,
 isProcessing = false,
 onStopGeneration,
 conversationId,
+onRenameCurrentConversation,
 isGuest,
 onRequestAuth,
 userName,
@@ -112,6 +118,10 @@ userName,
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createClientComponentClient();
+  const router = useRouter();
+  const { user, plan, setPlan } = useUser();
+  const isAdmin = useMemo(() => user?.email?.toLowerCase() === "abdulmuizproject@gmail.com", [user?.email]);
+  const planLabel = useMemo(() => (plan ? plan.toUpperCase() : "FREE"), [plan]);
   const recognitionRef = useRef<any>(null);
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
 
@@ -149,6 +159,60 @@ userName,
     if (selectedTradeIds.length > 0) {
       onAttachTrades?.(selectedTradeIds);
     }
+  };
+
+  const ensureActiveConversation = () => {
+    if (!conversationId) {
+      alert("Select a conversation first to use this action.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleShareConversation = async () => {
+    if (!ensureActiveConversation()) return;
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({
+          title: conversationTitle,
+          text: `Here's my Tradia AI insight: ${conversationTitle}`,
+        });
+        return;
+      }
+    } catch (error) {
+      console.warn("Share dialog dismissed or unsupported:", error);
+    }
+    onExportConversation?.();
+  };
+
+  const handleRenameConversation = () => {
+    if (!ensureActiveConversation()) return;
+    if (!onRenameCurrentConversation) {
+      console.warn("Rename handler not available");
+      return;
+    }
+    const proposed = prompt("Rename conversation", conversationTitle);
+    const trimmed = proposed?.trim();
+    if (trimmed) {
+      onRenameCurrentConversation(trimmed);
+    }
+  };
+
+  const handleViewPlan = () => {
+    alert(`Current plan: ${planLabel}`);
+  };
+
+  const handleUpgradePlan = () => {
+    router.push("/dashboard/billing");
+  };
+
+  const handleUpgradeAdminPlan = async () => {
+    if (!isAdmin) {
+      alert("Only administrators can elevate to the Elite plan.");
+      return;
+    }
+    await setPlan("elite");
+    alert("Admin plan upgraded to Elite.");
   };
 
   const startVoiceRecognition = () => {
@@ -283,8 +347,47 @@ userName,
                       <Plus className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-60 border border-indigo-500/40 bg-[#050b18] p-3 text-sm font-semibold text-white shadow-[0_24px_48px_rgba(5,11,24,0.65)]">
-                    <div className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                  <DropdownMenuContent className="w-64 border border-indigo-500/40 bg-[#050b18] p-3 text-sm font-semibold text-white shadow-[0_24px_48px_rgba(5,11,24,0.65)]">
+                    <div className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                      Conversation
+                    </div>
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
+                      onSelect={handleShareConversation}
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Share conversation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
+                      onSelect={handleRenameConversation}
+                    >
+                      <NotebookPen className="h-4 w-4" />
+                      Rename conversation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/60 focus:bg-transparent focus:text-white/70"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      Plan • {planLabel}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
+                      onSelect={handleUpgradePlan}
+                    >
+                      <Crown className="h-4 w-4" />
+                      Upgrade plan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
+                      onSelect={handleUpgradeAdminPlan}
+                    >
+                      <ShieldCheck className={`h-4 w-4 ${isAdmin ? "text-emerald-300" : "text-white/70"}`} />
+                      Admin: set Elite
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-3 bg-indigo-500/30" />
+                    <div className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
                       Assistant mode
                     </div>
                     <DropdownMenuItem
@@ -439,8 +542,13 @@ userName,
                     size="sm"
                     onClick={isProcessing ? onStopGeneration : handleSendMessage}
                     disabled={sendDisabled}
-                    title={isProcessing ? 'Stop generation' : 'Send'}
-                    className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-[#1D9BF0] p-0 text-white transition-transform duration-200 hover:scale-110 active:animate-bounce disabled:opacity-50`}
+                    title={isProcessing ? "Stop generation" : "Send message"}
+                    aria-label={isProcessing ? "Stop generation" : "Send message"}
+                    className={`h-11 w-11 rounded-2xl border p-0 transition-all duration-200 hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-0 disabled:opacity-50 ${
+                      isProcessing
+                        ? "border-red-400/60 bg-red-500/20 text-red-100 hover:border-red-300 hover:bg-red-500/30"
+                        : "border-indigo-500/40 bg-indigo-500/10 text-white hover:border-indigo-300 hover:bg-indigo-500/20"
+                    }`}
                   >
                     {showStopIcon ? <Square className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
                   </Button>

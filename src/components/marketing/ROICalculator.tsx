@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { analytics } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 
 export default function ROICalculator() {
   const [trades, setTrades] = useState<string>("");
@@ -15,7 +15,13 @@ export default function ROICalculator() {
     const potential = Math.round(w * 1.15);
     const msg = `Potential +15% win-rate lift → ~${potential}% (from ${w}%) over ${t} trades.`;
     setResult(msg);
-    try { analytics.trackEvent({ name: "roi_calc_submit", properties: { trades: t, win_rate: w } }); } catch {}
+    try {
+      trackEvent("feature_used", {
+        featureName: "roi_calculator",
+        trades: t,
+        win_rate: w,
+      });
+    } catch {}
   };
 
   return (

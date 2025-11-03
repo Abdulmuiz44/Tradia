@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
-import { analytics } from "@/lib/analytics";
+import { trackUserJourney } from "@/lib/analytics";
 import { FcGoogle } from "react-icons/fc";
 
 // Client-only Navbar/Footer
@@ -129,8 +129,8 @@ function SignupPage(): React.ReactElement {
         return;
       }
 
-      // Track successful signup
-      analytics.trackSignup(email, 'email');
+  // Track successful signup for analytics insights
+  trackUserJourney.signup(email, "email");
 
       setNotice(data?.message || "Account created. Check your email for a verification link.");
       router.push(`/check-email?email=${encodeURIComponent(email)}`);

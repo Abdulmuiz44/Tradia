@@ -40,8 +40,17 @@ import {
 } from "@/components/ui/select";
 import { Info } from "lucide-react";
 
-export default function RiskMetrics() {
-  const { trades } = useTrade();
+interface RiskMetricsProps {
+  trades?: Trade[];
+}
+
+export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {}) {
+  const { trades: contextTrades } = useTrade();
+  const trades = useMemo(() => {
+    if (Array.isArray(tradesProp)) return tradesProp;
+    if (Array.isArray(contextTrades)) return contextTrades;
+    return [];
+  }, [tradesProp, contextTrades]);
   const [chartType, setChartType] = useState("bar");
 
   const track = async (name: string, properties?: Record<string, any>) => {
