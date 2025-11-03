@@ -1,3 +1,4 @@
+// Force fresh build - ESLint configured to ignore during builds
 // filepath: next.config.mjs
 const nextConfig = {
   reactStrictMode: true,
