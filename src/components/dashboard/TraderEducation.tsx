@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { BookOpen, GraduationCap, Video, Heart, CheckCircle, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -318,11 +319,13 @@ export default function TraderEducation(): React.ReactElement {
                 <div className="mt-1 font-bold text-gray-100">Trade lots — get gifts</div>
                 <div className="text-sm text-gray-400 mt-1">Open an account with Headway (min $5) and claim promo gifts.</div>
               </div>
-              <div>
-                <img
+              <div className="relative h-20 w-28 overflow-hidden rounded-md">
+                <Image
                   src="/mnt/data/giftshop_en_10.png"
                   alt="Headway Giftshop banner"
-                  className="w-28 h-20 object-cover rounded-md"
+                  fill
+                  className="object-cover"
+                  sizes="112px"
                 />
               </div>
             </a>
@@ -338,11 +341,13 @@ export default function TraderEducation(): React.ReactElement {
                 <div className="mt-1 font-bold text-gray-100">Get Bonus $111</div>
                 <div className="text-sm text-gray-400 mt-1">New members can claim a $111 trading bonus — see landing for details.</div>
               </div>
-              <div>
-                <img
+              <div className="relative h-20 w-28 overflow-hidden rounded-md">
+                <Image
                   src="/mnt/data/bonus111_en_6.png"
                   alt="Headway bonus"
-                  className="w-28 h-20 object-cover rounded-md"
+                  fill
+                  className="object-cover"
+                  sizes="112px"
                 />
               </div>
             </a>

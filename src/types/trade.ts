@@ -14,7 +14,7 @@ export interface Trade {
   symbol: string;
 
   // Canonical camelCase fields used across the application
-  direction?: 'Buy' | 'Sell';
+  direction?: string;
   orderType?: string;
   openTime?: string;
   closeTime?: string;

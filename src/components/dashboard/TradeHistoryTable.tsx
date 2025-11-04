@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { format } from "date-fns";
 import { Trash2, Pencil, Filter, DownloadCloud, FilePlus, Trash, UploadCloud } from "lucide-react";
 import { useNotification } from "@/context/NotificationContext";
@@ -164,9 +165,13 @@ const formatRR = (v: unknown): string => {
 };
 
 /* ---------------- main component ---------------- */
-export default function TradeHistoryTable() {
+interface TradeHistoryTableProps {
+  trades?: Trade[];
+}
+
+export default function TradeHistoryTable({ trades: overrideTrades }: TradeHistoryTableProps = {}) {
   const {
-    trades,
+    trades: contextTrades,
     updateTrade,
     addTrade,
     importTrades,
@@ -174,6 +179,7 @@ export default function TradeHistoryTable() {
     deleteTrade,
     clearTrades,
   } = useTrade();
+  const trades = overrideTrades ?? contextTrades;
   const { plan } = useUser();
   const { notify } = useNotification();
   const { selected, accounts, select } = useTradingAccount();
@@ -827,10 +833,13 @@ export default function TradeHistoryTable() {
                       <td className="px-3 py-2">
                         {toStringSafe(getField(t, "beforeScreenshotUrl")) ? (
                           <a href={toStringSafe(getField(t, "beforeScreenshotUrl"))} target="_blank" rel="noreferrer">
-                            <img
+                            <Image
                               src={toStringSafe(getField(t, "beforeScreenshotUrl"))}
-                              alt="Before"
-                              className="h-10 w-16 object-cover rounded border border-zinc-800"
+                              alt="Before trade screenshot"
+                              width={64}
+                              height={40}
+                              unoptimized
+                              className="h-10 w-16 rounded border border-zinc-800 object-cover"
                             />
                           </a>
                         ) : (
@@ -840,10 +849,13 @@ export default function TradeHistoryTable() {
                       <td className="px-3 py-2">
                         {toStringSafe(getField(t, "afterScreenshotUrl")) ? (
                           <a href={toStringSafe(getField(t, "afterScreenshotUrl"))} target="_blank" rel="noreferrer">
-                            <img
+                            <Image
                               src={toStringSafe(getField(t, "afterScreenshotUrl"))}
-                              alt="After"
-                              className="h-10 w-16 object-cover rounded border border-zinc-800"
+                              alt="After trade screenshot"
+                              width={64}
+                              height={40}
+                              unoptimized
+                              className="h-10 w-16 rounded border border-zinc-800 object-cover"
                             />
                           </a>
                         ) : (

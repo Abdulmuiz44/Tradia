@@ -173,11 +173,14 @@ export function MessageList({ messages, className, maxHeight = "h-full" }: Messa
     }
 
     return (
-      <img 
-        key={index} 
-        src={src} 
-        alt="Content image" 
-        className="my-1 max-h-48 w-auto rounded border border-border" 
+      <Image
+        key={index}
+        src={src}
+        alt="Content image"
+        width={320}
+        height={192}
+        unoptimized
+        className="my-1 max-h-48 w-auto rounded border border-border object-contain"
       />
     )
   }
@@ -531,10 +534,13 @@ export function MessageList({ messages, className, maxHeight = "h-full" }: Messa
                       {/* Image attachment */}
                       {msg.imageData && (
                         <div className="mt-2">
-                          <img
+                          <Image
                             src={`data:${msg.imageData.mimeType};base64,${msg.imageData.base64}`}
                             alt="Message attachment"
-                            className="max-h-48 w-auto rounded border border-border"
+                            width={320}
+                            height={192}
+                            unoptimized
+                            className="max-h-48 w-auto rounded border border-border object-contain"
                           />
                         </div>
                       )}

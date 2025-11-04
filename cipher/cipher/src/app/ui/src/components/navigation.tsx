@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -29,7 +30,7 @@ export function Navigation() {
   return (
     <nav className="flex items-center space-x-4 px-4 py-2 border-b border-border/50 bg-card/50">
       <div className="flex items-center space-x-2">
-        <img src="/cipher-logo.png" alt="Cipher" className="w-6 h-6" />
+        <Image src="/cipher-logo.png" alt="Cipher logo" width={24} height={24} className="h-6 w-6" />
         <span className="font-semibold">Cipher</span>
         <Badge variant="secondary" className="text-xs">
           v0.1.0

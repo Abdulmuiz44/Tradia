@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { Trade } from "@/types/trade";
 import { useUser } from "@/context/UserContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -552,7 +553,14 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             />
             {beforeUrl && (
               <div className="mt-2 flex items-center gap-2">
-                <img src={beforeUrl} alt="Before" className="h-16 w-24 object-cover rounded border border-zinc-800" />
+                <Image
+                  src={beforeUrl}
+                  alt="Before trade screenshot"
+                  width={96}
+                  height={64}
+                  unoptimized
+                  className="h-16 w-24 rounded border border-zinc-800 object-cover"
+                />
                 <button type="button" onClick={() => setBeforeUrl("")} className="px-2 py-1 text-xs bg-zinc-800 rounded hover:bg-zinc-700">Remove</button>
               </div>
             )}
@@ -568,7 +576,14 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
             />
             {afterUrl && (
               <div className="mt-2 flex items-center gap-2">
-                <img src={afterUrl} alt="After" className="h-16 w-24 object-cover rounded border border-zinc-800" />
+                <Image
+                  src={afterUrl}
+                  alt="After trade screenshot"
+                  width={96}
+                  height={64}
+                  unoptimized
+                  className="h-16 w-24 rounded border border-zinc-800 object-cover"
+                />
                 <button type="button" onClick={() => setAfterUrl("")} className="px-2 py-1 text-xs bg-zinc-800 rounded hover:bg-zinc-700">Remove</button>
               </div>
             )}

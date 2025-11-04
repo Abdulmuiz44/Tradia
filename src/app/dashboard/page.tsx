@@ -1,6 +1,7 @@
 "use client"; // enable client-side rendering
 
 import React, { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
@@ -52,8 +53,15 @@ import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
 import TradePatternChart from "@/components/charts/TradePatternChart";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
+type DashboardTabDef = {
+  value: string;
+  label: string;
+  icon: string;
+  href?: string;
+};
+
 // Base tabs available to all users
-const BASE_TAB_DEFS = [
+const BASE_TAB_DEFS: DashboardTabDef[] = [
 { value: "overview", label: "Overview", icon: "BarChart3" },
 { value: "history", label: "Trade History", icon: "History" },
 { value: "journal", label: "Trade Journal", icon: "BookOpen" },
@@ -80,7 +88,7 @@ href: "/tradia-predict",
 ];
 
 // Admin-only tabs
-const ADMIN_TAB_DEFS = [
+const ADMIN_TAB_DEFS: DashboardTabDef[] = [
   { value: "user-analytics", label: "User Analytics", icon: "Users" },
 ];
 
@@ -270,7 +278,7 @@ function DashboardContent() {
       }
     };
     fetchUser();
-  }, [session, supabase]);
+  }, [session, supabase, adminChecked]);
 
   // refresh trades
   const handleSyncNow = async () => {
@@ -535,7 +543,7 @@ function DashboardContent() {
     <div className="flex flex-col h-full sticky top-0">
             {/* Logo/Brand */}
             <div className="flex items-center gap-3 p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-transparent">
-              <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-6 w-auto" />
+              <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
               <div>
                 <h1 className="text-slate-900 dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
                 <p className="text-slate-500 dark:text-gray-300 text-xs">Trading Dashboard</p>
@@ -626,7 +634,7 @@ function DashboardContent() {
                 <div className="absolute left-0 top-0 h-full w-64 max-w-[80vw] bg-white dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a] transform transition-transform duration-300 overflow-y-auto">
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2f3a]">
                 <div className="flex items-center gap-3">
-                <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-7 w-auto" />
+                <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={28} height={28} className="h-7 w-auto" priority />
                 <h1 className="text-black dark:text-white font-extrabold text-lg">Tradia</h1>
               </div>
               <button
@@ -922,7 +930,7 @@ function DashboardContent() {
                   </>
                 )}
 
-                {activeTab === "history" && <TradeHistoryTable trades={filteredTrades} />}
+                {activeTab === "history" && <TradeHistoryTable />}
 
                 
 

@@ -136,10 +136,10 @@ const transformTradeForBackend = (trade: Trade): Record<string, unknown> => {
     takeprofitprice: takeProfitPrice ?? null,
     pnl: pnl ?? null,
     profitloss: coalesce(
-      trade.profitLoss,
-      trade.profit_loss,
-      raw.profitLoss as number,
-      raw.profit_loss as number,
+      String(trade.profitLoss),
+      String(trade.profit_loss),
+      raw.profitLoss as string,
+      raw.profit_loss as string,
     ),
     resultrr: coalesce(trade.resultRR, trade.result_rr, raw.resultRR as number, raw.result_rr as number),
     rr: coalesce(trade.rr, raw.rr as number),
@@ -282,13 +282,12 @@ const transformTradeForFrontend = (trade: Record<string, unknown>): Trade => {
     id: String(trade.id ?? raw.id ?? ""),
     user_id: coalesce(trade.user_id as string, raw.user_id as string),
     symbol: String(coalesce(trade.symbol as string, raw.symbol as string, "")).toUpperCase(),
-    direction:
-      coalesce(trade.direction as string, raw.direction as string) ??
-      ((trade.type as string) === "BUY"
-        ? "Buy"
+    direction: (coalesce(trade.direction as "Buy" | "Sell", raw.direction as "Buy" | "Sell") ??
+    ((trade.type as string) === "BUY"
+      ? "Buy"
         : (trade.type as string) === "SELL"
         ? "Sell"
-        : undefined),
+        : undefined)) as "Buy" | "Sell" | undefined,
     orderType: coalesce(
       trade.ordertype as string,
       trade.order_type as string,

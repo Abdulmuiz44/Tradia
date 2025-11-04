@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select" // Temporarily disabled
@@ -314,10 +315,13 @@ export function InputArea({
         <div className="p-3 border-b">
           {imageData && (
             <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-              <img
+              <Image
                 src={`data:${imageData.mimeType};base64,${imageData.base64}`}
-                alt="Uploaded"
-                className="w-12 h-12 object-cover rounded"
+                alt="Uploaded preview"
+                width={48}
+                height={48}
+                unoptimized
+                className="h-12 w-12 rounded object-cover"
               />
               <div className="flex-1">
                 <p className="text-sm font-medium">Image uploaded</p>

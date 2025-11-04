@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { WelcomeScreenProps } from "@/types/chat"
 import { QuickActionCard } from "./quick-action-card"
 
@@ -10,7 +11,7 @@ export function WelcomeScreen({ quickActions }: WelcomeScreenProps) {
       <div className="w-full max-w-md space-y-8">
         <div className="space-y-4">
           <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-primary/10 text-primary">
-            <img src="/cipher-logo.png" alt="Cipher" className="w-8 h-8" />
+            <Image src="/cipher-logo.png" alt="Cipher logo" width={32} height={32} className="h-8 w-8" />
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold tracking-tight font-mono bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent text-center">

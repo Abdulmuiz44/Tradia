@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import LayoutClient from '@/components/LayoutClient';
@@ -143,7 +144,14 @@ function TradiaPredictContent() {
           <div className="absolute left-0 top-0 h-full w-64 bg-[#161B22] border-r border-[#2a2f3a]">
             <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
               <div className="flex items-center gap-3">
-                <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-7 w-auto" />
+                <Image
+                  src="/Tradia-logo-ONLY.png"
+                  alt="Tradia logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-auto"
+                  priority
+                />
                 <h1 className="text-white font-extrabold text-lg">Tradia</h1>
               </div>
             </div>

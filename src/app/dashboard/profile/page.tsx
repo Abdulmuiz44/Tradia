@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import TrialStatusCard from "@/components/TrialStatusCard";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
@@ -126,10 +127,13 @@ export default function ProfilePage() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <img
+              <Image
                 src="/Tradia-logo-ONLY.png"
                 alt="Tradia logo"
+                width={36}
+                height={36}
                 className="h-9 w-auto select-none"
+                priority
               />
               <div className="leading-tight">
               <p className="text-sm font-semibold tracking-tight text-[#FFFFFF]">Dashboard</p>

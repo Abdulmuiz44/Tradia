@@ -33,10 +33,11 @@ export default function Navbar() {
   useEffect(() => setMounted(true), []);
 
   const navLinks = [
-    { label: "Home", href: "/" },
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Pricing", href: "/pricing" }, // replaced /insights -> /pricing
-    { label: "About", href: "/about" },
+  { label: "Home", href: "/" },
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Chat", href: "/chat" },
+  { label: "Pricing", href: "/pricing" }, // replaced /insights -> /pricing
+  { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
   ];
 

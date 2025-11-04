@@ -1,8 +1,9 @@
 // src/app/pricing/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { AiOutlineCheck, AiOutlineArrowRight } from "react-icons/ai";
 import Navbar from "@/components/Navbar";
@@ -229,8 +230,15 @@ export default function PricingPage(): React.ReactElement {
               </div>
 
               <div className="lg:col-span-5">
-                <div className="rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-black/20 to-white/5 backdrop-blur-sm p-4">
-                  <img src="/TradiaDashboard.png" alt="Tradia dashboard" className="w-full h-auto object-cover rounded" />
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-4 shadow-2xl backdrop-blur-sm">
+                  <Image
+                    src="/TradiaDashboard.png"
+                    alt="Tradia dashboard"
+                    fill
+                    className="rounded object-cover"
+                    sizes="(min-width: 1024px) 480px, 100vw"
+                    priority
+                  />
                 </div>
                 <div className="mt-3 text-xs text-gray-400">Preview of the analytics dashboard — see it with your own trades after signup.</div>
               </div>

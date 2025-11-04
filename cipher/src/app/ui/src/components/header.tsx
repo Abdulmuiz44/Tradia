@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { HeaderProps } from "@/types/chat"
 import { ActionBar } from "./action-bar"
@@ -21,7 +22,7 @@ export function Header({
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             <div className="flex items-center justify-center w-7 h-7 rounded-lg border border-border/50 text-primary-foreground">
-              <img src="/cipher-logo.png" alt="Cipher" className="w-4 h-4" />
+              <Image src="/cipher-logo.png" alt="Cipher logo" width={16} height={16} className="h-4 w-4" />
             </div>
             <h1 className="text-base font-semibold tracking-tight">Cipher</h1>
           </div>

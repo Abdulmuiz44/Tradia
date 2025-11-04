@@ -85,7 +85,7 @@ export function useChatActions({ state, dispatch, trades, saveMessage }: UseChat
     } finally {
       dispatch({ type: 'SET_TYPING', payload: false });
     }
-  }, [state.inputMessage, state.assistantMode, state.grokUnlocked, trades, dispatch, pushSystemMessage]);
+  }, [state.inputMessage, state.assistantMode, state.grokUnlocked, trades, dispatch, pushSystemMessage, saveMessage]);
 
   return { pushSystemMessage, handleSendMessage };
 }

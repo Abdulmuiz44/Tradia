@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -241,9 +242,16 @@ export default function Home(): React.ReactElement {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.12 }}
-                  className="rounded-2xl border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-black/20 to-white/5 backdrop-blur-sm"
+                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 shadow-2xl backdrop-blur-sm"
                 >
-                  <img src="/TradiaDashboard.png" alt="Tradia trading dashboard showing performance analytics, trade charts, and AI insights for forex and financial market traders" className="w-full h-auto object-cover" />
+                  <Image
+                    src="/TradiaDashboard.png"
+                    alt="Tradia trading dashboard showing performance analytics, trade charts, and AI insights for forex and financial market traders"
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 1024px) 540px, 100vw"
+                    priority
+                  />
                 </motion.div>
 
                 <div className="mt-3 text-xs text-gray-400">Live dashboard preview (Upload trade history to see interactive charts).</div>
@@ -434,8 +442,14 @@ export default function Home(): React.ReactElement {
             </div>
 
             <div>
-              <div className="rounded-xl border border-white/10 overflow-hidden">
-                <img src="/TradiaInsights.png" alt="Tradia AI trading insights showing performance analysis, risk metrics, and actionable recommendations for traders" className="w-full h-auto object-cover" />
+              <div className="relative overflow-hidden rounded-xl border border-white/10">
+                <Image
+                  src="/TradiaInsights.png"
+                  alt="Tradia AI trading insights showing performance analysis, risk metrics, and actionable recommendations for traders"
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 1024px) 560px, 100vw"
+                />
               </div>
               <div className="mt-3 text-sm text-gray-400">Insights preview — automated, actionable, and tailored to your account history.</div>
             </div>
@@ -554,8 +568,14 @@ export default function Home(): React.ReactElement {
         {/* Product previews */}
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            <div className="col-span-2 rounded-xl border border-white/10 overflow-hidden">
-              <img src="/TradiaCalendar.png" alt="Tradia trading journal calendar showing trade history, performance timeline, and trading patterns visualization" className="w-full h-auto object-cover" />
+            <div className="relative col-span-2 overflow-hidden rounded-xl border border-white/10">
+              <Image
+                src="/TradiaCalendar.png"
+                alt="Tradia trading journal calendar showing trade history, performance timeline, and trading patterns visualization"
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 720px, 100vw"
+              />
             </div>
 
             <div className="rounded-xl border border-white/10 p-6 flex flex-col justify-between">
@@ -564,8 +584,14 @@ export default function Home(): React.ReactElement {
                 <p className="mt-2 text-gray-400">Identify repeating patterns and trading with quick filters and tagging.</p>
               </div>
 
-              <div className="mt-4 rounded-md overflow-hidden border border-white/10">
-                <img src="/TradiaPattern.png" alt="Tradia trading pattern analysis showing recurring trade setups, entry signals, and performance metrics for pattern-based trading strategies" className="w-full h-auto object-cover" />
+              <div className="relative mt-4 overflow-hidden rounded-md border border-white/10">
+                <Image
+                  src="/TradiaPattern.png"
+                  alt="Tradia trading pattern analysis showing recurring trade setups, entry signals, and performance metrics for pattern-based trading strategies"
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 1024px) 360px, 100vw"
+                />
               </div>
 
               <div className="mt-4">

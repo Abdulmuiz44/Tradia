@@ -20,7 +20,7 @@ import {
 import {
   Send,
   Bot,
-  Image,
+  Image as ImageIcon,
   X,
   Paperclip,
   Mic,
@@ -33,7 +33,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { PLAN_LIMITS } from "@/lib/planAccess";
+import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 import { cn } from "@/lib/utils";
 
 // Web Speech API type declarations
@@ -131,7 +131,13 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     setUserTier(normalizeTier(plan));
   }, [plan]);
 
-  const limits = PLAN_LIMITS[((userTier as PlanType) in PLAN_LIMITS ? (userTier as PlanType) : 'free')];
+  const normalizedPlan = plan?.toLowerCase() ?? '';
+  const isStarterPlan = normalizedPlan === 'starter';
+  const isFreeLikeTier = userTier === 'free' || isStarterPlan;
+  const tierBadgeLabel = isStarterPlan ? 'STARTER' : userTier.toUpperCase();
+
+  const effectivePlan = (userTier as PlanType) in PLAN_LIMITS ? (userTier as PlanType) : 'free';
+  const limits = PLAN_LIMITS[effectivePlan];
   const grokUnlocked = userTier === 'plus' || userTier === 'elite';
   const [assistantMode, setAssistantMode] = useState<'coach' | 'grok'>(() => (grokUnlocked ? 'grok' : 'coach'));
 
@@ -349,7 +355,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         content: msg.content
       }));
 
-      if ((userTier === 'free' || userTier === 'starter') && (uploadedFiles.length > 0 || inputMessage.toLowerCase().includes('screenshot'))) {
+      if (userTier === 'free' && (uploadedFiles.length > 0 || inputMessage.toLowerCase().includes('screenshot'))) {
         pushUpgradeMessage('PRO feature: Image analysis is available for Pro and above. Upgrade to unlock advanced chart analysis and visual insights.');
         setIsTyping(false);
         setUploadedFiles([]);
@@ -434,18 +440,18 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
           {/* Subscription Tier Indicator */}
           <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${
-            (userTier === 'free' || userTier === 'starter') ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
+            isFreeLikeTier ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
             userTier === 'pro' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
             userTier === 'plus' ? 'bg-purple-900/30 text-purple-400 border-purple-700/50' :
             'bg-yellow-900/30 text-yellow-400 border-yellow-700/50'
           }`}>
             <Crown className={`w-3 h-3 ${
-              (userTier === 'free' || userTier === 'starter') ? 'text-gray-400' :
+              isFreeLikeTier ? 'text-gray-400' :
               userTier === 'pro' ? 'text-blue-400' :
               userTier === 'plus' ? 'text-purple-400' :
               'text-yellow-400'
             }`} />
-            {(userTier === 'starter' ? 'STARTER' : userTier.toUpperCase())}
+            {tierBadgeLabel}
           </div>
 
           <button
@@ -612,7 +618,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 <div className="mt-3 space-y-2">
                   {message.attachments.map((file, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 bg-[#0D1117]/50 rounded border border-[#2a2f3a]">
-                      <Image className="w-4 h-4 text-gray-400" />
+                      <ImageIcon className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-300">{file.name}</span>
                     </div>
                   ))}
@@ -653,7 +659,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           <div className="flex flex-wrap gap-2 pt-3">
             {uploadedFiles.map((file, index) => (
               <div key={index} className="flex items-center gap-2 bg-[#1a1f2e] border border-[#2a2f3a] rounded-lg p-2">
-                <Image className="w-4 h-4 text-gray-400" />
+                <ImageIcon className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-300 truncate max-w-[160px]">{file.name}</span>
                 <button
                   onClick={() => removeFile(index)}
@@ -689,7 +695,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
             </button>
             <button
               onClick={() => {
-                if (userTier === 'free' || userTier === 'starter') {
+                if (isFreeLikeTier) {
                   setMessages(prev => [...prev, {
                     id: Date.now().toString(),
                     type: 'assistant',
@@ -701,14 +707,14 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 fileInputRef.current?.click();
               }}
               className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${
-                (userTier === 'free' || userTier === 'starter')
+                isFreeLikeTier
                   ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-700 text-gray-200 hover:bg-blue-600 hover:text-white'
               }`}
-              title={(userTier === 'free' || userTier === 'starter') ? 'PRO feature: Upgrade to analyze images' : 'Upload trade screenshot or analysis'}
-              disabled={userTier === 'free' || userTier === 'starter'}
+              title={isFreeLikeTier ? 'PRO feature: Upgrade to analyze images' : 'Upload trade screenshot or analysis'}
+              disabled={isFreeLikeTier}
             >
-              {(userTier === 'free' || userTier === 'starter') ? (
+              {isFreeLikeTier ? (
                 <Lock className="w-4 h-4 md:w-5 md:h-5" />
               ) : (
                 <Paperclip className="w-4 h-4 md:w-5 md:h-5" />

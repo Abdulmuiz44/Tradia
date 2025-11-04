@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import type { Trade } from "@/types/trade";
 import { useUser } from "@/context/UserContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -586,7 +587,14 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
           <div>
             <label className="block text-sm text-zinc-300 mb-1">Before Screenshot</label>
             {beforeUrl && (
-              <img src={beforeUrl} alt="Before" className="mb-2 max-h-32 rounded border border-zinc-800" />
+              <Image
+                src={beforeUrl}
+                alt="Before trade screenshot"
+                width={256}
+                height={128}
+                unoptimized
+                className="mb-2 max-h-32 rounded border border-zinc-800 object-contain"
+              />
             )}
             <input
               type="file"
@@ -616,7 +624,14 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
           <div>
             <label className="block text-sm text-zinc-300 mb-1">After Screenshot</label>
             {afterUrl && (
-              <img src={afterUrl} alt="After" className="mb-2 max-h-32 rounded border border-zinc-800" />
+              <Image
+                src={afterUrl}
+                alt="After trade screenshot"
+                width={256}
+                height={128}
+                unoptimized
+                className="mb-2 max-h-32 rounded border border-zinc-800 object-contain"
+              />
             )}
             <input
               type="file"

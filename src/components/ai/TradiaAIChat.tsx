@@ -4,6 +4,7 @@
 import React, {
   useCallback,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from 'react';
@@ -28,15 +29,16 @@ interface TradiaAIChatProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
-const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
-  className = "",
-  activeConversationId: externalActiveId,
-  onActiveConversationChange,
-  onConversationsChange,
-  onLoadingChange,
-}) => {
+const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((props, ref) => {
+  const {
+    className = "",
+    activeConversationId: externalActiveId,
+    onActiveConversationChange,
+    onConversationsChange,
+    onLoadingChange,
+  } = props;
   const tradeContext = (TradeContextModule as { useTrade: () => any }).useTrade();
-  const trades: Trade[] = tradeContext.trades;
+  const trades: Trade[] = tradeContext.trades || [];
   const { user, loading } = useUser();
 
   // State
@@ -175,7 +177,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     } catch (error) {
       console.error('Failed to load conversation:', error);
     }
-  }, [user]);
+  }, [user, onActiveConversationChange]);
 
   const handleDeleteConversation = useCallback(async (conversationId: string) => {
     if (!user) {
@@ -469,21 +471,22 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       };
 
       if (resolvedConversationId) {
+        const conversationId = resolvedConversationId;
         const updatedAt = new Date();
         setConversations((prev) => {
           const updatedMessages = [...requestMessages, finalAssistantMessage];
-          const existing = prev.find((conversation) => conversation.id === resolvedConversationId);
+          const existing = prev.find((conversation) => conversation.id === conversationId);
 
           if (existing) {
             return prev.map((conversation) =>
-              conversation.id === resolvedConversationId
+              conversation.id === conversationId
                 ? { ...conversation, updatedAt, messages: updatedMessages }
                 : conversation
             );
           }
 
           const seedConversation: Conversation = {
-            id: resolvedConversationId,
+            id: conversationId,
             title: 'New Conversation',
             createdAt: updatedAt,
             updatedAt,
@@ -504,6 +507,7 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
         updateAssistantContent(stopMessage);
 
         if (resolvedConversationId) {
+          const conversationId = resolvedConversationId;
           const updatedAt = new Date();
           const stoppedMessage: Message = {
             id: pendingAssistantId,
@@ -515,18 +519,18 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
 
           setConversations((prev) => {
             const updatedMessages = [...requestMessages, stoppedMessage];
-            const existing = prev.find((conversation) => conversation.id === resolvedConversationId);
+            const existing = prev.find((conversation) => conversation.id === conversationId);
 
             if (existing) {
               return prev.map((conversation) =>
-                conversation.id === resolvedConversationId
+                conversation.id === conversationId
                   ? { ...conversation, updatedAt, messages: updatedMessages }
                   : conversation
               );
             }
 
             const seedConversation: Conversation = {
-              id: resolvedConversationId,
+              id: conversationId,
               title: 'New Conversation',
               createdAt: updatedAt,
               updatedAt,
@@ -766,17 +770,25 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
     }
   }, [externalActiveId, activeConversationId, handleSelectConversation]);
 
-  // Note: forwardRef functionality removed for simplicity
-
   const activeConversation = conversations.find(c => c.id === activeConversationId);
+  useImperativeHandle(
+    ref,
+    () => ({
+      createConversation: handleCreateConversation,
+      refreshConversations: loadConversations,
+      selectConversation: handleSelectConversation,
+    }),
+    [handleCreateConversation, loadConversations, handleSelectConversation]
+  );
 
   return (
     <ChatLayout
+      className={className}
       hideSidebar={false}
       isGuest={isGuest}
       conversations={conversations}
-      loadingConversations={loadingConversations}
       activeConversationId={activeConversationId || undefined}
+      loadingConversations={loadingConversations || loading}
       onCreateConversation={handleCreateConversation}
       onSelectConversation={handleSelectConversation}
       onDeleteConversation={handleDeleteConversation}
@@ -809,10 +821,8 @@ const TradiaAIChatContent: React.FC<TradiaAIChatProps> = ({
       summary={tradeSummary}
     />
   );
-};
+});
 
-// Set display name for debugging
-TradiaAIChatContent.displayName = 'TradiaAIChat';
+TradiaAIChat.displayName = 'TradiaAIChat';
 
-// Export the component directly
-export default TradiaAIChatContent;
+export default TradiaAIChat;
