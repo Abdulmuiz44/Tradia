@@ -32,3 +32,5 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(({ onSelectA
     </div>
   );
 });
+
+QuickActions.displayName = "QuickActions";

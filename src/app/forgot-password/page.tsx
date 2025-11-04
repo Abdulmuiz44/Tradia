@@ -105,7 +105,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
             {/* Right — form */}
             <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm shadow-2xl">
               <h2 className="text-3xl font-bold text-indigo-300">Reset your password</h2>
-              <p className="mt-2 text-sm text-gray-400">Enter the email tied to your account and we'll send reset instructions.</p>
+              <p className="mt-2 text-sm text-gray-400">Enter the email tied to your account and we&apos;ll send reset instructions.</p>
 
               {message && (
                 <div
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
               </form>
 
               <div className="my-4 text-center text-sm text-gray-400">
-                Or <Link href="/signup" className="text-indigo-300 hover:underline">create an account</Link> if you don't have one.
+                Or <Link href="/signup" className="text-indigo-300 hover:underline">create an account</Link> if you don&apos;t have one.
               </div>
             </section>
           </div>

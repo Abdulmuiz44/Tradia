@@ -12,6 +12,14 @@ type Props = {
   blurMode?: boolean; // If true, blur the feature instead of hiding it
 };
 
+const planLevels = {
+  free: 0,
+  plus: 1,
+  premium: 2,
+  pro: 3,
+  elite: 4,
+} as const;
+
 export default function FeatureLock({
   children,
   requiredPlan = "plus",
@@ -24,31 +32,32 @@ export default function FeatureLock({
   // Check trial status once on mount; unlock features during active trial
   useEffect(() => {
     let mounted = true;
-    fetch("/api/user/trial-status")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
+
+    const loadTrialStatus = async () => {
+      try {
+        const response = await fetch("/api/user/trial-status");
+        if (!response.ok) return;
+        const data = await response.json();
         if (!mounted || !data?.info) return;
+
         const info = data.info as { expired: boolean; isPaid: boolean; isGrandfathered: boolean };
         const active = !info.isPaid && !info.isGrandfathered && info.expired === false;
         setTrialActive(active);
-      })
-      .catch(() => {})
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      .finally(() => {});
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Failed to load trial status", error);
+        }
+      }
+    };
+
+    void loadTrialStatus();
+
     return () => {
       mounted = false;
     };
   }, []);
 
-  const planLevels = {
-    free: 0,
-    plus: 1,
-  premium: 2,
-  pro: 3,
-  elite: 4,
-  };
-
-  const userLevel = planLevels[plan];
+  const userLevel = planLevels[plan as keyof typeof planLevels] ?? 0;
   const requiredLevel = planLevels[requiredPlan];
 
   const isLocked = !trialActive && userLevel < requiredLevel;

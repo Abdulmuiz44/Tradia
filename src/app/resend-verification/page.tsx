@@ -62,7 +62,7 @@ export default function ResendVerificationPage(): React.ReactElement {
             <header className="mb-4">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-300">Resend verification email</h1>
               <p className="mt-2 text-sm text-gray-400">
-                Enter the email you signed up with and we'll resend the verification link.
+                Enter the email you signed up with and we&apos;ll resend the verification link.
               </p>
             </header>
 

@@ -204,11 +204,11 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
                 <div className="flex items-start gap-3">
                   <span className="text-xl mt-1">💭</span>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-white mb-2">What's one thing we could improve?</p>
+                    <p className="text-sm font-semibold text-white mb-2">What&apos;s one thing we could improve?</p>
                     <p className="text-xs text-indigo-100/80 mb-3">Optional but super helpful - we read every response!</p>
                     <textarea
                       className="w-full resize-none rounded-lg border border-indigo-500/40 bg-black/40 p-3 text-sm text-indigo-100 placeholder:text-indigo-200/40 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 min-h-[80px]"
-                      placeholder="e.g. 'Love the AI insights, but wish the chart integration was smoother...'"
+                      placeholder='e.g. "Love the AI insights, but wish the chart integration was smoother..."'
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                     />

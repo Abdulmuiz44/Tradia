@@ -36,3 +36,5 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ onExport, canExport
     </div>
   );
 });
+
+Sidebar.displayName = "Sidebar";

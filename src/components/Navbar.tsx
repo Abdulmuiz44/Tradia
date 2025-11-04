@@ -3,6 +3,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, Moon, Sun, LogOut } from "lucide-react";
@@ -88,10 +89,13 @@ export default function Navbar() {
         {/* Brand */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3 no-underline" aria-label="Tradia Home">
-            <img
+            <Image
               src="/Tradia-logo-ONLY.png"
-              alt="Tradia"
-              className="h-10 sm:h-12 w-auto select-none"
+              alt="Tradia logo"
+              width={48}
+              height={48}
+              className="h-10 w-auto select-none sm:h-12"
+              priority
             />
             <div className="hidden sm:block">
               <div className="text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 -mt-0.5 font-medium">

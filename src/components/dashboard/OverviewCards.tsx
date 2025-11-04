@@ -991,7 +991,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-3">
-                Sample data includes realistic EUR/USD, BTC/USDT, and ETH/USDT trades to explore Tradia's features.
+                Sample data includes realistic EUR/USD, BTC/USDT, and ETH/USDT trades to explore Tradia&apos;s features.
               </p>
             </div>
           </div>

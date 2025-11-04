@@ -172,7 +172,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                   <Check className="w-4 h-4" />
                 </Button>
                 <Button
-                size="sm"\                  variant="ghost"
+                  size="sm"
+                  variant="ghost"
                 onClick={handleCancelEdit}
                 className="h-6 w-6 p-0 text-[#F4212E] hover:text-[#FFFFFF]"
                 >
@@ -230,3 +231,5 @@ export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     </div>
   );
 });
+
+MessageBubble.displayName = "MessageBubble";

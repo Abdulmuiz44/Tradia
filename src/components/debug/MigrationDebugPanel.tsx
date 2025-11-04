@@ -224,8 +224,8 @@ export default function MigrationDebugPanel() {
           <ol className="text-xs space-y-1 text-blue-600 dark:text-blue-400 list-decimal list-inside">
             <li>Check if you have local trades in localStorage</li>
             <li>Verify your session is active (User ID should be present)</li>
-            <li>Click "Test API Endpoint" to verify authentication works</li>
-            <li>If API test passes, click "Test Migration" to migrate trades</li>
+            <li>Click &ldquo;Test API Endpoint&rdquo; to verify authentication works</li>
+            <li>If API test passes, click &ldquo;Test Migration&rdquo; to migrate trades</li>
             <li>Check the results and verify trades appear in cloud database</li>
           </ol>
         </div>

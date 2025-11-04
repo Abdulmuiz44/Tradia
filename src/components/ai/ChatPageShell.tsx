@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
   Clock,
   Pin,
@@ -97,7 +98,14 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
             aria-label="Home"
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#1f2937]"
           >
-            <img src="/Tradia-logo-ONLY.png" alt="Tradia" className="h-6 w-auto" />
+            <Image
+              src="/Tradia-logo-ONLY.png"
+              alt="Tradia logo"
+              width={24}
+              height={24}
+              className="h-6 w-auto"
+              priority
+            />
           </a>
           <div className="leading-tight">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">

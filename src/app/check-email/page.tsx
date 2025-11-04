@@ -21,7 +21,7 @@ export default function CheckEmailPage(): React.ReactElement {
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-300">Check your email</h1>
               <p className="mt-2 text-sm text-gray-400 max-w-prose">
-                We've sent a verification link to the address below. Open that email and click the link to complete
+                We&apos;ve sent a verification link to the address below. Open that email and click the link to complete
                 your registration.
               </p>
             </div>
@@ -33,8 +33,8 @@ export default function CheckEmailPage(): React.ReactElement {
 
             <div className="mt-6 space-y-4">
               <p className="text-sm text-gray-400">
-                Didn't receive the email? It can sometimes take a minute. Check your spam folder, and if you still
-                can't find it try one of the options below.
+                Didn&apos;t receive the email? It can sometimes take a minute. Check your spam folder, and if you still
+                can&apos;t find it try one of the options below.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

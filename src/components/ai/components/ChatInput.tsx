@@ -130,3 +130,5 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
     </div>
   );
 });
+
+ChatInput.displayName = "ChatInput";

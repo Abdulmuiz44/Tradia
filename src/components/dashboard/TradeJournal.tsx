@@ -1576,7 +1576,7 @@ type NormalizedTrade = Trade & {
               <HeuristicForecast trades={trades as Trade[]} summary={summary} />
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
                 <h5 className="text-sm text-zinc-300">Actionable suggestion</h5>
-                <p className="mt-2 text-white">Combine the probability shown with your plan " do not rely only on this. This is not financial advice.</p>
+                <p className="mt-2 text-white">Combine the probability shown with your plan — do not rely only on this. This is not financial advice.</p>
                 <div className="mt-4 text-xs text-zinc-400">For a production-grade forecast, integrate a trained model server-side and surface calibrated probabilities here.</div>
               </div>
             </div>
@@ -1929,7 +1929,7 @@ type NormalizedTrade = Trade & {
                     <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.exit} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, exit: e.target.value }: pb))} />
                     <div className="text-xs text-muted-foreground mb-1">Notes</div>
                     <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm" rows={2} value={p.notes || ''} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, notes: e.target.value }: pb))} />
-                    <div className="mt-3 text-xs text-muted-foreground">Tip: Pin one setup and focus until it's consistent.</div>
+                    <div className="mt-3 text-xs text-muted-foreground">Tip: Pin one setup and focus until it&apos;s consistent.</div>
                   </div>
                 ))}
               </div>

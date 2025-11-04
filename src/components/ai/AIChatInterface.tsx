@@ -740,7 +740,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-900/30 to-blue-800/30 rounded-full border border-blue-700/50">
               <Mic className="w-3 h-3 text-blue-400" />
-              <span className="text-xs text-blue-300 font-medium">Voice: "How's my trading?"</span>
+              <span className="text-xs text-blue-300 font-medium">Voice: &ldquo;How&apos;s my trading?&rdquo;</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-900/30 to-green-800/30 rounded-full border border-green-700/50">
               <span className="text-xs text-green-300 font-medium">Strategy advice</span>
@@ -808,7 +808,7 @@ Ask for a deep-dive, a risk tune-up, or ideas to stay in flow.`;
       '- Ask for `playbook` to turn this into a checklist.',
       '- Upload a chart screenshot and I will annotate the setup.',
       '- Say `predict next` for a probabilistic outlook on upcoming trades.',
-      "I'm ready when you are — what should Grok spotlight next?",
+      "I&apos;m ready when you are — what should Grok spotlight next?",
     ];
     return summaryBlocks.join('\n');
   }

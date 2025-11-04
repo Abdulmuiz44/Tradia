@@ -254,6 +254,7 @@ function buildDriverBullets(
 
 export default function TradiaPredictPanel() {
   const { plan: rawPlan } = useUser();
+  const { data: session } = useSession();
   const router = useRouter();
   const plan = normalisePlan(rawPlan);
   const capability = PLAN_CAPABILITIES[plan];
@@ -300,8 +301,16 @@ export default function TradiaPredictPanel() {
     setIsRefreshing(true);
     setError(null);
     try {
-      const { data: session } = useSession();
-      const params = new URLSearchParams({ pair, user_id: (session?.user as any)?.id });
+      const sessionUserId =
+        typeof session?.user === "object" && session.user !== null
+          ? (session.user as { id?: string }).id ?? undefined
+          : undefined;
+
+      const params = new URLSearchParams({ pair });
+      if (sessionUserId) {
+        params.set("user_id", sessionUserId);
+      }
+
       const res = await fetch(`/api/predict?${params.toString()}`, { cache: "no-store" });
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
@@ -403,7 +412,7 @@ export default function TradiaPredictPanel() {
               <Brain className="w-12 h-12 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Upgrade to Access Tradia Predict</h3>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Tradia Predict uses xAI's Grok model to analyze market data, liquidity patterns, and macro trends to forecast the next probable market direction. Available exclusively for Plus and Elite members.
+                Tradia Predict uses xAI&apos;s Grok model to analyze market data, liquidity patterns, and macro trends to forecast the next probable market direction. Available exclusively for Plus and Elite members.
               </p>
               <div className="grid gap-4 md:grid-cols-2 max-w-3xl mx-auto mb-6">
                 <div className="text-left p-4 rounded-lg bg-background/50 border border-border">

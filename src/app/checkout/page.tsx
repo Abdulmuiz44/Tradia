@@ -91,7 +91,7 @@ export default function CheckoutPage() {
   // Initialize email from any available auth context
   useEffect(() => {
     if (unified.email && !email) setEmail(unified.email);
-  }, [unified.email]);
+  }, [unified.email, email]);
 
   const handleCreateCheckout = async () => {
     // Allow guest checkout: require an email if not authenticated

@@ -325,7 +325,7 @@ export default function UploadCsvModal({
             </div>
           ) : (
             <div className="text-sm text-zinc-400">
-              No file selected yet. Use "Browse" to choose a CSV file.
+              No file selected yet. Use &ldquo;Browse&rdquo; to choose a CSV file.
             </div>
           )}
 

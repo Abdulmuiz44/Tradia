@@ -67,3 +67,5 @@ export const ChatHeader: React.FC<ChatHeaderProps> = React.memo(({
     </div>
   );
 });
+
+ChatHeader.displayName = "ChatHeader";

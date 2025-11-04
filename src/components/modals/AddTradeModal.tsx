@@ -577,7 +577,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
 
         <div className="flex justify-between items-center gap-4 mt-6">
           <div className="text-sm text-gray-400">
-            Tip: use full precision for prices (step="any"). RR auto-calculated from entry/stop/tp.
+            Tip: use full precision for prices (step=&ldquo;any&rdquo;). RR auto-calculated from entry/stop/tp.
           </div>
 
           <div className="flex gap-2">

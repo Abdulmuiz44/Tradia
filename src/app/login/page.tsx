@@ -257,7 +257,7 @@ function LoginPage(): React.ReactElement {
               </button>
 
               <p className="mt-6 text-center text-sm text-gray-400">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="/signup" className="text-indigo-300 hover:underline">
                   Create one
                 </Link>

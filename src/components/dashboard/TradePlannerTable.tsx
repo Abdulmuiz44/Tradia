@@ -625,7 +625,7 @@ export default function TradePlannerTable() {
       {/* planner list */}
       <div className="grid grid-cols-1 gap-4">
         {sortedPlans.length === 0 && !loading ? (
-          <div className="text-sm text-zinc-400">No plans yet — click "New Plan" to start.</div>
+          <div className="text-sm text-zinc-400">No plans yet — click &ldquo;New Plan&rdquo; to start.</div>
         ) : (
           sortedPlans.map((plan: LocalPlan) => {
             const est = computeEst(plan);

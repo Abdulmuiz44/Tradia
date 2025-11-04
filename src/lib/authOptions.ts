@@ -158,10 +158,8 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-  // use permissive `any` parameter types for callbacks to avoid strict NextAuth
-  // type incompatibilities with the project's DB/user shapes
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async signIn({ user, account, profile }: any) {
+  // use permissive handling inside callbacks; NextAuth supplies the correct types
+  async signIn({ user, account, profile }) {
       try {
         if (account?.provider === "google") {
           const provider = getString(account, "provider") ?? "google";
@@ -281,16 +279,16 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async jwt({ token, user }: any) {
+  async jwt({ token, user }) {
       try {
+        const mutableToken = token as Record<string, unknown>;
         const incomingUserId = getString(user, "id");
         if (incomingUserId) {
           token.userId = incomingUserId;
           if (getString(user, "email")) token.email = getString(user, "email");
           if (getString(user, "name")) token.name = getString(user, "name");
-          if (getString(user, "plan")) (token as any).plan = getString(user, "plan");
-          if (getString(user, "role")) (token as any).role = getString(user, "role");
+          if (getString(user, "plan")) mutableToken.plan = getString(user, "plan");
+          if (getString(user, "role")) mutableToken.role = getString(user, "role");
         }
         // Check database connectivity before attempting lookups (skip if forced)
         const shouldForceSkip = forceSkipDb();
@@ -320,7 +318,7 @@ export const authOptions: NextAuthOptions = {
               token.email = u.email ?? token.email;
               token.image = u.image ?? token.image;
               token.role = u.role ?? token.role ?? "trader";
-              (token as any).plan = u.plan ?? (token as any).plan ?? "free";
+              mutableToken.plan = u.plan ?? mutableToken.plan ?? "free";
             }
           } catch (err) {
             console.warn("jwt callback DB refresh failed:", err instanceof Error ? err.message : String(err));
@@ -332,17 +330,17 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async session({ session, token }: any) {
+  async session({ session, token }) {
       try {
         if (!session.user || typeof session.user !== "object") session.user = {};
         const su = session.user as Record<string, unknown>;
+        const mutableToken = token as Record<string, unknown>;
         if (typeof token.userId === "string") su.id = token.userId;
         if (typeof token.name === "string") su.name = token.name;
         if (typeof token.email === "string") su.email = token.email;
         if (typeof token.image === "string") su.image = token.image;
         su.role = typeof token.role === "string" ? token.role : "trader";
-        su.plan = typeof (token as any).plan === "string" ? (token as any).plan : "free";
+        su.plan = typeof mutableToken.plan === "string" ? mutableToken.plan : "free";
       } catch (err: unknown) {
         console.error("session callback error:", err instanceof Error ? err.message : String(err));
       }

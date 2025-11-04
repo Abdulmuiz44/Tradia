@@ -130,7 +130,7 @@ function SignupPage(): React.ReactElement {
       }
 
   // Track successful signup for analytics insights
-  trackUserJourney.signup(email, "email");
+  trackUserJourney.signup("email");
 
       setNotice(data?.message || "Account created. Check your email for a verification link.");
       router.push(`/check-email?email=${encodeURIComponent(email)}`);

@@ -57,7 +57,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             </h1>
 
             <p className="text-gray-600 mb-6">
-              We encountered an unexpected error. This has been reported and we're working on a fix.
+              We encountered an unexpected error. This has been reported and we&apos;re working on a fix.
             </p>
 
             <div className="space-y-3">

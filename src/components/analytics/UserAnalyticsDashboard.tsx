@@ -1,7 +1,7 @@
 // src/components/analytics/UserAnalyticsDashboard.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +61,30 @@ export default function UserAnalyticsDashboard() {
   // Check if user is admin
   const isAdmin = session?.user?.email === "abdulmuizproject@gmail.com";
 
+  const fetchUserStats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/analytics/user-stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!session || !isAdmin) return undefined;
+
+    void fetchUserStats();
+    const id = setInterval(() => {
+      void fetchUserStats();
+    }, 10000);
+    return () => clearInterval(id);
+  }, [fetchUserStats, isAdmin, session]);
+
   // Show access denied for non-admin users
   if (status === "loading") {
     return (
@@ -84,27 +108,6 @@ export default function UserAnalyticsDashboard() {
       </div>
     );
   }
-
-  useEffect(() => {
-    fetchUserStats();
-    // simple polling for near real-time
-    const id = setInterval(fetchUserStats, 10000);
-    return () => clearInterval(id);
-  }, []);
-
-  const fetchUserStats = async () => {
-    try {
-      const response = await fetch('/api/analytics/user-stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatNumber = (value: number | null | undefined) => {
     const num = Number(value ?? 0);

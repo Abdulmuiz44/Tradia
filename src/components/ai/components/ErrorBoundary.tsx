@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
           <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
           <p className="text-gray-400 text-center mb-4 max-w-md">
-            The chat encountered an unexpected error. This has been reported and we're working on a fix.
+            The chat encountered an unexpected error. This has been reported and we&apos;re working on a fix.
           </p>
           <Button onClick={this.handleRetry} className="bg-blue-600 hover:bg-blue-700">
             <RefreshCw className="w-4 h-4 mr-2" />

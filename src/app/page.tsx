@@ -542,7 +542,7 @@ export default function Home(): React.ReactElement {
                     </div>
                   </div>
 
-                  <p className="text-gray-300">"{t.text}"</p>
+                  <p className="text-gray-300">&ldquo;{t.text}&rdquo;</p>
                 </motion.div>
               ))}
             </div>

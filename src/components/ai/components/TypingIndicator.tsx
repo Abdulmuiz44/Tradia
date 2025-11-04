@@ -19,3 +19,5 @@ export const TypingIndicator: React.FC = React.memo(() => {
     </div>
   );
 });
+
+TypingIndicator.displayName = "TypingIndicator";

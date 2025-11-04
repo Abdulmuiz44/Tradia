@@ -1,7 +1,7 @@
 // src/app/dashboard/billing/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -60,31 +60,7 @@ export default function BillingPage() {
   const canceled = searchParams?.get('canceled');
   const txRef = searchParams?.get('tx_ref') || searchParams?.get('txRef') || null;
 
-  useEffect(() => {
-    if (session?.user) {
-      loadBillingData();
-    }
-  }, [session]);
-
-  // If redirected from Flutterwave with tx_ref, verify explicitly to avoid waiting for webhook
-  useEffect(() => {
-    (async () => {
-      try {
-        if (success && txRef) {
-          await fetch('/api/payments/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ txRef })
-          });
-          // refresh plan/subscription once after verification
-          await loadBillingData();
-        }
-      } catch {}
-    })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [success, txRef]);
-
-  const loadBillingData = async () => {
+  const loadBillingData = useCallback(async () => {
     if (!session?.user?.id) return;
 
     try {
@@ -137,7 +113,33 @@ export default function BillingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (session?.user) {
+      void loadBillingData();
+    }
+  }, [session?.user, loadBillingData]);
+
+  // If redirected from Flutterwave with tx_ref, verify explicitly to avoid waiting for webhook
+  useEffect(() => {
+    if (!success || !txRef) return;
+
+    const runVerification = async () => {
+      try {
+        await fetch('/api/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ txRef })
+        });
+        await loadBillingData();
+      } catch {
+        // swallow errors; UI already reflects previous subscription state
+      }
+    };
+
+    void runVerification();
+  }, [success, txRef, loadBillingData]);
 
   const handleUpgrade = async (planType: PlanType) => {
     if (!session?.user?.email) return;

@@ -138,7 +138,7 @@ export default function UpgradePrompt({
               <div>
                 <h2 className="text-2xl font-bold">Upgrade to Unlock Premium Features</h2>
                 <p className="text-blue-100 mt-1">
-                  You're currently on the <span className="font-semibold">{getPlanDisplayName(currentPlan)} Plan</span>
+                  You&apos;re currently on the <span className="font-semibold">{getPlanDisplayName(currentPlan)} Plan</span>
                 </p>
               </div>
             </div>
