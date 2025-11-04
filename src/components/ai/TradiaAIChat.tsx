@@ -321,7 +321,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
       );
     }
 
-    let resolvedConversationId = activeConversationId ?? undefined;
+    let resolvedConversationId = activeConversationId ?? `conv-${Date.now()}`;
     let accumulatedText = '';
 
     const updateAssistantContent = (text: string) => {
