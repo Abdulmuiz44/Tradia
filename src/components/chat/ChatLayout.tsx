@@ -116,8 +116,9 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   const supabase = createClientComponentClient();
   const isAuthenticated = Boolean(session);
   const requestAuth = React.useCallback(() => {
-    signIn(undefined, { callbackUrl: "/chat" }).catch(() => {});
-  }, []);
+    // Navigate to the dedicated login flow to avoid silent failures when NextAuth cannot launch
+    router.push("/login");
+  }, [router]);
   const email = session?.user?.email || "";
   const userDisplayName = (user?.name?.trim?.() || session?.user?.name?.trim?.() || (email ? email.split("@")[0] : "Trader")) as string;
   const isAdmin = React.useMemo(() => user?.email?.toLowerCase() === "abdulmuizproject@gmail.com", [user?.email]);

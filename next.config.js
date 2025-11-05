@@ -47,24 +47,26 @@ const nextConfig = {
     ],
   },
 
-  webpack: (config) => {
-    config.cache = false; // Disable webpack cache to avoid pack file errors
-  if (process.env.ANALYZE === 'true' && process.env.NODE_ENV === 'production') {
-  try {
-  const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-  config.plugins.push(
-  new BundleAnalyzerPlugin({
-  analyzerMode: 'static',
-  reportFilename: './analyze/client.html',
-  openAnalyzer: false,
-  })
-  );
-  } catch (error) {
-  console.warn('Bundle analyzer not installed. Run: npm install --save-dev webpack-bundle-analyzer');
-  }
-  }
-  return config;
-  },
+  // Bundle analyzer for performance monitoring
+  ...(process.env.ANALYZE === 'true' && {
+    webpack: (config) => {
+      if (process.env.NODE_ENV === 'production') {
+        try {
+          const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+          config.plugins.push(
+            new BundleAnalyzerPlugin({
+              analyzerMode: 'static',
+              reportFilename: './analyze/client.html',
+              openAnalyzer: false,
+            })
+          );
+        } catch (error) {
+          console.warn('Bundle analyzer not installed. Run: npm install --save-dev webpack-bundle-analyzer');
+        }
+      }
+      return config;
+    },
+  }),
 
   // Performance optimizations
   swcMinify: true,
