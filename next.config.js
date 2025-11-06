@@ -38,8 +38,15 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['localhost', 'vercel.app'],
     remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vercel.app',
+      },
       {
         protocol: 'https',
         hostname: '**',
@@ -68,8 +75,7 @@ const nextConfig = {
     },
   }),
 
-  // Performance optimizations
-  swcMinify: true,
+  // Performance optimizations (SWC minify enabled by default in Next.js 13+)
 
   // Compression
   compress: true,
