@@ -66,7 +66,7 @@ export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {
   const equitySeries = useMemo(() => {
     let balance = 0;
     return trades.map((t) => {
-      balance += t.pnl;
+      balance += t.pnl || 0;
 
       // Safely handle date formatting with fallbacks
       let dateToFormat: Date;

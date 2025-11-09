@@ -30,7 +30,6 @@ const planColors: Record<PlanType, string> = {
 
 const planBgColors: Record<PlanType, string> = {
   free: 'bg-gray-50',
-  starter: 'bg-gray-50',
   pro: 'bg-blue-50',
   plus: 'bg-purple-50',
   elite: 'bg-yellow-50',
@@ -114,7 +113,6 @@ export const PricingCard: React.FC<PricingCardProps> = ({
         </CardTitle>
         <CardDescription className="text-sm">
           {plan === 'free' && 'Perfect for getting started'}
-          {plan === 'starter' && 'Great for casual traders'}
           {plan === 'pro' && 'For serious traders'}
           {plan === 'plus' && 'For professional traders'}
           {plan === 'elite' && 'Ultimate trading experience'}

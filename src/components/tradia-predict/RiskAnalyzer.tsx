@@ -319,7 +319,7 @@ function calculateRiskMetrics(trades: Trade[]): RiskMetrics {
 
   // Time risk (trading during risky hours)
   const riskyHours = trades.filter(trade => {
-    const hour = new Date(trade.openTime).getHours();
+    const hour = new Date(trade.openTime || Date.now()).getHours();
     return hour >= 22 || hour <= 6; // Asian/London overlap or thin liquidity
   }).length;
 

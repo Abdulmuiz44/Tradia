@@ -259,7 +259,8 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       return;
     }
 
-    const newTrade: Omit<Trade, 'id'> = {
+    const newTrade: Trade = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a temporary ID
       symbol: String(form.symbol ?? ""),
       direction: (String(form.direction ?? "Buy") as "Buy" | "Sell"),
       orderType: String(form.orderType ?? ""),
