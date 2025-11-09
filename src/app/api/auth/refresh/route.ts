@@ -6,8 +6,21 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { createAdminSupabase } from "@/utils/supabase/admin";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) console.warn("JWT_SECRET not set");
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+let loggedMissingSecret = false;
+const getJwtSecret = (): string | null => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (!loggedMissingSecret) {
+      console.warn("JWT_SECRET not set; refresh route is disabled.");
+      loggedMissingSecret = true;
+    }
+    return null;
+  }
+  return secret;
+};
 
 export async function POST() {
   try {
@@ -17,6 +30,11 @@ export async function POST() {
 
     if (!refreshRaw || !refreshId) {
       return NextResponse.json({ error: "Missing refresh credentials" }, { status: 401 });
+    }
+
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      return NextResponse.json({ error: "Server misconfigured." }, { status: 500 });
     }
 
     const supabase = createAdminSupabase();
@@ -65,7 +83,7 @@ export async function POST() {
         name: user.name,
         email_verified: Boolean(user.email_verified),
       },
-      JWT_SECRET,
+      jwtSecret,
       { expiresIn: "12h" }
     );
 

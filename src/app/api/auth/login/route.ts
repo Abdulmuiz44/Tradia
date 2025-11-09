@@ -5,8 +5,21 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { createAdminSupabase } from "@/utils/supabase/admin";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-if (!JWT_SECRET) console.warn("JWT_SECRET not set");
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+let loggedMissingSecret = false;
+const getJwtSecret = (): string | null => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (!loggedMissingSecret) {
+      console.warn("JWT_SECRET not set; login route is disabled.");
+      loggedMissingSecret = true;
+    }
+    return null;
+  }
+  return secret;
+};
 
 /**
  * POST /api/auth/login
@@ -21,6 +34,11 @@ export async function POST(req: Request) {
 
     if (!normalizedEmail || !password) {
       return NextResponse.json({ error: "Email and password required." }, { status: 400 });
+    }
+
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      return NextResponse.json({ error: "Server misconfigured." }, { status: 500 });
     }
 
     const supabase = createAdminSupabase();
@@ -77,7 +95,7 @@ export async function POST(req: Request) {
         plan,
         role,
       },
-      JWT_SECRET,
+      jwtSecret,
       { expiresIn: "12h" }
     );
 

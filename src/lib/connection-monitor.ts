@@ -1,6 +1,6 @@
 // src/lib/connection-monitor.ts
 import { MT5Credentials, ConnectionStatus } from '@/types/mt5';
-import { credentialStorage } from '@/lib/credential-storage';
+import { getCredentialStorage } from '@/lib/credential-storage';
 import { mt5ConnectionManager } from '@/lib/mt5-connection-manager';
 import { createClient } from '@/utils/supabase/server';
 
@@ -68,7 +68,8 @@ export class ConnectionMonitor {
     this.monitoringConfigs.set(userId, monitoringConfig);
 
     // Load existing credentials
-    const credentials = await credentialStorage.getUserCredentials(userId);
+    const storage = getCredentialStorage();
+    const credentials = await storage.getUserCredentials(userId);
 
     // Initialize health status for each credential
     for (const credential of credentials) {
@@ -222,7 +223,8 @@ export class ConnectionMonitor {
    * Perform health check for all user credentials
    */
   private async performHealthCheck(userId: string): Promise<void> {
-    const credentials = await credentialStorage.getUserCredentials(userId);
+    const storage = getCredentialStorage();
+    const credentials = await storage.getUserCredentials(userId);
     const config = this.monitoringConfigs.get(userId);
 
     if (!config) return;
@@ -245,7 +247,8 @@ export class ConnectionMonitor {
 
     try {
       // Get credentials for health check
-      const credentials: MT5Credentials | null = await credentialStorage.getCredentials(userId, credentialId);
+      const storage = getCredentialStorage();
+      const credentials: MT5Credentials | null = await storage.getCredentials(userId, credentialId);
       if (!credentials) {
         await this.updateHealthStatus(userId, credentialId, {
           status: 'error',

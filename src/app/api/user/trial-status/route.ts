@@ -6,6 +6,10 @@ import { createClient } from "@/utils/supabase/server";
 import { getTrialInfoByEmail } from "@/lib/trial";
 import { sendTrialExpiredEmail } from "@/lib/mailer";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -44,6 +48,9 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, info });
   } catch (err) {
+    if (err && typeof err === "object" && "digest" in err && (err as { digest?: unknown }).digest === "DYNAMIC_SERVER_USAGE") {
+      throw err;
+    }
     console.error("trial-status error:", err);
     return NextResponse.json({ error: "INTERNAL_ERROR" }, { status: 500 });
   }

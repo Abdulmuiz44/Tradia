@@ -2,9 +2,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { credentialStorage } from "@/lib/credential-storage";
+import { getCredentialStorage } from "@/lib/credential-storage";
 import { MT5Credentials } from "@/types/mt5";
 import { requireActiveTrialOrPaid } from "@/lib/trial";
+
+export const runtime = "nodejs";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -54,7 +56,8 @@ export async function GET() {
     }
 
     // Get user's credentials
-    const credentials = await credentialStorage.getUserCredentials(user.id);
+    const storage = getCredentialStorage();
+    const credentials = await storage.getUserCredentials(user.id);
 
     // Return credentials without sensitive data
     const safeCredentials = credentials.map(cred => ({
@@ -164,7 +167,8 @@ export async function POST(req: Request) {
     console.log('Credentials object before storeCredentials:', JSON.stringify(credentials, null, 2));
 
     // Store credentials securely
-    const storedCredential = await credentialStorage.storeCredentials(user.id, credentials);
+    const storage = getCredentialStorage();
+    const storedCredential = await storage.storeCredentials(user.id, credentials);
 
     // Log security audit
     await supabase.from("mt5_security_audit").insert({

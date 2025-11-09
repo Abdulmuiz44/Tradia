@@ -388,4 +388,6 @@ export class CredentialStorageService {
 }
 
 // Export singleton instance
-export const credentialStorage = CredentialStorageService.getInstance();
+export function getCredentialStorage(): CredentialStorageService {
+  return CredentialStorageService.getInstance();
+}

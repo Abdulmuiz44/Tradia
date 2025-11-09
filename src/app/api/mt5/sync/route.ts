@@ -2,9 +2,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { credentialStorage } from "@/lib/credential-storage";
+import { getCredentialStorage } from "@/lib/credential-storage";
 import { fetchDeals } from "@/lib/mtapi";
 import { requireActiveTrialOrPaid } from "@/lib/trial";
+
+export const runtime = "nodejs";
 
 type SyncBody = {
   credentialId?: string;
@@ -32,6 +34,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
     }
 
+    const storage = getCredentialStorage();
     const body: SyncBody = await req.json().catch(() => ({}));
     const { credentialId, from, to } = body;
 
@@ -47,7 +50,7 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      const creds = await credentialStorage.getCredentials(userId, credentialId);
+      const creds = await storage.getCredentials(userId, credentialId);
       if (!creds) {
         return NextResponse.json(
           { error: "CREDENTIALS_NOT_FOUND", message: "MT5 credentials not found or inactive" },

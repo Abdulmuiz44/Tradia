@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+export const runtime = "nodejs";
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -39,6 +41,11 @@ export async function GET(req: Request) {
   }
 
   // ✅ Re-issue JWT with updated email_verified
+  if (!JWT_SECRET) {
+    failUrl.searchParams.set("reason", "missing_secret");
+    return NextResponse.redirect(failUrl);
+  }
+
   const newToken = jwt.sign(
     {
       sub: user.id,

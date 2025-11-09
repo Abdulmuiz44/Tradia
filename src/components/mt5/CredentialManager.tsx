@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from "react";
 import { StoredCredential, MT5Credentials } from "@/types/mt5";
-import { credentialStorage } from "@/lib/credential-storage";
 import { encryptionService } from "@/lib/encryption";
 import {
   Plus,

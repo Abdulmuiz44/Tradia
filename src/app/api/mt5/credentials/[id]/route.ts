@@ -2,9 +2,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { credentialStorage } from "@/lib/credential-storage";
+import { getCredentialStorage } from "@/lib/credential-storage";
 import { createClient } from "@/utils/supabase/server";
 import { requireActiveTrialOrPaid } from "@/lib/trial";
+
+export const runtime = "nodejs";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -54,10 +56,11 @@ export async function GET(
       );
     }
 
+    const storage = getCredentialStorage();
     const credentialId = params.id;
 
     // Get the specific credential
-    const credential = await credentialStorage.getCredentials(user.id, credentialId);
+    const credential = await storage.getCredentials(user.id, credentialId);
 
     if (!credential) {
       return NextResponse.json(
@@ -67,7 +70,7 @@ export async function GET(
     }
 
     // Get credential metadata (without password)
-    const credentials = await credentialStorage.getUserCredentials(user.id);
+    const credentials = await storage.getUserCredentials(user.id);
     const metadata = credentials.find(c => c.id === credentialId);
 
     if (!metadata) {
@@ -147,6 +150,7 @@ export async function PUT(
       );
     }
 
+    const storage = getCredentialStorage();
     const credentialId = params.id;
     const body = await req.json() as {
       name?: string;
@@ -154,7 +158,7 @@ export async function PUT(
     };
 
     // Get existing credential for comparison
-    const existingCredential = await credentialStorage.getCredentials(user.id, credentialId);
+    const existingCredential = await storage.getCredentials(user.id, credentialId);
     if (!existingCredential) {
       return NextResponse.json(
         { error: "CREDENTIAL_NOT_FOUND", message: "Credential not found" },
@@ -170,7 +174,7 @@ export async function PUT(
     };
 
     // Store updated credential
-    const storedCredential = await credentialStorage.storeCredentials(user.id, updatedCredential);
+    const storedCredential = await storage.storeCredentials(user.id, updatedCredential);
 
     // Log security audit
     await supabase.from("mt5_security_audit").insert({
@@ -256,10 +260,11 @@ export async function DELETE(
       );
     }
 
+    const storage = getCredentialStorage();
     const credentialId = params.id;
 
     // Get credential info before deletion for audit
-    const credential = await credentialStorage.getCredentials(user.id, credentialId);
+    const credential = await storage.getCredentials(user.id, credentialId);
     if (!credential) {
       return NextResponse.json(
         { error: "CREDENTIAL_NOT_FOUND", message: "Credential not found" },
@@ -268,7 +273,7 @@ export async function DELETE(
     }
 
     // Delete the credential
-    await credentialStorage.deleteCredentials(user.id, credentialId);
+    await storage.deleteCredentials(user.id, credentialId);
 
     // Log security audit
     await supabase.from("mt5_security_audit").insert({
