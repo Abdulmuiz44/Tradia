@@ -120,8 +120,8 @@ interface TradingViewSyncPanelProps {
 }
 
 export default function TradingViewSyncPanel({ className = "" }: TradingViewSyncPanelProps): React.ReactElement {
-  const [plan, setPlan] = useState<PlanType>("starter");
-  const [usage, setUsage] = useState<UsageState>(() => createDefaultUsage("starter"));
+  const [plan, setPlan] = useState<PlanType>("free");
+  const [usage, setUsage] = useState<UsageState>(() => createDefaultUsage("free"));
   const [loadingUsage, setLoadingUsage] = useState(true);
   const [errors, setErrors] = useState<Record<TvFeatureKey, string | null>>({
     alerts: null,

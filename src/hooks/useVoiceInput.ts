@@ -16,7 +16,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any | null>(null);
   const { info, error: showError } = useToast();
 
   useEffect(() => {
@@ -30,7 +30,9 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
       recognition.lang = options.language || 'en-US';
       recognition.continuous = options.continuous ?? false;
       recognition.interimResults = options.interimResults ?? true;
-      recognition.maxAlternatives = options.maxAlternatives || 1;
+      if ('maxAlternatives' in recognition) {
+        (recognition as any).maxAlternatives = options.maxAlternatives || 1;
+      }
 
       recognition.onstart = () => {
         setIsListening(true);

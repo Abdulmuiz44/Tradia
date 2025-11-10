@@ -8,7 +8,7 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   data?: any;
-  actions?: NotificationAction[];
+  actions?: { action: string; title: string; icon?: string }[];
 }
 
 export const usePushNotifications = () => {
@@ -153,10 +153,8 @@ export const usePushNotifications = () => {
         icon: payload.icon || '/icon-192x192.png',
         badge: payload.badge || '/icon-192x192.png',
         data: payload.data,
-        actions: payload.actions,
-        vibrate: [100, 50, 100],
         requireInteraction: false,
-      });
+      } as NotificationOptions);
 
       trackEvent('push_notification_sent', {
         title: payload.title,
@@ -179,7 +177,7 @@ export const usePushNotifications = () => {
 };
 
 // Utility function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 
@@ -190,7 +188,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     outputArray[i] = rawData.charCodeAt(i);
   }
 
-  return outputArray;
+  return outputArray as Uint8Array<ArrayBuffer>;
 }
 
 // Backend integration functions
