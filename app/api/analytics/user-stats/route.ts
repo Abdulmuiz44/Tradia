@@ -314,14 +314,14 @@ export async function GET() {
       .from('user_profiles')
       .select('trading_style, trading_experience, created_at');
 
-    const tradingStyles = engagementData?.reduce((acc: Record<string, number>, profile) => {
+    const tradingStyles = engagementData?.reduce((acc: Record<string, number>, profile: any) => {
       if (profile.trading_style) {
         acc[profile.trading_style] = (acc[profile.trading_style] || 0) + 1;
       }
       return acc;
     }, {}) || {};
 
-    const tradingExperience = engagementData?.reduce((acc: Record<string, number>, profile) => {
+    const tradingExperience = engagementData?.reduce((acc: Record<string, number>, profile: any) => {
       if (profile.trading_experience) {
         acc[profile.trading_experience] = (acc[profile.trading_experience] || 0) + 1;
       }
