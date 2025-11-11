@@ -124,23 +124,11 @@ userName,
   const planLabel = useMemo(() => (plan ? plan.toUpperCase() : "FREE"), [plan]);
   const recognitionRef = useRef<any>(null);
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Only scroll to bottom after initial load is complete
-  useEffect(() => {
-    if (!initialLoadComplete && messages.length > 0) {
-      setInitialLoadComplete(true);
-      return;
-    }
-    if (initialLoadComplete && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages.length, initialLoadComplete]);
-
+  // Update input when voice transcript changes
   useEffect(() => {
     if (voiceTranscript) {
       setInputMessage(voiceTranscript);
-      textareaRef.current?.focus();
     }
   }, [voiceTranscript]);
 
@@ -153,7 +141,6 @@ userName,
     if (!trimmed) return;
     onSendMessage?.(trimmed);
     setInputMessage("");
-    textareaRef.current?.focus();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
