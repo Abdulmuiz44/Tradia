@@ -377,14 +377,6 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             >
               <PrimaryIcon className="h-4 w-4" />
             </Button>
-            <Button
-              size="sm"
-              onClick={handleCreateConversation}
-              className="h-9 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 px-4 text-xs font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-[1.03]"
-              title={secondaryLabel}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </header>

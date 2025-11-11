@@ -11,17 +11,21 @@ import FeedbackModal from "./FeedbackModal";
  *
  * Props:
  *  - showOnPaths?: string[]  => optional list of path prefixes (e.g. ['/dashboard']) when the button should show.
+ *  - hideOnPaths?: string[]  => optional list of path prefixes to explicitly hide the button on
  *  - position?: 'bottom-right' | 'bottom-left' => optional position (default bottom-right)
  *
  * Usage:
  *  <FloatingFeedbackButton />
  *  <FloatingFeedbackButton showOnPaths={['/dashboard']} />
+ *  <FloatingFeedbackButton hideOnPaths={['/chat']} />
  */
 export default function FloatingFeedbackButton({
   showOnPaths,
+  hideOnPaths,
   position = "bottom-right",
 }: {
   showOnPaths?: string[] | undefined;
+  hideOnPaths?: string[] | undefined;
   position?: "bottom-right" | "bottom-left";
 }) {
   const [open, setOpen] = useState(false);
@@ -37,18 +41,45 @@ export default function FloatingFeedbackButton({
 
   useEffect(() => {
     if (!mounted) return;
+    
+    const path = pathname ?? (typeof window !== "undefined" ? window.location.pathname : "/");
+    
+    // Check if we should hide on this path
+    if (hideOnPaths && hideOnPaths.length > 0) {
+      const shouldHide = hideOnPaths.some((p) => path.startsWith(p));
+      if (shouldHide) {
+        setVisible(false);
+        return;
+      }
+    }
+    
+    // Check if we should show only on specific paths
     if (!showOnPaths || showOnPaths.length === 0) {
       setVisible(true);
       return;
     }
-    const path = pathname ?? (typeof window !== "undefined" ? window.location.pathname : "/");
-    // show if any prefix matches
     const ok = showOnPaths.some((p) => path.startsWith(p));
     setVisible(ok);
+    
     // We also want to respond to client-side navigation (app router) changes.
     // Minimal listener to update on popstate.
     const onNav = () => {
       const newPath = pathname ?? (typeof window !== "undefined" ? window.location.pathname : "/");
+      
+      // Check hideOnPaths first
+      if (hideOnPaths && hideOnPaths.length > 0) {
+        const shouldHide = hideOnPaths.some((p) => newPath.startsWith(p));
+        if (shouldHide) {
+          setVisible(false);
+          return;
+        }
+      }
+      
+      // Then check showOnPaths
+      if (!showOnPaths || showOnPaths.length === 0) {
+        setVisible(true);
+        return;
+      }
       const matches = showOnPaths.some((p) => newPath.startsWith(p));
       setVisible(matches);
     };
@@ -61,7 +92,7 @@ export default function FloatingFeedbackButton({
       window.removeEventListener("replacestate" as any, onNav);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showOnPaths, mounted, pathname]);
+  }, [showOnPaths, hideOnPaths, mounted, pathname]);
 
   if (!visible) return null;
 
