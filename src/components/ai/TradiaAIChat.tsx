@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import * as TradeContextModule from '@/context/TradeContext';
 import { useUser } from '@/context/UserContext';
 import { ChatLayout } from '../chat/ChatLayout';
@@ -37,6 +38,8 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     onConversationsChange,
     onLoadingChange,
   } = props;
+  const router = useRouter();
+  const pathname = usePathname();
   const tradeContext = (TradeContextModule as { useTrade: () => any }).useTrade();
   const trades: Trade[] = tradeContext.trades || [];
   const { user, loading } = useUser();
@@ -142,11 +145,14 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         setActiveConversationId(newConversation.id);
         onActiveConversationChange?.(newConversation.id);
         setMessages([]);
+        
+        // Navigate to the new conversation
+        router.push(`/chat/${newConversation.id}`);
       }
     } catch (error) {
       console.error('Failed to create conversation:', error);
     }
-  }, [model, assistantMode, onActiveConversationChange, user]);
+  }, [model, assistantMode, onActiveConversationChange, user, router]);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
     if (!user) {
@@ -160,6 +166,10 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         const data = await response.json();
         setActiveConversationId(conversationId);
         onActiveConversationChange?.(conversationId);
+        
+        // Navigate to the conversation URL
+        router.push(`/chat/${conversationId}`);
+        
         setMessages(data.messages.map((msg: any) => ({
           id: msg.id,
           type: msg.type,
@@ -177,7 +187,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     } catch (error) {
       console.error('Failed to load conversation:', error);
     }
-  }, [user, onActiveConversationChange]);
+  }, [user, onActiveConversationChange, router]);
 
   const handleDeleteConversation = useCallback(async (conversationId: string) => {
     if (!user) {
@@ -397,6 +407,9 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         resolvedConversationId = headerConversationId;
         setActiveConversationId(headerConversationId);
         onActiveConversationChange?.(headerConversationId);
+        
+        // Navigate to the new conversation URL
+        router.push(`/chat/${headerConversationId}`);
       }
 
       if (!response.body) {
@@ -544,19 +557,24 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
       }
 
       console.error('Error sending message:', error);
-      let errorContent = 'Sorry, I encountered an error. Please try again.';
+      let errorContent = '👋 Hey there! I ran into a hiccup while processing your request. Let me try to help you figure out what happened.';
       let canRetry = false;
 
       if (error instanceof Error) {
         const message = error.message;
         if (message.includes('temporarily busy') || message.includes('rate')) {
-          errorContent = '🤖 AI service is currently busy. Please wait a moment and try again.';
+          errorContent = '🤖 Looks like I\'m getting a lot of requests right now! Give me just a moment to catch my breath, and I\'ll be right with you. Try again in a few seconds?';
           canRetry = true;
-        } else if (message.includes('Authentication')) {
-          errorContent = '🔐 Authentication error. Please refresh the page and log in again.';
+        } else if (message.includes('Authentication') || message.includes('Unauthorized')) {
+          errorContent = '🔐 Hmm, it seems like we need to verify your identity again. Could you refresh the page and log back in? I\'ll be waiting here for you!';
         } else if (message.includes('Database')) {
-          errorContent = '💾 Database connection issue. Please try again in a few seconds.';
+          errorContent = '💾 I\'m having trouble connecting to my memory banks. This usually resolves itself in a few seconds. Mind trying again shortly?';
           canRetry = true;
+        } else if (message.includes('timeout') || message.includes('timed out')) {
+          errorContent = '⏱️ That took longer than expected! Sometimes the AI service needs a bit more time. Let\'s give it another shot?';
+          canRetry = true;
+        } else if (message.includes('configuration') || message.includes('api key')) {
+          errorContent = '⚙️ There seems to be a configuration issue on my end. This is something my developers need to look at. Could you reach out to support?';
         } else {
           errorContent = message;
         }

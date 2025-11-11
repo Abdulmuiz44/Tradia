@@ -252,9 +252,11 @@ export async function POST(req: Request) {
     }
 
     const tradeData = await req.json();
-    console.log("POST /api/trades: Received trade data", { userId, symboldata: tradeData.symbol });
+    console.log("POST /api/trades: Received trade data", { userId, symbol: tradeData.symbol });
     
-    const supabase = createClient();
+    // Use admin client for API routes
+    const { createAdminClient } = await import("@/utils/supabase/admin");
+    const supabase = createAdminClient();
 
     // Generate trade ID
     const tradeId = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -277,6 +279,8 @@ export async function POST(req: Request) {
       source: "manual"
     };
 
+    console.log("POST /api/trades: Attempting to insert trade", { tradeId, userId, symbol: normalizedTrade.symbol });
+
     const { data, error } = await supabase
       .from("trades")
       .insert(normalizedTrade)
@@ -284,7 +288,14 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.error("POST /api/trades: Supabase error", { error, userId, symbol: tradeData.symbol });
+      console.error("POST /api/trades: Supabase error", { 
+        error, 
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details,
+        userId, 
+        symbol: tradeData.symbol 
+      });
       throw error;
     }
 
