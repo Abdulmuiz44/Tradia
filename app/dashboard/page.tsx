@@ -394,7 +394,9 @@ function DashboardContent() {
     const handleNavigateToTab = (event: any) => {
       const tab = event.detail;
       if (tab && typeof tab === 'string') {
-        setActiveTab(tab);
+        React.startTransition(() => {
+          setActiveTab(tab);
+        });
       }
     };
 
@@ -567,7 +569,7 @@ function DashboardContent() {
               <DashboardSidebar
                 tabs={TAB_DEFS}
                 activeTab={activeTab}
-                setActiveTab={(tab) => setActiveTab(tab)}
+                setActiveTab={(tab) => React.startTransition(() => setActiveTab(tab))}
               />
             </div>
 
@@ -660,7 +662,10 @@ function DashboardContent() {
               <DashboardSidebar
                 tabs={TAB_DEFS}
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={(tab) => {
+                  React.startTransition(() => setActiveTab(tab));
+                  setMobileMenuOpen(false);
+                }}
                 isMobile={true}
                 onClose={() => setMobileMenuOpen(false)}
               />

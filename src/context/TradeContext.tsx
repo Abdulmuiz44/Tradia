@@ -507,6 +507,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           title: "Trade added",
           description: "Your trade has been successfully recorded.",
         });
+        // Refresh to ensure consistency with database
+        await refreshTrades();
       } catch (error: unknown) {
         console.error("Error adding trade:", error);
         notify({
@@ -547,6 +549,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         setTrades((prev: Trade[]) =>
           prev.map((existing) => (existing.id === trade.id ? transformedTrade : existing)),
         );
+        // Refresh to ensure consistency with database
+        await refreshTrades();
         notify({
           variant: "success",
           title: "Trade updated",
@@ -586,6 +590,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         }
 
         setTrades((prev: Trade[]) => prev.filter((existing) => existing.id !== tradeId));
+        // Refresh to ensure consistency with database
+        await refreshTrades();
         notify({
           variant: "success",
           title: "Trade deleted",
