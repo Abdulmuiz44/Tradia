@@ -284,8 +284,8 @@ userName,
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
-      <ScrollArea className="flex-1">
-        <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-12">
+      <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-12 pb-8">
           {messages.map((message, index) => (
           <MessageBubble
           key={message.id}
@@ -305,7 +305,7 @@ userName,
         </div>
       </ScrollArea>
 
-      <div className="relative px-4 pb-10 pt-6">
+      <div className="sticky bottom-0 z-20 flex-shrink-0 bg-[#050b18] px-4 pb-6 pt-4 border-t border-indigo-500/20">
         
         <div className="mx-auto w-full max-w-3xl space-y-4">
           {selectedTradeIds.length > 0 && (

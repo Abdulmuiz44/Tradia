@@ -300,7 +300,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
       className,
     )}
     >
-      <header className="sticky top-0 z-30 h-[68px] border-b border-indigo-500/40 bg-[#050b18]">
+      <header className="sticky top-0 z-30 flex-shrink-0 h-[68px] border-b border-indigo-500/40 bg-[#050b18]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
             {!hideSidebar && (
