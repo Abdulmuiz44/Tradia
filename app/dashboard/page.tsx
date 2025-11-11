@@ -73,12 +73,6 @@ label: "Tradia AI",
 icon: "Bot",
 href: "/chat",
 },
-{
-value: "tradia-predict",
-label: "Tradia Predict",
-icon: "Brain",
-href: "/tradia-predict",
-},
 { value: "risk", label: "Risk Management", icon: "Shield", href: "/dashboard/risk-management" },
 { value: "reporting", label: "Reporting", icon: "FileText", href: "/dashboard/reporting" },
 { value: "planner", label: "Trade Planner", icon: "Target" },
@@ -89,6 +83,12 @@ href: "/tradia-predict",
 
 // Admin-only tabs
 const ADMIN_TAB_DEFS: DashboardTabDef[] = [
+  {
+    value: "tradia-predict",
+    label: "Tradia Predict",
+    icon: "Brain",
+    href: "/tradia-predict",
+  },
   { value: "user-analytics", label: "User Analytics", icon: "Users" },
 ];
 
@@ -505,10 +505,6 @@ function DashboardContent() {
     const normalizedPlan = rawPlan === 'starter' ? 'free' : rawPlan;
 
     let tabs = BASE_TAB_DEFS;
-
-    if (normalizedPlan !== 'pro' && normalizedPlan !== 'plus' && normalizedPlan !== 'elite') {
-        tabs = tabs.filter(t => t.value !== 'tradia-predict');
-    }
 
     // Hide upgrade tab for elite users
     const base = (normalizedPlan === 'elite' || isAdmin)

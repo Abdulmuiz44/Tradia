@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/utils/supabase/client";
 import {
   PLAN_LIMITS,
   type PlanType,
@@ -403,7 +403,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
   const { notify } = useNotification();
   const { user } = useUser();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const fetchTrades = useCallback(async (): Promise<Trade[]> => {
     if (!user?.id) {
@@ -427,7 +427,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       return [];
     }
 
-    const transformedTrades = (data ?? []).map((item) => transformTradeForFrontend(item as Record<string, unknown>));
+    const transformedTrades = (data ?? []).map((item: any) => transformTradeForFrontend(item as Record<string, unknown>));
     setTrades(transformedTrades);
     return transformedTrades;
   }, [notify, supabase, user?.id]);
