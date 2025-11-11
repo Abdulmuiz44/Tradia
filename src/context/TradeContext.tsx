@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/utils/supabase/client";
 import {
   PLAN_LIMITS,
   type PlanType,
@@ -403,7 +403,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
   const { notify } = useNotification();
   const { user } = useUser();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const fetchTrades = useCallback(async (): Promise<Trade[]> => {
     if (!user?.id) {
@@ -427,7 +427,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       return [];
     }
 
-    const transformedTrades = (data ?? []).map((item) => transformTradeForFrontend(item as Record<string, unknown>));
+    const transformedTrades = (data ?? []).map((item: any) => transformTradeForFrontend(item as Record<string, unknown>));
     setTrades(transformedTrades);
     return transformedTrades;
   }, [notify, supabase, user?.id]);
@@ -507,6 +507,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           title: "Trade added",
           description: "Your trade has been successfully recorded.",
         });
+        // Refresh to ensure consistency with database
+        await refreshTrades();
       } catch (error: unknown) {
         console.error("Error adding trade:", error);
         notify({
@@ -547,6 +549,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         setTrades((prev: Trade[]) =>
           prev.map((existing) => (existing.id === trade.id ? transformedTrade : existing)),
         );
+        // Refresh to ensure consistency with database
+        await refreshTrades();
         notify({
           variant: "success",
           title: "Trade updated",
@@ -586,6 +590,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         }
 
         setTrades((prev: Trade[]) => prev.filter((existing) => existing.id !== tradeId));
+        // Refresh to ensure consistency with database
+        await refreshTrades();
         notify({
           variant: "success",
           title: "Trade deleted",

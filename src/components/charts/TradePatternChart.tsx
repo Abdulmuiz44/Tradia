@@ -45,7 +45,7 @@ export default function TradePatternChart({
             cy="50%"
             labelLine={false}
             label={({ name, percent }): string =>
-              `${name}: ${percent !== undefined ? (percent * 100).toFixed(0) : "0"}%`
+              `${name}: ${percent !== undefined && typeof percent === 'number' ? (percent * 100).toFixed(0) : "0"}%`
             }
             outerRadius={120}
             fill="#8884d8"

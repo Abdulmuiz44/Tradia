@@ -391,7 +391,7 @@ export default function TradeJournal(): React.ReactElement {
   const planType = resolvePlanType(rawPlan);
   const effectivePlan: PlanType = isAdmin ? "elite" : planType;
   const planLimits = PLAN_LIMITS[effectivePlan];
-  const planRank: Record<PlanType, number> = { free: 0, starter: 0, pro: 1, plus: 2, elite: 3 };
+  const planRank: Record<PlanType, number> = { free: 0, pro: 1, plus: 2, elite: 3 };
   const hasPlan = (min: PlanType = "free") => planRank[effectivePlan] >= planRank[min];
 
   const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;

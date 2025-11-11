@@ -5,11 +5,16 @@ const TradiaAIChat = dynamic(() => import("@/components/ai/TradiaAIChat"), {
   ssr: false,
 });
 
-export default function ChatPage() {
+interface ChatPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function ChatConversationPage({ params }: ChatPageProps) {
   return (
     <div className="min-h-screen bg-[#061226] text-white">
-      <TradiaAIChat />
+      <TradiaAIChat activeConversationId={params.id} />
     </div>
   );
 }
-

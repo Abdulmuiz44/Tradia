@@ -980,10 +980,17 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                 </button>
                 <button
                   onClick={() => {
-                    // Navigate to trade history or show import modal
-                    if (window && window.dispatchEvent) {
-                      window.dispatchEvent(new CustomEvent('showImportModal'));
-                    }
+                    // Navigate to trade history tab
+                    const event = new CustomEvent('navigateToTab', { detail: 'history' });
+                    window.dispatchEvent(event);
+                    // Scroll to top
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    // Show import modal after short delay
+                    setTimeout(() => {
+                      if (window && window.dispatchEvent) {
+                        window.dispatchEvent(new CustomEvent('showImportModal'));
+                      }
+                    }, 300);
                   }}
                   className="px-4 py-2 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-colors"
                 >

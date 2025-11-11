@@ -81,7 +81,7 @@ export class CredentialStorageService {
     const userKey = encryptionService.deriveKey(this.masterKey, userId);
 
     // Encrypt the password
-    const encryptedPassword = encryptionService.encrypt(credentials.investorPassword || '', userKey);
+    const encryptedPassword = encryptionService.encrypt(credentials.password || '', userKey);
 
     // Check for existing credential with same server/login
     const { data: existing } = await supabase
@@ -258,11 +258,11 @@ export class CredentialStorageService {
     }
 
     // Password validation
-    if (!credentials.investorPassword) {
+    if (!credentials.password) {
       errors.push('Password is required');
       securityScore -= 40;
     } else {
-      const passwordStrength = this.assessPasswordStrength(credentials.investorPassword);
+      const passwordStrength = this.assessPasswordStrength(credentials.password);
       securityScore -= (100 - passwordStrength.score);
 
       if (passwordStrength.warnings.length > 0) {
@@ -371,9 +371,9 @@ export class CredentialStorageService {
 
     for (const credential of credentials) {
       const plainPassword = await this.getCredentials(userId, credential.id);
-      if (!plainPassword || !plainPassword.investorPassword) continue;
+      if (!plainPassword || !plainPassword.password) continue;
 
-      const newEncryptedPassword = encryptionService.encrypt(plainPassword.investorPassword, newUserKey);
+      const newEncryptedPassword = encryptionService.encrypt(plainPassword.password, newUserKey);
 
       await supabase
         .from('mt5_credentials')

@@ -244,14 +244,19 @@ const mapToCamelCase = (data: any) => {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
+    const userId = (session?.user as any)?.id;
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.error("POST /api/trades: No userId in session", { session });
+      return NextResponse.json({ error: "Unauthorized - Please log in again" }, { status: 401 });
     }
 
     const tradeData = await req.json();
-    const supabase = createClient();
+    console.log("POST /api/trades: Received trade data", { userId, symbol: tradeData.symbol });
+    
+    // Use admin client for API routes
+    const { createAdminClient } = await import("@/utils/supabase/admin");
+    const supabase = createAdminClient();
 
     // Generate trade ID
     const tradeId = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -274,17 +279,30 @@ export async function POST(req: Request) {
       source: "manual"
     };
 
+    console.log("POST /api/trades: Attempting to insert trade", { tradeId, userId, symbol: normalizedTrade.symbol });
+
     const { data, error } = await supabase
       .from("trades")
       .insert(normalizedTrade)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("POST /api/trades: Supabase error", { 
+        error, 
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details,
+        userId, 
+        symbol: tradeData.symbol 
+      });
+      throw error;
+    }
 
+    console.log("POST /api/trades: Trade created successfully", { tradeId, userId });
     return NextResponse.json({ trade: mergeTradeSecret(userId, data) });
   } catch (err: unknown) {
-    console.error("Failed to create trade:", err);
+    console.error("POST /api/trades: Failed to create trade:", err);
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message || "Failed to create trade" }, { status: 500 });
   }

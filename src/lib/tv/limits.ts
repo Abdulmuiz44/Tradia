@@ -24,13 +24,13 @@ export interface TvPlanLimit {
 }
 
 function normalizePlan(plan: PlanType | string | null | undefined): PlanType {
-  if (!plan) return "starter";
+  if (!plan) return "free";
   const lower = String(plan).toLowerCase();
   if (["free", "starter", "pro", "plus", "elite"].includes(lower)) {
     return lower as PlanType;
   }
   if (lower === "premium") return "plus";
-  return "starter";
+  return "free";
 }
 
 export function getTvLimitForPlan(

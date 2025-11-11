@@ -662,7 +662,7 @@ ${this.generatePlanFooter()}`;
     cutoffDate.setDate(cutoffDate.getDate() - maxDays);
 
     return trades.filter(trade => {
-      const tradeDate = trade.closeTime ? new Date(trade.closeTime) : new Date(trade.openTime);
+      const tradeDate = trade.closeTime ? new Date(trade.closeTime || Date.now()) : new Date(trade.openTime || Date.now());
       return tradeDate >= cutoffDate;
     });
   }
@@ -1407,7 +1407,7 @@ What specific aspect of your trading would you like to explore? I'm here to help
 
     trades.forEach(trade => {
       if (trade.openTime) {
-        const hour = new Date(trade.openTime).getHours();
+        const hour = new Date(trade.openTime || Date.now()).getHours();
         const hourStr = hour.toString().padStart(2, '0') + ':00';
 
         if (!hourlyStats[hourStr]) {

@@ -300,7 +300,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
       className,
     )}
     >
-      <header className="sticky top-0 z-30 h-[68px] border-b border-indigo-500/40 bg-[#050b18]">
+      <header className="sticky top-0 z-30 flex-shrink-0 h-[68px] border-b border-indigo-500/40 bg-[#050b18]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
             {!hideSidebar && (
@@ -376,14 +376,6 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
               title={authButtonLabel}
             >
               <PrimaryIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleCreateConversation}
-              className="h-9 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 px-4 text-xs font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-[1.03]"
-              title={secondaryLabel}
-            >
-              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </div>

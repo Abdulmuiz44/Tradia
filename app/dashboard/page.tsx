@@ -1,6 +1,7 @@
 "use client"; // enable client-side rendering
 
 import React, { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -12,21 +13,7 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import TradeMigrationModal from "@/components/modals/TradeMigrationModal";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import OverviewCards from "@/components/dashboard/OverviewCards";
-import WeeklyCoachRecap from "@/components/dashboard/WeeklyCoachRecap";
-import RiskGuard from "@/components/dashboard/RiskGuard";
-import MentalCoach from "@/components/dashboard/MentalCoach";
-import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
-import RiskMetrics from "@/components/dashboard/RiskMetrics";
-import PositionSizing from "@/components/dashboard/PositionSizing";
-import TraderEducation from "@/components/dashboard/TraderEducation";
-import TradeJournal from "@/components/dashboard/TradeJournal";
-import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
-import PricingPlans from "@/components/payment/PricingPlans";
-import UserAnalyticsDashboard from "@/components/analytics/UserAnalyticsDashboard";
-
-import TradiaAIChat from "@/components/ai/TradiaAIChat";
+import { createClient } from "@/utils/supabase/client";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -41,17 +28,31 @@ import {
 } from "lucide-react";
 import ClientOnly from "@/components/ClientOnly";
 import LayoutClient from "@/components/LayoutClient";
-import TradeAnalytics from "@/components/dashboard/TradeAnalytics";
-import SurveyPrompt from "@/components/marketing/SurveyPrompt";
-
-
-// Chart Components
-import ProfitLossChart from "@/components/charts/ProfitLossChart";
-import DrawdownChart from "@/components/charts/DrawdownChart";
-import PerformanceTimeline from "@/components/charts/PerformanceTimeline";
-import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
-import TradePatternChart from "@/components/charts/TradePatternChart";
 import NotificationBell from "@/components/notifications/NotificationBell";
+
+// Lazy load heavy components for faster initial load
+const OverviewCards = dynamic(() => import("@/components/dashboard/OverviewCards"), { ssr: false });
+const WeeklyCoachRecap = dynamic(() => import("@/components/dashboard/WeeklyCoachRecap"), { ssr: false });
+const RiskGuard = dynamic(() => import("@/components/dashboard/RiskGuard"), { ssr: false });
+const MentalCoach = dynamic(() => import("@/components/dashboard/MentalCoach"), { ssr: false });
+const TradeHistoryTable = dynamic(() => import("@/components/dashboard/TradeHistoryTable"), { ssr: false });
+const RiskMetrics = dynamic(() => import("@/components/dashboard/RiskMetrics"), { ssr: false });
+const PositionSizing = dynamic(() => import("@/components/dashboard/PositionSizing"), { ssr: false });
+const TraderEducation = dynamic(() => import("@/components/dashboard/TraderEducation"), { ssr: false });
+const TradeJournal = dynamic(() => import("@/components/dashboard/TradeJournal"), { ssr: false });
+const TradePlannerTable = dynamic(() => import("@/components/dashboard/TradePlannerTable"), { ssr: false });
+const PricingPlans = dynamic(() => import("@/components/payment/PricingPlans"), { ssr: false });
+const UserAnalyticsDashboard = dynamic(() => import("@/components/analytics/UserAnalyticsDashboard"), { ssr: false });
+const TradiaAIChat = dynamic(() => import("@/components/ai/TradiaAIChat"), { ssr: false });
+const TradeAnalytics = dynamic(() => import("@/components/dashboard/TradeAnalytics"), { ssr: false });
+const SurveyPrompt = dynamic(() => import("@/components/marketing/SurveyPrompt"), { ssr: false });
+
+// Chart Components - lazy loaded
+const ProfitLossChart = dynamic(() => import("@/components/charts/ProfitLossChart"), { ssr: false });
+const DrawdownChart = dynamic(() => import("@/components/charts/DrawdownChart"), { ssr: false });
+const PerformanceTimeline = dynamic(() => import("@/components/charts/PerformanceTimeline"), { ssr: false });
+const TradeBehavioralChart = dynamic(() => import("@/components/charts/TradeBehavioralChart"), { ssr: false });
+const TradePatternChart = dynamic(() => import("@/components/charts/TradePatternChart"), { ssr: false });
 
 type DashboardTabDef = {
   value: string;
@@ -73,12 +74,6 @@ label: "Tradia AI",
 icon: "Bot",
 href: "/chat",
 },
-{
-value: "tradia-predict",
-label: "Tradia Predict",
-icon: "Brain",
-href: "/tradia-predict",
-},
 { value: "risk", label: "Risk Management", icon: "Shield", href: "/dashboard/risk-management" },
 { value: "reporting", label: "Reporting", icon: "FileText", href: "/dashboard/reporting" },
 { value: "planner", label: "Trade Planner", icon: "Target" },
@@ -89,6 +84,12 @@ href: "/tradia-predict",
 
 // Admin-only tabs
 const ADMIN_TAB_DEFS: DashboardTabDef[] = [
+  {
+    value: "tradia-predict",
+    label: "Tradia Predict",
+    icon: "Brain",
+    href: "/tradia-predict",
+  },
   { value: "user-analytics", label: "User Analytics", icon: "Users" },
 ];
 
@@ -195,7 +196,7 @@ const monthsAgo = (months: number) => {
 function DashboardContent() {
   const { data: session } = useSession();
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -388,6 +389,23 @@ function DashboardContent() {
     checkAuth();
   }, [session]);
 
+  // Listen for navigate to tab event from OverviewCards
+  useEffect(() => {
+    const handleNavigateToTab = (event: any) => {
+      const tab = event.detail;
+      if (tab && typeof tab === 'string') {
+        React.startTransition(() => {
+          setActiveTab(tab);
+        });
+      }
+    };
+
+    window.addEventListener('navigateToTab', handleNavigateToTab);
+    return () => {
+      window.removeEventListener('navigateToTab', handleNavigateToTab);
+    };
+  }, []);
+
   /* ---------------------------
      Hooks that must run every render (unconditional)
      --------------------------- */
@@ -506,10 +524,6 @@ function DashboardContent() {
 
     let tabs = BASE_TAB_DEFS;
 
-    if (normalizedPlan !== 'pro' && normalizedPlan !== 'plus' && normalizedPlan !== 'elite') {
-        tabs = tabs.filter(t => t.value !== 'tradia-predict');
-    }
-
     // Hide upgrade tab for elite users
     const base = (normalizedPlan === 'elite' || isAdmin)
       ? tabs.filter(t => t.value !== 'upgrade')
@@ -530,7 +544,7 @@ function DashboardContent() {
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
-    <main className="min-h-screen w-full bg-[var(--surface-primary)] dark:bg-[#0D1117] transition-colors duration-300 overflow-x-hidden">
+    <main className="min-h-screen w-full bg-[#061226] text-white transition-colors duration-300 overflow-x-hidden">
     <TradeMigrationModal
     open={showMigrationPrompt}
     onClose={handleMigrationClose}
@@ -546,7 +560,7 @@ function DashboardContent() {
               <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
               <div>
                 <h1 className="text-slate-900 dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
-                <p className="text-slate-500 dark:text-gray-300 text-xs">Trading Dashboard</p>
+                <p className="text-slate-500 dark:text-white text-xs font-semibold">Trading Dashboard</p>
               </div>
             </div>
 
@@ -555,7 +569,7 @@ function DashboardContent() {
               <DashboardSidebar
                 tabs={TAB_DEFS}
                 activeTab={activeTab}
-                setActiveTab={(tab) => setActiveTab(tab)}
+                setActiveTab={(tab) => React.startTransition(() => setActiveTab(tab))}
               />
             </div>
 
@@ -572,10 +586,10 @@ function DashboardContent() {
                       <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 text-left">
-                      <p className="text-[var(--text-primary)] dark:text-white text-sm font-medium truncate">
+                      <p className="text-[var(--text-primary)] dark:text-white text-sm font-bold truncate">
                         {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-[var(--text-muted)] dark:text-gray-400 text-xs truncate">
+                      <p className="text-[var(--text-muted)] dark:text-gray-200 text-xs font-semibold truncate">
                         {session?.user?.email || ''}
                       </p>
                     </div>
@@ -599,21 +613,21 @@ function DashboardContent() {
 
                   <button
                     onClick={() => router.push("/dashboard/profile")}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-semibold"
                   >
                     <User className="w-4 h-4 text-black dark:text-white" />
                     <span>Profile</span>
                   </button>
                   <button
                     onClick={() => router.push("/dashboard/settings")}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-semibold"
                   >
                     <Settings className="w-4 h-4 text-black dark:text-white" />
                     <span>Settings</span>
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-light"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold"
                   >
                     <span>Sign Out</span>
                   </button>
@@ -648,7 +662,10 @@ function DashboardContent() {
               <DashboardSidebar
                 tabs={TAB_DEFS}
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={(tab) => {
+                  React.startTransition(() => setActiveTab(tab));
+                  setMobileMenuOpen(false);
+                }}
                 isMobile={true}
                 onClose={() => setMobileMenuOpen(false)}
               />
@@ -670,8 +687,8 @@ function DashboardContent() {
                 <Menu size={20} />
               </button>
               <div>
-                <h1 className="text-lg md:text-xl font-semibold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
-                <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
+                <p className="text-[var(--text-secondary)] dark:text-white text-xs sm:text-sm font-semibold hidden sm:block">
                   {activeTab === "chat" ? 'Your personal trading coach with voice support' :
                    activeTab === "overview" ? 'Comprehensive trading overview and key metrics' :
                    activeTab === "analytics" ? 'Detailed performance analytics and insights' :
@@ -682,7 +699,7 @@ function DashboardContent() {
                 {/* Admin Status Indicator */}
                 <div className="flex items-center gap-2 mt-1">
                   <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-slate-400 dark:bg-gray-500'}`}></div>
-                  <span className="text-xs text-[var(--text-secondary)] dark:text-white">
+                  <span className="text-xs text-[var(--text-secondary)] dark:text-white font-semibold">
                     {isAdmin ? 'Admin Access' : 'Standard Access'}
                   </span>
                 </div>

@@ -188,8 +188,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Trial banner */}
           <TrialBanner />
           {children}
-          {/* keep floating button available app-wide */}
-          <FloatingFeedbackButton />
+          {/* keep floating button available app-wide, but hide on chat page */}
+          <FloatingFeedbackButton hideOnPaths={['/chat']} />
           <SpeedInsights />
         </Providers>
       </body>

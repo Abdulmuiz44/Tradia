@@ -6,6 +6,7 @@ import { Pool, PoolConfig } from "pg";
  * - Prefer using DATABASE_URL (e.g. Supabase)
  * - Falls back to discrete DB_USER/DB_PASSWORD/etc if needed
  * - Uses a global cached Pool so multiple serverless invocations don't create many connections
+ * - Lazy initialization to prevent build-time errors
  */
 
 declare global {
@@ -59,8 +60,17 @@ function makePool(): Pool {
   return new Pool(cfg);
 }
 
-// Use a global pool in Node dev / serverless environments to avoid creating many clients
-const pool: Pool = global.__global_pg_pool__ ?? makePool();
-if (!global.__global_pg_pool__) global.__global_pg_pool__ = pool;
+// Lazy initialization - only create pool when accessed
+function getPool(): Pool {
+  if (!global.__global_pg_pool__) {
+    global.__global_pg_pool__ = makePool();
+  }
+  return global.__global_pg_pool__;
+}
 
-export { pool };
+// Export a getter instead of the pool directly to enable lazy initialization
+export const pool = new Proxy({} as Pool, {
+  get(target, prop) {
+    return (getPool() as any)[prop];
+  }
+});

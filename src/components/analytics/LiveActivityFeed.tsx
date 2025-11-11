@@ -50,7 +50,7 @@ export default function LiveActivityFeed() {
           setItems(prev => [payload.new as ActivityItem, ...prev].slice(0, 100));
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         setConnected(status === 'SUBSCRIBED');
       });
 

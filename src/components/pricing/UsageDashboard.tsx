@@ -50,7 +50,7 @@ export const UsageDashboard: React.FC<UsageDashboardProps> = ({
       icon: <FileText className="w-5 h-5" />,
       label: 'File Uploads',
       used: usageStats.uploads,
-      limit: limits.maxFileUploadsPerDay,
+      limit: 10, // Default limit for file uploads
       description: 'Files uploaded today',
       color: 'green',
     },
