@@ -244,13 +244,16 @@ const mapToCamelCase = (data: any) => {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
+    const userId = (session?.user as any)?.id;
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.error("POST /api/trades: No userId in session", { session });
+      return NextResponse.json({ error: "Unauthorized - Please log in again" }, { status: 401 });
     }
 
     const tradeData = await req.json();
+    console.log("POST /api/trades: Received trade data", { userId, symboldata: tradeData.symbol });
+    
     const supabase = createClient();
 
     // Generate trade ID
@@ -280,11 +283,15 @@ export async function POST(req: Request) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("POST /api/trades: Supabase error", { error, userId, symbol: tradeData.symbol });
+      throw error;
+    }
 
+    console.log("POST /api/trades: Trade created successfully", { tradeId, userId });
     return NextResponse.json({ trade: mergeTradeSecret(userId, data) });
   } catch (err: unknown) {
-    console.error("Failed to create trade:", err);
+    console.error("POST /api/trades: Failed to create trade:", err);
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message || "Failed to create trade" }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 "use client"; // enable client-side rendering
 
 import React, { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -12,21 +13,7 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import TradeMigrationModal from "@/components/modals/TradeMigrationModal";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import OverviewCards from "@/components/dashboard/OverviewCards";
-import WeeklyCoachRecap from "@/components/dashboard/WeeklyCoachRecap";
-import RiskGuard from "@/components/dashboard/RiskGuard";
-import MentalCoach from "@/components/dashboard/MentalCoach";
-import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
-import RiskMetrics from "@/components/dashboard/RiskMetrics";
-import PositionSizing from "@/components/dashboard/PositionSizing";
-import TraderEducation from "@/components/dashboard/TraderEducation";
-import TradeJournal from "@/components/dashboard/TradeJournal";
-import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
-import PricingPlans from "@/components/payment/PricingPlans";
-import UserAnalyticsDashboard from "@/components/analytics/UserAnalyticsDashboard";
-
-import TradiaAIChat from "@/components/ai/TradiaAIChat";
+import { createClient } from "@/utils/supabase/client";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -41,17 +28,31 @@ import {
 } from "lucide-react";
 import ClientOnly from "@/components/ClientOnly";
 import LayoutClient from "@/components/LayoutClient";
-import TradeAnalytics from "@/components/dashboard/TradeAnalytics";
-import SurveyPrompt from "@/components/marketing/SurveyPrompt";
-
-
-// Chart Components
-import ProfitLossChart from "@/components/charts/ProfitLossChart";
-import DrawdownChart from "@/components/charts/DrawdownChart";
-import PerformanceTimeline from "@/components/charts/PerformanceTimeline";
-import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
-import TradePatternChart from "@/components/charts/TradePatternChart";
 import NotificationBell from "@/components/notifications/NotificationBell";
+
+// Lazy load heavy components for faster initial load
+const OverviewCards = dynamic(() => import("@/components/dashboard/OverviewCards"), { ssr: false });
+const WeeklyCoachRecap = dynamic(() => import("@/components/dashboard/WeeklyCoachRecap"), { ssr: false });
+const RiskGuard = dynamic(() => import("@/components/dashboard/RiskGuard"), { ssr: false });
+const MentalCoach = dynamic(() => import("@/components/dashboard/MentalCoach"), { ssr: false });
+const TradeHistoryTable = dynamic(() => import("@/components/dashboard/TradeHistoryTable"), { ssr: false });
+const RiskMetrics = dynamic(() => import("@/components/dashboard/RiskMetrics"), { ssr: false });
+const PositionSizing = dynamic(() => import("@/components/dashboard/PositionSizing"), { ssr: false });
+const TraderEducation = dynamic(() => import("@/components/dashboard/TraderEducation"), { ssr: false });
+const TradeJournal = dynamic(() => import("@/components/dashboard/TradeJournal"), { ssr: false });
+const TradePlannerTable = dynamic(() => import("@/components/dashboard/TradePlannerTable"), { ssr: false });
+const PricingPlans = dynamic(() => import("@/components/payment/PricingPlans"), { ssr: false });
+const UserAnalyticsDashboard = dynamic(() => import("@/components/analytics/UserAnalyticsDashboard"), { ssr: false });
+const TradiaAIChat = dynamic(() => import("@/components/ai/TradiaAIChat"), { ssr: false });
+const TradeAnalytics = dynamic(() => import("@/components/dashboard/TradeAnalytics"), { ssr: false });
+const SurveyPrompt = dynamic(() => import("@/components/marketing/SurveyPrompt"), { ssr: false });
+
+// Chart Components - lazy loaded
+const ProfitLossChart = dynamic(() => import("@/components/charts/ProfitLossChart"), { ssr: false });
+const DrawdownChart = dynamic(() => import("@/components/charts/DrawdownChart"), { ssr: false });
+const PerformanceTimeline = dynamic(() => import("@/components/charts/PerformanceTimeline"), { ssr: false });
+const TradeBehavioralChart = dynamic(() => import("@/components/charts/TradeBehavioralChart"), { ssr: false });
+const TradePatternChart = dynamic(() => import("@/components/charts/TradePatternChart"), { ssr: false });
 
 type DashboardTabDef = {
   value: string;
@@ -195,7 +196,7 @@ const monthsAgo = (months: number) => {
 function DashboardContent() {
   const { data: session } = useSession();
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -526,7 +527,7 @@ function DashboardContent() {
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
-    <main className="min-h-screen w-full bg-[var(--surface-primary)] dark:bg-[#0D1117] transition-colors duration-300 overflow-x-hidden">
+    <main className="min-h-screen w-full bg-[#061226] text-white transition-colors duration-300 overflow-x-hidden">
     <TradeMigrationModal
     open={showMigrationPrompt}
     onClose={handleMigrationClose}
