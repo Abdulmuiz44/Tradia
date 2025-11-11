@@ -90,6 +90,7 @@ function LoginPage(): React.ReactElement {
         email: form.email,
         password: form.password,
         redirect: false,
+        callbackUrl: "/dashboard",
       });
 
       if (result?.ok) {
@@ -103,14 +104,23 @@ function LoginPage(): React.ReactElement {
           // ignore
         }
 
-        // success -> navigate
+        // success -> navigate to dashboard
         router.push("/dashboard");
+        router.refresh();
       } else {
-        setError(result?.error || "Login failed.");
+        // Show more user-friendly error messages
+        const errorMessage = result?.error || "Login failed";
+        if (errorMessage.includes("Email not verified")) {
+          setError("Please verify your email before logging in. Check your inbox for the verification link.");
+        } else if (errorMessage.includes("Invalid email or password")) {
+          setError("Invalid email or password. Please try again.");
+        } else {
+          setError("Login failed. Please check your credentials and try again.");
+        }
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError((err as Error)?.message || "Login request failed.");
+      setError("An error occurred during login. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -248,12 +258,23 @@ function LoginPage(): React.ReactElement {
               </div>
 
               <button
-                onClick={async () => { try { await signIn("google", { callbackUrl: "/dashboard" }); } catch (e) { setError(e instanceof Error ? e.message : "Google sign-in failed"); } }}
-                className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition text-gray-100"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    setError(null);
+                    await signIn("google", { callbackUrl: "/dashboard", redirect: true });
+                  } catch (e) {
+                    setLoading(false);
+                    setError("Google sign-in failed. Please try again.");
+                    console.error("Google sign-in error:", e);
+                  }
+                }}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition text-gray-100 disabled:opacity-60 disabled:cursor-not-allowed"
                 aria-label="Continue with Google"
               >
                 <FcGoogle size={20} />
-                <span>Continue with Google</span>
+                <span>{loading ? "Signing in..." : "Continue with Google"}</span>
               </button>
 
               <p className="mt-6 text-center text-sm text-gray-400">
