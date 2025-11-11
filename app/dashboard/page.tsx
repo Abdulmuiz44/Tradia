@@ -543,7 +543,7 @@ function DashboardContent() {
               <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
               <div>
                 <h1 className="text-slate-900 dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
-                <p className="text-slate-500 dark:text-gray-300 text-xs">Trading Dashboard</p>
+                <p className="text-slate-500 dark:text-white text-xs font-semibold">Trading Dashboard</p>
               </div>
             </div>
 
@@ -569,10 +569,10 @@ function DashboardContent() {
                       <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 text-left">
-                      <p className="text-[var(--text-primary)] dark:text-white text-sm font-medium truncate">
+                      <p className="text-[var(--text-primary)] dark:text-white text-sm font-bold truncate">
                         {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-[var(--text-muted)] dark:text-gray-400 text-xs truncate">
+                      <p className="text-[var(--text-muted)] dark:text-gray-200 text-xs font-semibold truncate">
                         {session?.user?.email || ''}
                       </p>
                     </div>
@@ -596,21 +596,21 @@ function DashboardContent() {
 
                   <button
                     onClick={() => router.push("/dashboard/profile")}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-semibold"
                   >
                     <User className="w-4 h-4 text-black dark:text-white" />
                     <span>Profile</span>
                   </button>
                   <button
                     onClick={() => router.push("/dashboard/settings")}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-semibold"
                   >
                     <Settings className="w-4 h-4 text-black dark:text-white" />
                     <span>Settings</span>
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-light"
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold"
                   >
                     <span>Sign Out</span>
                   </button>
@@ -667,8 +667,8 @@ function DashboardContent() {
                 <Menu size={20} />
               </button>
               <div>
-                <h1 className="text-lg md:text-xl font-semibold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
-                <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
+                <p className="text-[var(--text-secondary)] dark:text-white text-xs sm:text-sm font-semibold hidden sm:block">
                   {activeTab === "chat" ? 'Your personal trading coach with voice support' :
                    activeTab === "overview" ? 'Comprehensive trading overview and key metrics' :
                    activeTab === "analytics" ? 'Detailed performance analytics and insights' :
@@ -679,7 +679,7 @@ function DashboardContent() {
                 {/* Admin Status Indicator */}
                 <div className="flex items-center gap-2 mt-1">
                   <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-slate-400 dark:bg-gray-500'}`}></div>
-                  <span className="text-xs text-[var(--text-secondary)] dark:text-white">
+                  <span className="text-xs text-[var(--text-secondary)] dark:text-white font-semibold">
                     {isAdmin ? 'Admin Access' : 'Standard Access'}
                   </span>
                 </div>

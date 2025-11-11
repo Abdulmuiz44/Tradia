@@ -95,7 +95,7 @@ export default function DashboardSidebar({
         const buttonContent = (
           <>
             <IconComponent className="w-5 h-5 transition-colors dashboard-sidebar__icon" />
-            <span className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}>
+            <span className={`font-bold ${isMobile ? "text-xs" : "text-sm"}`}>
               {tab.label}
             </span>
             {isActive && (
