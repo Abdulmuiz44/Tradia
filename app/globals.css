@@ -263,6 +263,10 @@ html:not(.dark) .bg-slate-800 {
   font-weight: 600;
 }
 
+.dark .dashboard-sidebar__item span {
+  color: #ffffff;
+}
+
 .dashboard-sidebar__item:hover {
   background-color: #f8f9fa;
  color: #000000;

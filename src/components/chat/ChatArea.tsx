@@ -124,10 +124,18 @@ userName,
   const planLabel = useMemo(() => (plan ? plan.toUpperCase() : "FREE"), [plan]);
   const recognitionRef = useRef<any>(null);
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
+  // Only scroll to bottom after initial load is complete
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    if (!initialLoadComplete && messages.length > 0) {
+      setInitialLoadComplete(true);
+      return;
+    }
+    if (initialLoadComplete && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages.length, initialLoadComplete]);
 
   useEffect(() => {
     if (voiceTranscript) {

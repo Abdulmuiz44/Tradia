@@ -97,23 +97,28 @@ const authOptions: NextAuthOptions = {
 
       if (!existingUser) {
         // Create new user for Google OAuth
+        // Check if admin email
+        const isAdmin = email === "abdulmuizproject@gmail.com";
         await supabase.from("users").insert({
           email,
           name: user.name ?? "",
           email_verified: true,
-          plan: "free",
-          role: "trader",
+          plan: isAdmin ? "elite" : "free",
+          role: isAdmin ? "admin" : "trader",
           image: user.image ?? null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
       } else {
         // Update existing user to mark email as verified
+        // Also update plan/role if admin
+        const isAdmin = email === "abdulmuizproject@gmail.com";
         await supabase
           .from("users")
           .update({
             email_verified: true,
             image: user.image ?? existingUser.image,
+            ...(isAdmin && { plan: "elite", role: "admin" }),
             updated_at: new Date().toISOString(),
           })
           .eq("email", email);

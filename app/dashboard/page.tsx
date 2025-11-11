@@ -389,6 +389,21 @@ function DashboardContent() {
     checkAuth();
   }, [session]);
 
+  // Listen for navigate to tab event from OverviewCards
+  useEffect(() => {
+    const handleNavigateToTab = (event: any) => {
+      const tab = event.detail;
+      if (tab && typeof tab === 'string') {
+        setActiveTab(tab);
+      }
+    };
+
+    window.addEventListener('navigateToTab', handleNavigateToTab);
+    return () => {
+      window.removeEventListener('navigateToTab', handleNavigateToTab);
+    };
+  }, []);
+
   /* ---------------------------
      Hooks that must run every render (unconditional)
      --------------------------- */
