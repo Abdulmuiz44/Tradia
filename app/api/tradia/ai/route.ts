@@ -153,7 +153,8 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient();
-    const normalizeTrade = (row: any) => withDerivedTradeTimes(mergeTradeSecret(userId, row));
+    // Only create normalizeTrade function if userId exists (not a guest)
+    const normalizeTrade = (row: any) => withDerivedTradeTimes(mergeTradeSecret(userId!, row));
 
     let currentConversationId: string | undefined = conversationId;
     const modelId = (options.model as string | undefined)?.trim() || DEFAULT_MODEL;
@@ -209,7 +210,7 @@ export async function POST(req: NextRequest) {
 
     const attachedTrades = isGuest ? [] : await fetchRelevantTrades({
       supabase,
-      userId,
+      userId: userId!, // Assert userId is defined for authenticated users
       attachedTradeIds: validAttachedTradeIds,
       normalizeTrade,
     });
@@ -220,7 +221,7 @@ export async function POST(req: NextRequest) {
       netPnL: 0,
       avgRR: 0,
       maxDrawdown: 0
-    } : await getAccountSummary(userId);
+    } : await getAccountSummary(userId!);
 
     const systemMessage = buildSystemMessage({
       accountSummary,
@@ -251,7 +252,7 @@ export async function POST(req: NextRequest) {
           await persistAssistantMessage({
             supabase,
             conversationId: currentConversationId!,
-            userId,
+            userId: userId!, // Assert userId is defined for authenticated users
             content: text,
             mode,
           });

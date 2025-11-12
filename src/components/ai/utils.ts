@@ -104,6 +104,15 @@ export function getPlanLimits(tier: UserTier['type']): PlanLimits {
       canExportChat: false,
       messageHistoryDays: 30, // From PLAN_LIMITS.tradeStorageDays
     },
+    starter: {
+      maxMessagesPerDay: 10, // Slightly more than free
+      maxFileUploadsPerDay: 1,
+      maxFileSizeMB: 5,
+      canUploadFiles: true,
+      canUseGrok: false,
+      canExportChat: false,
+      messageHistoryDays: 60, // 2 months
+    },
     pro: {
       maxMessagesPerDay: 50, // From PLAN_LIMITS.aiChatsPerDay
       maxFileUploadsPerDay: 5,
