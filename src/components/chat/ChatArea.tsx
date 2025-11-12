@@ -440,11 +440,6 @@ userName,
                       target.style.height = Math.min(target.scrollHeight, 220) + "px";
                     }}
                     onKeyDown={handleKeyDown}
-                    onBlur={(e) => {
-                      // Prevent mobile keyboard from closing the input
-                      // This is a common issue on iOS
-                      e.preventDefault();
-                    }}
                     onDrop={(event) => {
                       event.preventDefault();
                       const data = event.dataTransfer.getData("application/json");
