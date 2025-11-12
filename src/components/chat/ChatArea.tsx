@@ -440,6 +440,11 @@ userName,
                       target.style.height = Math.min(target.scrollHeight, 220) + "px";
                     }}
                     onKeyDown={handleKeyDown}
+                    onBlur={(e) => {
+                      // Prevent mobile keyboard from closing the input
+                      // This is a common issue on iOS
+                      e.preventDefault();
+                    }}
                     onDrop={(event) => {
                       event.preventDefault();
                       const data = event.dataTransfer.getData("application/json");
@@ -456,10 +461,18 @@ userName,
                       }
                     }}
                     onDragOver={(event) => event.preventDefault()}
+                    onTouchStart={(e) => {
+                      // Ensure the textarea is focused on touch devices
+                      e.currentTarget.focus();
+                    }}
                     placeholder={`${currentModeLabel}: Ask Tradia AI${userName ? ", " + userName : ""}`}
-                    className="w-full min-h-[68px] resize-none bg-transparent px-4 py-3 text-sm text-[#FFFFFF] placeholder:text-[#71767B] focus:outline-none"
+                    className="w-full min-h-[68px] resize-none bg-transparent px-4 py-3 text-sm text-[#FFFFFF] placeholder:text-[#71767B] focus:outline-none touch-manipulation"
                     rows={1}
                     style={{ height: "auto", minHeight: "68px" }}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                   />
                   <div className="mt-2 hidden text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80 sm:block">
                     <span>{currentModeLabel}</span>
