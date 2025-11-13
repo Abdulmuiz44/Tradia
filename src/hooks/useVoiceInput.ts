@@ -92,12 +92,12 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         }
 
         showError('Voice Input Error', errorMessage);
-        trackEvent('voice_input_error', { error: event.error });
+        trackEvent('feature_used', { feature: 'voice_input_error', error: event.error });
       };
 
       recognition.onend = () => {
         setIsListening(false);
-        trackEvent('voice_input_ended');
+        trackEvent('feature_used', { feature: 'voice_input_ended' });
       };
 
       recognitionRef.current = recognition;
