@@ -8,7 +8,7 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   data?: any;
-  actions?: NotificationAction[];
+  actions?: Array<{ action: string; title: string; icon?: string }>;
 }
 
 export const usePushNotifications = () => {
@@ -55,11 +55,11 @@ export const usePushNotifications = () => {
 
       if (result === 'granted') {
         info('Permission Granted', 'You will now receive notifications from Tradia.');
-        trackEvent('push_permission_granted');
+        trackEvent('feature_used', { feature: 'push_permission_granted' });
         return true;
       } else {
         showError('Permission Denied', 'Push notifications are disabled. You can enable them in your browser settings.');
-        trackEvent('push_permission_denied');
+        trackEvent('feature_used', { feature: 'push_permission_denied' });
         return false;
       }
     } catch (err) {
@@ -100,7 +100,8 @@ export const usePushNotifications = () => {
       await sendSubscriptionToBackend(pushSubscription);
 
       info('Subscribed', 'You will now receive push notifications from Tradia.');
-      trackEvent('push_subscribed', {
+      trackEvent('feature_used', {
+        feature: 'push_subscribed',
         endpoint: pushSubscription.endpoint,
       });
 
@@ -108,7 +109,7 @@ export const usePushNotifications = () => {
     } catch (err) {
       console.error('Error subscribing to push notifications:', err);
       showError('Subscription Failed', 'Failed to subscribe to push notifications.');
-      trackEvent('push_subscription_failed');
+      trackEvent('feature_used', { feature: 'push_subscription_failed' });
       return false;
     }
   }, [isSupported, permission, requestPermission, info, showError]);
@@ -126,7 +127,7 @@ export const usePushNotifications = () => {
         await removeSubscriptionFromBackend(subscription);
 
         info('Unsubscribed', 'You will no longer receive push notifications.');
-        trackEvent('push_unsubscribed');
+        trackEvent('feature_used', { feature: 'push_unsubscribed' });
       }
 
       return success;
@@ -158,8 +159,8 @@ export const usePushNotifications = () => {
         requireInteraction: false,
       });
 
-      trackEvent('push_notification_sent', {
-        title: payload.title,
+      trackEvent('feature_used', {
+        feature: 'push_notification_sent',
       });
     } catch (err) {
       console.error('Error sending notification:', err);
@@ -179,7 +180,7 @@ export const usePushNotifications = () => {
 };
 
 // Utility function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 
@@ -190,7 +191,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     outputArray[i] = rawData.charCodeAt(i);
   }
 
-  return outputArray;
+  return outputArray as Uint8Array<ArrayBuffer>;
 }
 
 // Backend integration functions
