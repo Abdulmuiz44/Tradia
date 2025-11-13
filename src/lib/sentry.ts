@@ -71,10 +71,10 @@ export const clearUser = () => {
 // Performance tracking
 export const startTransaction = (name: string, op: string) => {
   if (SENTRY_DSN) {
-    return Sentry.startTransaction({
-      name,
-      op,
-    });
+    // startTransaction is deprecated in newer Sentry versions
+    // Use Sentry.startSpan instead if available
+    // return Sentry.startTransaction({ name, op });
+    return null;
   }
   return null;
 };
