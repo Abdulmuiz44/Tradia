@@ -154,8 +154,8 @@ export const usePushNotifications = () => {
         icon: payload.icon || '/icon-192x192.png',
         badge: payload.badge || '/icon-192x192.png',
         data: payload.data,
-        actions: payload.actions,
-        vibrate: [100, 50, 100],
+        // actions: payload.actions, // Not supported in all browsers
+        // vibrate: [100, 50, 100], // Not in NotificationOptions type
         requireInteraction: false,
       });
 

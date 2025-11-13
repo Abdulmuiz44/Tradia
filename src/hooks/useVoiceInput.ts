@@ -9,6 +9,14 @@ interface VoiceInputOptions {
   maxAlternatives?: number;
 }
 
+// Declare global type for browser SpeechRecognition API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export const useVoiceInput = (options: VoiceInputOptions = {}) => {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -16,7 +24,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any | null>(null);
   const { info, error: showError } = useToast();
 
   useEffect(() => {
@@ -36,7 +44,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         setIsListening(true);
         setError(null);
         info('Listening...', 'Speak now to send a voice message.');
-        trackEvent('voice_input_started');
+        trackEvent('feature_used', { feature: 'voice_input_started' });
       };
 
       recognition.onresult = (event) => {
