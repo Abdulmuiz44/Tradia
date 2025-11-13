@@ -6,6 +6,7 @@ export interface MT5Credentials {
   server: string;
   login: string;
   password: string;
+  investorPassword?: string;
   platform?: string;
   nickname?: string;
   createdAt?: string;
@@ -50,4 +51,11 @@ export interface MT5Position {
   swap: number;
   commission: number;
   openTime: Date;
+}
+
+export class ConnectionError extends Error {
+  constructor(message: string, public code?: string) {
+    super(message);
+    this.name = 'ConnectionError';
+  }
 }
