@@ -16,7 +16,8 @@ export type ConnectionStatus =
   | 'connected' 
   | 'disconnected' 
   | 'connecting' 
-  | 'error' 
+  | 'error'
+  | 'degraded'
   | 'unknown';
 
 export interface MT5ConnectionInfo {

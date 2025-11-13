@@ -11,6 +11,7 @@ export interface ValidationOptions {
 
 export interface ValidationResult {
   success: boolean;
+  isValid: boolean;
   status: ConnectionStatus;
   error?: string;
   responseTime?: number;
@@ -24,6 +25,7 @@ export const mt5ConnectionManager = {
     // Stub implementation - returns disconnected status
     return {
       success: false,
+      isValid: false,
       status: 'disconnected',
       error: 'MT5 connection validation not implemented',
       responseTime: 0
