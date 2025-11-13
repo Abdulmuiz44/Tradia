@@ -47,7 +47,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         trackEvent('feature_used', { feature: 'voice_input_started' });
       };
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: any) => {
         let finalTranscript = '';
         let interimTranscript = '';
 
@@ -64,14 +64,11 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         setInterimTranscript(interimTranscript);
 
         if (finalTranscript) {
-          trackEvent('voice_input_transcript', {
-            length: finalTranscript.length,
-            language: recognition.lang,
-          });
+          trackEvent('feature_used', { feature: 'voice_input_transcript', length: finalTranscript.length, language: recognition.lang });
         }
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: any) => {
         setError(event.error);
         setIsListening(false);
 
