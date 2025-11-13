@@ -3,6 +3,7 @@
 export interface MT5Credentials {
   id?: string;
   userId?: string;
+  name?: string;
   server: string;
   login: string;
   password: string;
