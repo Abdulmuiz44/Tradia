@@ -263,6 +263,12 @@ html:not(.dark) .bg-slate-800 {
   font-weight: 500;
 }
 
+.dark .dashboard-sidebar__item span,
+.dark .dashboard-sidebar__item button,
+.dark .dashboard-sidebar__item a {
+  color: #ffffff !important;
+}
+
 .dashboard-sidebar__item:hover {
   background-color: #f8f9fa;
   color: #000000;
@@ -271,6 +277,12 @@ html:not(.dark) .bg-slate-800 {
 
 .dark .dashboard-sidebar__item:hover {
   background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
+}
+
+.dark .dashboard-sidebar__item:hover span,
+.dark .dashboard-sidebar__item:hover button,
+.dark .dashboard-sidebar__item:hover a {
   color: #ffffff !important;
 }
 
@@ -285,6 +297,12 @@ html:not(.dark) .bg-slate-800 {
   background-color: rgba(255, 255, 255, 0.15);
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .dashboard-sidebar__item.is-active span,
+.dark .dashboard-sidebar__item.is-active button,
+.dark .dashboard-sidebar__item.is-active a {
+  color: #ffffff !important;
 }
 
 .dashboard-sidebar__item .dashboard-sidebar__icon {

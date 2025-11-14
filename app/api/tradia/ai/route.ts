@@ -2,8 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
-import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { OpenAIStream, StreamingTextResponse } from "ai";
 import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { mergeTradeSecret } from "@/lib/secure-store";
@@ -24,25 +23,9 @@ const MODE_PROMPTS: Record<string, string> = {
     "Act as the default Tradia assistant. Balance friendly tone with actionable insights tailored to trading performance.",
 };
 
-const openaiClient = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? "",
-});
-
-const gatewayBaseUrl = process.env.VERCEL_AI_GATEWAY_URL ?? process.env.AI_GATEWAY_URL;
-const gatewayApiKey = process.env.VERCEL_AI_API_KEY ?? process.env.AI_GATEWAY_API_KEY ?? "";
-const gatewayClient = gatewayBaseUrl
-  ? createOpenAI({
-      apiKey: gatewayApiKey,
-      baseURL: gatewayBaseUrl,
-    })
-  : null;
-
-const xaiClient = createOpenAI({
-  apiKey: process.env.XAI_API_KEY ?? process.env.GROK_API_KEY ?? "",
-  baseURL: process.env.XAI_BASE_URL ?? "https://api.x.ai/v1",
-});
-
-const DEFAULT_MODEL = "openai:gpt-4o-mini";
+// ONLY use OpenAI - no other providers
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? "";
+const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 interface SystemMessageInput {
   accountSummary: Record<string, any>;
@@ -157,7 +140,6 @@ export async function POST(req: NextRequest) {
     const normalizeTrade = (row: any) => withDerivedTradeTimes(mergeTradeSecret(userId!, row));
 
     let currentConversationId: string | undefined = conversationId;
-    const modelId = (options.model as string | undefined)?.trim() || DEFAULT_MODEL;
 
     // Skip database operations for guest users
     if (!isGuest) {
@@ -169,7 +151,7 @@ export async function POST(req: NextRequest) {
             id: newConvId,
             user_id: userId,
             title: "New Conversation",
-            model: modelId,
+            model: DEFAULT_MODEL,
             temperature: options.temperature ?? 0.25,
             mode,
           });
@@ -237,13 +219,37 @@ export async function POST(req: NextRequest) {
         content: msg.content,
       }));
 
-    const result = await streamText({
-      model: resolveModel(modelId),
-      system: systemMessage,
-      messages: trimmedMessages,
-      temperature: options.temperature ?? 0.25,
-      maxOutputTokens: options.max_tokens ?? 1024,
-      onFinish: async ({ text }) => {
+    // Use OpenAI API directly - simple and reliable
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
+    }
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: DEFAULT_MODEL,
+        messages: [
+          { role: "system", content: systemMessage },
+          ...trimmedMessages,
+        ],
+        temperature: options.temperature ?? 0.25,
+        max_tokens: options.max_tokens ?? 1024,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `OpenAI API error: ${response.statusText}`);
+    }
+
+    // Convert OpenAI stream to text stream
+    const stream = OpenAIStream(response, {
+      async onFinal(completion) {
         // Skip persistence for guest users
         if (isGuest) {
           return;
@@ -252,20 +258,17 @@ export async function POST(req: NextRequest) {
           await persistAssistantMessage({
             supabase,
             conversationId: currentConversationId!,
-            userId: userId!, // Assert userId is defined for authenticated users
-            content: text,
+            userId: userId!,
+            content: completion,
             mode,
           });
         } catch (error) {
           console.error("Failed to persist assistant message:", error);
         }
       },
-      onError(error) {
-        console.error("AI stream error:", error);
-      },
     });
 
-    return result.toTextStreamResponse({
+    return new StreamingTextResponse(stream, {
       headers: {
         "X-Conversation-Id": currentConversationId!,
         "Cache-Control": "no-store",
@@ -298,44 +301,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
-}
-
-function resolveModel(modelId: string) {
-  const trimmed = modelId.trim();
-  const [providerPrefix, explicitModel] = trimmed.includes(":")
-    ? (trimmed.split(":", 2) as [string, string])
-    : ["openai", trimmed];
-
-  const provider = providerPrefix.toLowerCase();
-  const modelName = explicitModel.trim();
-
-  if (!modelName) {
-    throw new Error("No model specified for AI request");
-  }
-
-  if (provider === "openai") {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
-    }
-    return openaiClient(modelName);
-  }
-
-  if (provider === "gateway") {
-    if (!gatewayClient || !gatewayBaseUrl || !gatewayApiKey) {
-      throw new Error("Vercel AI Gateway is not configured");
-    }
-    return gatewayClient(modelName);
-  }
-
-  if (provider === "xai" || provider === "grok" || modelName.startsWith("grok")) {
-    if (!(process.env.XAI_API_KEY || process.env.GROK_API_KEY)) {
-      throw new Error("XAI/Grok API key is not configured");
-    }
-    const resolvedModel = provider === "xai" || provider === "grok" ? modelName : trimmed;
-    return xaiClient(resolvedModel);
-  }
-
-  throw new Error(`Unsupported model provider: ${provider}`);
 }
 
 async function persistAssistantMessage({
