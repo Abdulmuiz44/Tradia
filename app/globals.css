@@ -259,7 +259,7 @@ html:not(.dark) .bg-slate-800 {
 }
 
 .dark .dashboard-sidebar__item {
-  color: var(--text-muted);
+  color: #ffffff;
  font-weight: 500;
 }
 
@@ -292,7 +292,7 @@ color: var(--text-primary);
 }
 
 .dark .dashboard-sidebar__item .dashboard-sidebar__icon {
-color: var(--text-muted);
+color: #ffffff;
 }
 
 .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,

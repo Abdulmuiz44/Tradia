@@ -50,7 +50,7 @@ export default function BillingPage() {
   const [currentPlan, setCurrentPlan] = useState<PlanType>('free');
   const [subscription, setSubscription] = useState<any | null>(null);
   const [billingHistory, setBillingHistory] = useState<BillingHistory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Changed to false for instant render
   const [upgrading, setUpgrading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('pro');
@@ -86,27 +86,15 @@ export default function BillingPage() {
         }
       }
 
-      // Load billing history (mock data for now)
-      setBillingHistory([
-        {
-          id: 'inv_001',
-          date: '2024-01-15',
-          amount: 29,
-          currency: 'USD',
-          status: 'paid',
-          description: 'Pro Plan - Monthly',
-          invoiceUrl: '#'
-        },
-        {
-          id: 'inv_002',
-          date: '2023-12-15',
-          amount: 29,
-          currency: 'USD',
-          status: 'paid',
-          description: 'Pro Plan - Monthly',
-          invoiceUrl: '#'
-        }
-      ]);
+      // Load real billing history from API
+      const historyResponse = await fetch('/api/payments/history');
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setBillingHistory(historyData.history || []);
+      } else {
+        // Set empty array if no history found
+        setBillingHistory([]);
+      }
 
     } catch (error) {
       console.error('Failed to load billing data:', error);
@@ -218,14 +206,6 @@ export default function BillingPage() {
       default: return <AlertCircle className="w-4 h-4" />;
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
 
   if (!session?.user) {
     router.push('/login');
