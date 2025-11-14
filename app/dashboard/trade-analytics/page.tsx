@@ -1,9 +1,14 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
-import TradeAnalytics from "@/components/dashboard/TradeAnalytics";
+
+const TradeAnalytics = dynamic(
+  () => import("@/components/dashboard/TradeAnalytics"),
+  { ssr: false }
+);
 
 function TradeAnalyticsContent() {
   const { data: session } = useSession();
@@ -14,9 +19,11 @@ function TradeAnalyticsContent() {
                   session?.user?.email?.includes("abdulmuizproject@gmail.com") || false;
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-bold mb-4">Trade Analytics</h1>
-      <TradeAnalytics trades={trades} session={session} isAdmin={isAdmin} />
+    <div className="min-h-screen bg-[#061226] p-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl font-bold text-white mb-6">Trade Analytics</h1>
+        <TradeAnalytics trades={trades} session={session} isAdmin={isAdmin} />
+      </div>
     </div>
   );
 }
