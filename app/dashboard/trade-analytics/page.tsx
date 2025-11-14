@@ -12,7 +12,7 @@ export default function TradeAnalyticsPage() {
 
   // Check admin status
   const isAdmin = session?.user?.email === "abdulmuizproject@gmail.com" ||
-                  session?.user?.email?.includes("abdulmuizproject@gmail.com");
+                  session?.user?.email?.includes("abdulmuizproject@gmail.com") || false;
 
   if (!session) {
     return (
