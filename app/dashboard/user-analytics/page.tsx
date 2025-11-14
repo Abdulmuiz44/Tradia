@@ -5,7 +5,8 @@ import UserAnalyticsDashboard from "@/components/analytics/UserAnalyticsDashboar
 
 export default function UserAnalyticsPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
+      <h1 className="text-2xl font-bold mb-4">User Analytics</h1>
       <UserAnalyticsDashboard />
     </div>
   );

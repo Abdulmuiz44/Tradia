@@ -2,25 +2,25 @@
 
 import React from "react";
 import { useSession } from "next-auth/react";
-import { useTrade } from "@/context/TradeContext";
+import { TradeProvider, useTrade } from "@/context/TradeContext";
 import OverviewCards from "@/components/dashboard/OverviewCards";
-import Spinner from "@/components/ui/spinner";
 
-export default function OverviewPage() {
+function OverviewContent() {
   const { data: session } = useSession();
   const { trades } = useTrade();
 
-  if (!session) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
+      <h1 className="text-2xl font-bold mb-4">Overview</h1>
       <OverviewCards trades={trades} session={session} />
     </div>
+  );
+}
+
+export default function OverviewPage() {
+  return (
+    <TradeProvider>
+      <OverviewContent />
+    </TradeProvider>
   );
 }
