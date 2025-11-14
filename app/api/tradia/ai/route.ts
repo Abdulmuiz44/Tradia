@@ -219,8 +219,13 @@ export async function POST(req: NextRequest) {
       }));
 
     // Use OpenAI API directly - simple and reliable
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+    if (!OPENAI_API_KEY || OPENAI_API_KEY.trim() === "") {
+      return NextResponse.json(
+        { 
+          error: "OpenAI API is not configured. Please set OPENAI_API_KEY environment variable in Vercel." 
+        }, 
+        { status: 503 }
+      );
     }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -243,7 +248,27 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `OpenAI API error: ${response.statusText}`);
+      const errorMsg = errorData.error?.message || response.statusText;
+      
+      // Provide specific error messages based on status code
+      if (response.status === 401) {
+        return NextResponse.json(
+          { error: "Invalid OpenAI API key. Please check your OPENAI_API_KEY in Vercel environment variables." },
+          { status: 503 }
+        );
+      } else if (response.status === 429) {
+        return NextResponse.json(
+          { error: "Rate limit exceeded. Please wait a moment and try again." },
+          { status: 429 }
+        );
+      } else if (response.status === 400) {
+        return NextResponse.json(
+          { error: `Invalid request: ${errorMsg}` },
+          { status: 400 }
+        );
+      }
+      
+      throw new Error(errorMsg);
     }
 
     // Create a custom stream reader
