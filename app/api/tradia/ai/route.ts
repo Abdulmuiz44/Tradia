@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
-import { OpenAIStream, StreamingTextResponse } from "ai";
 import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { mergeTradeSecret } from "@/lib/secure-store";
@@ -247,29 +246,64 @@ export async function POST(req: NextRequest) {
       throw new Error(errorData.error?.message || `OpenAI API error: ${response.statusText}`);
     }
 
-    // Convert OpenAI stream to text stream
-    const stream = OpenAIStream(response, {
-      async onFinal(completion) {
-        // Skip persistence for guest users
-        if (isGuest) {
-          return;
-        }
+    // Create a custom stream reader
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let fullCompletion = "";
+
+    // Create a ReadableStream for streaming response
+    const stream = new ReadableStream({
+      async start(controller) {
         try {
-          await persistAssistantMessage({
-            supabase,
-            conversationId: currentConversationId!,
-            userId: userId!,
-            content: completion,
-            mode,
-          });
+          while (reader) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n").filter(line => line.trim() !== "");
+
+            for (const line of lines) {
+              const message = line.replace(/^data: /, "");
+              if (message === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(message);
+                const content = parsed.choices?.[0]?.delta?.content || "";
+                if (content) {
+                  fullCompletion += content;
+                  controller.enqueue(new TextEncoder().encode(content));
+                }
+              } catch (e) {
+                // Skip parse errors
+              }
+            }
+          }
+
+          // Persist the complete message for authenticated users
+          if (!isGuest && fullCompletion) {
+            try {
+              await persistAssistantMessage({
+                supabase,
+                conversationId: currentConversationId!,
+                userId: userId!,
+                content: fullCompletion,
+                mode,
+              });
+            } catch (error) {
+              console.error("Failed to persist assistant message:", error);
+            }
+          }
+
+          controller.close();
         } catch (error) {
-          console.error("Failed to persist assistant message:", error);
+          controller.error(error);
         }
       },
     });
 
-    return new StreamingTextResponse(stream, {
+    return new NextResponse(stream, {
       headers: {
+        "Content-Type": "text/plain; charset=utf-8",
         "X-Conversation-Id": currentConversationId!,
         "Cache-Control": "no-store",
       },
