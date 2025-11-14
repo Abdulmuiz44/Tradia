@@ -62,10 +62,10 @@ type DashboardTabDef = {
 
 // Base tabs available to all users
 const BASE_TAB_DEFS: DashboardTabDef[] = [
-{ value: "overview", label: "Overview", icon: "BarChart3" },
-{ value: "history", label: "Trade History", icon: "History" },
-{ value: "journal", label: "Trade Journal", icon: "BookOpen" },
-{ value: "analytics", label: "Trade Analytics", icon: "TrendingUp" },
+{ value: "overview", label: "Overview", icon: "BarChart3", href: "/dashboard/overview" },
+{ value: "history", label: "Trade History", icon: "History", href: "/dashboard/trade-history" },
+{ value: "journal", label: "Trade Journal", icon: "BookOpen", href: "/dashboard/trade-journal" },
+{ value: "analytics", label: "Trade Analytics", icon: "TrendingUp", href: "/dashboard/trade-analytics" },
 
 {
 value: "chat",
@@ -81,15 +81,15 @@ href: "/tradia-predict",
 },
 { value: "risk", label: "Risk Management", icon: "Shield", href: "/dashboard/risk-management" },
 { value: "reporting", label: "Reporting", icon: "FileText", href: "/dashboard/reporting" },
-{ value: "planner", label: "Trade Planner", icon: "Target" },
-{ value: "position-sizing", label: "Position Sizing", icon: "Calculator" },
-{ value: "education", label: "Trade Education", icon: "GraduationCap" },
+{ value: "planner", label: "Trade Planner", icon: "Target", href: "/dashboard/trade-planner" },
+{ value: "position-sizing", label: "Position Sizing", icon: "Calculator", href: "/dashboard/position-sizing" },
+{ value: "education", label: "Trade Education", icon: "GraduationCap", href: "/dashboard/trade-education" },
 { value: "upgrade", label: "Upgrade", icon: "Crown" },
 ];
 
 // Admin-only tabs
 const ADMIN_TAB_DEFS: DashboardTabDef[] = [
-  { value: "user-analytics", label: "User Analytics", icon: "Users" },
+  { value: "user-analytics", label: "User Analytics", icon: "Users", href: "/dashboard/user-analytics" },
 ];
 
 
@@ -197,8 +197,13 @@ function DashboardContent() {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("overview");
+  
+  // Redirect to overview page on load
+  React.useEffect(() => {
+    router.push("/dashboard/overview");
+  }, [router]);
   // Removed trading account enforcement; features remain accessible
   // Removed hasAccount checking state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -307,10 +312,7 @@ function DashboardContent() {
     }
   };
 
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(t);
-  }, []);
+  // Removed automatic loading timeout - instant dashboard access
 
   const handleMigrationClose = () => {
     setShowMigrationPrompt(false);
@@ -530,7 +532,7 @@ function DashboardContent() {
   const currentTabLabel = TAB_DEFS.find((t) => t.value === activeTab)?.label || "Dashboard";
 
   return (
-    <main className="min-h-screen w-full bg-[var(--surface-primary)] dark:bg-[#0D1117] transition-colors duration-300 overflow-x-hidden">
+    <main className="min-h-screen w-full bg-[#061226] dark:bg-[#061226] transition-colors duration-300 overflow-x-hidden">
     <TradeMigrationModal
     open={showMigrationPrompt}
     onClose={handleMigrationClose}
@@ -539,10 +541,10 @@ function DashboardContent() {
     <SurveyPrompt isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} />
     <div className="flex min-h-screen max-w-full">
     {/* Desktop Sidebar */}
-    <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[var(--surface-secondary)] dark:lg:bg-[#161B22] lg:border-r lg:border-[var(--surface-border)] dark:lg:border-[#2a2f3a]">
-    <div className="flex flex-col h-full sticky top-0">
+    <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[#061226] dark:lg:bg-[#061226] lg:border-r lg:border-gray-800 dark:lg:border-gray-800">
+    <div className="flex flex-col h-screen sticky top-0">
             {/* Logo/Brand */}
-            <div className="flex items-center gap-3 p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-transparent">
+            <div className="flex items-center gap-3 p-6 border-b border-gray-800 dark:border-gray-800 bg-[#061226] dark:bg-[#061226]">
               <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
               <div>
                 <h1 className="text-slate-900 dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
@@ -551,7 +553,7 @@ function DashboardContent() {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 p-4 overflow-y-auto bg-[var(--surface-secondary)] dark:bg-transparent">
+            <div className="flex-1 p-4 overflow-y-auto bg-[#061226] dark:bg-[#061226]">
               <DashboardSidebar
                 tabs={TAB_DEFS}
                 activeTab={activeTab}
@@ -560,13 +562,13 @@ function DashboardContent() {
             </div>
 
             {/* User Profile Section */}
-            <div className="p-4 border-t border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-[#161B22]">
+            <div className="p-4 border-t border-gray-800 dark:border-gray-800 bg-[#061226] dark:bg-[#061226]">
               <AnimatedDropdown
                 title="Account"
                 panelClassName="w-[95%] max-w-sm"
                 positionClassName="left-4 top-16"
                 trigger={(
-                  <button className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface-secondary)] dark:bg-transparent hover:bg-[var(--surface-hover)] dark:hover:bg-gray-700 transition-colors" aria-label="Open account menu">
+                  <button className="flex items-center gap-3 w-full p-3 rounded-xl bg-[#061226] dark:bg-[#061226] hover:bg-gray-800 dark:hover:bg-gray-800 transition-colors" aria-label="Open account menu">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
                       <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
@@ -631,8 +633,8 @@ function DashboardContent() {
         onClick={() => setMobileMenuOpen(false)}
         >
         <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute left-0 top-0 h-full w-64 max-w-[80vw] bg-white dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a] transform transition-transform duration-300 overflow-y-auto">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2f3a]">
+                <div className="absolute left-0 top-0 h-full w-64 max-w-[80vw] bg-[#061226] dark:bg-[#061226] border-r border-gray-800 dark:border-gray-800 transform transition-transform duration-300 overflow-y-auto">
+              <div className="flex items-center justify-between p-4 border-b border-gray-800 dark:border-gray-800">
                 <div className="flex items-center gap-3">
                 <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={28} height={28} className="h-7 w-auto" priority />
                 <h1 className="text-black dark:text-white font-extrabold text-lg">Tradia</h1>
@@ -659,7 +661,7 @@ function DashboardContent() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-0 min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] text-[var(--text-primary)] dark:bg-[#0D1117] dark:text-white overflow-x-auto">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-800 dark:border-gray-800 bg-[#061226] text-white dark:bg-[#061226] dark:text-white overflow-x-auto">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors">
+    <div className="relative min-h-screen w-full flex flex-col bg-[#061226] text-white dark:bg-[#061226] dark:text-white transition-colors">
       <div className="pt-1 px-1 flex-grow">{children}</div>
       <Footer />
     </div>
