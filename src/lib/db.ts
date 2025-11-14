@@ -10,10 +10,10 @@ import { Pool, PoolConfig } from "pg";
 
 declare global {
   // eslint-disable-next-line no-var
-  var __global_pg_pool__: Pool | undefined;
+  var __global_pg_pool__: Pool | null | undefined;
 }
 
-function buildPoolConfig(): PoolConfig {
+function buildPoolConfig(): PoolConfig | null {
   // If a single DATABASE_URL is provided, use it (recommended for Supabase)
   if (process.env.DATABASE_URL) {
     return {
@@ -34,9 +34,11 @@ function buildPoolConfig(): PoolConfig {
     !process.env.DB_PORT ||
     !process.env.DB_NAME
   ) {
-    throw new Error(
-      "Database environment variables not set. Please set DATABASE_URL or DB_USER/DB_PASSWORD/DB_HOST/DB_PORT/DB_NAME."
+    // Don't throw error at build time, return null instead
+    console.warn(
+      "Database environment variables not set. Database features will be unavailable. Please set DATABASE_URL or DB_USER/DB_PASSWORD/DB_HOST/DB_PORT/DB_NAME in production."
     );
+    return null;
   }
 
   const port = Number(process.env.DB_PORT) || 5432;
@@ -54,13 +56,15 @@ function buildPoolConfig(): PoolConfig {
   };
 }
 
-function makePool(): Pool {
+function makePool(): Pool | null {
   const cfg = buildPoolConfig();
+  if (!cfg) return null;
   return new Pool(cfg);
 }
 
 // Use a global pool in Node dev / serverless environments to avoid creating many clients
-const pool: Pool = global.__global_pg_pool__ ?? makePool();
-if (!global.__global_pg_pool__) global.__global_pg_pool__ = pool;
+// Will be null if database env vars not configured (e.g., during build)
+const pool: Pool | null = global.__global_pg_pool__ ?? makePool();
+if (pool && !global.__global_pg_pool__) global.__global_pg_pool__ = pool;
 
 export { pool };

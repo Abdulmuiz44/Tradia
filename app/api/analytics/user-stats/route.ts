@@ -131,6 +131,9 @@ export async function GET() {
     let avgDurationSec = null as number | null;
     try {
       // Connect to pooled Postgres (may fail if DATABASE_URL or DNS not configured)
+      if (!pool) {
+        throw new Error('Database pool not initialized');
+      }
       client = await pool.connect();
 
       // total trades
