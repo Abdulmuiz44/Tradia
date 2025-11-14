@@ -492,9 +492,7 @@ function DashboardContent() {
   }, [authChecked, isAuthed, router]);
 
   // Removed trading account enforcement check
-
-  if (!authChecked) return <Spinner />;
-  if (!isAuthed) return <Spinner />;
+  // Removed loading spinners - instant dashboard access
 
   // Dynamic tab definitions based on user role - simple computation without useMemo to avoid hooks issues
   const getTabDefinitions = () => {
@@ -919,14 +917,10 @@ function DashboardContent() {
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 min-w-0 max-w-full">
             {/* Trading account enforcement removed */}
-            {isLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <Spinner />
-              </div>
-            ) : (
-              <>
-                {activeTab === "overview" && (
-                  <>
+            {/* Loading spinner removed - instant content display */}
+            <>
+              {activeTab === "overview" && (
+                <>
                     
                     <OverviewCards trades={filteredTrades} session={session} />
                   </>
@@ -977,7 +971,6 @@ function DashboardContent() {
                   </div>
                 )}
               </>
-            )}
           </div>
         </div>
       </div>
