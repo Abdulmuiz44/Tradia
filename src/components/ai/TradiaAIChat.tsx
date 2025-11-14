@@ -736,13 +736,8 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     setIsProcessing(false);
   }, [isProcessing]);
 
-  // Create initial conversation if none exists and loaded
-  useEffect(() => {
-    if (conversations.length === 0 && user && !loading && !loadingConversations) {
-      handleCreateConversation();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations.length, loading, loadingConversations]);
+  // Don't auto-create conversations - let users create them explicitly
+  // This prevents automatic conversation creation that confuses users
 
   useEffect(() => {
     onConversationsChange?.(conversations);
