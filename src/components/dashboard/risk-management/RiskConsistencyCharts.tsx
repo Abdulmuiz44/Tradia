@@ -46,7 +46,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
 
       return {
         trade: index + 1,
-        date: new Date(trade.closeTime || trade.openTime).toLocaleDateString(),
+        date: new Date(trade.closeTime || trade.openTime || Date.now()).toLocaleDateString(),
         riskAmount: risk,
         riskPercent: riskPercent,
         symbol: trade.symbol,
@@ -64,7 +64,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
 
       return {
         trade: index + 1,
-        date: new Date(trade.closeTime || trade.openTime).toLocaleDateString(),
+        date: new Date(trade.closeTime || trade.openTime || Date.now()).toLocaleDateString(),
         equity: cumulativePnL + 10000, // Starting equity of $10k
         drawdown: -drawdown, // Negative for visualization
         pnl: trade.pnl || 0

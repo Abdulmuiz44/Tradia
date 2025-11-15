@@ -63,13 +63,13 @@ export const TradePickerPanel: React.FC<TradePickerPanelProps> = ({
     .sort((a, b) => {
       switch (sortBy) {
         case 'date-desc':
-          return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime();
+          return new Date(b.entry_time || 0).getTime() - new Date(a.entry_time || 0).getTime();
         case 'date-asc':
-          return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime();
+          return new Date(a.entry_time || 0).getTime() - new Date(b.entry_time || 0).getTime();
         case 'pnl-desc':
-          return b.pnl - a.pnl;
+          return (b.pnl || 0) - (a.pnl || 0);
         case 'pnl-asc':
-          return a.pnl - b.pnl;
+          return (a.pnl || 0) - (b.pnl || 0);
         case 'symbol':
           return a.symbol.localeCompare(b.symbol);
         default:

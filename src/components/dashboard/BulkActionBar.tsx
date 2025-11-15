@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useContext, useState } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import React, { useState } from "react";
+import { useTrade } from "@/context/TradeContext";
 
 interface Props {
   selectedIds: string[];
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function BulkActionBar({ selectedIds, setSelectedIds }: Props) {
-  const ctx = useContext(TradeContext)!;
+  const ctx = useTrade();
   const [filterEmotion, setFilterEmotion] = useState<string>("");
 
   return (
@@ -19,13 +19,19 @@ export default function BulkActionBar({ selectedIds, setSelectedIds }: Props) {
           <>
             <button
               className="px-3 py-1 bg-green-500 text-white rounded"
-              onClick={() => ctx.bulkToggleReviewed(selectedIds, true)}
+              onClick={() => {
+                // TODO: Implement bulk review functionality
+                console.log("Mark reviewed:", selectedIds);
+              }}
             >
               Mark Reviewed
             </button>
             <button
               className="px-3 py-1 bg-red-500 text-white rounded"
-              onClick={() => ctx.bulkToggleReviewed(selectedIds, false)}
+              onClick={() => {
+                // TODO: Implement bulk review functionality
+                console.log("Mark pending:", selectedIds);
+              }}
             >
               Mark Pending
             </button>

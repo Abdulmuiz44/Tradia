@@ -298,7 +298,7 @@ function calculatePeriodPerformance(trades: Trade[], period: 'week' | 'month'): 
   const periods: Record<string, Trade[]> = {};
 
   trades.forEach(trade => {
-    const tradeDate = new Date(trade.closeTime || trade.openTime);
+    const tradeDate = new Date(trade.closeTime || trade.openTime || Date.now());
     let periodKey: string;
 
     if (period === 'week') {
@@ -389,7 +389,7 @@ function calculateSessionPerformance(trades: Trade[]): SessionPerformance[] {
   };
 
   trades.forEach(trade => {
-    const hour = new Date(trade.openTime).getUTCHours();
+    const hour = new Date(trade.openTime || Date.now()).getUTCHours();
     let session = 'asian';
 
     if (hour >= 8 && hour < 16) session = 'london'; // 8 AM - 4 PM UTC
@@ -419,7 +419,7 @@ function calculateAvgTradeDuration(trades: Trade[]): number {
 
   trades.forEach(trade => {
     if (trade.openTime && trade.closeTime) {
-      const duration = new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime();
+      const duration = new Date(trade.closeTime || Date.now()).getTime() - new Date(trade.openTime || Date.now()).getTime();
       totalDuration += duration / (1000 * 60); // Convert to minutes
       count++;
     }
@@ -434,7 +434,7 @@ function calculateConsistencyScore(trades: Trade[]): number {
   // Group trades by day
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
