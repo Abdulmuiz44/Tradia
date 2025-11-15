@@ -30,7 +30,10 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
       recognition.lang = options.language || 'en-US';
       recognition.continuous = options.continuous ?? false;
       recognition.interimResults = options.interimResults ?? true;
-      recognition.maxAlternatives = options.maxAlternatives || 1;
+      // maxAlternatives is not universally supported, so we set it conditionally
+      if ('maxAlternatives' in recognition) {
+        (recognition as any).maxAlternatives = options.maxAlternatives || 1;
+      }
 
       recognition.onstart = () => {
         setIsListening(true);

@@ -20,7 +20,20 @@ export type AnalyticsEvent =
   | 'push_subscribed'
   | 'push_unsubscribed'
   | 'push_subscription_failed'
-  | 'push_notification_sent';
+  | 'push_notification_sent'
+  | 'voice_input_started'
+  | 'voice_input_ended'
+  | 'voice_input_error'
+  | 'voice_input_transcript'
+  | 'voice_output_started'
+  | 'voice_output_completed'
+  | 'voice_output_error'
+  | 'voice_output_paused'
+  | 'voice_output_resumed'
+  | 'voice_output_stopped'
+  | 'voice_output_voice_changed'
+  | 'performance_metric'
+  | 'revenue';
 
 // Custom analytics tracking
 export const trackEvent = (event: AnalyticsEvent, properties?: Record<string, any>) => {

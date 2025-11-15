@@ -10,10 +10,11 @@ if (SENTRY_DSN) {
     replaysOnErrorSampleRate: 1.0,
     replaysSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0.1,
     integrations: [
-      new Sentry.Replay({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
+      // Replay integration commented out - not available in current Sentry version
+      // new Sentry.Replay({
+      //   maskAllText: true,
+      //   blockAllMedia: true,
+      // }),
     ],
   });
 }
