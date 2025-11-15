@@ -1,9 +1,10 @@
-﻿# Tradia - AI Trading Performance Assistant
+# Tradia - AI Trading Performance Assistant
 
 Welcome to **[Tradia](https://tradiaai.app)**, the all-in-one AI-powered trading performance assistant that helps traders understand, analyze, and improve their results. Built with Next.js, Supabase, and modern AI tooling, Tradia combines actionable analytics with an AI coach experience across desktop and mobile.
 
 ## 🚀 Core Capabilities
 - **AI Trading Coach** – Conversational and voice guidance driven by Grok/OpenAI, including daily performance summaries and strategy feedback.
+- **Emotion-Based Psychology Coach** – Real-time emotion detection, tilt alerts, and battle-tested coaching framework using xAI Grok. [Learn more →](EMOTION_COACH_README.md)
 - **Performance Analytics** – Automated win-rate, profit factor, drawdown, and expectancy calculations with interactive Plotly visualizations.
 - **Trade Import Pipeline** – Upload CSV/XLSX exports, parse instantly, and review risk metrics by pair, timeframe, or strategy tag.
 - **Journaling & Tagging** – Add notes, labels, and exportable PDF/Excel reports to track psychology and behavior over time.
