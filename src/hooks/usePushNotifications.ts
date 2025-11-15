@@ -8,7 +8,7 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   data?: any;
-  actions?: NotificationAction[];
+  actions?: Array<{ action: string; title: string; icon?: string }>;
 }
 
 export const usePushNotifications = () => {
