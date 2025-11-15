@@ -6,12 +6,19 @@ import { createClient } from "@/utils/supabase/server";
 import { mergeTradeSecret } from "@/lib/secure-store";
 import { aiService } from "@/lib/ai/AIService";
 import type { UserPlan as AIUserPlan } from "@/lib/ai/AIService";
+import { getErnieService, shouldUseErnie } from "@/lib/ai/ernieService";
 
 interface ChatRequest {
   message: string;
   tradeHistory?: any[];
   // Accept lightweight attachment metadata from client
-  attachments?: Array<{ name?: string; type?: string; size?: number }>;
+  // Updated to include actual image data for ERNIE processing
+  attachments?: Array<{ 
+    name?: string; 
+    type?: string; 
+    size?: number;
+    data?: string; // Base64 encoded image data or URL
+  }>;
   conversationHistory?: Array<{
     role: 'user' | 'assistant';
     content: string;
@@ -122,8 +129,65 @@ export async function POST(req: NextRequest) {
 
     // Analyze uploaded images if any (metadata only)
     let imageAnalysis: any = null;
+    let ernieResponse: string | null = null;
+    
     try {
-      if (attachments && attachments.length > 0) {
+      // Check if we have image attachments with actual data
+      const hasImageData = attachments && attachments.length > 0 && 
+                           attachments.some(a => a.data && a.data.length > 0);
+      
+      if (hasImageData && shouldUseErnie(true)) {
+        // Use ERNIE for vision-based analysis when images are present
+        console.log('[AI Chat] Using ERNIE vision model for image analysis');
+        const ernieService = getErnieService();
+        
+        try {
+          // Filter attachments to only those with image data
+          const imageAttachments = attachments!.filter(a => a.data);
+          
+          // Prepare system prompt for trading context
+          const systemPrompt = `You are Tradia AI, an expert trading advisor with vision capabilities. 
+You are analyzing trading charts, screenshots, or trade history images. 
+Provide detailed, actionable insights about the trading patterns, risk management, entry/exit points, and market conditions visible in the images.
+Be specific and reference what you see in the images.`;
+
+          // Build the prompt with trading context
+          const imagePrompt = message || 'Please analyze this trading chart/screenshot and provide detailed insights.';
+          
+          // Call ERNIE API
+          let ernieResult;
+          if (imageAttachments.length === 1) {
+            ernieResult = await ernieService.analyzeImage(
+              imageAttachments[0].data!,
+              imagePrompt,
+              systemPrompt
+            );
+          } else {
+            // Multiple images
+            ernieResult = await ernieService.analyzeMultipleImages(
+              imageAttachments.map(a => a.data!),
+              imagePrompt,
+              systemPrompt
+            );
+          }
+          
+          // Use ERNIE's response (final answer only, reasoning is logged by service)
+          ernieResponse = ernieResult.content;
+          
+          // Log usage for monitoring
+          if (ernieResult.usage) {
+            console.log('[AI Chat] ERNIE usage:', ernieResult.usage);
+          }
+          
+        } catch (ernieError) {
+          // If ERNIE fails, log and fall back to regular analysis
+          console.error('[AI Chat] ERNIE analysis failed, falling back to regular AI:', ernieError);
+          ernieResponse = null;
+        }
+      }
+      
+      // Fall back to mock analysis if ERNIE not used or failed
+      if (!ernieResponse && attachments && attachments.length > 0) {
         imageAnalysis = await analyzeTradeScreenshots(attachments);
       }
     } catch (imgErr) {
@@ -132,24 +196,32 @@ export async function POST(req: NextRequest) {
 
     // Generate AI response (hardened against failures)
     let aiResponse = "";
-    try {
-      // Precompute ML analysis (not returned directly but improves responses)
-      await aiService.createMLAnalysis(userTrades || []);
-      aiResponse = await aiService.generatePersonalizedResponse(
-        message || "",
-        userTrades || [],
-        {
-          recentTrades: userTrades?.slice(-10),
-          uploadedImages: attachments as any,
-          marketCondition: 'General market analysis',
-          mode: requestedMode
-        }
-      );
-    } catch (aiErr) {
-      console.error("AI generation error:", aiErr);
-      // Fall back to a simple deterministic message so the client does not show a hard error
-      const total = Array.isArray(userTrades) ? userTrades.length : 0;
-      aiResponse = `Here's a quick look: you have ${total} trades available. Ask me about performance, risk, or patterns.`;
+    
+    // If we got a response from ERNIE, use it
+    if (ernieResponse) {
+      aiResponse = ernieResponse;
+      console.log('[AI Chat] Using ERNIE vision response');
+    } else {
+      // Otherwise use the existing AI service
+      try {
+        // Precompute ML analysis (not returned directly but improves responses)
+        await aiService.createMLAnalysis(userTrades || []);
+        aiResponse = await aiService.generatePersonalizedResponse(
+          message || "",
+          userTrades || [],
+          {
+            recentTrades: userTrades?.slice(-10),
+            uploadedImages: attachments as any,
+            marketCondition: 'General market analysis',
+            mode: requestedMode
+          }
+        );
+      } catch (aiErr) {
+        console.error("AI generation error:", aiErr);
+        // Fall back to a simple deterministic message so the client does not show a hard error
+        const total = Array.isArray(userTrades) ? userTrades.length : 0;
+        aiResponse = `Here's a quick look: you have ${total} trades available. Ask me about performance, risk, or patterns.`;
+      }
     }
 
     // Ensure we always have a response
