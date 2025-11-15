@@ -78,7 +78,7 @@ const RiskAlertsRecommendations: React.FC<RiskAlertsRecommendationsProps> = ({ t
     let cumulativePnL = 0;
 
     const sortedTrades = [...trades].sort((a, b) =>
-      new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
+      new Date(a.closeTime || a.openTime || 0).getTime() - new Date(b.closeTime || b.openTime || 0).getTime()
     );
 
     for (const trade of sortedTrades) {

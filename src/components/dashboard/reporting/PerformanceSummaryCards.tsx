@@ -56,7 +56,7 @@ const PerformanceSummaryCards: React.FC<PerformanceSummaryCardsProps> = ({ trade
 
     // Calculate daily profits
     const dailyProfits = trades.reduce((acc, trade) => {
-      const date = new Date(trade.closeTime || trade.openTime).toDateString();
+      const date = new Date(trade.closeTime || trade.openTime || 0).toDateString();
       acc[date] = (acc[date] || 0) + (trade.pnl || 0);
       return acc;
     }, {} as Record<string, number>);
