@@ -97,7 +97,7 @@ const AIPerformanceInsights: React.FC<AIPerformanceInsightsProps> = ({ trades })
     // Consistency analysis
     const dailyPnL: Record<string, number> = {};
     trades.forEach(trade => {
-      const date = new Date(trade.closeTime || trade.openTime).toDateString();
+      const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
       dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
     });
 
@@ -383,7 +383,7 @@ function calculateTradingMetrics(trades: Trade[]) {
   let cumulativePnL = 0;
 
   const sortedTrades = [...trades].sort((a, b) =>
-    new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
+    new Date(a.closeTime || a.openTime || 0).getTime() - new Date(b.closeTime || b.openTime || 0).getTime()
   );
 
   for (const trade of sortedTrades) {
@@ -396,7 +396,7 @@ function calculateTradingMetrics(trades: Trade[]) {
   // Calculate consistency
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 

@@ -3,7 +3,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type PlanType = 'pro' | 'plus' | 'elite' | 'free';
+export type PlanType = 'pro' | 'plus' | 'elite' | 'free' | 'starter';
 
 export interface PlanLimits {
   mt5Accounts: number;
@@ -26,6 +26,8 @@ export interface PlanLimits {
   exportData: boolean; // Enable export buttons
   shareReports: boolean; // Enable share report
   alerts: boolean; // Enable set alerts
+  // File uploads
+  maxFileUploadsPerDay: number; // -1 for unlimited
   customizeView: boolean; // Enable customize view
   // TradingView features
   tvAlerts: number; // Monthly TV alert optimizations (-1 unlimited)
@@ -60,6 +62,34 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvPatterns: 10,
     tvScreener: false,
     tvBroker: false,
+    maxFileUploadsPerDay: 0,
+  },
+
+  starter: {
+    mt5Accounts: 0,
+    aiChatsPerDay: 10,
+    tradeStorageDays: 60,
+    maxTrades: 100,
+    advancedAnalytics: false,
+    prioritySupport: false,
+    customIntegrations: false,
+    aiMLAnalysis: true,
+    imageProcessing: false,
+    personalizedStrategy: false,
+    realTimeAnalytics: true,
+    riskManagement: false,
+    marketTiming: false,
+    maxTradePlans: 5,
+    exportData: false,
+    shareReports: false,
+    alerts: false,
+    customizeView: false,
+    tvAlerts: 10,
+    tvBacktests: 5,
+    tvPatterns: 20,
+    tvScreener: false,
+    tvBroker: false,
+    maxFileUploadsPerDay: 1,
   },
 
   pro: {
@@ -86,6 +116,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvPatterns: 50,
     tvScreener: true,
     tvBroker: true,
+    maxFileUploadsPerDay: 10,
   },
   plus: {
     mt5Accounts: 3,
@@ -111,6 +142,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvPatterns: 200,
     tvScreener: true,
     tvBroker: true,
+    maxFileUploadsPerDay: 10,
   },
   elite: {
     mt5Accounts: -1, // unlimited
@@ -136,6 +168,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvPatterns: -1,
     tvScreener: true,
     tvBroker: true,
+    maxFileUploadsPerDay: -1,
   }
 };
 
@@ -244,6 +277,7 @@ export function getUpgradeOptions(currentPlan: PlanType): Array<{
 export function getPlanDisplayName(plan: PlanType): string {
   const names = {
     free: 'Free',
+    starter: 'Starter',
     pro: 'Pro',
     plus: 'Plus',
     elite: 'Elite'
@@ -254,6 +288,7 @@ export function getPlanDisplayName(plan: PlanType): string {
 export function getPlanColor(plan: PlanType): string {
   const colors = {
     free: 'text-gray-500',
+    starter: 'text-gray-600',
     pro: 'text-blue-500',
     plus: 'text-purple-500',
     elite: 'text-yellow-500'
@@ -265,16 +300,17 @@ export function normalizePlanType(value: unknown): PlanType {
   if (!value) return 'free';
   const str = String(value).toLowerCase();
   if (str === 'premium') return 'plus';
-  if (str === 'basic' || str === 'starter') return 'free';
-  const allowed: PlanType[] = ['free', 'pro', 'plus', 'elite'];
+  if (str === 'basic') return 'free';
+  const allowed: PlanType[] = ['free', 'starter', 'pro', 'plus', 'elite'];
   return allowed.includes(str as PlanType) ? (str as PlanType) : 'free';
 }
 
 export const PLAN_RANK: Record<PlanType, number> = {
   free: 0,
-  pro: 1,
-  plus: 2,
-  elite: 3,
+  starter: 1,
+  pro: 2,
+  plus: 3,
+  elite: 4,
 };
 
 export function isPlanAtLeast(plan: PlanType | string | null | undefined, required: PlanType): boolean {
