@@ -383,7 +383,7 @@ function calculateAvgRR(trades: Trade[]): number {
 function getDateRange(trades: Trade[]): string {
   if (trades.length === 0) return 'N/A';
 
-  const dates = trades.map(trade => new Date(trade.closeTime || trade.openTime));
+  const dates = trades.map(trade => new Date(trade.closeTime || trade.openTime || Date.now()));
   const earliest = new Date(Math.min(...dates.map(d => d.getTime())));
   const latest = new Date(Math.max(...dates.map(d => d.getTime())));
 
@@ -393,7 +393,7 @@ function getDateRange(trades: Trade[]): string {
 function calculateBestDay(trades: Trade[]): number {
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
@@ -403,7 +403,7 @@ function calculateBestDay(trades: Trade[]): number {
 function calculateWorstDay(trades: Trade[]): number {
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
@@ -427,7 +427,7 @@ function calculateConsistencyScore(trades: Trade[]): number {
 
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
@@ -448,7 +448,7 @@ function calculateAvgTradeDuration(trades: Trade[]): number {
 
   trades.forEach(trade => {
     if (trade.openTime && trade.closeTime) {
-      const duration = new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime();
+      const duration = new Date(trade.closeTime || Date.now()).getTime() - new Date(trade.openTime || Date.now()).getTime();
       totalDuration += duration / (1000 * 60); // Convert to minutes
       count++;
     }
