@@ -662,7 +662,7 @@ ${this.generatePlanFooter()}`;
     cutoffDate.setDate(cutoffDate.getDate() - maxDays);
 
     return trades.filter(trade => {
-      const tradeDate = trade.closeTime ? new Date(trade.closeTime) : new Date(trade.openTime);
+      const tradeDate = trade.closeTime ? new Date(trade.closeTime) : new Date(trade.openTime || Date.now());
       return tradeDate >= cutoffDate;
     });
   }

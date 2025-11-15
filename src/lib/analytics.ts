@@ -70,12 +70,12 @@ export const trackPageView = (page: string, properties?: Record<string, any>) =>
 
 // Performance tracking
 export const trackPerformance = (metric: string, value: number, context?: Record<string, any>) => {
-  trackEvent('performance_metric', { metric, value, ...context });
+  trackEvent('feature_used', { feature: 'performance_metric', metric, value, ...context });
 };
 
 // Revenue tracking
 export const trackRevenue = (amount: number, currency: string = 'USD', plan?: string) => {
-  trackEvent('revenue', { amount, currency, plan });
+  trackEvent('feature_used', { feature: 'revenue', amount, currency, plan });
 };
 
 // Custom hook for analytics

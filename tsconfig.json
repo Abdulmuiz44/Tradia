@@ -32,6 +32,8 @@
     "tradia-backend",
     "tradia-backend/**",
     "tradia-smc-forecaster",
-    "tradia-smc-forecaster/**"
+    "tradia-smc-forecaster/**",
+    "src/pages_legacy",
+    "src/pages_legacy/**"
   ]
 }

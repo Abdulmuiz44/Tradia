@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useContext, useState } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import React, { useState } from "react";
 
 interface Props {
   selectedIds: string[];
@@ -9,27 +8,15 @@ interface Props {
 }
 
 export default function BulkActionBar({ selectedIds, setSelectedIds }: Props) {
-  const ctx = useContext(TradeContext)!;
   const [filterEmotion, setFilterEmotion] = useState<string>("");
 
   return (
     <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 p-3 rounded-md mb-4">
       <div className="flex gap-2">
         {selectedIds.length > 0 && (
-          <>
-            <button
-              className="px-3 py-1 bg-green-500 text-white rounded"
-              onClick={() => ctx.bulkToggleReviewed(selectedIds, true)}
-            >
-              Mark Reviewed
-            </button>
-            <button
-              className="px-3 py-1 bg-red-500 text-white rounded"
-              onClick={() => ctx.bulkToggleReviewed(selectedIds, false)}
-            >
-              Mark Pending
-            </button>
-          </>
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {selectedIds.length} trade{selectedIds.length !== 1 ? 's' : ''} selected
+          </span>
         )}
       </div>
       <div className="flex gap-2 items-center">

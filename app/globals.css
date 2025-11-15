@@ -259,50 +259,68 @@ html:not(.dark) .bg-slate-800 {
 }
 
 .dark .dashboard-sidebar__item {
-  color: var(--text-muted);
- font-weight: 500;
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+.dark .dashboard-sidebar__item span,
+.dark .dashboard-sidebar__item button,
+.dark .dashboard-sidebar__item a {
+  color: #ffffff !important;
 }
 
 .dashboard-sidebar__item:hover {
   background-color: #f8f9fa;
- color: #000000;
-border-color: transparent;
+  color: #000000;
+  border-color: transparent;
 }
 
 .dark .dashboard-sidebar__item:hover {
-background-color: var(--surface-hover);
-color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
+}
+
+.dark .dashboard-sidebar__item:hover span,
+.dark .dashboard-sidebar__item:hover button,
+.dark .dashboard-sidebar__item:hover a {
+  color: #ffffff !important;
 }
 
 .dashboard-sidebar__item.is-active {
   background-color: #ffffff;
-color: #000000;
-border-color: #e9ecef;
-box-shadow: var(--shadow-soft);
+  color: #000000;
+  border-color: #e9ecef;
+  box-shadow: var(--shadow-soft);
 }
 
 .dark .dashboard-sidebar__item.is-active {
-background-color: var(--surface-secondary);
-color: var(--text-primary);
-  border-color: var(--surface-border);
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .dashboard-sidebar__item.is-active span,
+.dark .dashboard-sidebar__item.is-active button,
+.dark .dashboard-sidebar__item.is-active a {
+  color: #ffffff !important;
 }
 
 .dashboard-sidebar__item .dashboard-sidebar__icon {
- color: #000000;
+  color: #000000;
 }
 
 .dark .dashboard-sidebar__item .dashboard-sidebar__icon {
-color: var(--text-muted);
+  color: #ffffff !important;
 }
 
 .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
 .dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-color: #000000;
+  color: #000000;
 }
 
 .dark .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
 .dark .dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-  color: var(--text-primary);
+  color: #ffffff !important;
 }
 
 .dashboard-sidebar__indicator {

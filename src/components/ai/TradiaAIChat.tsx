@@ -113,6 +113,20 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   // Conversation handlers
   const handleCreateConversation = useCallback(async () => {
     if (!user) {
+      // Allow guest users to create a local conversation
+      const timestamp = Date.now();
+      const newConversation: Conversation = {
+        id: `guest_conv_${timestamp}`,
+        title: 'New Conversation',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        pinned: false,
+        messages: [],
+      };
+      setConversations(prev => [newConversation, ...prev]);
+      setActiveConversationId(newConversation.id);
+      onActiveConversationChange?.(newConversation.id);
+      setMessages([]);
       return;
     }
     try {
@@ -149,6 +163,17 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   }, [model, assistantMode, onActiveConversationChange, user]);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
+    // Allow guest users to select local conversations
+    if (conversationId.startsWith('guest_')) {
+      setActiveConversationId(conversationId);
+      onActiveConversationChange?.(conversationId);
+      const guestConv = conversations.find(c => c.id === conversationId);
+      if (guestConv) {
+        setMessages(guestConv.messages || []);
+      }
+      return;
+    }
+    
     if (!user) {
       return;
     }
@@ -250,9 +275,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   }, [conversations, user]);
 
   const handleExportConversation = useCallback((conversationId?: string) => {
-    if (!user) {
-      return;
-    }
     const targetId = conversationId ?? activeConversationId;
     if (!targetId) {
       return;
@@ -269,11 +291,11 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
     }
-  }, [conversations, activeConversationId, user]);
+  }, [conversations, activeConversationId]);
 
   // Message handlers
   const handleSendMessage = useCallback(async (content: string) => {
-    if (!user || isProcessing) {
+    if (isProcessing) {
       return;
     }
 
@@ -612,7 +634,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
       abortControllerRef.current = null;
     }
   }, [
-    user,
     isProcessing,
     selectedTrades,
     assistantMode,
@@ -624,9 +645,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   ]);
 
   const handleRegenerateMessage = useCallback((messageId: string) => {
-    if (!user) {
-      return;
-    }
     // Find the user message before the assistant message
     const messageIndex = messages.findIndex(m => m.id === messageId);
     if (messageIndex > 0 && messages[messageIndex].type === 'assistant') {
@@ -641,9 +659,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   }, [messages, handleSendMessage, user]);
 
   const handleEditMessage = useCallback((messageId: string, newContent: string) => {
-    if (!user) {
-      return;
-    }
     setMessages(prev =>
       prev.map(m => m.id === messageId ? { ...m, content: newContent } : m)
     );
@@ -663,12 +678,9 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         )
       );
     }
-  }, [activeConversationId, user]);
+  }, [activeConversationId]);
 
   const handleDeleteMessage = useCallback((messageId: string) => {
-    if (!user) {
-      return;
-    }
     const newMessages = messages.filter(m => m.id !== messageId);
     setMessages(newMessages);
 
@@ -684,32 +696,20 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   }, [messages, activeConversationId, user]);
 
   const handleCopyMessage = useCallback((content: string) => {
-    if (!user) {
-      return;
-    }
     navigator.clipboard.writeText(content);
-  }, [user]);
+  }, []);
 
   const handleRateMessage = useCallback((messageId: string, rating: 'up' | 'down') => {
-    if (!user) {
-      return;
-    }
     // In a real app, this would send feedback to the server
     console.log(`Rated message ${messageId}: ${rating}`);
-  }, [user]);
+  }, []);
 
   const handlePinMessage = useCallback((messageId: string) => {
-    if (!user) {
-      return;
-    }
     // In a real app, this would pin the message
     console.log(`Pinned message ${messageId}`);
-  }, [user]);
+  }, []);
 
   const handleRetryMessage = useCallback(async (messageId: string) => {
-    if (!user) {
-      return;
-    }
     const errorMessage = messages.find(m => m.id === messageId);
     if (errorMessage?.originalContent) {
       // Remove the error message and retry
@@ -719,19 +719,13 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   }, [messages, handleSendMessage, user]);
 
   const handleAttachTrades = useCallback((tradeIds: string[]) => {
-    if (!user) {
-      return;
-    }
     setSelectedTradeIds(tradeIds);
-  }, [user]);
+  }, []);
 
   const handleVoiceInput = useCallback(() => {
-    if (!user) {
-      return;
-    }
     setIsListening(!isListening);
     // In a real app, this would integrate with speech recognition
-  }, [isListening, user]);
+  }, [isListening]);
 
   const handleStopGeneration = useCallback(() => {
     if (!isProcessing) {
@@ -742,13 +736,8 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     setIsProcessing(false);
   }, [isProcessing]);
 
-  // Create initial conversation if none exists and loaded
-  useEffect(() => {
-    if (conversations.length === 0 && user && !loading && !loadingConversations) {
-      handleCreateConversation();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations.length, user, loading, loadingConversations]);
+  // Don't auto-create conversations - let users create them explicitly
+  // This prevents automatic conversation creation that confuses users
 
   useEffect(() => {
     onConversationsChange?.(conversations);

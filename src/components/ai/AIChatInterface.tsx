@@ -36,13 +36,13 @@ import { useUser } from "@/context/UserContext";
 import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 import { cn } from "@/lib/utils";
 
-// Web Speech API type declarations
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
+// Web Speech API type declarations (already declared in useVoiceInput.ts)
+// declare global {
+//   interface Window {
+//     SpeechRecognition: any;
+//     webkitSpeechRecognition: any;
+//   }
+// }
 
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;

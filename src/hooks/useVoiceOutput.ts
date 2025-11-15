@@ -86,7 +86,8 @@ export const useVoiceOutput = (options: VoiceOutputOptions = {}) => {
 
       utterance.onstart = () => {
         setIsSpeaking(true);
-        trackEvent('voice_output_started', {
+        trackEvent('feature_used', { 
+          feature: 'voice_output_started',
           textLength: text.length,
           voice: currentVoice?.name,
           language: utterance.lang,
@@ -95,14 +96,14 @@ export const useVoiceOutput = (options: VoiceOutputOptions = {}) => {
 
       utterance.onend = () => {
         setIsSpeaking(false);
-        trackEvent('voice_output_completed');
+        trackEvent('feature_used', { feature: 'voice_output_completed' });
       };
 
       utterance.onerror = (event) => {
         setIsSpeaking(false);
         console.error('Speech synthesis error:', event);
         showError('Speech Error', 'Failed to synthesize speech.');
-        trackEvent('voice_output_error', { error: event.error });
+        trackEvent('feature_used', { feature: 'voice_output_error', error: event.error });
       };
 
       utteranceRef.current = utterance;
@@ -121,27 +122,27 @@ export const useVoiceOutput = (options: VoiceOutputOptions = {}) => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
       setIsSpeaking(false);
-      trackEvent('voice_output_stopped');
+      trackEvent('feature_used', { feature: 'voice_output_stopped' });
     }
   }, []);
 
   const pause = useCallback(() => {
     if (speechSynthesis.speaking && !speechSynthesis.paused) {
       speechSynthesis.pause();
-      trackEvent('voice_output_paused');
+      trackEvent('feature_used', { feature: 'voice_output_paused' });
     }
   }, []);
 
   const resume = useCallback(() => {
     if (speechSynthesis.paused) {
       speechSynthesis.resume();
-      trackEvent('voice_output_resumed');
+      trackEvent('feature_used', { feature: 'voice_output_resumed' });
     }
   }, []);
 
   const setVoice = useCallback((voice: SpeechSynthesisVoice) => {
     setCurrentVoice(voice);
-    trackEvent('voice_output_voice_changed', { voice: voice.name });
+    trackEvent('feature_used', { feature: 'voice_output_voice_changed', voice: voice.name });
   }, []);
 
   const getVoicesByLanguage = useCallback((language: string) => {
