@@ -49,3 +49,4 @@ next-env.d.ts
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+test-emotion-detection.ts
