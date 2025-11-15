@@ -6,9 +6,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig = {
   reactStrictMode: true,
-  turbopack: {
-    root: __dirname,
-  },
   eslint: {
     // Don't run ESLint during production builds on the server (CI/VERCEL)
     ignoreDuringBuilds: true,
