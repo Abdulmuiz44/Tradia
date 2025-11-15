@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useSession } from "next-auth/react";
+import { TradingAccountProvider } from "@/context/TradingAccountContext";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
 import TradeAnalytics from "@/components/dashboard/TradeAnalytics";
 
@@ -25,8 +26,10 @@ function TradeAnalyticsContent() {
 
 export default function TradeAnalyticsPage() {
   return (
-    <TradeProvider>
-      <TradeAnalyticsContent />
-    </TradeProvider>
+    <TradingAccountProvider>
+      <TradeProvider>
+        <TradeAnalyticsContent />
+      </TradeProvider>
+    </TradingAccountProvider>
   );
 }
