@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useContext } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import React, { useState } from "react";
+import { useTrade } from "@/context/TradeContext";
 import type { Trade } from "@/types/trade";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function TradeJournalModal({ trade, onClose }: Props) {
-  const ctx = useContext(TradeContext)!;
+  const ctx = useTrade();
   const [note, setNote] = useState((trade as any).postNote || "");
   const [emotion, setEmotion] = useState((trade as any).emotion || "Calm");
   const [rating, setRating] = useState((trade as any).executionRating || 3);

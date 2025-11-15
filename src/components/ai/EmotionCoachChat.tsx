@@ -278,7 +278,7 @@ export default function EmotionCoachChat() {
               Your Trading Psychology Coach
             </h2>
             <p className="mb-4">
-              I'm here to help you navigate trading emotions and build
+              I&apos;m here to help you navigate trading emotions and build
               discipline.
             </p>
             <div className="grid grid-cols-2 gap-3 max-w-md mx-auto text-sm">
@@ -393,7 +393,7 @@ export default function EmotionCoachChat() {
                 PAUSE
               </h2>
               <p className="text-lg text-red-100 mb-6">
-                High tilt detected. Let's take a breath.
+                High tilt detected. Let&apos;s take a breath.
               </p>
               <div className="bg-red-950 rounded-lg p-6 mb-6">
                 <p className="font-semibold text-white mb-4">
@@ -410,7 +410,7 @@ export default function EmotionCoachChat() {
                 onClick={() => setShowTiltAlert(false)}
                 className="bg-white text-red-900 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors"
               >
-                I'm Ready to Continue
+                I&apos;m Ready to Continue
               </button>
             </div>
           </div>

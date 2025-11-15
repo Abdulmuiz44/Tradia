@@ -97,7 +97,7 @@ const AIPerformanceInsights: React.FC<AIPerformanceInsightsProps> = ({ trades })
     // Consistency analysis
     const dailyPnL: Record<string, number> = {};
     trades.forEach(trade => {
-      const date = new Date(trade.closeTime || trade.openTime).toDateString();
+      const date = new Date(trade.closeTime || trade.openTime || Date.now()).toDateString();
       dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
     });
 
