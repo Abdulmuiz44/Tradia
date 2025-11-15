@@ -383,7 +383,7 @@ function calculateAvgRR(trades: Trade[]): number {
 function getDateRange(trades: Trade[]): string {
   if (trades.length === 0) return 'N/A';
 
-  const dates = trades.map(trade => new Date(trade.closeTime || trade.openTime));
+  const dates = trades.map(trade => new Date(trade.closeTime || trade.openTime || 0));
   const earliest = new Date(Math.min(...dates.map(d => d.getTime())));
   const latest = new Date(Math.max(...dates.map(d => d.getTime())));
 
@@ -393,7 +393,7 @@ function getDateRange(trades: Trade[]): string {
 function calculateBestDay(trades: Trade[]): number {
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || 0).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
@@ -403,7 +403,7 @@ function calculateBestDay(trades: Trade[]): number {
 function calculateWorstDay(trades: Trade[]): number {
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || 0).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
@@ -427,7 +427,7 @@ function calculateConsistencyScore(trades: Trade[]): number {
 
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = new Date(trade.closeTime || trade.openTime || 0).toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 

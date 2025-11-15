@@ -14,8 +14,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  Histogram
+  ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, BarChart3, Activity } from 'lucide-react';
 import { Trade } from '@/types/trade';
@@ -36,7 +35,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
 
     // Sort trades by date
     const sortedTrades = [...trades].sort((a, b) =>
-      new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
+      new Date(a.closeTime || a.openTime || 0).getTime() - new Date(b.closeTime || b.openTime || 0).getTime()
     );
 
     // Risk per trade over time
@@ -46,7 +45,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
 
       return {
         trade: index + 1,
-        date: new Date(trade.closeTime || trade.openTime).toLocaleDateString(),
+        date: new Date(trade.closeTime || trade.openTime || 0).toLocaleDateString(),
         riskAmount: risk,
         riskPercent: riskPercent,
         symbol: trade.symbol,
@@ -64,7 +63,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
 
       return {
         trade: index + 1,
-        date: new Date(trade.closeTime || trade.openTime).toLocaleDateString(),
+        date: new Date(trade.closeTime || trade.openTime || 0).toLocaleDateString(),
         equity: cumulativePnL + 10000, // Starting equity of $10k
         drawdown: -drawdown, // Negative for visualization
         pnl: trade.pnl || 0
