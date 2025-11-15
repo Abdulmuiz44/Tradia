@@ -8,7 +8,11 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   data?: any;
-  actions?: NotificationAction[];
+  actions?: Array<{
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
 }
 
 export const usePushNotifications = () => {
@@ -90,7 +94,7 @@ export const usePushNotifications = () => {
 
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
       });
 
       setSubscription(pushSubscription);
@@ -153,6 +157,7 @@ export const usePushNotifications = () => {
         icon: payload.icon || '/icon-192x192.png',
         badge: payload.badge || '/icon-192x192.png',
         data: payload.data,
+        // @ts-ignore - actions is supported but types may be outdated
         actions: payload.actions,
         vibrate: [100, 50, 100],
         requireInteraction: false,

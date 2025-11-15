@@ -16,7 +16,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any | null>(null);
   const { info, error: showError } = useToast();
 
   useEffect(() => {

@@ -78,7 +78,7 @@ const RiskAlertsRecommendations: React.FC<RiskAlertsRecommendationsProps> = ({ t
     let cumulativePnL = 0;
 
     const sortedTrades = [...trades].sort((a, b) =>
-      new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
+      new Date(a.closeTime || a.openTime || Date.now()).getTime() - new Date(b.closeTime || b.openTime || Date.now()).getTime()
     );
 
     for (const trade of sortedTrades) {
@@ -139,7 +139,7 @@ const RiskAlertsRecommendations: React.FC<RiskAlertsRecommendationsProps> = ({ t
           symbol: t.symbol,
           outcome: t.outcome,
           pnl: t.pnl,
-          date: new Date(t.closeTime || t.openTime).toISOString()
+          date: new Date(t.closeTime || t.openTime || Date.now()).toISOString()
         }))
       };
 
@@ -410,7 +410,7 @@ function calculateMaxDrawdown(trades: Trade[]): number {
   let cumulativePnL = 0;
 
   const sortedTrades = [...trades].sort((a, b) =>
-    new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
+    new Date(a.closeTime || a.openTime || Date.now()).getTime() - new Date(b.closeTime || b.openTime || Date.now()).getTime()
   );
 
   for (const trade of sortedTrades) {

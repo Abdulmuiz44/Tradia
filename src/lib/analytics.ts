@@ -11,7 +11,16 @@ export type AnalyticsEvent =
   | 'plan_downgrade'
   | 'error_occurred'
   | 'page_view'
-  | 'feature_used';
+  | 'feature_used'
+  | 'exit_intent_trigger'
+  | 'exit_intent_resume'
+  | 'exit_intent_cta'
+  | 'push_permission_granted'
+  | 'push_permission_denied'
+  | 'push_subscribed'
+  | 'push_unsubscribed'
+  | 'push_subscription_failed'
+  | 'push_notification_sent';
 
 // Custom analytics tracking
 export const trackEvent = (event: AnalyticsEvent, properties?: Record<string, any>) => {
