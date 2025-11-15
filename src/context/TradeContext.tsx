@@ -390,9 +390,11 @@ export interface TradeContextValue {
   legacyLocalTrades: Trade[];
   importTrades: (trades: Trade[]) => Promise<void>;
   importLoading: boolean;
+  bulkToggleReviewed: (ids: string[], reviewed: boolean) => Promise<void>;
+  setTradesFromCsv: (trades: Trade[]) => Promise<void>;
 }
 
-const TradeContext = createContext<TradeContextValue | undefined>(undefined);
+export const TradeContext = createContext<TradeContextValue | undefined>(undefined);
 
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -839,6 +841,38 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     [legacyLocalTrades, notify, refreshTrades],
   );
 
+  const bulkToggleReviewed = useCallback(
+    async (ids: string[], reviewed: boolean) => {
+      try {
+        // Update trades in bulk
+        const updates = ids.map(id => {
+          const trade = trades.find(t => t.id === id);
+          if (trade) {
+            return updateTrade({ ...trade, reviewed });
+          }
+          return Promise.resolve();
+        });
+        await Promise.all(updates);
+        await refreshTrades();
+      } catch (error) {
+        console.error("Error bulk toggling reviewed:", error);
+        notify({
+          variant: "destructive",
+          title: "Failed to update trades",
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [trades, updateTrade, refreshTrades, notify]
+  );
+
+  const setTradesFromCsv = useCallback(
+    async (csvTrades: Trade[]) => {
+      await importTrades(csvTrades);
+    },
+    [importTrades]
+  );
+
   const contextValue: TradeContextValue = {
     trades,
     addTrade,
@@ -852,6 +886,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     legacyLocalTrades,
     importTrades,
     importLoading,
+    bulkToggleReviewed,
+    setTradesFromCsv,
   };
 
   return <TradeContext.Provider value={contextValue}>{children}</TradeContext.Provider>;

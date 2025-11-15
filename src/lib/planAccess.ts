@@ -3,7 +3,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type PlanType = 'pro' | 'plus' | 'elite' | 'free';
+export type PlanType = 'pro' | 'plus' | 'elite' | 'free' | 'starter';
 
 export interface PlanLimits {
   mt5Accounts: number;
