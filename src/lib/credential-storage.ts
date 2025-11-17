@@ -168,6 +168,9 @@ export class CredentialStorageService {
         .eq('id', credentialId);
 
       return {
+        id: data.id,
+        user_id: data.user_id,
+        account_number: data.account_number || data.login,
         server: data.server,
         login: data.login,
         password: decryptedPassword,
