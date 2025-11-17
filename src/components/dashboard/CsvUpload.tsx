@@ -272,7 +272,7 @@ export default function CsvUpload({
   onClose: controlledOnClose,
   onImport: controlledOnImport,
 }: CsvUploadProps): React.ReactElement {
-  const { setTradesFromCsv } = useTrade();
+  const { importTrades, importLoading } = useTrade();
   const { plan } = useUser();
 
   const [open, setOpen] = useState<boolean>(false);
@@ -473,7 +473,7 @@ export default function CsvUpload({
     });
   }, [rows, mappedHeaders]);
 
-  const handleImport = useCallback(() => {
+  const handleImport = useCallback(async () => {
     if (!mappedForImport || mappedForImport.length === 0) {
       toast.error("No rows to import.");
       return;
@@ -534,7 +534,7 @@ export default function CsvUpload({
 
       setParsing(true);
       setProgress(60);
-      setTradesFromCsv(tradesToImport as Trade[]);
+      await importTrades(tradesToImport as Trade[]);
       setProgress(100);
       toast.success(`Imported ${mappedForImport.length} rows`);
       setTimeout(() => {
@@ -564,7 +564,7 @@ export default function CsvUpload({
       setParsing(false);
       setProgress(0);
     }
-  }, [mappedForImport, setTradesFromCsv, controlledOnImport, controlledOnClose, plan]);
+  }, [mappedForImport, importTrades, controlledOnImport, controlledOnClose, plan]);
 
   const marketStats = useMemo(() => {
     if (!rows || rows.length === 0) return null;

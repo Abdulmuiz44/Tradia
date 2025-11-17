@@ -94,7 +94,7 @@ export default function OnboardingPage() {
         >
           <h1 className="text-4xl font-bold mb-4">Welcome to Tradia! 🎉</h1>
           <p className="text-gray-300 text-lg">
-            Let's personalize your experience. What do you trade?
+            Let&apos;s personalize your experience. What do you trade?
           </p>
         </motion.div>
 
@@ -155,7 +155,7 @@ export default function OnboardingPage() {
 
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
-            Don't worry, you can change this later in your account settings.
+            Don&apos;t worry, you can change this later in your account settings.
           </p>
         </div>
       </div>
