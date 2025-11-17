@@ -14,9 +14,9 @@ import TrialBanner from "@/components/TrialBanner";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Tradia | AI Trading Performance & Analytics",
-  description: "Tradia is your AI trading performance hub: add trades manually or import via CSV to analyze performance, get insights, and improve consistency. Start free and upgrade anytime.",
-  keywords: "trade analysis, trading performance, AI trading assistant, trade journal, trading insights, forex trading, trading analytics, CSV import",
+  title: "Tradia | AI-Powered Forex & Crypto Trading Analytics",
+  description: "Tradia is your AI trading performance hub for Forex and Crypto: import FX and crypto trades, see performance metrics, get personalized coaching, and improve your edge. Optimized for EUR/USD, GBP/JPY, BTC/USDT, ETH/USDT traders.",
+  keywords: "forex trading analytics, crypto trading analysis, FX performance tracking, bitcoin trading journal, ethereum trading insights, forex AI assistant, crypto trade journal, EUR/USD analytics, BTC/USDT tracker, trading performance",
   authors: [{ name: "Tradia Team" }],
   creator: "Tradia",
   publisher: "Tradia",
@@ -30,8 +30,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: "Tradia | AI Trading Performance & Analytics",
-    description: "AI-powered trade analytics, coaching, CSV import, prop-firm simulator and risk controls — all in one.",
+    title: "Tradia | AI-Powered Forex & Crypto Trading Analytics",
+    description: "AI-powered Forex and Crypto trade analytics, personalized coaching, CSV import for FX pairs and crypto. Track EUR/USD, BTC/USDT and more — optimized for FX & Crypto traders.",
     url: "https://tradiaai.app",
     siteName: "Tradia",
     images: [
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tradia | AI Trading Performance & Analytics",
-    description: "Analyze trades, get AI insights and risk controls, and level up your consistency.",
+    title: "Tradia | AI-Powered Forex & Crypto Trading Analytics",
+    description: "Analyze Forex and Crypto trades, get AI insights for EUR/USD, BTC/USDT and more. Optimized for FX & Crypto traders.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },
@@ -73,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Tradia",
-    "description": "AI-powered trading performance assistant. Add trades manually or import via CSV to analyze performance, get AI insights, and improve your trading strategy.",
+    "description": "AI-powered Forex and Crypto trading performance assistant. Import FX pairs and crypto trades via CSV, analyze performance metrics, get personalized AI coaching, and improve your trading edge. Optimized for EUR/USD, GBP/JPY, BTC/USDT, ETH/USDT traders.",
     "url": "https://tradiaai.app",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web Browser",
