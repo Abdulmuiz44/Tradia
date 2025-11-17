@@ -15,6 +15,7 @@ export type ConnectionStatus =
   | 'disconnected'
   | 'connecting'
   | 'error'
+  | 'degraded'
   | 'unknown';
 
 export interface MT5Connection {
@@ -23,4 +24,10 @@ export interface MT5Connection {
   status: ConnectionStatus;
   lastConnected?: Date;
   error?: string;
+}
+
+export interface ConnectionError {
+  code: string;
+  message: string;
+  details?: any;
 }

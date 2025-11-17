@@ -11,6 +11,7 @@ interface ValidationOptions {
 
 interface ValidationResult {
   success: boolean;
+  isValid: boolean;
   status: ConnectionStatus;
   error?: string;
   latency?: number;
@@ -40,6 +41,7 @@ class MT5ConnectionManager {
     // TODO: Implement connection validation
     return {
       success: false,
+      isValid: false,
       status: 'disconnected',
       error: 'Not implemented'
     };
