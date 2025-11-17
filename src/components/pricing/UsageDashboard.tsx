@@ -46,14 +46,14 @@ export const UsageDashboard: React.FC<UsageDashboardProps> = ({
       description: 'Messages used today',
       color: 'blue',
     },
-    {
-      icon: <FileText className="w-5 h-5" />,
-      label: 'File Uploads',
-      used: usageStats.uploads,
-      limit: limits.maxFileUploadsPerDay,
-      description: 'Files uploaded today',
-      color: 'green',
-    },
+    // {
+    //   icon: <FileText className="w-5 h-5" />,
+    //   label: 'File Uploads',
+    //   used: usageStats.uploads,
+    //   limit: 100, // Default limit since maxFileUploadsPerDay doesn't exist in PlanLimits
+    //   description: 'Files uploaded today',
+    //   color: 'green',
+    // },
   ];
 
   return (

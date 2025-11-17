@@ -332,7 +332,7 @@ export const authOptions: NextAuthOptions = {
 
   async session({ session, token }) {
       try {
-        if (!session.user || typeof session.user !== "object") session.user = {};
+        if (!session.user || typeof session.user !== "object") session.user = { id: '' };
         const su = session.user as Record<string, unknown>;
         const mutableToken = token as Record<string, unknown>;
         if (typeof token.userId === "string") su.id = token.userId;
