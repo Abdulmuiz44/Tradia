@@ -25,35 +25,98 @@ const HEADER_KEY_MAP: [RegExp, string][] = [
   [/^\s*sym(?:bol)?\s*$/i, "symbol"],
   [/^\s*ticker\s*$/i, "symbol"],
   [/^\s*instrument\s*$/i, "symbol"],
+  [/^\s*pair\s*$/i, "symbol"],
 
   [/^\s*open\s*time\s*$/i, "openTime"],
   [/^\bopen\b/i, "openTime"],
   [/^\bentry_time\b/i, "openTime"],
+  [/^\bentry\s*time\b/i, "openTime"],
 
   [/^\s*close\s*time\s*$/i, "closeTime"],
   [/^\bclose\b/i, "closeTime"],
+  [/^\bexit_time\b/i, "closeTime"],
+  [/^\bexit\s*time\b/i, "closeTime"],
 
   [/^\s*profit(?:[_\s-]?loss|loss)?\s*$/i, "pnl"],
   [/^\s*pnl\s*$/i, "pnl"],
   [/^\bnetpl\b/i, "pnl"],
 
   [/^\s*entry(?:[_\s-]?price)?\s*$/i, "entryPrice"],
+  [/^\s*exit(?:[_\s-]?price)?\s*$/i, "exitPrice"],
   [/^\s*stop(?:[_\s-]?loss)?(?:[_\s-]?price)?\s*$/i, "stopLossPrice"],
   [/^\s*take(?:[_\s-]?profit)?(?:[_\s-]?price)?\s*$/i, "takeProfitPrice"],
 
   [/^\s*lots?\s*$/i, "lotSize"],
+  [/^\s*lot[_\s-]?size\s*$/i, "lotSize"],
   [/^\s*volume\s*$/i, "lotSize"],
+  
+  [/^\s*quantity\s*$/i, "quantity"],
+  [/^\s*qty\s*$/i, "quantity"],
+  [/^\s*amount\s*$/i, "quantity"],
 
   [/^\s*side\s*$/i, "direction"],
   [/^\s*order(?:[_\s-]?type)?\s*$/i, "orderType"],
   [/^\s*outcome\s*$/i, "outcome"],
   [/^\s*rr\b/i, "resultRR"],
   [/^\s*notes?\s*$/i, "journalNotes"],
+  [/^\s*comment\s*$/i, "journalNotes"],
   [/^\s*reason\b/i, "reasonForTrade"],
   [/^\s*id\b/i, "id"],
   [/^\s*ticket\b/i, "id"],
   [/^\s*session\b/i, "session"],
 ];
+
+/**
+ * Detect if a symbol is a Forex pair
+ */
+function isForexSymbol(symbol: string): boolean {
+  if (!symbol) return false;
+  const normalized = symbol.toUpperCase().replace(/[^A-Z]/g, '');
+  
+  const forexPairs = [
+    'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF',
+    'NZDUSD', 'EURGBP', 'EURJPY', 'GBPJPY', 'AUDJPY', 'EURAUD',
+    'EURCHF', 'AUDNZD', 'NZDJPY', 'GBPAUD', 'GBPCAD', 'EURNZD',
+    'AUDCAD', 'GBPCHF', 'EURCAD', 'CADJPY', 'CHFJPY', 'AUDCHF',
+  ];
+  
+  // Check if it's a known FX pair or follows FX pair pattern (6 letters with currency codes)
+  if (forexPairs.some(pair => normalized.includes(pair))) {
+    return true;
+  }
+  
+  // Check for slash format (EUR/USD)
+  if (/^[A-Z]{3}\/[A-Z]{3}$/.test(symbol.toUpperCase())) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Detect if a symbol is a Crypto pair
+ */
+function isCryptoSymbol(symbol: string): boolean {
+  if (!symbol) return false;
+  const normalized = symbol.toUpperCase();
+  
+  const cryptoAssets = [
+    'BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'XRP', 'ADA', 'SOL',
+    'DOGE', 'DOT', 'MATIC', 'LTC', 'AVAX', 'LINK', 'UNI', 'ATOM',
+    'XLM', 'ALGO', 'VET', 'FIL', 'TRX', 'ETC', 'AAVE', 'XMR',
+  ];
+  
+  return cryptoAssets.some(asset => normalized.includes(asset));
+}
+
+/**
+ * Auto-detect market type from symbol
+ */
+function detectMarketType(symbol: string): 'forex' | 'crypto' | null {
+  if (isForexSymbol(symbol)) return 'forex';
+  if (isCryptoSymbol(symbol)) return 'crypto';
+  return null;
+}
 
 function guessHeaderKey(header: string): string | undefined {
   const h = header.trim();
@@ -450,13 +513,22 @@ export default function CsvUpload({
         const trade: Partial<Trade> = {};
         for (const key in row) {
           const value = row[key];
-          if (key === 'lotSize' || key === 'entryPrice' || key === 'stopLossPrice' || key === 'takeProfitPrice' || key === 'pnl') {
+          if (key === 'lotSize' || key === 'entryPrice' || key === 'exitPrice' || key === 'stopLossPrice' || key === 'takeProfitPrice' || key === 'pnl' || key === 'quantity') {
             (trade as any)[key] = Number(value) || 0;
           } else {
             (trade as any)[key] = value;
           }
         }
         trade.id = trade.id || `imported-${idx}-${Date.now()}`;
+        
+        // Auto-detect market type from symbol
+        if (trade.symbol && typeof trade.symbol === 'string') {
+          const marketType = detectMarketType(trade.symbol);
+          if (marketType) {
+            (trade as any).market = marketType;
+          }
+        }
+        
         return trade;
       });
 
@@ -493,6 +565,32 @@ export default function CsvUpload({
       setProgress(0);
     }
   }, [mappedForImport, setTradesFromCsv, controlledOnImport, controlledOnClose, plan]);
+
+  const marketStats = useMemo(() => {
+    if (!rows || rows.length === 0) return null;
+    
+    let forexCount = 0;
+    let cryptoCount = 0;
+    let unknownCount = 0;
+    
+    rows.forEach((row) => {
+      const symbolKey = Object.keys(row).find(k => 
+        mappedHeaders[k] === 'symbol' || k.toLowerCase() === 'symbol'
+      );
+      
+      if (symbolKey) {
+        const symbol = String(row[symbolKey] || '');
+        const market = detectMarketType(symbol);
+        if (market === 'forex') forexCount++;
+        else if (market === 'crypto') cryptoCount++;
+        else unknownCount++;
+      } else {
+        unknownCount++;
+      }
+    });
+    
+    return { forexCount, cryptoCount, unknownCount, total: rows.length };
+  }, [rows, mappedHeaders]);
 
   const PreviewTable = useMemo(() => {
     if (!rows || rows.length === 0) {
@@ -619,6 +717,38 @@ export default function CsvUpload({
 
           {/* Center: scrollable content area */}
           <div className="overflow-auto pr-2">
+            {/* Market detection summary */}
+            {marketStats && marketStats.total > 0 && (
+              <div className="mb-4 p-3 rounded bg-zinc-800/50 border border-zinc-700">
+                <h3 className="text-sm font-semibold text-zinc-200 mb-2">Market Detection</h3>
+                <div className="flex gap-4 text-xs">
+                  {marketStats.forexCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">💱 Forex:</span>
+                      <span className="text-zinc-300">{marketStats.forexCount} trades</span>
+                    </div>
+                  )}
+                  {marketStats.cryptoCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400">₿ Crypto:</span>
+                      <span className="text-zinc-300">{marketStats.cryptoCount} trades</span>
+                    </div>
+                  )}
+                  {marketStats.unknownCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400">⚠️ Unknown:</span>
+                      <span className="text-zinc-300">{marketStats.unknownCount} trades</span>
+                    </div>
+                  )}
+                </div>
+                {marketStats.unknownCount > 0 && (
+                  <p className="mt-2 text-xs text-zinc-400">
+                    Note: {marketStats.unknownCount} trade(s) could not be auto-detected. Market type will be set during import if possible.
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div className="mb-4">
               <div className="text-xs text-zinc-400 mb-1">Parsing progress</div>
               <div className="w-full bg-zinc-900 h-2 rounded overflow-hidden">
