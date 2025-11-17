@@ -9,12 +9,13 @@ if (SENTRY_DSN) {
     environment: process.env.NODE_ENV || 'development',
     replaysOnErrorSampleRate: 1.0,
     replaysSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0.1,
-    integrations: [
-      new Sentry.Replay({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
+    // Replay integration requires @sentry/replay package
+    // integrations: [
+    //   new Sentry.Replay({
+    //     maskAllText: true,
+    //     blockAllMedia: true,
+    //   }),
+    // ],
   });
 }
 
@@ -70,10 +71,9 @@ export const clearUser = () => {
 // Performance tracking
 export const startTransaction = (name: string, op: string) => {
   if (SENTRY_DSN) {
-    return Sentry.startTransaction({
-      name,
-      op,
-    });
+    // startTransaction is deprecated in newer versions of Sentry
+    // Use startSpan instead or remove this function
+    return null;
   }
   return null;
 };
