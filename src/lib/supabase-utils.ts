@@ -23,7 +23,7 @@ export async function checkDailyLimit(userId: string, limitType: string): Promis
       return false;
     }
 
-    const currentCount = usageData?.[`${limitType}_count`] || 0;
+    const currentCount = (usageData as any)?.[`${limitType}_count`] || 0;
 
     // Get user plan
     const { data: userData, error: userError } = await supabase

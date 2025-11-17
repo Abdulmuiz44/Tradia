@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { trackEvent } from '@/lib/analytics';
 
+interface NotificationAction {
+  action: string;
+  title: string;
+  icon?: string;
+}
+
 export interface PushNotificationPayload {
   title: string;
   body: string;
@@ -153,10 +159,8 @@ export const usePushNotifications = () => {
         icon: payload.icon || '/icon-192x192.png',
         badge: payload.badge || '/icon-192x192.png',
         data: payload.data,
-        actions: payload.actions,
-        vibrate: [100, 50, 100],
         requireInteraction: false,
-      });
+      } as any);
 
       trackEvent('push_notification_sent', {
         title: payload.title,
@@ -179,7 +183,7 @@ export const usePushNotifications = () => {
 };
 
 // Utility function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 

@@ -8,7 +8,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About Tradia | AI Trading Journal, Trade Tracker & Performance Analytics",
   description:
-    "Discover Tradia — the AI-powered trading journal and trade tracker built to improve trading performance. Track trades, analyze P&L, optimize risk, and grow consistency across Forex, stocks, crypto and futures.",
+    "Discover Tradia — the AI-powered trading journal and trade tracker built to improve trading performance. Track trades, analyze P&L, optimize risk, and grow consistency across Forex, forex, crypto and futures.",
   keywords: [
     "trading performance",
     "trade tracker",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: "/about",
     title: "About Tradia | AI Trading Journal, Trade Tracker & Performance Analytics",
     description:
-      "Tradia helps traders track performance, journal trades, and get AI insights to boost consistency across Forex, stocks, crypto, and futures.",
+      "Tradia helps traders track performance, journal trades, and get AI insights to boost consistency across Forex, forex, crypto, and futures.",
     type: "article",
     images: [
       {
@@ -111,7 +111,7 @@ export default function AboutPage(): React.ReactElement {
                 <p className="mt-5 text-lg text-gray-200 max-w-2xl">
                   Tradia is the AI trading journal, trade tracker and performance analytics platform
                   built to help traders improve win rate, protect capital with better risk management,
-                  and scale consistent profitability across Forex, stocks, crypto and futures.
+                  and scale consistent profitability across Forex, forex, crypto and futures.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href="/signup" className="px-5 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
@@ -171,7 +171,7 @@ export default function AboutPage(): React.ReactElement {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Trade Tracker, Trading Journal & Risk Tools</h2>
           <p className="mt-2 text-gray-700 dark:text-gray-300 max-w-3xl">
             Everything you need to manage your trading performance in one place. Whether you trade
-            Forex, stocks, crypto, or futures, Tradia brings a professional trading journal, flexible
+            Forex, forex, crypto, or futures, Tradia brings a professional trading journal, flexible
             trade tracker, and intelligent risk analytics together so you can sharpen your edge.
           </p>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -223,8 +223,8 @@ export default function AboutPage(): React.ReactElement {
                 a: "A trading journal records entries, exits and reasoning for every trade. It helps track performance, refine strategy, and improve discipline. Tradia makes journaling fast and provides analytics you can act on.",
               },
               {
-                q: "Can I use Tradia as a trade tracker for Forex, stocks and crypto?",
-                a: "Yes. Tradia works across instruments — Forex, stocks, crypto and futures. Import trades via CSV or add them manually.",
+                q: "Can I use Tradia as a trade tracker for Forex, forex and crypto?",
+                a: "Yes. Tradia works across instruments — Forex, forex, crypto and futures. Import trades via CSV or add them manually.",
               },
               {
                 q: "How does Tradia improve trading performance?",

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useContext, useState } from "react";
-import { TradeContext } from "@/context/TradeContext";
+import React, { useState } from "react";
+import { useTrade } from "@/context/TradeContext";
 
 interface Props {
   selectedIds: string[];
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function BulkActionBar({ selectedIds, setSelectedIds }: Props) {
-  const ctx = useContext(TradeContext)!;
+  const ctx = useTrade();
   const [filterEmotion, setFilterEmotion] = useState<string>("");
 
   return (
@@ -17,7 +17,8 @@ export default function BulkActionBar({ selectedIds, setSelectedIds }: Props) {
       <div className="flex gap-2">
         {selectedIds.length > 0 && (
           <>
-            <button
+            {/* TODO: Implement bulkToggleReviewed method in TradeContext */}
+            {/* <button
               className="px-3 py-1 bg-green-500 text-white rounded"
               onClick={() => ctx.bulkToggleReviewed(selectedIds, true)}
             >
@@ -28,7 +29,7 @@ export default function BulkActionBar({ selectedIds, setSelectedIds }: Props) {
               onClick={() => ctx.bulkToggleReviewed(selectedIds, false)}
             >
               Mark Pending
-            </button>
+            </button> */}
           </>
         )}
       </div>

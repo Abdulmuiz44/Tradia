@@ -154,5 +154,5 @@ async function getTodayUsage(userId: string, type: string): Promise<number> {
     .single();
 
   if (error || !data) return 0;
-  return data[`${type}_count`] || 0;
+  return (data as any)[`${type}_count`] || 0;
 }

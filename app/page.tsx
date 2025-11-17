@@ -201,11 +201,11 @@ export default function Home(): React.ReactElement {
                 </motion.h1>
 
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
-                  Traders like you boosted win rates 20% — upload a sample trade to see yours free.
+                  Import trades, see your performance metrics, get personalized coaching with Tradia AI, and improve your edge — optimized for FX & Crypto traders.
                 </motion.p>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-400 max-w-2xl">
-                  Join thousands of traders who use Tradia to analyze their trading performance, identify patterns, optimize strategies, and make data-driven decisions that lead to consistent profits in the financial markets.
+                  Join thousands of Forex and Crypto traders who use Tradia to analyze their trading performance, identify patterns, optimize strategies, and make data-driven decisions that lead to consistent profits.
                 </motion.div>
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
@@ -333,8 +333,8 @@ export default function Home(): React.ReactElement {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4 text-white">Why Professional Traders Choose Tradia</h2>
               <p className="text-gray-300 max-w-3xl mx-auto text-lg">
-                Join thousands of successful traders who have transformed their trading performance using our comprehensive analytics platform.
-                From day traders to swing traders, Tradia provides the insights and tools needed to trade with confidence.
+                Join thousands of successful Forex and Crypto traders who have transformed their trading performance using our comprehensive analytics platform.
+                Whether you trade FX pairs or digital assets, Tradia provides the insights and tools needed to trade with confidence.
               </p>
             </div>
 
@@ -369,9 +369,9 @@ export default function Home(): React.ReactElement {
                </div>
                 <h3 className="text-xl font-semibold mb-3">Comprehensive Trading Analytics</h3>
                 <p className="text-gray-400">
-                  Get detailed insights into your trading performance with advanced analytics and AI-powered recommendations.
-                  Whether you trade forex, stocks, commodities, or cryptocurrencies, Tradia provides
-                  comprehensive analysis to help you improve your trading strategies.
+                  Get detailed insights into your Forex and Crypto trading performance with advanced analytics and AI-powered recommendations.
+                  Track EUR/USD, GBP/JPY, BTC/USDT, ETH/USDT and more. Tradia provides
+                  comprehensive analysis to help you improve your FX and Crypto trading strategies.
                 </p>
               </div>
 
@@ -414,7 +414,7 @@ export default function Home(): React.ReactElement {
 
             <div className="text-center mt-12">
               <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-                Ready to take your trading to the next level? Join successful traders worldwide who use Tradia
+                Ready to take your Forex and Crypto trading to the next level? Join successful FX and Crypto traders worldwide who use Tradia
                 to analyze, improve, and scale their trading performance.
               </p>
               <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg text-lg">

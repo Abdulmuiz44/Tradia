@@ -21,6 +21,7 @@ interface UserSettings {
   theme: 'light' | 'dark' | 'system';
   language: string;
   timezone: string;
+  marketPreference: 'forex' | 'crypto' | 'both';
   notifications: {
     email: boolean;
     push: boolean;
@@ -39,6 +40,7 @@ export default function SettingsPage() {
     theme: 'dark',
     language: 'en',
     timezone: 'UTC',
+    marketPreference: 'both',
     notifications: {
       email: true,
       push: true,
@@ -225,6 +227,46 @@ export default function SettingsPage() {
                   <option value="Asia/Tokyo">Tokyo</option>
                   <option value="Africa/Lagos">West Africa (Lagos)</option>
                 </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Market Preference Settings */}
+          <div className="bg-[#15202B] rounded-lg p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Globe className="w-6 h-6" />
+              Trading Markets
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-3">What do you trade?</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { value: 'forex', label: 'Forex', description: 'EUR/USD, GBP/JPY, etc.', icon: '💱' },
+                    { value: 'crypto', label: 'Crypto', description: 'BTC/USDT, ETH/USDT, etc.', icon: '₿' },
+                    { value: 'both', label: 'Both', description: 'All markets', icon: '🌐' }
+                  ].map((market) => (
+                    <button
+                      key={market.value}
+                      onClick={() => updateSetting('marketPreference', 'marketPreference', market.value)}
+                      className={`flex flex-col items-start gap-2 p-4 rounded-lg border-2 transition-colors ${
+                        settings.marketPreference === market.value
+                          ? 'border-indigo-500 bg-indigo-600/20'
+                          : 'border-gray-600 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-2xl">{market.icon}</div>
+                      <div className="text-left">
+                        <div className="font-semibold">{market.label}</div>
+                        <div className="text-xs text-gray-400">{market.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  This helps us customize your dashboard, analytics, and AI recommendations.
+                </p>
               </div>
             </div>
           </div>
