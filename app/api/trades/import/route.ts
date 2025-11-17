@@ -11,8 +11,12 @@ const mapToSnakeCase = (data: any) => ({
   ordertype: data.orderType,
   opentime: data.openTime,
   closetime: data.closeTime,
+  entry_time: data.entryTime || data.entry_time,
+  exit_time: data.exitTime || data.exit_time,
   session: data.session,
   lotsize: data.lotSize,
+  lot_size: data.lotSize || data.lot_size,
+  quantity: data.quantity,
   entryprice: data.entryPrice,
   exitprice: data.exitPrice,
   stoplossprice: data.stopLossPrice,
@@ -34,7 +38,9 @@ const mapToSnakeCase = (data: any) => ({
   emotion: data.emotion,
   reasonfortrade: data.reasonForTrade,
   journalnotes: data.journalNotes,
+  comment: data.comment || data.journalNotes,
   notes: data.notes,
+  market: data.market,
 });
 
 export async function POST(request: Request) {
