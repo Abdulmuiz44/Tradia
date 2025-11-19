@@ -6,7 +6,7 @@ Tradia AI Chat is a production-ready, ChatGPT-style conversational interface tha
 
 ## Features
 
-- **Conversational AI**: Chat with OpenAI GPT models about your trading performance
+- **Conversational AI**: Chat with Mistral AI models about your trading performance
 - **Context-Aware Responses**: AI analyzes attached trades and account summary for personalized advice
 - **Trade Attachment**: Drag-and-drop trades from the right panel to include in conversations
 - **Real-time Streaming**: Responses stream in real-time for better UX
@@ -22,6 +22,7 @@ Create a `.env.local` file in the project root:
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
+MISTRAL_API_KEY=your_mistral_api_key_here
 ```
 
 Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys).
@@ -49,7 +50,7 @@ All endpoints require user authentication.
 - `GET /api/trades` - Fetch user's trades with filtering
 - `GET /api/trades/summary` - Get aggregated trading statistics
 - `POST /api/trades/select` - Select specific trades for analysis
-- `POST /api/tradia/ai` - Chat with AI (streams OpenAI responses)
+- `POST /api/tradia/ai` - Chat with AI (streams Mistral responses)
 
 ## Component Structure
 
@@ -70,7 +71,7 @@ Sample trades are available in `/dev-demos/trades.json` for testing purposes.
 
 ## Security
 
-- OpenAI API key is server-side only, never exposed to client
+- Mistral API key is server-side only, never exposed to client
 - All inputs are sanitized
 - Rate limiting should be implemented for production
 - User data is encrypted at rest
@@ -93,4 +94,4 @@ Current test coverage includes API route mocking and component interactions.
 
 ## Deployment
 
-Ensure `OPENAI_API_KEY` is set in production environment variables. The application is ready for Vercel, Railway, or similar platforms.
+Ensure `MISTRAL_API_KEY` is set in production environment variables. The application is ready for Vercel, Railway, or similar platforms.

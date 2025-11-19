@@ -57,7 +57,7 @@ export default function UpgradePrompt({
         'Advanced analytics & insights',
         'Image processing for trade screenshots',
         'Real-time performance analytics and insights',
-        'Tradia Predict with xAI Grok (Plus & Elite only)',
+        'Tradia Predict with Mistral AI (Plus & Elite only)',
         'Priority support',
         'Custom integrations'
       ],
@@ -75,7 +75,7 @@ export default function UpgradePrompt({
         'Unlimited trade storage',
         'All premium features',
         'All AI features included',
-        'Tradia Predict with enhanced Grok predictions',
+        'Tradia Predict with enhanced Mistral predictions',
         'Dedicated support',
         'Custom integrations',
         'API access'

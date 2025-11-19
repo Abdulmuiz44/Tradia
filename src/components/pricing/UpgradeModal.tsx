@@ -137,7 +137,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Crown className="w-4 h-4 text-yellow-500" />
-                    <span>Grok AI {limits.aiChatsPerDay > 50 ? '✓' : '✗'}</span>
+                    <span>Mistral AI {limits.aiChatsPerDay > 50 ? '✓' : '✗'}</span>
                   </div>
                 </div>
 

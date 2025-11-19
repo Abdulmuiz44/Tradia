@@ -258,7 +258,7 @@ userName,
       case "journal":
         return "Trade Journal";
       case "grok":
-        return "Grok";
+        return "Mistral";
       default:
         return "Coach";
     }
@@ -273,7 +273,7 @@ userName,
       case "journal":
         return "Reflects on trading habits";
       case "grok":
-        return "Adds wit to market insight";
+        return "Provides insightful market analysis";
       default:
         return "Keeps you accountable";
     }
@@ -520,11 +520,11 @@ userName,
                           OpenAI · GPT-4.1 mini (analysis)
                         </Button>
                         <Button
-                          variant={model === 'xai:grok-beta' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('xai:grok-beta'); setModelDialogOpen(false); }}
+                          variant={model === 'mistral:mistral-large-latest' ? 'default' : 'ghost'}
+                          onClick={() => { onModelChange?.('mistral:mistral-large-latest'); setModelDialogOpen(false); }}
                           className="justify-start"
                         >
-                          xAI · Grok Beta (creative)
+                          Mistral AI · Mistral Large (creative)
                         </Button>
                         <Button
                           variant={model === 'gateway:meta-llama-3-70b-instruct' ? 'default' : 'ghost'}

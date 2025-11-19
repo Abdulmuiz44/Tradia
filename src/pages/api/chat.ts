@@ -56,20 +56,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Build AI prompt based on mode
     const systemPrompt = mode === 'grok'
-      ? `You are Grok, a helpful and maximally truthful AI trading assistant built by xAI. You have real-time access to market data and can provide sophisticated trading analysis. Be direct, insightful, and focus on actionable trading intelligence. Use your training data to provide market context when relevant.`
+      ? `You are Mistral, a helpful and maximally truthful AI trading assistant. You have real-time access to market data and can provide sophisticated trading analysis. Be direct, insightful, and focus on actionable trading intelligence. Use your training data to provide market context when relevant.`
       : `You are Tradia Coach, an AI trading mentor focused on helping traders develop sustainable strategies and risk management. Provide encouraging, educational responses that help traders grow their skills. Focus on psychology, risk management, and long-term success.`;
 
     const fullPrompt = `${systemPrompt}\n\nUser message: ${sanitizedMessage}${tradeContext}`;
 
-    // Call OpenAI API (you'll need to add your API key)
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Mistral API (you'll need to add your API key)
+    const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4', // or gpt-3.5-turbo for cost savings
+        model: 'mistral-large-latest', // or mistral-medium for cost savings
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `${sanitizedMessage}${tradeContext}` }
@@ -79,12 +79,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }),
     });
 
-    if (!openaiResponse.ok) {
-      console.error('OpenAI API error:', await openaiResponse.text());
+    if (!mistralResponse.ok) {
+      console.error('Mistral API error:', await mistralResponse.text());
       return res.status(500).json({ error: 'AI service temporarily unavailable' });
     }
 
-    const aiData = await openaiResponse.json();
+    const aiData = await mistralResponse.json();
     const aiResponse = aiData.choices?.[0]?.message?.content || 'I apologize, but I encountered an issue generating a response.';
 
     // Increment usage counter

@@ -3,7 +3,7 @@
 Welcome to **[Tradia](https://tradiaai.app)**, the all-in-one AI-powered trading performance assistant that helps traders understand, analyze, and improve their results. Built with Next.js, Supabase, and modern AI tooling, Tradia combines actionable analytics with an AI coach experience across desktop and mobile.
 
 ## 🚀 Core Capabilities
-- **AI Trading Coach** – Conversational and voice guidance driven by Grok/OpenAI, including daily performance summaries and strategy feedback.
+- **AI Trading Coach** – Conversational and voice guidance driven by Mistral, including daily performance summaries and strategy feedback.
 - **Performance Analytics** – Automated win-rate, profit factor, drawdown, and expectancy calculations with interactive Plotly visualizations.
 - **Trade Import Pipeline** – Upload CSV/XLSX exports, parse instantly, and review risk metrics by pair, timeframe, or strategy tag.
 - **Journaling & Tagging** – Add notes, labels, and exportable PDF/Excel reports to track psychology and behavior over time.
@@ -14,7 +14,7 @@ Welcome to **[Tradia](https://tradiaai.app)**, the all-in-one AI-powered trading
 - Node.js 18+
 - `pnpm` (preferred) or npm
 - Supabase project with a Postgres database
-- OpenAI (or XAI) API key for AI features
+- Mistral API key for AI features
 - Optional: Stripe/Flutterwave credentials for billing, Sentry/PostHog keys for monitoring
 
 ## ⚙️ Getting Started
@@ -36,6 +36,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # OpenAI / XAI Configuration
 OPENAI_API_KEY=your_openai_api_key
 XAI_API_KEY=your_xai_api_key
+MISTRAL_API_KEY=your_mistral_api_key
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000

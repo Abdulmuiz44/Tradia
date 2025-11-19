@@ -15,7 +15,7 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE assistant_mode AS ENUM ('coach', 'grok');
+    CREATE TYPE assistant_mode AS ENUM ('coach', 'mistral');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;

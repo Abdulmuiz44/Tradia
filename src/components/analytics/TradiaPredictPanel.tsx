@@ -412,7 +412,7 @@ export default function TradiaPredictPanel() {
               <Brain className="w-12 h-12 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Upgrade to Access Tradia Predict</h3>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Tradia Predict uses xAI&apos;s Grok model to analyze market data, liquidity patterns, and macro trends to forecast the next probable market direction. Available exclusively for Plus and Elite members.
+                Tradia Predict uses Mistral AI to analyze market data, liquidity patterns, and macro trends to forecast the next probable market direction. Available exclusively for Plus and Elite members.
               </p>
               <div className="grid gap-4 md:grid-cols-2 max-w-3xl mx-auto mb-6">
                 <div className="text-left p-4 rounded-lg bg-background/50 border border-border">

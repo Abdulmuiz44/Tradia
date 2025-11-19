@@ -60,7 +60,7 @@ function makePool(): Pool {
 }
 
 // Use a global pool in Node dev / serverless environments to avoid creating many clients
-const pool: Pool = global.__global_pg_pool__ ?? makePool();
-if (!global.__global_pg_pool__) global.__global_pg_pool__ = pool;
+const pool: Pool = (global as any).__global_pg_pool__ ?? makePool();
+if (!(global as any).__global_pg_pool__) (global as any).__global_pg_pool__ = pool;
 
 export { pool };

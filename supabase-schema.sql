@@ -7,7 +7,7 @@
 -- Create custom types
 CREATE TYPE user_plan AS ENUM ('free', 'pro', 'plus', 'elite');
 CREATE TYPE message_type AS ENUM ('user', 'assistant');
-CREATE TYPE assistant_mode AS ENUM ('coach', 'grok');
+CREATE TYPE assistant_mode AS ENUM ('coach', 'mistral');
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE public.users (

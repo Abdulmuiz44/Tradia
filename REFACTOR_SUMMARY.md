@@ -1,7 +1,7 @@
 # Tradia Refactor Summary: SMC Forecaster → Tradia Predict
 
 ## Overview
-Successfully refactored the "SMC Forecaster" feature to "Tradia Predict" with xAI Grok integration and updated pricing structure.
+Successfully refactored the "SMC Forecaster" feature to "Tradia Predict" with Mistral AI integration and updated pricing structure.
 
 ## Changes Made
 
@@ -26,11 +26,11 @@ Successfully refactored the "SMC Forecaster" feature to "Tradia Predict" with xA
   - Plus: Full access with 3-hour refresh, 90% confidence cap, all 5 pairs
   - Elite: Full access with 1-hour refresh, 97% confidence cap, all 5 pairs
 
-### 4. xAI Grok Integration
+### 4. Mistral AI Integration
 - **Model Reference**: Added "Powered by Grok" badge
 - **API Parameters**: Added `model=grok` parameter to API calls
 - **Environment Variables**: 
-  - `XAI_API_KEY` or `GROK_API_KEY` for authentication
+  - `XAI_API_KEY` or `MISTRAL_API_KEY` for authentication
   - `PREDICT_API_BASE_URL` for service endpoint
 - **Headers**: Added `X-Model` and `X-User-Plan` headers to API requests
 
@@ -38,7 +38,7 @@ Successfully refactored the "SMC Forecaster" feature to "Tradia Predict" with xA
 - **Tab Value**: `smc-forecast` → `tradia-predict`
 - **Tab Label**: "SMC Forecast" → "Tradia Predict"
 - **Tab Icon**: "Compass" → "Brain"
-- **Description**: Updated to mention xAI Grok and market predictions
+  - **Description**: Updated to mention Mistral AI and market predictions
 - **Import**: Updated dynamic import to use `TradiaPredictPanel`
 
 ### 6. Pricing Updates
@@ -48,7 +48,7 @@ Successfully refactored the "SMC Forecaster" feature to "Tradia Predict" with xA
   - Elite: $390/year (was $390/year - no change)
 - **Removed**: All "Save 20%" text and savings calculations
 - **Removed Function**: `getAnnualSavings()` function completely removed
-- **Feature Addition**: Added "Tradia Predict with xAI Grok" to Plus and Elite feature lists
+- **Feature Addition**: Added "Tradia Predict with Mistral AI" to Plus and Elite feature lists
 
 ### 7. UI/UX Enhancements
 - **Upgrade Prompt**: New full-screen upgrade prompt for Free and Pro users
@@ -64,7 +64,7 @@ Successfully refactored the "SMC Forecaster" feature to "Tradia Predict" with xA
 - "SMC signal blend" → "AI-powered market predictions"
 - "forecast" → "prediction" (in API calls and messages)
 - "Forecast Stream" → "Prediction Stream"
-- Updated all descriptions to mention xAI Grok
+- Updated all descriptions to mention Mistral AI
 
 ### 9. Feature Access Logic
 ```typescript
@@ -94,6 +94,7 @@ if (!ALLOWED_PLANS.includes(userPlan)) {
 ```env
 # xAI Grok API Configuration
 XAI_API_KEY=your_xai_api_key_here
+MISTRAL_API_KEY=your_mistral_api_key_here
 # or
 GROK_API_KEY=your_grok_api_key_here
 

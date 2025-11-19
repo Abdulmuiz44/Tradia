@@ -95,7 +95,7 @@ const plansData: Plan[] = [
     "Real-time performance analytics and insights",
       "100 AI conversations",
       "500 AI messages per day",
-      "Tradia Predict with xAI Grok (Plus & Elite only)",
+      "Tradia Predict with Mistral AI (Plus & Elite only)",
     ],
   },
   {
@@ -110,7 +110,7 @@ const plansData: Plan[] = [
     "AI strategy builder",
     "Prop-firm automation & breach SMS",
     "All risk & AI features included",
-    "Tradia Predict with enhanced Grok predictions",
+    "Tradia Predict with enhanced Mistral predictions",
       "Unlimited AI conversations",
       "Unlimited AI messages per day",
     ],
@@ -493,7 +493,7 @@ export default function PricingPlans(): React.ReactElement {
 
         <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-gray-400 max-w-2xl">
-            <strong>Pro tip:</strong> Start free, upgrade to Plus to unlock Tradia Predict with xAI Grok and get daily AI coaching. Elite members get the most advanced predictions with hourly updates.
+            <strong>Pro tip:</strong> Start free, upgrade to Plus to unlock Tradia Predict with Mistral AI and get daily AI coaching. Elite members get the most advanced predictions with hourly updates.
           </div>
 
           <div className="flex gap-3">

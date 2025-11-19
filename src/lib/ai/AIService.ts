@@ -345,7 +345,7 @@ export class AIService {
       recentTrades?: Trade[];
       marketCondition?: string;
       uploadedImages?: File[];
-      mode?: 'coach' | 'grok';
+      mode?: 'coach' | 'mistral';
       riskBias?: 'conservative' | 'balanced' | 'aggressive';
     }
   ): Promise<string> {

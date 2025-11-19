@@ -1,0 +1,410 @@
+
+> tradia-frontend-v1@0.1.0 type-check C:\Users\Hp\Documents\Github\Tradia
+> tsc --noEmit
+
+app/api/ai/chat/route.ts(145,11): error TS2322: Type '"coach" | "grok"' is not assignable to type '"coach" | "mistral" | undefined'.
+  Type '"grok"' is not assignable to type '"coach" | "mistral" | undefined'.
+src/components/ai/hooks/useChatActions.ts(45,9): error TS2367: This comparison appears to be unintentional because the types '"coach" | "mistral"' and '"grok"' have no overlap.
+src/components/ai/hooks/useChatActions.ts(45,50): error TS2339: Property 'grokUnlocked' does not exist on type 'ChatState'.
+src/components/ai/hooks/useChatActions.ts(88,54): error TS2339: Property 'grokUnlocked' does not exist on type 'ChatState'.
+src/components/ai/hooks/useChatReducer.ts(3,32): error TS2305: Module '"../utils"' has no exported member 'isGrokUnlocked'.
+src/components/ai/hooks/useChatReducer.ts(13,3): error TS2353: Object literal may only specify known properties, and 'grokUnlocked' does not exist in type 'ChatState'.
+src/components/ai/hooks/useChatReducer.ts(32,10): error TS2678: Type '"SET_GROK_UNLOCKED"' is not comparable to type '"SET_MESSAGES" | "ADD_MESSAGE" | "SET_INPUT" | "SET_TYPING" | "SET_MODE" | "SET_USER_TIER" | "SET_USER_EMAIL" | "SET_MISTRAL_UNLOCKED" | "SET_SEARCH_RESULTS" | "CLEAR_SEARCH"'.
+src/components/ai/hooks/useChatReducer.ts(33,26): error TS2353: Object literal may only specify known properties, and 'grokUnlocked' does not exist in type 'ChatState'.
+src/components/ai/hooks/useChatReducer.ts(33,47): error TS2339: Property 'payload' does not exist on type 'never'.
+src/components/ai/hooks/useChatReducer.ts(50,5): error TS2322: Type '"coach" | "grok"' is not assignable to type '"coach" | "mistral"'.
+  Type '"grok"' is not assignable to type '"coach" | "mistral"'.
+src/components/ai/hooks/useChatReducer.ts(57,11): error TS2345: Argument of type '"coach" | "grok"' is not assignable to parameter of type '"coach" | "mistral"'.
+  Type '"grok"' is not assignable to type '"coach" | "mistral"'.
+src/components/ai/hooks/useChatReducer.ts(63,9): error TS2322: Type '"coach" | "grok"' is not assignable to type '"coach" | "mistral" | undefined'.
+  Type '"grok"' is not assignable to type '"coach" | "mistral" | undefined'.
+src/components/ai/TradiaAIChat.test.tsx(11,10): error TS2459: Module '"@/context/UserContext"' declares 'UserContext' locally, but it is not exported.
+src/components/ai/TradiaAIChat.test.tsx(12,10): error TS2459: Module '"@/context/TradeContext"' declares 'TradeContext' locally, but it is not exported.
+src/components/ai/TradiaAIChat.test.tsx(16,49): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(21,64): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(22,66): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(22,90): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(30,5): error TS2339: Property 'mockUserProvider' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ai/TradiaAIChat.test.tsx(31,7): error TS2339: Property 'mockTradeProvider' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ai/TradiaAIChat.test.tsx(33,7): error TS2339: Property 'mockTradeProvider' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ai/TradiaAIChat.test.tsx(34,5): error TS2339: Property 'mockUserProvider' does not exist on type 'JSX.IntrinsicElements'.
+src/components/ai/TradiaAIChat.test.tsx(38,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(40,24): error TS2503: Cannot find namespace 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(42,3): error TS2304: Cannot find name 'beforeEach'.
+src/components/ai/TradiaAIChat.test.tsx(43,23): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(46,3): error TS2304: Cannot find name 'afterEach'.
+src/components/ai/TradiaAIChat.test.tsx(50,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(54,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(55,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(56,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(57,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(58,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(61,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(65,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(66,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(67,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(68,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(69,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(72,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(76,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(77,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(78,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(79,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(82,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(89,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(90,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(93,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(100,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(103,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(106,26): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(113,7): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(124,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(124,47): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(130,7): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(134,3): error TS2582: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/ai/TradiaAIChat.test.tsx(139,20): error TS2304: Cannot find name 'jest'.
+src/components/ai/TradiaAIChat.test.tsx(150,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(151,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(152,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(155,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(156,5): error TS2304: Cannot find name 'expect'.
+src/components/ai/TradiaAIChat.test.tsx(158,7): error TS2304: Cannot find name 'expect'.
+src/components/ai/utils.ts(97,9): error TS2741: Property 'starter' is missing in type '{ free: { maxMessagesPerDay: number; maxFileUploadsPerDay: number; maxFileSizeMB: number; canUploadFiles: false; canUseMistral: false; canExportChat: false; messageHistoryDays: number; }; pro: { ...; }; plus: { ...; }; elite: { ...; }; }' but required in type 'Record<"free" | "starter" | "pro" | "plus" | "elite", PlanLimits>'.
+src/components/chat/ChatArea.tsx(260,12): error TS2678: Type '"grok"' is not comparable to type 'AssistantMode'.
+src/components/chat/ChatArea.tsx(275,12): error TS2678: Type '"grok"' is not comparable to type 'AssistantMode'.
+src/components/chat/TradePickerPanel.tsx(66,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/chat/TradePickerPanel.tsx(66,62): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/chat/TradePickerPanel.tsx(68,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/chat/TradePickerPanel.tsx(68,62): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/chat/TradePickerPanel.tsx(70,18): error TS18048: 'b.pnl' is possibly 'undefined'.
+src/components/chat/TradePickerPanel.tsx(70,26): error TS18048: 'a.pnl' is possibly 'undefined'.
+src/components/chat/TradePickerPanel.tsx(72,18): error TS18048: 'a.pnl' is possibly 'undefined'.
+src/components/chat/TradePickerPanel.tsx(72,26): error TS18048: 'b.pnl' is possibly 'undefined'.
+src/components/common/LazyComponents.tsx(7,9): error TS2322: Type 'Promise<typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/PricingPage")>' is not assignable to type 'Promise<{ default: ComponentType<object>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/PricingPage")' but required in type '{ default: ComponentType<object>; }'.
+src/components/common/LazyComponents.tsx(11,9): error TS2322: Type 'Promise<typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/PricingCard")>' is not assignable to type 'Promise<{ default: ComponentType<object>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/PricingCard")' but required in type '{ default: ComponentType<object>; }'.
+src/components/common/LazyComponents.tsx(15,9): error TS2322: Type 'Promise<typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/UpgradeModal")>' is not assignable to type 'Promise<{ default: ComponentType<object>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/UpgradeModal")' but required in type '{ default: ComponentType<object>; }'.
+src/components/common/LazyComponents.tsx(19,9): error TS2322: Type 'Promise<typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/UsageDashboard")>' is not assignable to type 'Promise<{ default: ComponentType<object>; }>'.
+  Property 'default' is missing in type 'typeof import("C:/Users/Hp/Documents/Github/Tradia/src/components/pricing/UsageDashboard")' but required in type '{ default: ComponentType<object>; }'.
+src/components/dashboard/BulkActionBar.tsx(4,10): error TS2459: Module '"@/context/TradeContext"' declares 'TradeContext' locally, but it is not exported.
+src/components/dashboard/BulkActionBar.tsx(22,34): error TS2339: Property 'bulkToggleReviewed' does not exist on type '{}'.
+src/components/dashboard/BulkActionBar.tsx(28,34): error TS2339: Property 'bulkToggleReviewed' does not exist on type '{}'.
+src/components/dashboard/CsvUpload.tsx(212,11): error TS2339: Property 'setTradesFromCsv' does not exist on type 'TradeContextValue'.
+src/components/dashboard/reporting/AIPerformanceInsights.tsx(100,29): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/AIPerformanceInsights.tsx(386,14): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/AIPerformanceInsights.tsx(386,62): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/AIPerformanceInsights.tsx(399,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/DetailedReportsSection.tsx(301,32): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/DetailedReportsSection.tsx(392,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/DetailedReportsSection.tsx(437,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/ExportCenter.tsx(386,46): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/ExportCenter.tsx(396,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/ExportCenter.tsx(406,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/ExportCenter.tsx(430,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/reporting/PerformanceSummaryCards.tsx(59,29): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskAlertsRecommendations.tsx(81,16): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskAlertsRecommendations.tsx(81,64): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskAlertsRecommendations.tsx(142,26): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskAlertsRecommendations.tsx(413,14): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskAlertsRecommendations.tsx(413,62): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskConsistencyCharts.tsx(18,3): error TS2305: Module '"recharts"' has no exported member 'Histogram'.
+src/components/dashboard/risk-management/RiskConsistencyCharts.tsx(39,16): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskConsistencyCharts.tsx(39,64): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskConsistencyCharts.tsx(49,24): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskConsistencyCharts.tsx(67,24): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskExposureOverview.tsx(57,16): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/risk-management/RiskExposureOverview.tsx(57,64): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/dashboard/RiskMetrics.tsx(69,18): error TS18048: 't.pnl' is possibly 'undefined'.
+src/components/dashboard/TradeAnalytics.tsx(588,63): error TS18048: 'percent' is possibly 'undefined'.
+src/components/dashboard/TradeJournal.tsx(394,57): error TS2353: Object literal may only specify known properties, and 'starter' does not exist in type 'Record<PlanType, number>'.
+src/components/dashboard/TradeJournalModal.tsx(4,10): error TS2459: Module '"@/context/TradeContext"' declares 'TradeContext' locally, but it is not exported.
+src/components/marketing/ExitIntent.tsx(42,26): error TS2345: Argument of type '"exit_intent_trigger"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/components/marketing/ExitIntent.tsx(108,36): error TS2345: Argument of type '"exit_intent_resume"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/components/marketing/ExitIntent.tsx(117,36): error TS2345: Argument of type '"exit_intent_cta"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/components/modals/AddTradeModal.tsx(284,12): error TS2345: Argument of type 'Omit<Trade, "id">' is not assignable to parameter of type 'Trade'.
+  Property 'id' is missing in type 'Omit<Trade, "id">' but required in type 'Trade'.
+src/components/pricing/__tests__/PricingCard.test.tsx(7,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(8,28): error TS2304: Cannot find name 'jest'.
+src/components/pricing/__tests__/PricingCard.test.tsx(10,3): error TS2304: Cannot find name 'beforeEach'.
+src/components/pricing/__tests__/PricingCard.test.tsx(14,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(22,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(23,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(24,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(25,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(28,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(37,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(38,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(39,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(40,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(43,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(52,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(53,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(56,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(69,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(72,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(80,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(81,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(82,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(83,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(86,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/pricing/__tests__/PricingCard.test.tsx(94,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(95,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(96,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/__tests__/PricingCard.test.tsx(97,5): error TS2304: Cannot find name 'expect'.
+src/components/pricing/PricingCard.tsx(33,3): error TS2353: Object literal may only specify known properties, and 'starter' does not exist in type 'Record<PlanType, string>'.
+src/components/pricing/PricingCard.tsx(117,12): error TS2367: This comparison appears to be unintentional because the types 'PlanType' and '"starter"' have no overlap.
+src/components/pricing/UsageDashboard.tsx(53,21): error TS2339: Property 'maxFileUploadsPerDay' does not exist on type 'PlanLimits'.
+src/components/tradia-predict/PortfolioOptimizer.tsx(138,49): error TS2304: Cannot find name 'COLORS'.
+src/components/tradia-predict/PortfolioOptimizer.tsx(138,64): error TS2304: Cannot find name 'COLORS'.
+src/components/tradia-predict/RiskAnalyzer.tsx(322,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/tradia-predict/TradePredictor.tsx(292,75): error TS18048: 'trade.pnl' is possibly 'undefined'.
+src/components/tradia-predict/TradePredictor.tsx(293,75): error TS18048: 'trade.pnl' is possibly 'undefined'.
+src/components/tradia-predict/TradePredictor.tsx(297,70): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/components/tradia-predict/TradePredictor.tsx(298,70): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/components/tv/TradingViewSyncPanel.tsx(123,46): error TS2345: Argument of type '"starter"' is not assignable to parameter of type 'PlanType | (() => PlanType)'.
+src/components/tv/TradingViewSyncPanel.tsx(124,75): error TS2345: Argument of type '"starter"' is not assignable to parameter of type 'PlanType'.
+src/components/ui/checkbox.tsx(2,36): error TS2307: Cannot find module '@radix-ui/react-checkbox' or its corresponding type declarations.
+src/contexts/__tests__/ToastContext.test.tsx(25,23): error TS2322: Type 'Toast[]' is not assignable to type 'ToastProps[]'.
+  Property 'onClose' is missing in type 'Toast' but required in type 'ToastProps'.
+src/contexts/__tests__/ToastContext.test.tsx(30,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(31,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(38,5): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(39,5): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(40,5): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(41,5): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(44,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(57,7): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(58,7): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(62,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(75,7): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(76,7): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(80,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(93,7): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(100,7): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(104,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(116,5): error TS2304: Cannot find name 'expect'.
+src/contexts/__tests__/ToastContext.test.tsx(119,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/contexts/__tests__/ToastContext.test.tsx(120,24): error TS2304: Cannot find name 'jest'.
+src/contexts/__tests__/ToastContext.test.tsx(122,5): error TS2304: Cannot find name 'expect'.
+src/hooks/usePushNotifications.ts(11,13): error TS2552: Cannot find name 'NotificationAction'. Did you mean 'NotificationOptions'?
+src/hooks/usePushNotifications.ts(58,20): error TS2345: Argument of type '"push_permission_granted"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/usePushNotifications.ts(62,20): error TS2345: Argument of type '"push_permission_denied"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/usePushNotifications.ts(93,9): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'string | BufferSource | null | undefined'.
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is missing the following properties from type 'ArrayBuffer': resizable, resize, detached, transfer, transferToFixedLength
+src/hooks/usePushNotifications.ts(103,18): error TS2345: Argument of type '"push_subscribed"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/usePushNotifications.ts(111,18): error TS2345: Argument of type '"push_subscription_failed"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/usePushNotifications.ts(129,20): error TS2345: Argument of type '"push_unsubscribed"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/usePushNotifications.ts(156,9): error TS2353: Object literal may only specify known properties, and 'actions' does not exist in type 'NotificationOptions'.
+src/hooks/usePushNotifications.ts(161,18): error TS2345: Argument of type '"push_notification_sent"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceInput.ts(19,33): error TS2304: Cannot find name 'SpeechRecognition'.
+src/hooks/useVoiceInput.ts(33,19): error TS2339: Property 'maxAlternatives' does not exist on type 'SpeechRecognition'.
+src/hooks/useVoiceInput.ts(39,20): error TS2345: Argument of type '"voice_input_started"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceInput.ts(59,22): error TS2345: Argument of type '"voice_input_transcript"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceInput.ts(90,20): error TS2345: Argument of type '"voice_input_error"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceInput.ts(95,20): error TS2345: Argument of type '"voice_input_ended"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(89,20): error TS2345: Argument of type '"voice_output_started"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(98,20): error TS2345: Argument of type '"voice_output_completed"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(105,20): error TS2345: Argument of type '"voice_output_error"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(124,18): error TS2345: Argument of type '"voice_output_stopped"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(131,18): error TS2345: Argument of type '"voice_output_paused"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(138,18): error TS2345: Argument of type '"voice_output_resumed"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/hooks/useVoiceOutput.ts(144,16): error TS2345: Argument of type '"voice_output_voice_changed"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/lib/ai/AIService.ts(665,80): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/lib/analytics.ts(73,14): error TS2345: Argument of type '"performance_metric"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/lib/analytics.ts(78,14): error TS2345: Argument of type '"revenue"' is not assignable to parameter of type 'AnalyticsEvent'.
+src/lib/authOptions.ts(335,64): error TS2741: Property 'id' is missing in type '{}' but required in type '{ id: string; name?: string | null | undefined; email?: string | null | undefined; image?: string | null | undefined; role?: string | undefined; }'.
+src/lib/connection-monitor.ts(2,50): error TS2307: Cannot find module '@/types/mt5' or its corresponding type declarations.
+src/lib/connection-monitor.ts(4,38): error TS2307: Cannot find module '@/lib/mt5-connection-manager' or its corresponding type declarations.
+src/lib/credential-storage.ts(2,49): error TS2307: Cannot find module '@/types/mt5' or its corresponding type declarations.
+src/lib/sentry.ts(13,18): error TS2339: Property 'Replay' does not exist on type 'typeof import("C:/Users/Hp/Documents/Github/Tradia/node_modules/.pnpm/@sentry+nextjs@10.26.0_@ope_39fb5210599cdf4720102aa061272740/node_modules/@sentry/nextjs/build/types/index.types")'.
+src/lib/sentry.ts(73,19): error TS2339: Property 'startTransaction' does not exist on type 'typeof import("C:/Users/Hp/Documents/Github/Tradia/node_modules/.pnpm/@sentry+nextjs@10.26.0_@ope_39fb5210599cdf4720102aa061272740/node_modules/@sentry/nextjs/build/types/index.types")'.
+src/lib/supabase-utils.ts(26,38): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+src/lib/tv/limits.ts(27,14): error TS2322: Type '"starter"' is not assignable to type 'PlanType'.
+src/lib/tv/limits.ts(33,3): error TS2322: Type '"starter"' is not assignable to type 'PlanType'.
+src/pages/api/chat.ts(3,29): error TS2307: Cannot find module '../auth/[...nextauth]' or its corresponding type declarations.
+src/pages/api/chat.ts(5,49): error TS2307: Cannot find module '../../../lib/supabase-utils' or its corresponding type declarations.
+src/pages/api/chat.ts(98,44): error TS2304: Cannot find name 'user'.
+src/pages/api/chat.ts(119,15): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+src/pages/api/upload.ts(157,15): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+ ELIFECYCLE  Command failed with exit code 1.

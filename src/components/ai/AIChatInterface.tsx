@@ -587,8 +587,8 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           </div>
           <div className="text-xs text-slate-400 leading-relaxed">
             {assistantMode === 'grok' && grokUnlocked
-              ? 'Grok Fast Mode delivers XAI summaries, anomaly detection, and story-driven playbooks in seconds.'
-              : 'Coach Mode keeps things structured with coaching prompts and gentle nudges. Switch to Grok after upgrading for XAI-powered depth.'}
+              ? 'Mistral Fast Mode delivers insights, anomaly detection, and story-driven playbooks in seconds.'
+              : 'Coach Mode keeps things structured with coaching prompts and gentle nudges. Switch to Mistral after upgrading for advanced analysis.'}
           </div>
         </div>
       </div>
@@ -793,7 +793,7 @@ Ask for a deep-dive, a risk tune-up, or ideas to stay in flow.`;
   const grokHeading = () =>
     [
       '## Tradia Grok Fast Insight',
-      '**Signal Blend:** XAI Grok — Explainability Mode',
+      '**Signal Blend:** Mistral AI — Explainability Mode',
       `**Focus:** ${focusTopic}`,
     ].join('\n');
 

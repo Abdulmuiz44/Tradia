@@ -1,6 +1,6 @@
 // src/types/chat.ts
 
-export type AssistantMode = 'coach' | 'mentor' | 'analysis' | 'journal' | 'grok' | 'assistant';
+export type AssistantMode = 'coach' | 'mentor' | 'analysis' | 'journal' | 'mistral' | 'assistant';
 
 export interface Message {
   id: string;

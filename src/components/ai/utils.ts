@@ -23,18 +23,18 @@ export function isUserAdmin(email: string): boolean {
   return email === adminEmail;
 }
 
-// Check if grok unlocked
-export function isGrokUnlocked(tier: UserTier['type'], isAdmin: boolean): boolean {
+// Check if mistral unlocked
+export function isMistralUnlocked(tier: UserTier['type'], isAdmin: boolean): boolean {
   return isAdmin || tier === 'pro' || tier === 'plus' || tier === 'elite';
 }
 
 // Get onboarding message
 export function getOnboardingMessage(
   tier: UserTier['type'],
-  mode: 'coach' | 'grok',
+  mode: 'coach' | 'mistral',
   tradeCount: number,
   isAdmin: boolean,
-  grokUnlocked: boolean
+  mistralUnlocked: boolean
 ): string {
   const hasTrades = tradeCount > 0;
 
@@ -43,17 +43,17 @@ export function getOnboardingMessage(
       '### Welcome, Admin! Full Access Granted.',
       hasTrades
         ? `I've scanned your ${tradeCount} recent trades. How can I assist with deep insights or system diagnostics today?`
-        : 'Feel free to test all features, including Grok\'s advanced capabilities and trade history uploads.',
+        : 'Feel free to test all features, including Mistral\'s advanced capabilities and trade history uploads.',
       'All models and features are unlocked for you.'
     ].join("\n\n");
   }
 
-  if (mode === 'grok' && grokUnlocked) {
+  if (mode === 'mistral' && mistralUnlocked) {
     return [
-      '### Grok mode is live',
+      '### Mistral mode is live',
       hasTrades
         ? `I just ran anomaly checks across your ${tradeCount} recent trades.`
-        : 'Drop a question or upload a chart and Grok will break it down instantly.',
+        : 'Drop a question or upload a chart and Mistral will break it down instantly.',
       'Ask for a bias sweep, forward view, or say "build a playbook" for action steps.'
     ].join("\n\n");
   }
@@ -64,7 +64,7 @@ export function getOnboardingMessage(
       hasTrades
         ? `I already scanned your ${tradeCount} recent trades so we can set the focus for today.`
         : 'Share what you are tackling and we will map the next best move.',
-      'Flip into Grok mode whenever you want deep explainability or predictive signals.'
+      'Flip into Mistral mode whenever you want deep explainability or predictive signals.'
     ].join("\n\n");
   }
 
@@ -74,7 +74,7 @@ export function getOnboardingMessage(
       hasTrades
         ? `Your last ${tradeCount} trades are queued for a fast performance pulse.`
         : 'Ask for a scorecard, risk tune-up, or mindset reset to get a tailored plan.',
-      'Upgrade to Plus when you are ready for Grok anomaly detection and screenshot breakdowns.'
+      'Upgrade to Plus when you are ready for Mistral anomaly detection and screenshot breakdowns.'
     ].join("\n\n");
   }
 
@@ -83,7 +83,7 @@ export function getOnboardingMessage(
     hasTrades
       ? `I pulled highlights from your ${tradeCount} recent trades so you can build momentum faster.`
       : 'Ask anything about performance, risk, or setups and I will respond with a game plan.',
-    'Upgrading unlocks Grok mode for explainable deep dives and predictive prompts.'
+    'Upgrading unlocks Mistral mode for explainable deep dives and predictive prompts.'
   ].join("\n\n");
 }
 
@@ -100,7 +100,7 @@ export function getPlanLimits(tier: UserTier['type']): PlanLimits {
       maxFileUploadsPerDay: 0,
       maxFileSizeMB: 0,
       canUploadFiles: false,
-      canUseGrok: false,
+      canUseMistral: false,
       canExportChat: false,
       messageHistoryDays: 30, // From PLAN_LIMITS.tradeStorageDays
     },
@@ -109,7 +109,7 @@ export function getPlanLimits(tier: UserTier['type']): PlanLimits {
       maxFileUploadsPerDay: 5,
       maxFileSizeMB: 10,
       canUploadFiles: true, // Pro can export data (PLAN_LIMITS.exportData: true)
-      canUseGrok: true,
+      canUseMistral: true,
       canExportChat: true, // From PLAN_LIMITS.exportData
       messageHistoryDays: 182, // From PLAN_LIMITS.tradeStorageDays (6 months)
     },
@@ -118,7 +118,7 @@ export function getPlanLimits(tier: UserTier['type']): PlanLimits {
       maxFileUploadsPerDay: 20,
       maxFileSizeMB: 50,
       canUploadFiles: true,
-      canUseGrok: true,
+      canUseMistral: true,
       canExportChat: true, // From PLAN_LIMITS.exportData
       messageHistoryDays: 365, // From PLAN_LIMITS.tradeStorageDays
     },
@@ -127,7 +127,7 @@ export function getPlanLimits(tier: UserTier['type']): PlanLimits {
       maxFileUploadsPerDay: -1, // Unlimited
       maxFileSizeMB: 100,
       canUploadFiles: true,
-      canUseGrok: true,
+      canUseMistral: true,
       canExportChat: true, // From PLAN_LIMITS.exportData
       messageHistoryDays: -1, // Unlimited - From PLAN_LIMITS.tradeStorageDays
     },
