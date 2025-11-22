@@ -1,0 +1,13 @@
+
+> tradia-frontend-v1@0.1.0 build
+> npx next build
+
+   Creating an optimized production build ...
+ ⨯ Conflicting app and page files were found, please remove the conflicting files to continue:
+ ⨯   "pages/api/auth/login.ts" - "app/api/auth/login/route.ts"
+ ⨯   "pages/api/auth/signup.ts" - "app/api/auth/signup/route.ts"
+ ⨯   "pages/api/payments/create-checkout.ts" - "app/api/payments/create-checkout/route.ts"
+ ⨯   "pages/api/trades/import.ts" - "app/api/trades/import/route.ts"
+ ⨯   "pages/api/trades/index.ts" - "app/api/trades/route.ts"
+ ⨯   "pages/api/tradia/ai.ts" - "app/api/tradia/ai/route.ts"
+ ⨯   "pages/api/user/profile.ts" - "app/api/user/profile/route.ts"

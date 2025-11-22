@@ -1,0 +1,50 @@
+
+> tradia-frontend-v1@0.1.0 build
+> npx next build
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./app/layout.tsx
+177:9  Warning: Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+./src/components/analytics/StrategyBuilder.tsx
+124:6  Warning: React Hook useMemo has a missing dependency: 'weekdayNames'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/charts/ProfitLossChart.tsx
+55:9  Warning: The 'arr' conditional could make the dependencies of useMemo Hook (at line 87) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'arr' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/dashboard/OverviewCards.tsx
+326:6  Warning: React Hook useEffect has missing dependencies: 'session?.user?.id' and 'session?.user?.name'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+328:9  Warning: The 'allTrades' conditional could make the dependencies of useMemo Hook (at line 342) change on every render. To fix this, wrap the initialization of 'allTrades' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+328:9  Warning: The 'allTrades' conditional could make the dependencies of useMemo Hook (at line 585) change on every render. To fix this, wrap the initialization of 'allTrades' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/dashboard/TradeAnalytics.tsx
+208:6  Warning: React Hook useMemo has a missing dependency: 'effectivePlan'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/dashboard/TradePlannerTable.tsx
+224:6  Warning: React Hook useMemo has an unnecessary dependency: 'plans'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/dashboard/TraderEducation.tsx
+131:6  Warning: React Hook useEffect has a missing dependency: 'defaultChecklist'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/marketing/ExitIntent.tsx
+60:6  Warning: React Hook useMemo has an unnecessary dependency: 'show'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/NotificationSystem.tsx
+89:6  Warning: React Hook useEffect has a missing dependency: 'addNotification'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/tv/TradingViewSyncPanel.tsx
+201:6  Warning: React Hook useEffect has a missing dependency: 'refreshUsage'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/context/UserContext.tsx
+156:6  Warning: React Hook useEffect has a missing dependency: 'fetchUserData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/usePushNotifications.ts
+30:6  Warning: React Hook useEffect has a missing dependency: 'checkSubscriptionStatus'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useVoiceInput.ts
+128:6  Warning: React Hook useCallback has a missing dependency: 'stopListening'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

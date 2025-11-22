@@ -24,25 +24,12 @@ const MODE_PROMPTS: Record<string, string> = {
     "Act as the default Tradia assistant. Balance friendly tone with actionable insights tailored to trading performance.",
 };
 
-const openaiClient = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? "",
+const mistralClient = createOpenAI({
+  baseURL: 'https://api.mistral.ai/v1',
+  apiKey: process.env.MISTRAL_API_KEY ?? "",
 });
 
-const gatewayBaseUrl = process.env.VERCEL_AI_GATEWAY_URL ?? process.env.AI_GATEWAY_URL;
-const gatewayApiKey = process.env.VERCEL_AI_API_KEY ?? process.env.AI_GATEWAY_API_KEY ?? "";
-const gatewayClient = gatewayBaseUrl
-  ? createOpenAI({
-      apiKey: gatewayApiKey,
-      baseURL: gatewayBaseUrl,
-    })
-  : null;
-
-const xaiClient = createOpenAI({
-  apiKey: process.env.XAI_API_KEY ?? process.env.GROK_API_KEY ?? "",
-  baseURL: process.env.XAI_BASE_URL ?? "https://api.x.ai/v1",
-});
-
-const DEFAULT_MODEL = "openai:gpt-4o-mini";
+const DEFAULT_MODEL = "mistral-medium-latest";
 
 interface SystemMessageInput {
   accountSummary: Record<string, any>;
@@ -132,8 +119,8 @@ export async function POST(req: NextRequest) {
 
     const validAttachedTradeIds = Array.isArray(attachedTradeIds)
       ? attachedTradeIds.filter((id: unknown) =>
-          typeof id === "string" && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)
-        )
+        typeof id === "string" && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)
+      )
       : [];
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -144,7 +131,7 @@ export async function POST(req: NextRequest) {
     const normalizeTrade = (row: any) => withDerivedTradeTimes(mergeTradeSecret(userId, row));
 
     let currentConversationId: string | undefined = conversationId;
-    const modelId = (options.model as string | undefined)?.trim() || DEFAULT_MODEL;
+    const modelId = DEFAULT_MODEL; // Enforce Mistral
 
     if (!currentConversationId) {
       const newConvId = `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -268,41 +255,10 @@ export async function POST(req: NextRequest) {
 }
 
 function resolveModel(modelId: string) {
-  const trimmed = modelId.trim();
-  const [providerPrefix, explicitModel] = trimmed.includes(":")
-    ? (trimmed.split(":", 2) as [string, string])
-    : ["openai", trimmed];
-
-  const provider = providerPrefix.toLowerCase();
-  const modelName = explicitModel.trim();
-
-  if (!modelName) {
-    throw new Error("No model specified for AI request");
+  if (!process.env.MISTRAL_API_KEY) {
+    throw new Error("MISTRAL_API_KEY is not configured");
   }
-
-  if (provider === "openai") {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
-    }
-    return openaiClient(modelName);
-  }
-
-  if (provider === "gateway") {
-    if (!gatewayClient || !gatewayBaseUrl || !gatewayApiKey) {
-      throw new Error("Vercel AI Gateway is not configured");
-    }
-    return gatewayClient(modelName);
-  }
-
-  if (provider === "xai" || provider === "grok" || modelName.startsWith("grok")) {
-    if (!(process.env.XAI_API_KEY || process.env.GROK_API_KEY)) {
-      throw new Error("XAI/Grok API key is not configured");
-    }
-    const resolvedModel = provider === "xai" || provider === "grok" ? modelName : trimmed;
-    return xaiClient(resolvedModel);
-  }
-
-  throw new Error(`Unsupported model provider: ${provider}`);
+  return mistralClient(DEFAULT_MODEL);
 }
 
 async function persistAssistantMessage({
