@@ -1,6 +1,6 @@
 import { useReducer } from 'react';
 import { ChatState, ChatAction, Message, UserTier } from '../types';
-import { getOnboardingMessage, isGrokUnlocked, isUserAdmin } from '../utils';
+import { getOnboardingMessage, isMistralUnlocked, isUserAdmin } from '../utils';
 
 const initialState: ChatState = {
   messages: [],
@@ -46,21 +46,22 @@ export function useChatReducer(initialTier: UserTier['type'], initialEmail: stri
     userTier: initialTier,
     userEmail: initialEmail,
     isAdmin: isUserAdmin(initialEmail),
-    grokUnlocked: isGrokUnlocked(initialTier, isUserAdmin(initialEmail)),
-    assistantMode: isGrokUnlocked(initialTier, isUserAdmin(initialEmail)) ? 'grok' : 'coach',
+    mistralUnlocked: isMistralUnlocked(initialTier, isUserAdmin(initialEmail)),
+    grokUnlocked: false,
+    assistantMode: 'coach',
     messages: [
       {
         id: 'ai-welcome',
         type: 'assistant',
         content: getOnboardingMessage(
           initialTier,
-          isGrokUnlocked(initialTier, isUserAdmin(initialEmail)) ? 'grok' : 'coach',
+          'coach',
           tradesLength,
           isUserAdmin(initialEmail),
-          isGrokUnlocked(initialTier, isUserAdmin(initialEmail))
+          isMistralUnlocked(initialTier, isUserAdmin(initialEmail))
         ),
         timestamp: new Date(),
-        mode: isGrokUnlocked(initialTier, isUserAdmin(initialEmail)) ? 'grok' : 'coach',
+        mode: 'coach',
         variant: 'system',
       },
     ],

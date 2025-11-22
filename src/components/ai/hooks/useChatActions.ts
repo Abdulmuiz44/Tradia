@@ -42,14 +42,7 @@ export function useChatActions({ state, dispatch, trades, saveMessage }: UseChat
     dispatch({ type: 'SET_INPUT', payload: '' });
     dispatch({ type: 'SET_TYPING', payload: true });
 
-    if (state.assistantMode === 'grok' && !state.grokUnlocked) {
-      dispatch({ type: 'SET_TYPING', payload: false });
-      pushSystemMessage(
-        'Tradia Grok is a PRO feature. Upgrade to unlock real-time Grok summaries, predictive signals, and conversational explainability.',
-        'upgrade'
-      );
-      return;
-    }
+
 
     try {
       const response = await fetch('/api/ai/chat', {
@@ -85,7 +78,7 @@ export function useChatActions({ state, dispatch, trades, saveMessage }: UseChat
     } finally {
       dispatch({ type: 'SET_TYPING', payload: false });
     }
-  }, [state.inputMessage, state.assistantMode, state.grokUnlocked, trades, dispatch, pushSystemMessage, saveMessage]);
+  }, [state.inputMessage, state.assistantMode, trades, dispatch, pushSystemMessage, saveMessage]);
 
   return { pushSystemMessage, handleSendMessage };
 }

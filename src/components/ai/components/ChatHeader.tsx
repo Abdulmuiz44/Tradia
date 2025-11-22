@@ -46,23 +46,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = React.memo(({
         >
           <Crown className="w-3 h-3 mr-1" /> {userTier.toUpperCase()}
         </Badge>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleMode}
-          disabled={!grokUnlocked && assistantMode === 'coach'}
-          className={cn(
-            "flex items-center gap-1",
-            assistantMode === 'grok' ? "text-purple-400 hover:text-purple-300" : "text-blue-400 hover:text-blue-300",
-            !grokUnlocked && "opacity-50 cursor-not-allowed"
-          )}
-          title={grokUnlocked ? "Toggle AI Mode" : "Upgrade to unlock Grok"}
-          aria-label={`Switch to ${assistantMode === 'coach' ? 'Grok' : 'Coach'} mode`}
-        >
-          {assistantMode === 'grok' ? <Sparkles className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-          {assistantMode === 'grok' ? 'Grok Mode' : 'Coach Mode'}
-          {!grokUnlocked && <Lock className="w-3 h-3 ml-1" />}
-        </Button>
+        <Badge variant="outline" className="text-xs border-green-500 text-green-400">
+          <Sparkles className="w-3 h-3 mr-1" /> Mistral AI Active
+        </Badge>
       </div>
     </div>
   );
