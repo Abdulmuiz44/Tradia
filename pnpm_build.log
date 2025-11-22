@@ -1,5 +1,5 @@
 
-> tradia-frontend-v1@0.1.0 build
+> tradia-frontend-v1@0.1.0 build C:\Users\Hp\Documents\Github\Tradia
 > npx next build
 
    Creating an optimized production build ...
@@ -8,9 +8,6 @@
 
 ./app/layout.tsx
 177:9  Warning: Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
-
-./src/components/ai/hooks/useChatActions.ts
-81:6  Warning: React Hook useCallback has an unnecessary dependency: 'state.grokUnlocked'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
 
 ./src/components/analytics/StrategyBuilder.tsx
 124:6  Warning: React Hook useMemo has a missing dependency: 'weekdayNames'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
@@ -63,3 +60,4 @@ Type error: Property 'mistralUnlocked' is missing in type '{ messages: never[]; 
 [0m [90m 6 | [39m  messages[33m:[39m [][33m,[39m[0m
 [0m [90m 7 | [39m  inputMessage[33m:[39m [32m''[39m[33m,[39m[0m
 [0m [90m 8 | [39m  isTyping[33m:[39m [36mfalse[39m[33m,[39m[0m
+ ELIFECYCLE  Command failed with exit code 1.
