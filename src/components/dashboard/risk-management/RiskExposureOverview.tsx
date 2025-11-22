@@ -15,6 +15,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 interface RiskExposureOverviewProps {
   trades: Trade[];
@@ -44,7 +45,8 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
 
     // Average risk per trade (based on stop loss distance)
     const avgRiskPerTrade = trades.reduce((sum, trade) => {
-      const risk = trade.pnl && trade.pnl < 0 ? Math.abs(trade.pnl) : 0;
+      const pnl = getTradePnl(trade);
+      const risk = pnl < 0 ? Math.abs(pnl) : 0;
       return sum + risk;
     }, 0) / totalTrades;
 
@@ -53,12 +55,14 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
     let maxDrawdown = 0;
     let cumulativePnL = 0;
 
-    const sortedTrades = [...trades].sort((a, b) =>
-      new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
-    );
+    const sortedTrades = [...trades].sort((a, b) => {
+      const aDate = getTradeDate(a);
+      const bDate = getTradeDate(b);
+      return (aDate?.getTime() ?? 0) - (bDate?.getTime() ?? 0);
+    });
 
     for (const trade of sortedTrades) {
-      cumulativePnL += trade.pnl || 0;
+      cumulativePnL += getTradePnl(trade);
       if (cumulativePnL > peak) peak = cumulativePnL;
       const drawdown = peak - cumulativePnL;
       if (drawdown > maxDrawdown) maxDrawdown = drawdown;

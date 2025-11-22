@@ -3,7 +3,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type PlanType = 'pro' | 'plus' | 'elite' | 'free';
+export type PlanType = 'pro' | 'plus' | 'elite' | 'free' | 'starter';
 
 export interface PlanLimits {
   mt5Accounts: number;
@@ -36,6 +36,31 @@ export interface PlanLimits {
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
+  starter: {
+    mt5Accounts: 0,
+    aiChatsPerDay: 10,
+    tradeStorageDays: 45,
+    maxTrades: 100,
+    advancedAnalytics: false,
+    prioritySupport: false,
+    customIntegrations: false,
+    aiMLAnalysis: true,
+    imageProcessing: false,
+    personalizedStrategy: false,
+    realTimeAnalytics: true,
+    riskManagement: false,
+    marketTiming: true,
+    maxTradePlans: 5,
+    exportData: false,
+    shareReports: false,
+    alerts: false,
+    customizeView: true,
+    tvAlerts: 10,
+    tvBacktests: 3,
+    tvPatterns: 20,
+    tvScreener: true,
+    tvBroker: false,
+  },
   free: {
     mt5Accounts: 0,
     aiChatsPerDay: 5,
@@ -244,6 +269,7 @@ export function getUpgradeOptions(currentPlan: PlanType): Array<{
 export function getPlanDisplayName(plan: PlanType): string {
   const names = {
     free: 'Free',
+    starter: 'Starter',
     pro: 'Pro',
     plus: 'Plus',
     elite: 'Elite'
@@ -254,6 +280,7 @@ export function getPlanDisplayName(plan: PlanType): string {
 export function getPlanColor(plan: PlanType): string {
   const colors = {
     free: 'text-gray-500',
+    starter: 'text-gray-500',
     pro: 'text-blue-500',
     plus: 'text-purple-500',
     elite: 'text-yellow-500'
@@ -272,6 +299,7 @@ export function normalizePlanType(value: unknown): PlanType {
 
 export const PLAN_RANK: Record<PlanType, number> = {
   free: 0,
+  starter: 0,
   pro: 1,
   plus: 2,
   elite: 3,

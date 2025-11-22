@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Message } from "@/types/chat";
 import { Trade } from "@/types/trade";
+import { getTradeDate } from '@/lib/trade-date-utils';
 
 type ParsedSection =
   | { type: "heading"; text: string }
@@ -352,7 +353,7 @@ interface TradeCardProps {
 const TradeCard: React.FC<TradeCardProps> = ({ trade }) => {
   const outcomeLabel = trade.outcome?.toUpperCase() ?? "N/A";
   const pnlValue = trade.pnl ?? 0;
-  const entryDate = trade.entry_time ? new Date(trade.entry_time) : null;
+  const entryDate = getTradeDate(trade);
   const strategyTags = trade.strategy_tags?.filter(Boolean).join(", ");
 
   return (

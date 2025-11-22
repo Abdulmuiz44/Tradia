@@ -73,6 +73,7 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Trade } from "@/types/trade";
 import AccountBadge from "@/components/AccountBadge";
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 // Types
 interface AnalyticsMetric {
@@ -201,8 +202,8 @@ const router = useRouter();
     const cutoffDate = subDays(new Date(), days as number);
 
     return trades.filter(trade => {
-      const tradeDate = new Date(trade.openTime || trade.closeTime || '');
-      return tradeDate >= cutoffDate;
+      const tradeDate = getTradeDate(trade);
+      return tradeDate ? tradeDate >= cutoffDate : false;
     });
   }, [trades, timeframe]);
 
@@ -212,16 +213,16 @@ const router = useRouter();
     const winningTrades = filteredTrades.filter(t => (t.outcome || '').toLowerCase() === 'win').length;
     const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
-    const totalPnL = filteredTrades.reduce((sum, t) => sum + (parseFloat(String(t.pnl || 0))), 0);
+    const totalPnL = filteredTrades.reduce((sum, t) => sum + getTradePnl(t), 0);
     const avgTrade = totalTrades > 0 ? totalPnL / totalTrades : 0;
 
     const winningPnL = filteredTrades
       .filter(t => (t.outcome || '').toLowerCase() === 'win')
-      .reduce((sum, t) => sum + (parseFloat(String(t.pnl || 0))), 0);
+      .reduce((sum, t) => sum + getTradePnl(t), 0);
 
     const losingPnL = filteredTrades
       .filter(t => (t.outcome || '').toLowerCase() === 'loss')
-      .reduce((sum, t) => sum + Math.abs(parseFloat(String(t.pnl || 0))), 0);
+      .reduce((sum, t) => sum + Math.abs(getTradePnl(t)), 0);
 
     const profitFactor = losingPnL > 0 ? winningPnL / losingPnL : winningPnL > 0 ? Infinity : 0;
 
@@ -293,10 +294,10 @@ const router = useRouter();
     });
 
     filteredTrades.forEach(trade => {
-      const tradeDate = new Date(trade.openTime || trade.closeTime || '');
+      const tradeDate = getTradeDate(trade);
       if (tradeDate) {
         const monthKey = format(tradeDate, 'MMM yyyy');
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + (trade.pnl || 0);
+        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + getTradePnl(trade);
       }
     });
 
@@ -312,7 +313,7 @@ const router = useRouter();
     const dayCounts = days.map(day => ({ day, trades: 0 }));
 
     filteredTrades.forEach(trade => {
-      const tradeDate = new Date(trade.openTime || trade.closeTime || '');
+      const tradeDate = getTradeDate(trade);
       if (tradeDate) {
         const dayIndex = tradeDate.getDay();
         dayCounts[dayIndex].trades += 1;
@@ -382,7 +383,8 @@ const router = useRouter();
     const dailyData: { [key: string]: PerformanceData } = {};
 
     filteredTrades.forEach(trade => {
-      const date = format(new Date(trade.openTime || trade.closeTime || ''), 'yyyy-MM-dd');
+      const tradeDate = getTradeDate(trade) ?? new Date();
+      const date = format(tradeDate, 'yyyy-MM-dd');
       if (!dailyData[date]) {
         dailyData[date] = {
           date,
@@ -394,7 +396,7 @@ const router = useRouter();
         };
       }
 
-      dailyData[date].pnl += parseFloat(String(trade.pnl || 0));
+      dailyData[date].pnl += getTradePnl(trade);
       dailyData[date].trades += 1;
     });
 
@@ -411,9 +413,10 @@ const router = useRouter();
       }
       day.drawdown = peakEquity > 0 ? ((peakEquity - cumulativeEquity) / peakEquity) * 100 : 0;
 
-      const dayTrades = filteredTrades.filter(t =>
-        format(new Date(t.openTime || t.closeTime || ''), 'yyyy-MM-dd') === day.date
-      );
+      const dayTrades = filteredTrades.filter(t => {
+        const candidate = getTradeDate(t) ?? new Date();
+        return format(candidate, 'yyyy-MM-dd') === day.date;
+      });
       const winningTrades = dayTrades.filter(t => (t.outcome || '').toLowerCase() === 'win').length;
       day.winRate = day.trades > 0 ? (winningTrades / day.trades) * 100 : 0;
     });
@@ -434,7 +437,7 @@ const router = useRouter();
           name: symbol,
           trades: symbolTrades.length,
           winRate: symbolTrades.length > 0 ? (winningTrades / symbolTrades.length) * 100 : 0,
-          pnl: symbolTrades.reduce((sum, t) => sum + parseFloat(String(t.pnl || 0)), 0)
+          pnl: symbolTrades.reduce((sum, t) => sum + getTradePnl(t), 0)
         };
       }),
       strategies: strategies.map(strategy => {
@@ -444,7 +447,7 @@ const router = useRouter();
           name: strategy,
           trades: strategyTrades.length,
           winRate: strategyTrades.length > 0 ? (winningTrades / strategyTrades.length) * 100 : 0,
-          pnl: strategyTrades.reduce((sum, t) => sum + parseFloat(String(t.pnl || 0)), 0)
+          pnl: strategyTrades.reduce((sum, t) => sum + getTradePnl(t), 0)
         };
       })
     };

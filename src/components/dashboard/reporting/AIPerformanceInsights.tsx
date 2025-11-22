@@ -14,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 interface AIPerformanceInsightsProps {
   trades: Trade[];
@@ -65,9 +66,10 @@ const AIPerformanceInsights: React.FC<AIPerformanceInsightsProps> = ({ trades })
     let avgRR = 0;
     let rrCount = 0;
     trades.forEach(trade => {
-      if (trade.pnl && trade.pnl !== 0) {
-        const risk = Math.abs(trade.pnl);
-        const reward = trade.outcome === 'Win' ? trade.pnl : -trade.pnl;
+      const pnl = getTradePnl(trade);
+      if (pnl !== 0) {
+        const risk = Math.abs(pnl);
+        const reward = trade.outcome === 'Win' ? pnl : -pnl;
         if (risk > 0) {
           avgRR += reward / risk;
           rrCount++;
@@ -97,8 +99,8 @@ const AIPerformanceInsights: React.FC<AIPerformanceInsightsProps> = ({ trades })
     // Consistency analysis
     const dailyPnL: Record<string, number> = {};
     trades.forEach(trade => {
-      const date = new Date(trade.closeTime || trade.openTime).toDateString();
-      dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
+      const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
+      dailyPnL[date] = (dailyPnL[date] || 0) + getTradePnl(trade);
     });
 
     const dailyValues = Object.values(dailyPnL);
@@ -360,15 +362,16 @@ function calculateTradingMetrics(trades: Trade[]) {
   const totalTrades = trades.length;
   const winningTrades = trades.filter(t => t.outcome === 'Win');
   const winRate = totalTrades > 0 ? (winningTrades.length / totalTrades) * 100 : 0;
-  const totalPnL = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+  const totalPnL = trades.reduce((sum, trade) => sum + getTradePnl(trade), 0);
 
   // Calculate average RR
   let totalRR = 0;
   let rrCount = 0;
   trades.forEach(trade => {
-    if (trade.pnl && trade.pnl !== 0) {
-      const risk = Math.abs(trade.pnl);
-      const reward = trade.outcome === 'Win' ? trade.pnl : -trade.pnl;
+    const pnl = getTradePnl(trade);
+    if (pnl !== 0) {
+      const risk = Math.abs(pnl);
+      const reward = trade.outcome === 'Win' ? pnl : -pnl;
       if (risk > 0) {
         totalRR += reward / risk;
         rrCount++;
@@ -382,12 +385,14 @@ function calculateTradingMetrics(trades: Trade[]) {
   let maxDrawdown = 0;
   let cumulativePnL = 0;
 
-  const sortedTrades = [...trades].sort((a, b) =>
-    new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
-  );
+  const sortedTrades = [...trades].sort((a, b) => {
+    const aDate = getTradeDate(a);
+    const bDate = getTradeDate(b);
+    return (aDate?.getTime() ?? 0) - (bDate?.getTime() ?? 0);
+  });
 
   for (const trade of sortedTrades) {
-    cumulativePnL += trade.pnl || 0;
+    cumulativePnL += getTradePnl(trade);
     if (cumulativePnL > peak) peak = cumulativePnL;
     const drawdown = peak - cumulativePnL;
     if (drawdown > maxDrawdown) maxDrawdown = drawdown;
@@ -396,8 +401,8 @@ function calculateTradingMetrics(trades: Trade[]) {
   // Calculate consistency
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
-    dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
+    const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
+    dailyPnL[date] = (dailyPnL[date] || 0) + getTradePnl(trade);
   });
 
   const dailyValues = Object.values(dailyPnL);

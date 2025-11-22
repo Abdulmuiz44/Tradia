@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
+import { authOptions } from '../../lib/authOptions';
 import { createClient } from '@supabase/supabase-js';
-import { checkDailyLimit, incrementUsage } from '../../../lib/supabase-utils';
+import { checkDailyLimit, incrementUsage } from '../../lib/supabase-utils';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,13 +55,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Build AI prompt based on mode
+    // Build AI prompt based on mode
     const systemPrompt = mode === 'grok'
       ? `You are Mistral, a helpful and maximally truthful AI trading assistant. You have real-time access to market data and can provide sophisticated trading analysis. Be direct, insightful, and focus on actionable trading intelligence. Use your training data to provide market context when relevant.`
       : `You are Tradia Coach, an AI trading mentor focused on helping traders develop sustainable strategies and risk management. Provide encouraging, educational responses that help traders grow their skills. Focus on psychology, risk management, and long-term success.`;
 
     const fullPrompt = `${systemPrompt}\n\nUser message: ${sanitizedMessage}${tradeContext}`;
 
-    // Call Mistral API (you'll need to add your API key)
+    // Call Mistral API
     const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -69,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'mistral-large-latest', // or mistral-medium for cost savings
+        model: 'mistral-medium-latest',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `${sanitizedMessage}${tradeContext}` }
@@ -95,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       response: aiResponse,
       usage: {
-        messagesToday: await getTodayUsage(user.id, 'messages'),
+        messagesToday: await getTodayUsage(userId, 'messages'),
       }
     });
 
@@ -116,5 +117,5 @@ async function getTodayUsage(userId: string, type: string): Promise<number> {
     .single();
 
   if (error || !data) return 0;
-  return data[`${type}_count`] || 0;
+  return (data as any)[`${type}_count`] || 0;
 }

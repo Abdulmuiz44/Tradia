@@ -85,34 +85,34 @@ interface ChatAreaProps {
 }
 
 export const ChatArea = ({
-conversationTitle = "New Conversation",
-messages = [],
-model = "openai:gpt-4o-mini",
-onModelChange,
-onSendMessage,
-onAttachTrades,
-selectedTradeIds = [],
-onTradeSelect,
-onRegenerateMessage,
-onEditMessage,
-onDeleteMessage,
-onCopyMessage,
-onRateMessage,
-onPinMessage,
-onRetryMessage,
-onExportConversation,
-onVoiceInput,
-isListening = false,
-voiceTranscript = "",
-assistantMode = "coach",
-onAssistantModeChange,
-isProcessing = false,
-onStopGeneration,
-conversationId,
-onRenameCurrentConversation,
-isGuest,
-onRequestAuth,
-userName,
+  conversationTitle = "New Conversation",
+  messages = [],
+  model = "mistral-medium-latest",
+  onModelChange,
+  onSendMessage,
+  onAttachTrades,
+  selectedTradeIds = [],
+  onTradeSelect,
+  onRegenerateMessage,
+  onEditMessage,
+  onDeleteMessage,
+  onCopyMessage,
+  onRateMessage,
+  onPinMessage,
+  onRetryMessage,
+  onExportConversation,
+  onVoiceInput,
+  isListening = false,
+  voiceTranscript = "",
+  assistantMode = "coach",
+  onAssistantModeChange,
+  isProcessing = false,
+  onStopGeneration,
+  conversationId,
+  onRenameCurrentConversation,
+  isGuest,
+  onRequestAuth,
+  userName,
 }: ChatAreaProps) => {
   const [inputMessage, setInputMessage] = useState(voiceTranscript);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -287,18 +287,18 @@ userName,
       <ScrollArea className="flex-1">
         <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-12">
           {messages.map((message, index) => (
-          <MessageBubble
-          key={message.id}
-          message={message}
-          onEdit={(newContent) => onEditMessage?.(message.id, newContent)}
-          onDelete={() => onDeleteMessage?.(message.id)}
-          onRegenerate={() => onRegenerateMessage?.(message.id)}
-          onCopy={() => onCopyMessage?.(message.content)}
-          onRate={(rating) => onRateMessage?.(message.id, rating)}
-          onPin={() => onPinMessage?.(message.id)}
-          onRetry={() => onRetryMessage?.(message.id)}
-          isLast={index === messages.length - 1}
-          />
+            <MessageBubble
+              key={message.id}
+              message={message}
+              onEdit={(newContent) => onEditMessage?.(message.id, newContent)}
+              onDelete={() => onDeleteMessage?.(message.id)}
+              onRegenerate={() => onRegenerateMessage?.(message.id)}
+              onCopy={() => onCopyMessage?.(message.content)}
+              onRate={(rating) => onRateMessage?.(message.id, rating)}
+              onPin={() => onPinMessage?.(message.id)}
+              onRetry={() => onRetryMessage?.(message.id)}
+              isLast={index === messages.length - 1}
+            />
           ))}
           {isProcessing && <TypingIndicator userName={userName} />}
           <div ref={messagesEndRef} />
@@ -306,7 +306,7 @@ userName,
       </ScrollArea>
 
       <div className="relative px-4 pb-10 pt-6">
-        
+
         <div className="mx-auto w-full max-w-3xl space-y-4">
           {selectedTradeIds.length > 0 && (
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(5,11,24,0.55)]">
@@ -472,70 +472,23 @@ userName,
                     variant="ghost"
                     size="sm"
                     onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
-                    className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-transparent p-0 transition-colors ${
-                      isListening
-                        ? "text-[#FFFFFF] hover:text-[#71767B]"
-                        : "text-[#71767B] hover:text-[#FFFFFF]"
-                    }`}
+                    className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-transparent p-0 transition-colors ${isListening
+                      ? "text-[#FFFFFF] hover:text-[#71767B]"
+                      : "text-[#71767B] hover:text-[#FFFFFF]"
+                      }`}
                     title={isListening ? "Stop voice input" : "Start voice input"}
                   >
                     {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                   </Button>
 
-                  <Dialog open={modelDialogOpen} onOpenChange={setModelDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-11 w-11 rounded-full border border-indigo-500/30 bg-transparent p-0 text-[#FFFFFF] transition hover:bg-indigo-500/10 ${isProcessing ? 'animate-pulse' : ''}`}
-                        title="Select Model"
-                      >
-                        <Bot className="h-5 w-5" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="border border-indigo-500/40 bg-[#050b18] text-[#FFFFFF]">
-                      <DialogHeader>
-                        <DialogTitle className="text-lg font-semibold text-white">Select AI Model</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-2 text-sm font-semibold">
-                        <Button
-                          variant={model === 'openai:gpt-4o-mini' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('openai:gpt-4o-mini'); setModelDialogOpen(false); }}
-                          className="justify-start"
-                        >
-                          OpenAI · GPT-4o mini (fast)
-                        </Button>
-                        <Button
-                          variant={model === 'openai:gpt-4o' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('openai:gpt-4o'); setModelDialogOpen(false); }}
-                          className="justify-start"
-                        >
-                          OpenAI · GPT-4o (balanced)
-                        </Button>
-                        <Button
-                          variant={model === 'openai:gpt-4.1-mini' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('openai:gpt-4.1-mini'); setModelDialogOpen(false); }}
-                          className="justify-start"
-                        >
-                          OpenAI · GPT-4.1 mini (analysis)
-                        </Button>
-                        <Button
-                          variant={model === 'mistral:mistral-large-latest' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('mistral:mistral-large-latest'); setModelDialogOpen(false); }}
-                          className="justify-start"
-                        >
-                          Mistral AI · Mistral Large (creative)
-                        </Button>
-                        <Button
-                          variant={model === 'gateway:meta-llama-3-70b-instruct' ? 'default' : 'ghost'}
-                          onClick={() => { onModelChange?.('gateway:meta-llama-3-70b-instruct'); setModelDialogOpen(false); }}
-                          className="justify-start"
-                        >
-                          Vercel Gateway · Llama 3 70B (structured)
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-11 w-11 rounded-full border border-indigo-500/30 bg-transparent p-0 text-[#FFFFFF] transition hover:bg-indigo-500/10 cursor-default"
+                    title="Powered by Mistral AI"
+                  >
+                    <Bot className="h-5 w-5" />
+                  </Button>
 
                   <Button
                     variant="ghost"
@@ -544,11 +497,10 @@ userName,
                     disabled={sendDisabled}
                     title={isProcessing ? "Stop generation" : "Send message"}
                     aria-label={isProcessing ? "Stop generation" : "Send message"}
-                    className={`h-11 w-11 rounded-2xl border p-0 transition-all duration-200 hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-0 disabled:opacity-50 ${
-                      isProcessing
-                        ? "border-red-400/60 bg-red-500/20 text-red-100 hover:border-red-300 hover:bg-red-500/30"
-                        : "border-indigo-500/40 bg-indigo-500/10 text-white hover:border-indigo-300 hover:bg-indigo-500/20"
-                    }`}
+                    className={`h-11 w-11 rounded-2xl border p-0 transition-all duration-200 hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-0 disabled:opacity-50 ${isProcessing
+                      ? "border-red-400/60 bg-red-500/20 text-red-100 hover:border-red-300 hover:bg-red-500/30"
+                      : "border-indigo-500/40 bg-indigo-500/10 text-white hover:border-indigo-300 hover:bg-indigo-500/20"
+                      }`}
                   >
                     {showStopIcon ? <Square className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
                   </Button>

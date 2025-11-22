@@ -14,6 +14,7 @@ import {
   Clock
 } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 interface PerformanceSummaryCardsProps {
   trades: Trade[];
@@ -34,7 +35,7 @@ const PerformanceSummaryCards: React.FC<PerformanceSummaryCardsProps> = ({ trade
       };
     }
 
-    const totalPnL = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+    const totalPnL = trades.reduce((sum, trade) => sum + getTradePnl(trade), 0);
     const winningTrades = trades.filter(t => t.outcome === 'Win');
     const losingTrades = trades.filter(t => t.outcome === 'Loss');
     const winRate = trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0;
@@ -43,9 +44,10 @@ const PerformanceSummaryCards: React.FC<PerformanceSummaryCardsProps> = ({ trade
     let totalRR = 0;
     let rrCount = 0;
     trades.forEach(trade => {
-      if (trade.pnl && trade.pnl !== 0) {
-        const risk = Math.abs(trade.pnl);
-        const reward = trade.outcome === 'Win' ? trade.pnl : -trade.pnl;
+      const pnl = getTradePnl(trade);
+      if (pnl !== 0) {
+        const risk = Math.abs(pnl);
+        const reward = trade.outcome === 'Win' ? pnl : -pnl;
         if (risk > 0) {
           totalRR += reward / risk;
           rrCount++;
@@ -56,8 +58,8 @@ const PerformanceSummaryCards: React.FC<PerformanceSummaryCardsProps> = ({ trade
 
     // Calculate daily profits
     const dailyProfits = trades.reduce((acc, trade) => {
-      const date = new Date(trade.closeTime || trade.openTime).toDateString();
-      acc[date] = (acc[date] || 0) + (trade.pnl || 0);
+      const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
+      acc[date] = (acc[date] || 0) + getTradePnl(trade);
       return acc;
     }, {} as Record<string, number>);
 
@@ -70,8 +72,8 @@ const PerformanceSummaryCards: React.FC<PerformanceSummaryCardsProps> = ({ trade
     const worstDay = Math.min(...dailyProfitValues, 0);
 
     // Profit factor (gross profit / gross loss)
-    const grossProfit = winningTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
-    const grossLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0));
+    const grossProfit = winningTrades.reduce((sum, trade) => sum + getTradePnl(trade), 0);
+    const grossLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + getTradePnl(trade), 0));
     const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
 
     return {

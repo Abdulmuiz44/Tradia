@@ -15,6 +15,7 @@ import {
   Settings
 } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl, safeDate } from '@/lib/trade-date-utils';
 
 interface ExportCenterProps {
   trades: Trade[];
@@ -28,7 +29,7 @@ const ExportCenter: React.FC<ExportCenterProps> = ({ trades }) => {
   const exportData = {
     summary: {
       totalTrades: trades.length,
-      totalPnL: trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0),
+      totalPnL: trades.reduce((sum, trade) => sum + getTradePnl(trade), 0),
       winRate: trades.length > 0 ? (trades.filter(t => t.outcome === 'Win').length / trades.length) * 100 : 0,
       avgRR: calculateAvgRR(trades),
       dateRange: getDateRange(trades),
@@ -367,9 +368,10 @@ function calculateAvgRR(trades: Trade[]): number {
   let count = 0;
 
   trades.forEach(trade => {
-    if (trade.pnl && trade.pnl !== 0) {
-      const risk = Math.abs(trade.pnl);
-      const reward = trade.outcome === 'Win' ? trade.pnl : -trade.pnl;
+    const pnl = getTradePnl(trade);
+    if (pnl !== 0) {
+      const risk = Math.abs(pnl);
+      const reward = trade.outcome === 'Win' ? pnl : -pnl;
       if (risk > 0) {
         totalRR += reward / risk;
         count++;
@@ -383,9 +385,10 @@ function calculateAvgRR(trades: Trade[]): number {
 function getDateRange(trades: Trade[]): string {
   if (trades.length === 0) return 'N/A';
 
-  const dates = trades.map(trade => new Date(trade.closeTime || trade.openTime));
-  const earliest = new Date(Math.min(...dates.map(d => d.getTime())));
-  const latest = new Date(Math.max(...dates.map(d => d.getTime())));
+  const parsedDates = trades.map(trade => getTradeDate(trade)).filter((d): d is Date => Boolean(d));
+  if (parsedDates.length === 0) return 'N/A';
+  const earliest = new Date(Math.min(...parsedDates.map(d => d.getTime())));
+  const latest = new Date(Math.max(...parsedDates.map(d => d.getTime())));
 
   return `${earliest.toLocaleDateString()} - ${latest.toLocaleDateString()}`;
 }
@@ -393,7 +396,7 @@ function getDateRange(trades: Trade[]): string {
 function calculateBestDay(trades: Trade[]): number {
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
+    const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
     dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
   });
 
@@ -403,8 +406,8 @@ function calculateBestDay(trades: Trade[]): number {
 function calculateWorstDay(trades: Trade[]): number {
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
-    dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
+    const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
+    dailyPnL[date] = (dailyPnL[date] || 0) + getTradePnl(trade);
   });
 
   return Math.min(...Object.values(dailyPnL), 0);
@@ -413,11 +416,11 @@ function calculateWorstDay(trades: Trade[]): number {
 function calculateProfitFactor(trades: Trade[]): number {
   const grossProfit = trades
     .filter(t => t.outcome === 'Win')
-    .reduce((sum, t) => sum + (t.pnl || 0), 0);
+    .reduce((sum, t) => sum + getTradePnl(t), 0);
 
   const grossLoss = Math.abs(trades
     .filter(t => t.outcome === 'Loss')
-    .reduce((sum, t) => sum + (t.pnl || 0), 0));
+    .reduce((sum, t) => sum + getTradePnl(t), 0));
 
   return grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
 }
@@ -427,8 +430,8 @@ function calculateConsistencyScore(trades: Trade[]): number {
 
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
-    dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
+    const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
+    dailyPnL[date] = (dailyPnL[date] || 0) + getTradePnl(trade);
   });
 
   const dailyValues = Object.values(dailyPnL);
@@ -447,8 +450,10 @@ function calculateAvgTradeDuration(trades: Trade[]): number {
   let count = 0;
 
   trades.forEach(trade => {
-    if (trade.openTime && trade.closeTime) {
-      const duration = new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime();
+    const open = safeDate(trade.openTime);
+    const close = safeDate(trade.closeTime);
+    if (open && close) {
+      const duration = close.getTime() - open.getTime();
       totalDuration += duration / (1000 * 60); // Convert to minutes
       count++;
     }

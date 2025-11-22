@@ -16,7 +16,7 @@ interface ChatRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
-  mode?: 'coach' | 'grok';
+  mode?: 'coach' | 'mistral';
 }
 
 export async function POST(req: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const body: ChatRequest = await req.json();
     const { message, tradeHistory, attachments, conversationHistory, mode } = body || {} as ChatRequest;
 
-    const requestedMode: 'coach' | 'grok' = mode === 'grok' ? 'grok' : 'coach';
+    const requestedMode: 'coach' | 'mistral' = mode === 'mistral' ? 'mistral' : 'coach';
 
     if (!message && (!attachments || attachments.length === 0)) {
       return NextResponse.json({ error: "Message or attachments required" }, { status: 400 });
@@ -89,19 +89,19 @@ export async function POST(req: NextRequest) {
       };
       const id = normalizePlan(userPlanStr, userEmail);
       const plan: AIUserPlan = {
-      
+
         id,
         name: id.charAt(0).toUpperCase() + id.slice(1),
         limits: {
           maxHistoryDays: id === 'elite' ? 36500 : id === 'plus' ? 365 : id === 'pro' ? 182 : 30,
           maxAccounts: id === 'elite' ? 999 : id === 'plus' ? 3 : id === 'pro' ? 1 : 0,
           aiFeatures: id === 'elite'
-            ? ['advanced_analytics','ai_trade_reviews','vision','predictive','personalized']
+            ? ['advanced_analytics', 'ai_trade_reviews', 'vision', 'predictive', 'personalized']
             : id === 'plus'
-              ? ['advanced_analytics','ai_trade_reviews','vision','predictive']
+              ? ['advanced_analytics', 'ai_trade_reviews', 'vision', 'predictive']
               : id === 'pro'
                 ? ['advanced_analytics']
-                : ['basic_analytics','performance_overview'],
+                : ['basic_analytics', 'performance_overview'],
           advancedAnalytics: id !== 'starter',
           strategyBuilder: id === 'plus' || id === 'elite',
           propFirmDashboard: id === 'elite',
@@ -114,11 +114,8 @@ export async function POST(req: NextRequest) {
     }
 
     const planId = assignedPlan?.id ?? 'starter';
-    if (requestedMode === 'grok' && planId !== 'plus' && planId !== 'elite') {
-      return NextResponse.json({
-        response: "Tradia Grok Fast Mode is available on Plus and Elite plans. Upgrade to unlock explainable AI callouts, predictive bias detection, and instant playbooks."
-      });
-    }
+    // Mistral mode is now available for all plans as the default engine
+    // if (requestedMode === 'mistral' && planId !== 'plus' && planId !== 'elite') { ... }
 
     // Analyze uploaded images if any (metadata only)
     let imageAnalysis: any = null;

@@ -209,7 +209,7 @@ export default function CsvUpload({
   onClose: controlledOnClose,
   onImport: controlledOnImport,
 }: CsvUploadProps): React.ReactElement {
-  const { setTradesFromCsv } = useTrade();
+  const { importTrades } = useTrade();
   const { plan } = useUser();
 
   const [open, setOpen] = useState<boolean>(false);
@@ -330,12 +330,12 @@ export default function CsvUpload({
 
           const headers =
             results &&
-            Array.isArray(results.meta?.fields) &&
-            (results.meta!.fields as unknown[]).length > 0
+              Array.isArray(results.meta?.fields) &&
+              (results.meta!.fields as unknown[]).length > 0
               ? (results.meta!.fields as unknown[]).map((f) => String(f))
               : parsedRows.length > 0
-              ? Object.keys(parsedRows[0])
-              : [];
+                ? Object.keys(parsedRows[0])
+                : [];
 
           const mapping = buildAutoMapping(headers);
           const coerced: ParsedRow[] = parsedRows.map((r) => {
@@ -410,7 +410,7 @@ export default function CsvUpload({
     });
   }, [rows, mappedHeaders]);
 
-  const handleImport = useCallback(() => {
+  const handleImport = useCallback(async () => {
     if (!mappedForImport || mappedForImport.length === 0) {
       toast.error("No rows to import.");
       return;
@@ -441,7 +441,7 @@ export default function CsvUpload({
           toast.error(`Your ${plan} plan allows importing up to ${plan === 'free' ? '30 days' : '6 months'} of history. Please upgrade to import older trades.`);
           setOpen(false);
           // Navigate to upgrade tab (works within dashboard layout)
-          try { (window as any).location.hash = '#upgrade'; } catch {}
+          try { (window as any).location.hash = '#upgrade'; } catch { }
           return;
         }
       }
@@ -462,7 +462,7 @@ export default function CsvUpload({
 
       setParsing(true);
       setProgress(60);
-      setTradesFromCsv(tradesToImport as Trade[]);
+      await importTrades(tradesToImport as unknown as Trade[]);
       setProgress(100);
       toast.success(`Imported ${mappedForImport.length} rows`);
       setTimeout(() => {
@@ -492,7 +492,7 @@ export default function CsvUpload({
       setParsing(false);
       setProgress(0);
     }
-  }, [mappedForImport, setTradesFromCsv, controlledOnImport, controlledOnClose, plan]);
+  }, [mappedForImport, importTrades, controlledOnImport, controlledOnClose, plan]);
 
   const PreviewTable = useMemo(() => {
     if (!rows || rows.length === 0) {

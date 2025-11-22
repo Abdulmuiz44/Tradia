@@ -15,10 +15,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Histogram
 } from 'recharts';
 import { TrendingUp, BarChart3, Activity } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 interface RiskConsistencyChartsProps {
   trades: Trade[];
@@ -35,22 +35,26 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
     }
 
     // Sort trades by date
-    const sortedTrades = [...trades].sort((a, b) =>
-      new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
-    );
+    const sortedTrades = [...trades].sort((a, b) => {
+      const aDate = getTradeDate(a);
+      const bDate = getTradeDate(b);
+      return (aDate?.getTime() ?? 0) - (bDate?.getTime() ?? 0);
+    });
 
     // Risk per trade over time
     const riskOverTime = sortedTrades.map((trade, index) => {
-      const risk = trade.pnl && trade.pnl < 0 ? Math.abs(trade.pnl) : 0;
+      const pnl = getTradePnl(trade);
+      const risk = pnl < 0 ? Math.abs(pnl) : 0;
       const riskPercent = trade.entryPrice ? (risk / trade.entryPrice) * 100 : 0;
+      const dateLabel = getTradeDate(trade)?.toLocaleDateString() ?? 'Unknown';
 
       return {
         trade: index + 1,
-        date: new Date(trade.closeTime || trade.openTime).toLocaleDateString(),
+        date: dateLabel,
         riskAmount: risk,
         riskPercent: riskPercent,
         symbol: trade.symbol,
-        outcome: trade.outcome
+        outcome: trade.outcome,
       };
     });
 
@@ -58,22 +62,23 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
     let cumulativePnL = 0;
     let peak = 0;
     const equityCurve = sortedTrades.map((trade, index) => {
-      cumulativePnL += trade.pnl || 0;
+      cumulativePnL += getTradePnl(trade);
       if (cumulativePnL > peak) peak = cumulativePnL;
       const drawdown = peak - cumulativePnL;
 
       return {
         trade: index + 1,
-        date: new Date(trade.closeTime || trade.openTime).toLocaleDateString(),
+        date: getTradeDate(trade)?.toLocaleDateString() ?? 'Unknown',
         equity: cumulativePnL + 10000, // Starting equity of $10k
         drawdown: -drawdown, // Negative for visualization
-        pnl: trade.pnl || 0
+        pnl: getTradePnl(trade),
       };
     });
 
     // Risk distribution histogram data
     const riskValues = sortedTrades.map(trade => {
-      const risk = trade.pnl && trade.pnl < 0 ? Math.abs(trade.pnl) : 0;
+      const pnl = getTradePnl(trade);
+      const risk = pnl < 0 ? Math.abs(pnl) : 0;
       return trade.entryPrice ? (risk / trade.entryPrice) * 100 : 0;
     }).filter(risk => risk > 0);
 

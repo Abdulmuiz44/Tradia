@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter, X, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { format } from 'date-fns';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 interface TradePickerPanelProps {
   trades?: Trade[];
@@ -63,13 +65,13 @@ export const TradePickerPanel: React.FC<TradePickerPanelProps> = ({
     .sort((a, b) => {
       switch (sortBy) {
         case 'date-desc':
-          return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime();
+          return (getTradeDate(b)?.getTime() || 0) - (getTradeDate(a)?.getTime() || 0);
         case 'date-asc':
-          return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime();
+          return (getTradeDate(a)?.getTime() || 0) - (getTradeDate(b)?.getTime() || 0);
         case 'pnl-desc':
-          return b.pnl - a.pnl;
+          return getTradePnl(b) - getTradePnl(a);
         case 'pnl-asc':
-          return a.pnl - b.pnl;
+          return getTradePnl(a) - getTradePnl(b);
         case 'symbol':
           return a.symbol.localeCompare(b.symbol);
         default:
@@ -266,7 +268,10 @@ const TradeItem: React.FC<TradeItemProps> = ({ trade, isSelected, onToggle }) =>
           <div>
             <div className="font-medium text-white">{trade.symbol}</div>
             <div className="text-sm text-white/60">
-              {trade.entry_time ? new Date(trade.entry_time).toLocaleDateString() : 'Date unavailable'}
+              {(() => {
+                const entryDate = getTradeDate(trade);
+                return entryDate ? format(entryDate, 'MMM d, yyyy') : 'Date unavailable';
+              })()}
             </div>
           </div>
         </div>

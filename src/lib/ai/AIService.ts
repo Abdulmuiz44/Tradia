@@ -1,5 +1,6 @@
 // src/lib/ai/AIService.ts
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 export interface TradePattern {
   type: 'winning_streak' | 'losing_streak' | 'consistent' | 'volatile' | 'trend_following' | 'counter_trend';
@@ -59,37 +60,37 @@ export interface AIReasoningProcess {
 }
 
 export class AIService {
-   private static instance: AIService;
-   private userPlan: UserPlan;
+  private static instance: AIService;
+  private userPlan: UserPlan;
 
-   private constructor() {
-     // Default to starter plan - in real implementation, this would be fetched from user context
-     this.userPlan = {
-       id: 'starter',
-       name: 'Starter',
-       limits: {
-         maxHistoryDays: 30,
-         maxAccounts: 0,
-         aiFeatures: ['basic_analytics', 'performance_overview'],
-         advancedAnalytics: false,
-         strategyBuilder: false,
-         propFirmDashboard: false
-       }
-     };
-   }
-
-   /**
-    * Get the appropriate AI model based on user plan and request type
-    */
-   private getAIModel(modelType: 'chat' | 'analysis' = 'chat') {
-      // Simple model selection based on plan
-      if (this.userPlan.id === 'pro' || this.userPlan.id === 'plus' || this.userPlan.id === 'elite') {
-         return modelType === 'analysis' ? 'advanced' : 'standard';
+  private constructor() {
+    // Default to starter plan - in real implementation, this would be fetched from user context
+    this.userPlan = {
+      id: 'starter',
+      name: 'Starter',
+      limits: {
+        maxHistoryDays: 30,
+        maxAccounts: 0,
+        aiFeatures: ['basic_analytics', 'performance_overview'],
+        advancedAnalytics: false,
+        strategyBuilder: false,
+        propFirmDashboard: false
       }
- 
-      // For starter users, use basic model
-      return 'basic';
-   }
+    };
+  }
+
+  /**
+   * Get the appropriate AI model based on user plan and request type
+   */
+  private getAIModel(modelType: 'chat' | 'analysis' = 'chat') {
+    // Simple model selection based on plan
+    if (this.userPlan.id === 'pro' || this.userPlan.id === 'plus' || this.userPlan.id === 'elite') {
+      return modelType === 'analysis' ? 'advanced' : 'standard';
+    }
+
+    // For starter users, use basic model
+    return 'basic';
+  }
 
   static getInstance(): AIService {
     if (!AIService.instance) {
@@ -117,9 +118,9 @@ export class AIService {
    */
   hasFeatureAccess(feature: string): boolean {
     return this.userPlan.limits.aiFeatures.includes(feature) ||
-           this.userPlan.limits.advancedAnalytics ||
-           this.userPlan.limits.strategyBuilder ||
-           this.userPlan.limits.propFirmDashboard;
+      this.userPlan.limits.advancedAnalytics ||
+      this.userPlan.limits.strategyBuilder ||
+      this.userPlan.limits.propFirmDashboard;
   }
 
   /**
@@ -383,6 +384,9 @@ export class AIService {
   /**
    * Generate AI response using simple text generation
    */
+  /**
+   * Generate AI response using Mistral AI
+   */
   private async generateAIResponse(
     query: string,
     tradeSummary: any,
@@ -390,27 +394,61 @@ export class AIService {
     reasoning: AIReasoningProcess,
     context?: any
   ): Promise<string> {
-    // Prefer Hugging Face free models with plan-based ensemble
     try {
       const sys = this.buildSystemPrompt(tradeSummary, analysis, reasoning);
       const user = this.buildUserPrompt(query, context);
-      const detail = `\n\nContext Summary (JSON):\n\n${JSON.stringify({ tradeSummary, keyInsights: analysis.insights.slice(0,5), patterns: analysis.patterns.slice(0,5) }, null, 2)}`;
-      const prompt = `${sys}\n\n${user}${detail}`;
 
-      const models = this.getHuggingFaceModelsForPlan();
-      if (models.length > 0) {
-        const results = await this.callMultipleHF(models, prompt);
-        const merged = this.mergeModelOutputs(results);
-        const formatted = this.formatAIResponse(merged, analysis);
+      const response = await this.callMistralAI(sys, user);
+      if (response) {
+        const formatted = this.formatAIResponse(response, analysis);
         return this.sanitizeOutput(formatted);
       }
     } catch (err) {
-      console.warn('Hugging Face generation failed, falling back:', err);
+      console.error('Mistral AI generation failed:', err);
     }
 
     // Fallback: simple local response
     const response = this.generateSimpleResponse(query, tradeSummary, analysis);
     return this.sanitizeOutput(this.formatAIResponse(response, analysis));
+  }
+
+  private async callMistralAI(systemPrompt: string, userPrompt: string): Promise<string | null> {
+    try {
+      const apiKey = process.env.MISTRAL_API_KEY;
+      if (!apiKey) {
+        console.warn('Mistral API key not found');
+        return null;
+      }
+
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'mistral-medium-latest',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          max_tokens: 1500,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Mistral API error:', errorText);
+        return null;
+      }
+
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || null;
+    } catch (error) {
+      console.error('Error calling Mistral AI:', error);
+      return null;
+    }
   }
 
   // --- Hugging Face integration (free models) ---
@@ -438,14 +476,14 @@ export class AIService {
   }
 
   private async callMultipleHF(models: string[], prompt: string): Promise<Array<{ model: string; text: string }>> {
-    // Disabled: Using OpenAI only
-    console.warn('HuggingFace calls disabled - using OpenAI only');
+    // Disabled: Using Mistral only
+    console.warn('HuggingFace calls disabled - using Mistral only');
     return [];
   }
 
   private async callHuggingFace(model: string, prompt: string): Promise<string> {
-    // Disabled: Using OpenAI only
-    console.warn('HuggingFace calls disabled - using OpenAI only');
+    // Disabled: Using Mistral only
+    console.warn('HuggingFace calls disabled - using Mistral only');
     return '';
   }
 
@@ -509,7 +547,7 @@ export class AIService {
    * Build system prompt for AI model
    */
   private buildSystemPrompt(tradeSummary: any, analysis: MLTradeAnalysis, reasoning: AIReasoningProcess): string {
-  return `You are Tradia AI, a skilled and friendly trading coach built into the Tradia app. Your role is to help users deeply understand, analyze, and improve their trading performance. You are powered with advanced analytics and coding abilities to answer any trading-related question naturally and helpfully.
+    return `You are Tradia AI, a skilled and friendly trading coach built into the Tradia app. Your role is to help users deeply understand, analyze, and improve their trading performance. You are powered with advanced analytics and coding abilities to answer any trading-related question naturally and helpfully.
 
 Always respond in a friendly, encouraging, and professional manner. Accept and answer questions in plain English like "How did I perform this week?", "Which pair is my most profitable?", "What's my win rate over the past month?", etc.
 
@@ -609,13 +647,13 @@ Please analyze this query in the context of their trading performance and provid
 
     const wins = trades.filter(t => t.outcome === 'Win').length;
     const winRate = (wins / trades.length) * 100;
-    const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+    const totalPnL = trades.reduce((sum, t) => sum + getTradePnl(t), 0);
     const avgTrade = totalPnL / trades.length;
 
     // Find best performing symbol
     const symbolStats = this.groupTradesBySymbol(trades);
     const bestSymbol = Object.entries(symbolStats)
-      .sort(([,a]: any, [,b]: any) => b.winRate - a.winRate)[0]?.[0] || 'N/A';
+      .sort(([, a]: any, [, b]: any) => b.winRate - a.winRate)[0]?.[0] || 'N/A';
 
     return {
       totalTrades: trades.length,
@@ -641,7 +679,7 @@ I apologize, but I'm having trouble processing your request right now. Here's wh
 **Your Performance Summary:**
 • Total Trades: ${totalTrades}
 • Win Rate: ${winRate}%
-• Total P&L: $${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)}
+• Total P&L: $${trades.reduce((sum, t) => sum + getTradePnl(t), 0).toFixed(2)}
 
 **General Trading Tips:**
 • Focus on maintaining consistent risk management
@@ -662,8 +700,8 @@ ${this.generatePlanFooter()}`;
     cutoffDate.setDate(cutoffDate.getDate() - maxDays);
 
     return trades.filter(trade => {
-      const tradeDate = trade.closeTime ? new Date(trade.closeTime) : new Date(trade.openTime);
-      return tradeDate >= cutoffDate;
+      const tradeDate = getTradeDate(trade);
+      return tradeDate ? tradeDate >= cutoffDate : false;
     });
   }
 
@@ -806,7 +844,7 @@ ${this.generatePlanFooter()}`;
     // Analyze win rate by time of day
     const hourlyPerformance = this.groupTradesByHour(trades);
     const bestHour = Object.entries(hourlyPerformance)
-      .sort(([,a], [,b]) => b.winRate - a.winRate)[0];
+      .sort(([, a], [, b]) => b.winRate - a.winRate)[0];
 
     if (bestHour && bestHour[1].winRate > 0.6 && bestHour[1].count >= 3) {
       insights.push({
@@ -860,7 +898,7 @@ ${this.generatePlanFooter()}`;
     const sizeGroups = this.groupTradesBySize(trades);
 
     const bestSizeGroup = Object.entries(sizeGroups)
-      .sort(([,a], [,b]) => b.winRate - a.winRate)[0];
+      .sort(([, a], [, b]) => b.winRate - a.winRate)[0];
 
     if (bestSizeGroup && bestSizeGroup[1].winRate > 0.6 && bestSizeGroup[1].count >= 5) {
       insights.push({
@@ -881,7 +919,7 @@ ${this.generatePlanFooter()}`;
     // Group by symbol
     const symbolPerformance = this.groupTradesBySymbol(trades);
     const bestSymbol = Object.entries(symbolPerformance)
-      .sort(([,a], [,b]) => b.winRate - a.winRate)[0];
+      .sort(([, a], [, b]) => b.winRate - a.winRate)[0];
 
     if (bestSymbol && bestSymbol[1].winRate > 0.6 && bestSymbol[1].count >= 5) {
       insights.push({
@@ -941,7 +979,7 @@ ${this.generatePlanFooter()}`;
     const symbolStats = this.groupTradesBySymbol(trades);
 
     const sortedSymbols = Object.entries(symbolStats)
-      .sort(([,a], [,b]) => b.winRate - a.winRate);
+      .sort(([, a], [, b]) => b.winRate - a.winRate);
 
     const bestPerformingSymbols = sortedSymbols
       .slice(0, 3)
@@ -1079,8 +1117,8 @@ You're doing ${winRate > 60 ? 'excellent' : winRate > 45 ? 'well' : 'okay'} - fo
 
 **Critical Issues Found:**
 ${mistakes.length > 0
-  ? mistakes.map(m => `❌ ${m.insight}\n   💡 ${m.recommendation}\n   📈 Expected Impact: ${m.expected_impact}`).join('\n\n')
-  : '✅ No major mistakes detected in your recent trading'}`;
+        ? mistakes.map(m => `❌ ${m.insight}\n   💡 ${m.recommendation}\n   📈 Expected Impact: ${m.expected_impact}`).join('\n\n')
+        : '✅ No major mistakes detected in your recent trading'}`;
 
     if (hasAISuggestions) {
       response += `
@@ -1406,18 +1444,18 @@ What specific aspect of your trading would you like to explore? I'm here to help
     const hourlyStats: Record<string, { count: number; wins: number; winRate: number }> = {};
 
     trades.forEach(trade => {
-      if (trade.openTime) {
-        const hour = new Date(trade.openTime).getHours();
-        const hourStr = hour.toString().padStart(2, '0') + ':00';
+      const tradeDate = getTradeDate(trade);
+      if (!tradeDate) return;
+      const hour = tradeDate.getUTCHours();
+      const hourStr = hour.toString().padStart(2, '0') + ':00';
 
-        if (!hourlyStats[hourStr]) {
-          hourlyStats[hourStr] = { count: 0, wins: 0, winRate: 0 };
-        }
+      if (!hourlyStats[hourStr]) {
+        hourlyStats[hourStr] = { count: 0, wins: 0, winRate: 0 };
+      }
 
-        hourlyStats[hourStr].count++;
-        if (trade.outcome === 'Win') {
-          hourlyStats[hourStr].wins++;
-        }
+      hourlyStats[hourStr].count++;
+      if (trade.outcome === 'Win') {
+        hourlyStats[hourStr].wins++;
       }
     });
 
@@ -1479,7 +1517,7 @@ What specific aspect of your trading would you like to explore? I'm here to help
       }
 
       symbolStats[symbol].count++;
-      symbolStats[symbol].pnl += trade.pnl || 0;
+      symbolStats[symbol].pnl += getTradePnl(trade);
       if (trade.outcome === 'Win') {
         symbolStats[symbol].wins++;
       }
@@ -1502,7 +1540,7 @@ What specific aspect of your trading would you like to explore? I'm here to help
     let runningTotal = 0;
 
     for (const trade of trades) {
-      runningTotal += trade.pnl || 0;
+      runningTotal += getTradePnl(trade);
 
       if (runningTotal > peak) {
         peak = runningTotal;
@@ -1519,12 +1557,12 @@ What specific aspect of your trading would you like to explore? I'm here to help
 
   private calculateProfitFactor(trades: Trade[]): number {
     const profits = trades
-      .filter(t => (t.pnl || 0) > 0)
-      .reduce((sum, t) => sum + (t.pnl || 0), 0);
+      .filter(t => getTradePnl(t) > 0)
+      .reduce((sum, t) => sum + getTradePnl(t), 0);
 
     const losses = Math.abs(trades
-      .filter(t => (t.pnl || 0) < 0)
-      .reduce((sum, t) => sum + (t.pnl || 0), 0));
+      .filter(t => getTradePnl(t) < 0)
+      .reduce((sum, t) => sum + getTradePnl(t), 0));
 
     return losses > 0 ? profits / losses : profits > 0 ? 3.0 : 0.5;
   }

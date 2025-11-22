@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Lightbulb, TrendingUp, Shield, RefreshCw } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl, safeDate } from '@/lib/trade-date-utils';
 
 interface RiskAlertsRecommendationsProps {
   trades: Trade[];
@@ -50,12 +51,13 @@ const RiskAlertsRecommendations: React.FC<RiskAlertsRecommendationsProps> = ({ t
 
     // Risk per trade analysis
     const avgRisk = trades.reduce((sum, trade) => {
-      const risk = trade.pnl && trade.pnl < 0 ? Math.abs(trade.pnl) : 0;
+      const pnl = getTradePnl(trade);
+      const risk = pnl < 0 ? Math.abs(pnl) : 0;
       return sum + risk;
     }, 0) / trades.length;
 
     const avgReward = winningTrades.length > 0
-      ? winningTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0) / winningTrades.length
+      ? winningTrades.reduce((sum, trade) => sum + getTradePnl(trade), 0) / winningTrades.length
       : 0;
 
     const riskRewardRatio = avgRisk > 0 ? avgReward / avgRisk : 0;
@@ -77,12 +79,14 @@ const RiskAlertsRecommendations: React.FC<RiskAlertsRecommendationsProps> = ({ t
     let maxDrawdown = 0;
     let cumulativePnL = 0;
 
-    const sortedTrades = [...trades].sort((a, b) =>
-      new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
-    );
+    const sortedTrades = [...trades].sort((a, b) => {
+      const aDate = getTradeDate(a) ?? safeDate(a.openTime || a.closeTime);
+      const bDate = getTradeDate(b) ?? safeDate(b.openTime || b.closeTime);
+      return (aDate?.getTime() ?? 0) - (bDate?.getTime() ?? 0);
+    });
 
     for (const trade of sortedTrades) {
-      cumulativePnL += trade.pnl || 0;
+      cumulativePnL += getTradePnl(trade);
       if (cumulativePnL > peak) peak = cumulativePnL;
       const drawdown = peak - cumulativePnL;
       if (drawdown > maxDrawdown) maxDrawdown = drawdown;
@@ -139,7 +143,7 @@ const RiskAlertsRecommendations: React.FC<RiskAlertsRecommendationsProps> = ({ t
           symbol: t.symbol,
           outcome: t.outcome,
           pnl: t.pnl,
-          date: new Date(t.closeTime || t.openTime).toISOString()
+          date: getTradeDate(t)?.toISOString() ?? new Date().toISOString()
         }))
       };
 
@@ -409,9 +413,11 @@ function calculateMaxDrawdown(trades: Trade[]): number {
   let maxDrawdown = 0;
   let cumulativePnL = 0;
 
-  const sortedTrades = [...trades].sort((a, b) =>
-    new Date(a.closeTime || a.openTime).getTime() - new Date(b.closeTime || b.openTime).getTime()
-  );
+  const sortedTrades = [...trades].sort((a, b) => {
+    const aDate = getTradeDate(a) ?? safeDate(a.openTime || a.closeTime);
+    const bDate = getTradeDate(b) ?? safeDate(b.openTime || b.closeTime);
+    return (aDate?.getTime() ?? 0) - (bDate?.getTime() ?? 0);
+  });
 
   for (const trade of sortedTrades) {
     cumulativePnL += trade.pnl || 0;

@@ -14,6 +14,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl, safeDate } from '@/lib/trade-date-utils';
 
 interface DetailedReportsSectionProps {
   trades: Trade[];
@@ -298,7 +299,7 @@ function calculatePeriodPerformance(trades: Trade[], period: 'week' | 'month'): 
   const periods: Record<string, Trade[]> = {};
 
   trades.forEach(trade => {
-    const tradeDate = new Date(trade.closeTime || trade.openTime);
+    const tradeDate = getTradeDate(trade) ?? new Date();
     let periodKey: string;
 
     if (period === 'week') {
@@ -316,16 +317,17 @@ function calculatePeriodPerformance(trades: Trade[], period: 'week' | 'month'): 
   return Object.entries(periods)
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([periodKey, periodTrades]) => {
-      const pnl = periodTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+      const pnl = periodTrades.reduce((sum, trade) => sum + getTradePnl(trade), 0);
       const winningTrades = periodTrades.filter(t => t.outcome === 'Win');
       const winRate = (winningTrades.length / periodTrades.length) * 100;
 
       let totalRR = 0;
       let rrCount = 0;
       periodTrades.forEach(trade => {
-        if (trade.pnl && trade.pnl !== 0) {
-          const risk = Math.abs(trade.pnl);
-          const reward = trade.outcome === 'Win' ? trade.pnl : -trade.pnl;
+        const pnl = getTradePnl(trade);
+        if (pnl !== 0) {
+          const risk = Math.abs(pnl);
+          const reward = trade.outcome === 'Win' ? pnl : -pnl;
           if (risk > 0) {
             totalRR += reward / risk;
             rrCount++;
@@ -353,16 +355,17 @@ function calculateAssetPerformance(trades: Trade[]): AssetPerformance[] {
   });
 
   return Object.entries(assetStats).map(([symbol, assetTrades]) => {
-    const pnl = assetTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+    const pnl = assetTrades.reduce((sum, trade) => sum + getTradePnl(trade), 0);
     const winningTrades = assetTrades.filter(t => t.outcome === 'Win');
     const winRate = (winningTrades.length / assetTrades.length) * 100;
 
     let totalRR = 0;
     let rrCount = 0;
     assetTrades.forEach(trade => {
-      if (trade.pnl && trade.pnl !== 0) {
-        const risk = Math.abs(trade.pnl);
-        const reward = trade.outcome === 'Win' ? trade.pnl : -trade.pnl;
+      const pnl = getTradePnl(trade);
+      if (pnl !== 0) {
+        const risk = Math.abs(pnl);
+        const reward = trade.outcome === 'Win' ? pnl : -pnl;
         if (risk > 0) {
           totalRR += reward / risk;
           rrCount++;
@@ -389,7 +392,8 @@ function calculateSessionPerformance(trades: Trade[]): SessionPerformance[] {
   };
 
   trades.forEach(trade => {
-    const hour = new Date(trade.openTime).getUTCHours();
+    const openDate = safeDate(trade.openTime);
+    const hour = openDate ? openDate.getUTCHours() : new Date().getUTCHours();
     let session = 'asian';
 
     if (hour >= 8 && hour < 16) session = 'london'; // 8 AM - 4 PM UTC
@@ -400,7 +404,7 @@ function calculateSessionPerformance(trades: Trade[]): SessionPerformance[] {
   });
 
   return Object.entries(sessionStats).map(([session, sessionTrades]) => {
-    const pnl = sessionTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+    const pnl = sessionTrades.reduce((sum, trade) => sum + getTradePnl(trade), 0);
     const winningTrades = sessionTrades.filter(t => t.outcome === 'Win');
     const winRate = sessionTrades.length > 0 ? (winningTrades.length / sessionTrades.length) * 100 : 0;
 
@@ -418,8 +422,10 @@ function calculateAvgTradeDuration(trades: Trade[]): number {
   let count = 0;
 
   trades.forEach(trade => {
-    if (trade.openTime && trade.closeTime) {
-      const duration = new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime();
+    const open = safeDate(trade.openTime);
+    const close = safeDate(trade.closeTime);
+    if (open && close) {
+      const duration = close.getTime() - open.getTime();
       totalDuration += duration / (1000 * 60); // Convert to minutes
       count++;
     }
@@ -434,8 +440,8 @@ function calculateConsistencyScore(trades: Trade[]): number {
   // Group trades by day
   const dailyPnL: Record<string, number> = {};
   trades.forEach(trade => {
-    const date = new Date(trade.closeTime || trade.openTime).toDateString();
-    dailyPnL[date] = (dailyPnL[date] || 0) + (trade.pnl || 0);
+    const date = getTradeDate(trade)?.toDateString() ?? new Date().toDateString();
+    dailyPnL[date] = (dailyPnL[date] || 0) + getTradePnl(trade);
   });
 
   const dailyValues = Object.values(dailyPnL);

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, Shield, TrendingUp, TrendingDown, DollarSign, Clock } from 'lucide-react';
 import { Trade } from '@/types/trade';
+import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 interface RiskAnalyzerProps {
   trades: Trade[];
@@ -290,7 +291,7 @@ function calculateRiskMetrics(trades: Trade[]): RiskMetrics {
   }
 
   // Calculate basic metrics
-  const returns = trades.map(t => t.pnl || 0);
+  const returns = trades.map(t => getTradePnl(t));
   const cumulative = returns.reduce((acc, pnl, i) => {
     acc.push((acc[i - 1] || 0) + pnl);
     return acc;
@@ -319,8 +320,8 @@ function calculateRiskMetrics(trades: Trade[]): RiskMetrics {
 
   // Time risk (trading during risky hours)
   const riskyHours = trades.filter(trade => {
-    const hour = new Date(trade.openTime).getHours();
-    return hour >= 22 || hour <= 6; // Asian/London overlap or thin liquidity
+    const hour = getTradeDate(trade)?.getUTCHours();
+    return hour !== undefined && hour !== null && (hour >= 22 || hour <= 6);
   }).length;
 
   const timeRisk = (riskyHours / trades.length) * 100;
@@ -388,7 +389,7 @@ function getRiskHeatmap(trades: Trade[]) {
 }
 
 function calculatePotentialLoss(trades: Trade[], percentage: number): number {
-  const totalValue = trades.reduce((sum, trade) => sum + Math.abs(trade.pnl || 0), 0);
+  const totalValue = trades.reduce((sum, trade) => sum + Math.abs(getTradePnl(trade)), 0);
   return Math.abs(totalValue * percentage);
 }
 

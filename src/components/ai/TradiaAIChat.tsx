@@ -45,7 +45,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [model, setModel] = useState('openai:gpt-4o-mini');
+  const [model, setModel] = useState('mistral-medium-latest');
   const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [tradeSummary, setTradeSummary] = useState<any>(null);
@@ -168,8 +168,8 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
           mode: msg.mode as AssistantMode | undefined,
           attachedTrades: [], // Will be populated if needed
         })));
-        const storedModel = data.conversation.model || 'openai:gpt-4o-mini';
-        setModel(storedModel.includes(':') ? storedModel : `openai:${storedModel}`);
+        const storedModel = data.conversation.model || 'mistral-medium-latest';
+        setModel(storedModel);
         if (data.conversation.mode) {
           setAssistantMode(data.conversation.mode as AssistantMode);
         }
@@ -261,7 +261,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     const conversation = conversations.find((c) => c.id === targetId);
     if (conversation) {
       const dataStr = JSON.stringify(conversation, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `tradia-conversation-${conversation.title.replace(/\s+/g, '-').toLowerCase()}.json`;
 
       const linkElement = document.createElement('a');
@@ -653,12 +653,12 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         prev.map(c =>
           c.id === activeConversationId
             ? {
-                ...c,
-                messages: c.messages.map(m =>
-                  m.id === messageId ? { ...m, content: newContent } : m
-                ),
-                updatedAt: new Date()
-              }
+              ...c,
+              messages: c.messages.map(m =>
+                m.id === messageId ? { ...m, content: newContent } : m
+              ),
+              updatedAt: new Date()
+            }
             : c
         )
       );
