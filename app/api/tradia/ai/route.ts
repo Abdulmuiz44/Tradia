@@ -24,10 +24,7 @@ const MODE_PROMPTS: Record<string, string> = {
     "Act as the default Tradia assistant. Balance friendly tone with actionable insights tailored to trading performance.",
 };
 
-const mistralClient = createOpenAI({
-  baseURL: 'https://api.mistral.ai/v1',
-  apiKey: process.env.MISTRAL_API_KEY ?? "",
-});
+// Client initialized lazily in resolveModel
 
 const DEFAULT_MODEL = "mistral-medium-latest";
 
@@ -233,7 +230,9 @@ export async function POST(req: NextRequest) {
 
     if (error instanceof Error) {
       const message = error.message;
-      if (/unauthorized|forbidden/i.test(message)) {
+      console.error("Detailed AI Error:", message, error.stack); // Log for server-side debugging
+
+      if (/unauthorized|forbidden|invalid api key/i.test(message)) {
         errorMessage = "🔐 Authentication error. Please refresh the page and try again.";
         statusCode = 403;
       } else if (/rate limit|busy|429/i.test(message)) {
@@ -246,7 +245,8 @@ export async function POST(req: NextRequest) {
         errorMessage = "⚙️ AI service is misconfigured. Please contact support.";
         statusCode = 503;
       } else {
-        errorMessage = message;
+        // Return the actual error message for debugging (in development/beta)
+        errorMessage = `AI Error: ${message}`;
       }
     }
 
@@ -258,6 +258,13 @@ function resolveModel(modelId: string) {
   if (!process.env.MISTRAL_API_KEY) {
     throw new Error("MISTRAL_API_KEY is not configured");
   }
+
+  // Lazy initialization to ensure env vars are loaded
+  const mistralClient = createOpenAI({
+    baseURL: 'https://api.mistral.ai/v1',
+    apiKey: process.env.MISTRAL_API_KEY,
+  });
+
   return mistralClient(DEFAULT_MODEL);
 }
 
