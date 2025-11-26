@@ -1,11 +1,9 @@
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
-import { createClient } from "@/utils/supabase/server";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret"; // must match backend signing secret
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
@@ -16,35 +14,20 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // For dashboard routes, be more permissive
+  // For dashboard routes
   const isDashboard = pathname.startsWith("/dashboard");
 
   if (isDashboard) {
-    // Try to get user from NextAuth
-    const nextAuthToken = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    // Check for NextAuth session cookie (simpler and more reliable)
+    const sessionToken = req.cookies.get('next-auth.session-token')?.value ||
+      req.cookies.get('__Secure-next-auth.session-token')?.value;
 
-    if (nextAuthToken?.email || (nextAuthToken?.profile as any)?.email) {
-      // Enforce trial: if expired and not paid/grandfathered -> redirect to checkout
-      try {
-        const apiUrl = new URL("/api/user/trial-status", req.url).toString();
-        const r = await fetch(apiUrl, { headers: { cookie: req.headers.get('cookie') || '' } });
-        if (r.ok) {
-          const data = await r.json();
-          const info = data?.info;
-          if (info && !info.isPaid && !info.isGrandfathered && info.expired) {
-            const url = new URL("/checkout", req.url);
-            url.searchParams.set("reason", "trial_expired");
-            return NextResponse.redirect(url);
-          }
-        }
-      } catch { }
+    if (sessionToken) {
+      console.log("middleware: NextAuth session found, allowing dashboard access");
       return res;
     }
 
-    // Try custom JWT
+    // Try custom JWT as fallback
     const authHeader = req.headers.get("authorization");
     const rawToken =
       authHeader?.replace("Bearer ", "") ||
@@ -57,19 +40,6 @@ export async function middleware(req: NextRequest) {
         const payload = jwt.verify(rawToken, JWT_SECRET);
         const userEmail = typeof payload === 'object' && payload !== null ? (payload as any).email : null;
         if (userEmail) {
-          try {
-            const apiUrl = new URL("/api/user/trial-status", req.url).toString();
-            const r = await fetch(apiUrl, { headers: { cookie: req.headers.get('cookie') || '' } });
-            if (r.ok) {
-              const data = await r.json();
-              const info = data?.info;
-              if (info && !info.isPaid && !info.isGrandfathered && info.expired) {
-                const url = new URL("/checkout", req.url);
-                url.searchParams.set("reason", "trial_expired");
-                return NextResponse.redirect(url);
-              }
-            }
-          } catch { }
           return res;
         }
       } catch (err) {
@@ -86,12 +56,10 @@ export async function middleware(req: NextRequest) {
   const isLoginOrSignup = ["/login", "/signup"].includes(pathname);
 
   if (isLoginOrSignup) {
-    const nextAuthToken = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const sessionToken = req.cookies.get('next-auth.session-token')?.value ||
+      req.cookies.get('__Secure-next-auth.session-token')?.value;
 
-    if (nextAuthToken?.email || (nextAuthToken?.profile as any)?.email) {
+    if (sessionToken) {
       console.log("middleware: authenticated user trying to access login, redirecting to dashboard");
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
