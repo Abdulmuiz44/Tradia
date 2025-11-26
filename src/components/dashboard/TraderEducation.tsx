@@ -109,13 +109,13 @@ export default function TraderEducation(): React.ReactElement {
 
   // checklist state persisted
   const CHECKLIST_KEY = "tradia:checklist:v1";
-  const defaultChecklist = [
+  const defaultChecklist = useMemo(() => [
     { id: "hf", label: "Higher timeframe structure aligns", done: false },
     { id: "news", label: "News / events checked", done: false },
     { id: "risk", label: "Risk & position size confirmed", done: false },
     { id: "plan", label: "Clear entry, SL & TP", done: false },
     { id: "journal", label: "Journal note created", done: false },
-  ];
+  ], []);
   const [checklist, setChecklist] = useState(defaultChecklist);
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function TraderEducation(): React.ReactElement {
         setChecklist(defaultChecklist);
       }
     }
-  }, []); // load-once
+  }, [CHECKLIST_KEY, defaultChecklist]); // load-once
 
   useEffect(() => {
     // persist checklist
@@ -242,9 +242,8 @@ export default function TraderEducation(): React.ReactElement {
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setTab("videos")}
-                className={`px-3 py-2 rounded-full text-sm font-medium ${
-                  tab === "videos" ? "bg-indigo-600 text-white shadow" : "bg-transparent text-gray-300 border border-gray-200/6"
-                }`}
+                className={`px-3 py-2 rounded-full text-sm font-medium ${tab === "videos" ? "bg-indigo-600 text-white shadow" : "bg-transparent text-gray-300 border border-gray-200/6"
+                  }`}
                 aria-pressed={tab === "videos"}
               >
                 Videos
@@ -252,9 +251,8 @@ export default function TraderEducation(): React.ReactElement {
 
               <button
                 onClick={() => setTab("setups")}
-                className={`px-3 py-2 rounded-full text-sm font-medium ${
-                  tab === "setups" ? "bg-indigo-600 text-white shadow" : "bg-transparent text-gray-300 border border-gray-200/6"
-                }`}
+                className={`px-3 py-2 rounded-full text-sm font-medium ${tab === "setups" ? "bg-indigo-600 text-white shadow" : "bg-transparent text-gray-300 border border-gray-200/6"
+                  }`}
                 aria-pressed={tab === "setups"}
               >
                 Setups & Signals
@@ -262,9 +260,8 @@ export default function TraderEducation(): React.ReactElement {
 
               <button
                 onClick={() => setTab("tools")}
-                className={`px-3 py-2 rounded-full text-sm font-medium ${
-                  tab === "tools" ? "bg-indigo-600 text-white shadow" : "bg-transparent text-gray-300 border border-gray-200/6"
-                }`}
+                className={`px-3 py-2 rounded-full text-sm font-medium ${tab === "tools" ? "bg-indigo-600 text-white shadow" : "bg-transparent text-gray-300 border border-gray-200/6"
+                  }`}
                 aria-pressed={tab === "tools"}
               >
                 Tools & Promos

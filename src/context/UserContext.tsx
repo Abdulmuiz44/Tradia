@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -24,7 +24,7 @@ interface UserContextType {
   refreshUser: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const useUser = () => {
   const context = useContext(UserContext);
@@ -40,7 +40,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [plan, setPlanState] = useState<PlanType>("free");
   const [loading, setLoading] = useState(true);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!session?.user?.email) {
       setUser(null);
       setPlanState("free");
@@ -112,7 +112,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   const setPlan = async (newPlan: PlanType) => {
     if (!user?.id) {
@@ -153,7 +153,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setPlanState("free");
       setLoading(false);
     }
-  }, [session, status]);
+  }, [status, fetchUserData]);
 
   return (
     <UserContext.Provider value={{

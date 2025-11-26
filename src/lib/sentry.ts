@@ -10,7 +10,7 @@ if (SENTRY_DSN) {
     replaysOnErrorSampleRate: 1.0,
     replaysSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0.1,
     integrations: [
-      new Sentry.Replay({
+      Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),
@@ -70,10 +70,11 @@ export const clearUser = () => {
 // Performance tracking
 export const startTransaction = (name: string, op: string) => {
   if (SENTRY_DSN) {
-    return Sentry.startTransaction({
+    // Sentry v8+ uses startSpan instead of startTransaction
+    return Sentry.startSpan({
       name,
       op,
-    });
+    }, (span) => span);
   }
   return null;
 };

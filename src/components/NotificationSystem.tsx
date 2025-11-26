@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { Notification } from "@/components/ui/notification";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -36,7 +36,7 @@ export const useNotifications = () => {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-  const addNotification = (notification: Omit<NotificationItem, 'id'>) => {
+  const addNotification = useCallback((notification: Omit<NotificationItem, 'id'>) => {
     const id = Date.now().toString();
     const newNotification: NotificationItem = {
       ...notification,
@@ -52,7 +52,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         removeNotification(id);
       }, newNotification.duration);
     }
-  };
+  }, []);
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
@@ -86,7 +86,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         },
       });
     }, 5000);
-  }, []);
+  }, [addNotification]);
 
   return (
     <NotificationContext.Provider value={{
@@ -114,8 +114,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 description={notification.description}
                 onClose={() => removeNotification(notification.id)}
                 icon={notification.type === 'success' ? 'success' :
-                      notification.type === 'error' ? 'error' :
-                      notification.type === 'warning' ? 'warning' : 'info'}
+                  notification.type === 'error' ? 'error' :
+                    notification.type === 'warning' ? 'warning' : 'info'}
               >
                 {notification.action && (
                   <div className="mt-3">

@@ -8,26 +8,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-ResponsiveContainer,
-LineChart,
-Line,
-BarChart,
-Bar,
-PieChart,
-Pie,
-Cell,
-XAxis,
-YAxis,
-Tooltip,
-Legend,
-AreaChart,
-Area,
-RadarChart,
-PolarGrid,
-PolarAngleAxis,
-PolarRadiusAxis,
-Radar,
-ComposedChart,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  AreaChart,
+  Area,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ComposedChart,
 } from "recharts";
 import {
   TrendingUp,
@@ -107,7 +107,7 @@ interface RiskMetrics {
 
 
 export default function TradeAnalytics({ trades, session, isAdmin, className = "" }: { trades: any[], session: any, isAdmin: boolean, className?: string }) {
-const router = useRouter();
+  const router = useRouter();
   const [accountBalance, setAccountBalance] = useState<number>(0);
   const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'controls'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
@@ -205,7 +205,7 @@ const router = useRouter();
       const tradeDate = getTradeDate(trade);
       return tradeDate ? tradeDate >= cutoffDate : false;
     });
-  }, [trades, timeframe]);
+  }, [trades, timeframe, effectivePlan]);
 
   // Performance metrics
   const performanceMetrics = useMemo((): AnalyticsMetric[] => {
@@ -471,13 +471,12 @@ const router = useRouter();
               {metric.value}
             </p>
             {metric.change !== undefined && (
-              <p className={`text-xs flex items-center gap-1 ${
-                metric.trend === 'up' ? 'text-green-500' :
+              <p className={`text-xs flex items-center gap-1 ${metric.trend === 'up' ? 'text-green-500' :
                 metric.trend === 'down' ? 'text-red-500' : 'text-gray-500'
-              }`}>
+                }`}>
                 {metric.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> :
-                 metric.trend === 'down' ? <ArrowDownRight className="w-3 h-3" /> :
-                 <Minus className="w-3 h-3" />}
+                  metric.trend === 'down' ? <ArrowDownRight className="w-3 h-3" /> :
+                    <Minus className="w-3 h-3" />}
                 {Math.abs(metric.change)}%
               </p>
             )}
@@ -491,80 +490,80 @@ const router = useRouter();
   );
 
   const renderOverview = () => (
-  <div className="space-y-6">
-  {/* Key Metrics Grid */}
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-  {performanceMetrics.map(renderMetricCard)}
-  </div>
+    <div className="space-y-6">
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {performanceMetrics.map(renderMetricCard)}
+      </div>
 
-  {/* Equity Curve - PRIMARY CHART */}
-  <Card>
-  <CardHeader>
-  <CardTitle className="flex items-center gap-2">
-  <TrendingUp className="w-5 h-5" />
-  Equity Curve
-  </CardTitle>
-  </CardHeader>
-  <CardContent>
-  <div className="h-80">
-  <ResponsiveContainer width="100%" height="100%">
-  <AreaChart data={performanceData}>
-  <XAxis dataKey="date" />
-  <YAxis />
-  <Tooltip formatter={(value) => [`$${value}`, 'Equity']} />
-  <Area
-    type="monotone"
-    dataKey="equity"
-  stroke="#10b981"
-  fill="url(#equityGradient)"
-  strokeWidth={2}
-  />
-  <defs>
-  <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-  </linearGradient>
-  </defs>
-  </AreaChart>
-  </ResponsiveContainer>
-  </div>
-  </CardContent>
-  </Card>
-
-  {/* Charts Grid */}
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  {/* Drawdown Chart */}
-  <Card>
-  <CardHeader>
-    <CardTitle className="flex items-center gap-2">
-        <TrendingDown className="w-5 h-5" />
-          Drawdown Analysis
-            </CardTitle>
-      </CardHeader>
-      <CardContent>
-      <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={performanceData}>
-            <XAxis dataKey="date" />
-          <YAxis />
-        <Tooltip formatter={(value) => [`${value}%`, 'Drawdown']} />
-      <Area
-      type="monotone"
-      dataKey="drawdown"
-      stroke="#ef4444"
-      fill="url(#drawdownGradient)"
-    strokeWidth={2}
-  />
-  <defs>
-    <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-        </linearGradient>
-        </defs>
-        </AreaChart>
-        </ResponsiveContainer>
-        </div>
+      {/* Equity Curve - PRIMARY CHART */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Equity Curve
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={performanceData}>
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`$${value}`, 'Equity']} />
+                <Area
+                  type="monotone"
+                  dataKey="equity"
+                  stroke="#10b981"
+                  fill="url(#equityGradient)"
+                  strokeWidth={2}
+                />
+                <defs>
+                  <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
+      </Card>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Drawdown Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="w-5 h-5" />
+              Drawdown Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={performanceData}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`${value}%`, 'Drawdown']} />
+                  <Area
+                    type="monotone"
+                    dataKey="drawdown"
+                    stroke="#ef4444"
+                    fill="url(#drawdownGradient)"
+                    strokeWidth={2}
+                  />
+                  <defs>
+                    <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Win/Loss Distribution Pie Chart */}
@@ -588,7 +587,7 @@ const router = useRouter();
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -617,10 +616,10 @@ const router = useRouter();
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyPnLData}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => [`$${value}`, 'P&L']} />
-              <Bar dataKey="pnl" fill="#10b981" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`$${value}`, 'P&L']} />
+                <Bar dataKey="pnl" fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -736,7 +735,7 @@ const router = useRouter();
             <Button
               className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
               onClick={() => {
-                try { (window as any).location.href = '/checkout?plan=pro&billing=monthly'; } catch {}
+                try { (window as any).location.href = '/checkout?plan=pro&billing=monthly'; } catch { }
               }}
             >
               Upgrade to PRO
@@ -910,44 +909,45 @@ const router = useRouter();
 
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-       <div>
-         <h2 className="text-2xl font-bold">Trade Analytics</h2>
-         <p className="text-muted-foreground">
-           Comprehensive analysis of your trading performance
-         </p>
+        <div>
+          <h2 className="text-2xl font-bold">Trade Analytics</h2>
+          <p className="text-muted-foreground">
+            Comprehensive analysis of your trading performance
+          </p>
           <div className="mt-2"><AccountBadge compact /></div>
-         {isMobile && (
-           <div className="mt-2 text-sm text-blue-400 font-medium">
-             Current View: {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
-           </div>
-         )}
-       </div>
+          {isMobile && (
+            <div className="mt-2 text-sm text-blue-400 font-medium">
+              Current View: {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {/* Timeframe Selector */}
           <div className="flex bg-muted rounded-lg p-1">
             {(['7d', '30d', '90d', '1y', 'all'] as const).map((period) => {
-              const allowed = new Set(['7d','30d']);
-              if (effectivePlan === 'pro') ['90d'].forEach(v=>allowed.add(v));
-              if (effectivePlan === 'plus' || effectivePlan === 'elite') ['90d','1y','all'].forEach(v=>allowed.add(v));
+              const allowed = new Set(['7d', '30d']);
+              if (effectivePlan === 'pro') ['90d'].forEach(v => allowed.add(v));
+              if (effectivePlan === 'plus' || effectivePlan === 'elite') ['90d', '1y', 'all'].forEach(v => allowed.add(v));
               const isAllowed = allowed.has(period);
               return (
-              <Button
-                key={period}
-                variant={timeframe === period ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  if (isAllowed) setTimeframe(period);
-                  else {
-                    // redirect to upgrade within dashboard
-                    try { (window as any).location.hash = '#upgrade'; } catch {}
-                  }
-                }}
-                className={`text-xs ${isAllowed ? '' : 'opacity-70'}`}
-              >
-                {period.toUpperCase()} {!isAllowed && (<span className="ml-1 text-yellow-400"><Lock className="w-3 h-3 inline" /></span>)}
-              </Button>
-            )})}
+                <Button
+                  key={period}
+                  variant={timeframe === period ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => {
+                    if (isAllowed) setTimeframe(period);
+                    else {
+                      // redirect to upgrade within dashboard
+                      try { (window as any).location.hash = '#upgrade'; } catch { }
+                    }
+                  }}
+                  className={`text-xs ${isAllowed ? '' : 'opacity-70'}`}
+                >
+                  {period.toUpperCase()} {!isAllowed && (<span className="ml-1 text-yellow-400"><Lock className="w-3 h-3 inline" /></span>)}
+                </Button>
+              )
+            })}
           </div>
 
           {/* Mobile Quick Actions */}
@@ -1008,47 +1008,47 @@ const router = useRouter();
           </div>
         )}
         {(effectivePlan === 'free') && (
-            <CompactUpgradePrompt currentPlan={'free' as any} feature="Weekly Coach Recap and Pro Insights" onUpgrade={() => {}} className="mb-4" />
+          <CompactUpgradePrompt currentPlan={'free' as any} feature="Weekly Coach Recap and Pro Insights" onUpgrade={() => { }} className="mb-4" />
         )}
       </div>
 
       {/* View Tabs */}
       <div className="overflow-x-auto border-b">
         <div className="flex gap-2 min-w-max pb-2">
-        {[
-          { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
-          { id: 'performance', label: 'Performance', icon: <TrendingUp className="w-4 h-4" /> },
-          { id: 'risk', label: 'Risk Analysis', icon: <Activity className="w-4 h-4" />, minPlan: 'pro' },
-          { id: 'patterns', label: 'Patterns', icon: <PieChartIcon className="w-4 h-4" /> },
-          { id: 'forecast', label: 'AI Forecast', icon: <Zap className="w-4 h-4" />, minPlan: 'pro' },
-          { id: 'guard', label: 'Loss Guard', icon: <ShieldCheck className="w-4 h-4" />, minPlan: 'pro' },
-          { id: 'tilt', label: 'Tilt Detector', icon: <Brain className="w-4 h-4" />, minPlan: 'plus' },
-          { id: 'prop', label: 'Prop Dashboard', icon: <Gauge className="w-4 h-4" />, minPlan: 'plus' },
-          { id: 'matcher', label: 'Strategy Matcher', icon: <Compass className="w-4 h-4" />, minPlan: 'pro' },
-          { id: 'coach', label: 'AI Mental Coach', icon: <Star className="w-4 h-4" /> },
-          { id: 'controls', label: 'Manual Risk Controls', icon: <Shield className="w-4 h-4" /> },
-        ].map((tab) => {
-          const allowed = typeof (tab as any).minPlan === 'string' ? hasPlan((tab as any).minPlan) : true;
-          return (
-            <Button
-              key={tab.id}
-              variant={activeView === (tab as any).id ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                if ((tab as any).id === 'coach') {
-                  router.push('/chat'); // Tradia AI
-                } else {
-                  setActiveView((tab as any).id as any);
-                }
-              }}
-              className={['flex items-center gap-2', !allowed ? 'opacity-70' : ''].filter(Boolean).join(' ')}
-            >
-              {tab.icon}
-              {tab.label}
-              {!allowed && <Crown className="w-3 h-3 text-yellow-500" />}
-            </Button>
-          );
-        })}
+          {[
+            { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
+            { id: 'performance', label: 'Performance', icon: <TrendingUp className="w-4 h-4" /> },
+            { id: 'risk', label: 'Risk Analysis', icon: <Activity className="w-4 h-4" />, minPlan: 'pro' },
+            { id: 'patterns', label: 'Patterns', icon: <PieChartIcon className="w-4 h-4" /> },
+            { id: 'forecast', label: 'AI Forecast', icon: <Zap className="w-4 h-4" />, minPlan: 'pro' },
+            { id: 'guard', label: 'Loss Guard', icon: <ShieldCheck className="w-4 h-4" />, minPlan: 'pro' },
+            { id: 'tilt', label: 'Tilt Detector', icon: <Brain className="w-4 h-4" />, minPlan: 'plus' },
+            { id: 'prop', label: 'Prop Dashboard', icon: <Gauge className="w-4 h-4" />, minPlan: 'plus' },
+            { id: 'matcher', label: 'Strategy Matcher', icon: <Compass className="w-4 h-4" />, minPlan: 'pro' },
+            { id: 'coach', label: 'AI Mental Coach', icon: <Star className="w-4 h-4" /> },
+            { id: 'controls', label: 'Manual Risk Controls', icon: <Shield className="w-4 h-4" /> },
+          ].map((tab) => {
+            const allowed = typeof (tab as any).minPlan === 'string' ? hasPlan((tab as any).minPlan) : true;
+            return (
+              <Button
+                key={tab.id}
+                variant={activeView === (tab as any).id ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => {
+                  if ((tab as any).id === 'coach') {
+                    router.push('/chat'); // Tradia AI
+                  } else {
+                    setActiveView((tab as any).id as any);
+                  }
+                }}
+                className={['flex items-center gap-2', !allowed ? 'opacity-70' : ''].filter(Boolean).join(' ')}
+              >
+                {tab.icon}
+                {tab.label}
+                {!allowed && <Crown className="w-3 h-3 text-yellow-500" />}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
@@ -1063,28 +1063,28 @@ const router = useRouter();
           hasPlan('pro') ? (
             <DailyLossDrawdownGuard trades={filteredTrades as Trade[]} plan={effectivePlan} accountBalance={accountBalance} />
           ) : (
-            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Daily Loss & Drawdown Guard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Daily Loss & Drawdown Guard" onUpgrade={() => { }} className="max-w-xl mx-auto" />
           )
         )}
         {activeView === 'tilt' && (
           hasPlan('plus') ? (
             <TiltModeDetector trades={filteredTrades as Trade[]} plan={effectivePlan} />
           ) : (
-            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Tilt Mode Detector" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Tilt Mode Detector" onUpgrade={() => { }} className="max-w-xl mx-auto" />
           )
         )}
         {activeView === 'prop' && (
           hasPlan('plus') ? (
             <PropFirmDashboard trades={filteredTrades as Trade[]} plan={effectivePlan} accountBalance={accountBalance} />
           ) : (
-            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop Firm Dashboard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop Firm Dashboard" onUpgrade={() => { }} className="max-w-xl mx-auto" />
           )
         )}
         {activeView === 'matcher' && (
           hasPlan('pro') ? (
             <OptimalStrategyMatcher trades={filteredTrades as Trade[]} plan={effectivePlan} />
           ) : (
-            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Optimal Strategy Matcher" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+            <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Optimal Strategy Matcher" onUpgrade={() => { }} className="max-w-xl mx-auto" />
           )
         )}
         {activeView === 'controls' && (
@@ -1159,16 +1159,16 @@ function RiskControlsAndPropSim({
       }
       const rawCl = localStorage.getItem('pretrade_checklist');
       if (rawCl) setChecklist({ ...checklist, ...JSON.parse(rawCl) });
-    } catch {}
+    } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     try {
       localStorage.setItem('risk_controls', JSON.stringify({ autoGuard, riskPct, maxTradesPerDay, maxDailyLoss, maxWeeklyLoss, cooldownMins }));
-    } catch {}
+    } catch { }
   }, [autoGuard, riskPct, maxTradesPerDay, maxDailyLoss, maxWeeklyLoss, cooldownMins]);
   useEffect(() => {
-    try { localStorage.setItem('pretrade_checklist', JSON.stringify(checklist)); } catch {}
+    try { localStorage.setItem('pretrade_checklist', JSON.stringify(checklist)); } catch { }
   }, [checklist]);
 
   // Derive daily PnL and counts
@@ -1312,21 +1312,21 @@ function RiskControlsAndPropSim({
       <div className="p-3 rounded bg-black/5 dark:bg-white/5">
         <div className="text-xs text-muted-foreground mb-1">Risk per trade</div>
         <div className="flex items-center gap-2">
-          <input type="range" min={0.25} max={3} step={0.25} value={riskPct} onChange={(e)=>setRiskPct(parseFloat(e.target.value))} className="w-full" />
+          <input type="range" min={0.25} max={3} step={0.25} value={riskPct} onChange={(e) => setRiskPct(parseFloat(e.target.value))} className="w-full" />
           <span className="text-sm font-medium">{riskPct.toFixed(2)}%</span>
         </div>
       </div>
       <div className="p-3 rounded bg-black/5 dark:bg-white/5">
         <div className="text-xs text-muted-foreground mb-1">Max trades/day</div>
         <div className="flex items-center gap-2">
-          <input type="number" min={1} max={50} value={maxTradesPerDay} onChange={(e)=>setMaxTradesPerDay(parseInt(e.target.value||'0'))} className="w-24 bg-transparent border rounded px-2 py-1" />
+          <input type="number" min={1} max={50} value={maxTradesPerDay} onChange={(e) => setMaxTradesPerDay(parseInt(e.target.value || '0'))} className="w-24 bg-transparent border rounded px-2 py-1" />
         </div>
       </div>
       <div className="p-3 rounded bg-black/5 dark:bg-white/5">
         <div className="text-xs text-muted-foreground mb-1">Max daily loss</div>
         <div className="flex items-center gap-2">
           <span className="text-sm">$</span>
-          <input type="number" min={10} step={10} value={Math.round(maxDailyLoss)} onChange={(e)=>setMaxDailyLoss(parseFloat(e.target.value||'0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
+          <input type="number" min={10} step={10} value={Math.round(maxDailyLoss)} onChange={(e) => setMaxDailyLoss(parseFloat(e.target.value || '0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
         </div>
       </div>
       {(plan === 'plus' || plan === 'elite' || plan === 'pro') && (
@@ -1334,7 +1334,7 @@ function RiskControlsAndPropSim({
           <div className="text-xs text-muted-foreground mb-1">Max weekly loss</div>
           <div className="flex items-center gap-2">
             <span className="text-sm">$</span>
-            <input type="number" min={50} step={10} value={Math.round(maxWeeklyLoss)} onChange={(e)=>setMaxWeeklyLoss(parseFloat(e.target.value||'0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
+            <input type="number" min={50} step={10} value={Math.round(maxWeeklyLoss)} onChange={(e) => setMaxWeeklyLoss(parseFloat(e.target.value || '0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
           </div>
         </div>
       )}
@@ -1342,7 +1342,7 @@ function RiskControlsAndPropSim({
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Cooldown after loss</div>
           <div className="flex items-center gap-2">
-            <input type="number" min={5} step={5} value={cooldownMins} onChange={(e)=>setCooldownMins(parseInt(e.target.value||'0'))} className="w-20 bg-transparent border rounded px-2 py-1" />
+            <input type="number" min={5} step={5} value={cooldownMins} onChange={(e) => setCooldownMins(parseInt(e.target.value || '0'))} className="w-20 bg-transparent border rounded px-2 py-1" />
             <span className="text-sm">mins</span>
           </div>
         </div>
@@ -1385,7 +1385,7 @@ function RiskControlsAndPropSim({
       </div>
       <div className={`p-3 rounded ${weeklyLossBreach ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/5'}`}>
         <div className="text-xs text-muted-foreground">Last 5 days P/L</div>
-        <div className="text-lg font-bold">${daily.slice(-5).reduce((s,[,v])=>s+v.pnl,0).toFixed(2)}</div>
+        <div className="text-lg font-bold">${daily.slice(-5).reduce((s, [, v]) => s + v.pnl, 0).toFixed(2)}</div>
         {weeklyLossBreach && <div className="text-xs text-red-400 mt-1">Max weekly loss breached.</div>}
       </div>
     </div>
@@ -1398,34 +1398,34 @@ function RiskControlsAndPropSim({
           <div className="text-xs text-muted-foreground mb-1">Balance</div>
           <div className="flex items-center gap-2">
             <span className="text-sm">$</span>
-            <input type="number" min={100} step={50} value={Math.round(propBalance)} onChange={(e)=>setPropBalance(parseFloat(e.target.value||'0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
+            <input type="number" min={100} step={50} value={Math.round(propBalance)} onChange={(e) => setPropBalance(parseFloat(e.target.value || '0'))} className="w-28 bg-transparent border rounded px-2 py-1" />
           </div>
         </div>
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Profit target</div>
           <div className="flex items-center gap-2">
-            <input type="range" min={5} max={20} step={1} value={propTargetPct} onChange={(e)=> canEditBasic && setPropTargetPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
+            <input type="range" min={5} max={20} step={1} value={propTargetPct} onChange={(e) => canEditBasic && setPropTargetPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
             <span className="text-sm font-medium">{propTargetPct}%</span>
           </div>
         </div>
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Max daily loss</div>
           <div className="flex items-center gap-2">
-            <input type="range" min={2} max={10} step={1} value={propMaxDailyLossPct} onChange={(e)=> canEditBasic && setPropMaxDailyLossPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
+            <input type="range" min={2} max={10} step={1} value={propMaxDailyLossPct} onChange={(e) => canEditBasic && setPropMaxDailyLossPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
             <span className="text-sm font-medium">{propMaxDailyLossPct}%</span>
           </div>
         </div>
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Max total loss</div>
           <div className="flex items-center gap-2">
-            <input type="range" min={5} max={20} step={1} value={propMaxTotalLossPct} onChange={(e)=> canEditBasic && setPropMaxTotalLossPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
+            <input type="range" min={5} max={20} step={1} value={propMaxTotalLossPct} onChange={(e) => canEditBasic && setPropMaxTotalLossPct(parseFloat(e.target.value))} className="w-full" disabled={!canEditBasic} />
             <span className="text-sm font-medium">{propMaxTotalLossPct}%</span>
           </div>
         </div>
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Challenge days</div>
           <div className="flex items-center gap-2">
-            <input type="number" min={5} max={60} value={propDays} onChange={(e)=>setPropDays(parseInt(e.target.value||'0'))} className="w-20 bg-transparent border rounded px-2 py-1" />
+            <input type="number" min={5} max={60} value={propDays} onChange={(e) => setPropDays(parseInt(e.target.value || '0'))} className="w-20 bg-transparent border rounded px-2 py-1" />
             <span className="text-sm">days</span>
           </div>
         </div>
@@ -1435,7 +1435,7 @@ function RiskControlsAndPropSim({
         <div className="p-3 rounded bg-black/5 dark:bg-white/5">
           <div className="text-xs text-muted-foreground mb-1">Phases</div>
           <div className="flex items-center gap-2">
-            <input type="number" min={1} max={2} value={propPhases} onChange={(e)=> canEditPhases && setPropPhases(Math.min(2, Math.max(1, parseInt(e.target.value||'1'))))} className="w-20 bg-transparent border rounded px-2 py-1" disabled={!canEditPhases} />
+            <input type="number" min={1} max={2} value={propPhases} onChange={(e) => canEditPhases && setPropPhases(Math.min(2, Math.max(1, parseInt(e.target.value || '1'))))} className="w-20 bg-transparent border rounded px-2 py-1" disabled={!canEditPhases} />
             <span className="text-sm">{propPhases === 2 ? 'Two-phase' : 'One-phase'}</span>
           </div>
         </div>
@@ -1460,14 +1460,14 @@ function RiskControlsAndPropSim({
           </div>
         </div>
         <div className="mt-3 w-full bg-black/20 rounded h-2 overflow-hidden">
-          <div className={`h-full ${propSim.pass ? 'bg-green-500' : propSim.breach ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, Math.max(0, (propSim.cum / (propSim.target||1)) * 100))}%` }} />
+          <div className={`h-full ${propSim.pass ? 'bg-green-500' : propSim.breach ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, Math.max(0, (propSim.cum / (propSim.target || 1)) * 100))}%` }} />
         </div>
       </div>
     </div>
   );
 
   const upgradeCta = (label = 'Upgrade to unlock') => (
-    <Button variant="outline" size="sm" onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch {} }}>
+    <Button variant="outline" size="sm" onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch { } }}>
       <Crown className="w-4 h-4 mr-1 text-yellow-500" /> {label}
     </Button>
   );

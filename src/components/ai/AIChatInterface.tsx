@@ -37,29 +37,19 @@ import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 import { cn } from "@/lib/utils";
 
 // Web Speech API type declarations
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
-
+// Web Speech API type declarations
 interface SpeechRecognition extends EventTarget {
+  lang: string;
   continuous: boolean;
   interimResults: boolean;
-  lang: string;
+  maxAlternatives: number;
   start(): void;
   stop(): void;
   abort(): void;
   onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
   onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
   onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
-}
-
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
@@ -67,17 +57,22 @@ interface SpeechRecognitionErrorEvent extends Event {
   message: string;
 }
 
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
 interface SpeechRecognitionResultList {
-  readonly length: number;
+  length: number;
   item(index: number): SpeechRecognitionResult;
   [index: number]: SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionResult {
-  readonly length: number;
+  isFinal: boolean;
+  length: number;
   item(index: number): SpeechRecognitionAlternative;
   [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
 }
 
 interface SpeechRecognitionAlternative {
@@ -85,10 +80,12 @@ interface SpeechRecognitionAlternative {
   confidence: number;
 }
 
-declare var SpeechRecognition: {
-  prototype: SpeechRecognition;
-  new(): SpeechRecognition;
-};
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface Message {
   id: string;
@@ -264,8 +261,8 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       }
     }
     return () => {
-      try { recognitionRef.current?.abort(); } catch {}
-      try { synthRef.current?.cancel(); } catch {}
+      try { recognitionRef.current?.abort(); } catch { }
+      try { synthRef.current?.cancel(); } catch { }
     };
   }, []);
 
@@ -439,18 +436,16 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           </div>
 
           {/* Subscription Tier Indicator */}
-          <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${
-            isFreeLikeTier ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
-            userTier === 'pro' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
-            userTier === 'plus' ? 'bg-purple-900/30 text-purple-400 border-purple-700/50' :
-            'bg-yellow-900/30 text-yellow-400 border-yellow-700/50'
-          }`}>
-            <Crown className={`w-3 h-3 ${
-              isFreeLikeTier ? 'text-gray-400' :
-              userTier === 'pro' ? 'text-blue-400' :
-              userTier === 'plus' ? 'text-purple-400' :
-              'text-yellow-400'
-            }`} />
+          <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${isFreeLikeTier ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
+              userTier === 'pro' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
+                userTier === 'plus' ? 'bg-purple-900/30 text-purple-400 border-purple-700/50' :
+                  'bg-yellow-900/30 text-yellow-400 border-yellow-700/50'
+            }`}>
+            <Crown className={`w-3 h-3 ${isFreeLikeTier ? 'text-gray-400' :
+                userTier === 'pro' ? 'text-blue-400' :
+                  userTier === 'plus' ? 'text-purple-400' :
+                    'text-yellow-400'
+              }`} />
             {tierBadgeLabel}
           </div>
 
@@ -487,14 +482,12 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
               <span className="text-sm text-gray-300">Voice Responses</span>
               <button
                 onClick={() => setVoiceSettings(prev => ({ ...prev, voiceEnabled: !prev.voiceEnabled }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${
-                  voiceSettings.voiceEnabled ? 'bg-blue-600' : 'bg-gray-600'
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${voiceSettings.voiceEnabled ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    voiceSettings.voiceEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${voiceSettings.voiceEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
                 />
               </button>
             </div>
@@ -502,14 +495,12 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
               <span className="text-sm text-gray-300">Auto Speak</span>
               <button
                 onClick={() => setVoiceSettings(prev => ({ ...prev, autoSpeak: !prev.autoSpeak }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${
-                  voiceSettings.autoSpeak ? 'bg-green-600' : 'bg-gray-600'
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors touch-manipulation ${voiceSettings.autoSpeak ? 'bg-green-600' : 'bg-gray-600'
+                  }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    voiceSettings.autoSpeak ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${voiceSettings.autoSpeak ? 'translate-x-6' : 'translate-x-1'
+                    }`}
                 />
               </button>
             </div>
@@ -596,62 +587,61 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 md:px-4 py-4">
         <div className="mx-auto flex w-full max-w-3xl flex-col space-y-3 md:space-y-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`w-full rounded-2xl border border-[#2a2f3a] p-3 md:p-4 shadow-lg transition-all ${
-                message.type === 'user'
-                  ? 'bg-blue-600 text-white border-blue-500/30'
-                  : 'bg-[#1a1f2e] text-gray-100 backdrop-blur'
-              }`}
-            >
-              {message.type === 'assistant' && (
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`w-full rounded-2xl border border-[#2a2f3a] p-3 md:p-4 shadow-lg transition-all ${message.type === 'user'
+                    ? 'bg-blue-600 text-white border-blue-500/30'
+                    : 'bg-[#1a1f2e] text-gray-100 backdrop-blur'
+                  }`}
+              >
+                {message.type === 'assistant' && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bot className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs font-medium text-blue-400">Tradia AI</span>
+                  </div>
+                )}
+
+                <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{message.content}</div>
+
+                {message.attachments && message.attachments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {message.attachments.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-[#0D1117]/50 rounded border border-[#2a2f3a]">
+                        <ImageIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-300">{file.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className={`text-xs mt-2 opacity-70 ${message.type === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="w-full rounded-2xl border border-[#2a2f3a] bg-[#1a1f2e] p-3 md:p-4 shadow-lg transition-all">
                 <div className="flex items-center gap-2 mb-2">
                   <Bot className="w-4 h-4 text-blue-400" />
                   <span className="text-xs font-medium text-blue-400">Tradia AI</span>
                 </div>
-              )}
-
-              <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{message.content}</div>
-
-              {message.attachments && message.attachments.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {message.attachments.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-[#0D1117]/50 rounded border border-[#2a2f3a]">
-                      <ImageIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-300">{file.name}</span>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-1">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                  <span className="text-sm text-gray-300 ml-2">Analyzing your request...</span>
                 </div>
-              )}
-
-              <div className={`text-xs mt-2 opacity-70 ${message.type === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
-          </div>
-        ))}
+          )}
 
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="w-full rounded-2xl border border-[#2a2f3a] bg-[#1a1f2e] p-3 md:p-4 shadow-lg transition-all">
-              <div className="flex items-center gap-2 mb-2">
-                <Bot className="w-4 h-4 text-blue-400" />
-                <span className="text-xs font-medium text-blue-400">Tradia AI</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-                <span className="text-sm text-gray-300 ml-2">Analyzing your request...</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />\r\n        </div>\r\n      </div>
+          <div ref={messagesEndRef} />\r\n        </div>\r\n      </div>
 
       {/* Composer */}
       <div className="px-3 md:px-4 pb-2 border-t border-[#2a2f3a]">
@@ -686,9 +676,8 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           <div className="flex items-center gap-2">
             <button
               onClick={() => { isRecording ? stopVoiceRecording() : startVoiceRecording(); }}
-              className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${
-                isRecording ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-              }`}
+              className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${isRecording ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                }`}
               title={isRecording ? 'Stop recording' : 'Start voice recording'}
             >
               {isRecording ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
@@ -706,11 +695,10 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
                 }
                 fileInputRef.current?.click();
               }}
-              className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${
-                isFreeLikeTier
+              className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${isFreeLikeTier
                   ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-700 text-gray-200 hover:bg-blue-600 hover:text-white'
-              }`}
+                }`}
               title={isFreeLikeTier ? 'PRO feature: Upgrade to analyze images' : 'Upload trade screenshot or analysis'}
               disabled={isFreeLikeTier}
             >

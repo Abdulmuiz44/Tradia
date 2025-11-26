@@ -4,7 +4,7 @@ import { PlanType } from '@/lib/planAccess';
 import { useUser } from '@/context/UserContext';
 import { normalizePlanType } from '@/lib/planAccess';
 
-interface PricingPageProps {
+export interface PricingPageProps {
   onSelectPlan?: (plan: PlanType) => void;
   highlightAI?: boolean;
 }

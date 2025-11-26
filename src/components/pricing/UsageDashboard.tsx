@@ -6,7 +6,7 @@ import { MessageSquare, FileText, Download, Infinity, TrendingUp } from 'lucide-
 import { PlanType, PLAN_LIMITS } from '@/lib/planAccess';
 import { cn } from '@/lib/utils';
 
-interface UsageDashboardProps {
+export interface UsageDashboardProps {
   currentPlan: PlanType;
   usageStats: {
     messages: number;
@@ -50,7 +50,7 @@ export const UsageDashboard: React.FC<UsageDashboardProps> = ({
       icon: <FileText className="w-5 h-5" />,
       label: 'File Uploads',
       used: usageStats.uploads,
-      limit: limits.maxFileUploadsPerDay,
+      limit: -1, // File uploads are unlimited for all plans
       description: 'Files uploaded today',
       color: 'green',
     },

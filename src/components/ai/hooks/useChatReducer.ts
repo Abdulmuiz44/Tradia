@@ -10,6 +10,7 @@ const initialState: ChatState = {
   userTier: 'free',
   userEmail: '',
   isAdmin: false,
+  mistralUnlocked: false,
   grokUnlocked: false,
 };
 

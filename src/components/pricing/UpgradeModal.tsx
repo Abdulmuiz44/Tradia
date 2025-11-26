@@ -13,7 +13,7 @@ import { Crown, Zap, MessageSquare, FileText, Download, Infinity } from 'lucide-
 import { PlanType, getUpgradeOptions, PLAN_LIMITS } from '@/lib/planAccess';
 import { normalizePlanType } from '@/lib/planAccess';
 
-interface UpgradeModalProps {
+export interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPlan: PlanType;

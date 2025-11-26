@@ -275,19 +275,19 @@ const transformTradeForFrontend = (trade: Record<string, unknown>): Trade => {
   const tags = Array.isArray(tagsSource)
     ? tagsSource
     : typeof tagsSource === "string"
-    ? tagsSource.split(",").map((tag) => tag.trim()).filter(Boolean)
-    : undefined;
+      ? tagsSource.split(",").map((tag) => tag.trim()).filter(Boolean)
+      : undefined;
 
   return {
     id: String(trade.id ?? raw.id ?? ""),
     user_id: coalesce(trade.user_id as string, raw.user_id as string),
     symbol: String(coalesce(trade.symbol as string, raw.symbol as string, "")).toUpperCase(),
     direction: (coalesce(trade.direction as "Buy" | "Sell", raw.direction as "Buy" | "Sell") ??
-    ((trade.type as string) === "BUY"
-      ? "Buy"
+      ((trade.type as string) === "BUY"
+        ? "Buy"
         : (trade.type as string) === "SELL"
-        ? "Sell"
-        : undefined)) as "Buy" | "Sell" | undefined,
+          ? "Sell"
+          : undefined)) as "Buy" | "Sell" | undefined,
     orderType: coalesce(
       trade.ordertype as string,
       trade.order_type as string,
@@ -390,9 +390,10 @@ export interface TradeContextValue {
   legacyLocalTrades: Trade[];
   importTrades: (trades: Trade[]) => Promise<void>;
   importLoading: boolean;
+  bulkToggleReviewed: (tradeIds: string[], reviewed: boolean) => Promise<void>;
 }
 
-const TradeContext = createContext<TradeContextValue | undefined>(undefined);
+export const TradeContext = createContext<TradeContextValue | undefined>(undefined);
 
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -741,6 +742,60 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     void loadTrades();
   }, [fetchTrades, importTrades, notify, user?.id]);
 
+  const bulkToggleReviewed = useCallback(
+    async (tradeIds: string[], reviewed: boolean) => {
+      if (!user?.id) {
+        notify({
+          variant: "destructive",
+          title: "Authentication Required",
+          description: "Please sign in to update trades.",
+        });
+        return;
+      }
+
+      try {
+        // Update each trade's reviewed status
+        const updatePromises = tradeIds.map(async (tradeId) => {
+          const trade = trades.find(t => t.id === tradeId);
+          if (!trade) return;
+
+          const response = await fetch("/api/trades", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...trade, reviewed }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to update trade ${tradeId}`);
+          }
+        });
+
+        await Promise.all(updatePromises);
+
+        // Update local state
+        setTrades((prev: Trade[]) =>
+          prev.map((trade) =>
+            tradeIds.includes(trade.id) ? { ...trade, reviewed } : trade
+          )
+        );
+
+        notify({
+          variant: "success",
+          title: "Trades updated",
+          description: `${tradeIds.length} trade${tradeIds.length === 1 ? '' : 's'} marked as ${reviewed ? 'reviewed' : 'pending'}.`,
+        });
+      } catch (error: unknown) {
+        console.error("Error bulk updating trades:", error);
+        notify({
+          variant: "destructive",
+          title: "Error updating trades",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+        });
+      }
+    },
+    [notify, trades, user?.id],
+  );
+
   const migrateLocalTrades = useCallback(
     async (): Promise<{ migratedCount: number }> => {
       if (legacyLocalTrades.length === 0) {
@@ -852,6 +907,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     legacyLocalTrades,
     importTrades,
     importLoading,
+    bulkToggleReviewed,
   };
 
   return <TradeContext.Provider value={contextValue}>{children}</TradeContext.Provider>;

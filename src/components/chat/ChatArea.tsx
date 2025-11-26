@@ -257,8 +257,6 @@ export const ChatArea = ({
         return "Trade Analysis";
       case "journal":
         return "Trade Journal";
-      case "grok":
-        return "Mistral";
       default:
         return "Coach";
     }
@@ -272,8 +270,6 @@ export const ChatArea = ({
         return "Dissects trades and metrics";
       case "journal":
         return "Reflects on trading habits";
-      case "grok":
-        return "Provides insightful market analysis";
       default:
         return "Keeps you accountable";
     }

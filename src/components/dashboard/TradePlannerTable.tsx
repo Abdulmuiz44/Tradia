@@ -221,7 +221,7 @@ export default function TradePlannerTable() {
       const tb = new Date(b.createdAt ?? 0).getTime();
       return tb - ta;
     });
-  }, [plans, normalizedPlans]);
+  }, [normalizedPlans]);
 
   const featureLocked = (required: Tier) => tierIndex(userPlan) < tierIndex(required);
 
@@ -652,7 +652,7 @@ export default function TradePlannerTable() {
                         >
                           Upgrade
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch {} }}>
+                        <Button size="sm" variant="ghost" onClick={() => { try { (window as any).location.hash = '#upgrade'; } catch { } }}>
                           Learn more
                         </Button>
                       </div>

@@ -204,12 +204,12 @@ function ColoredValue({ value, forceClass }: { value: React.ReactNode; forceClas
   const cls = forceClass
     ? forceClass
     : num !== null
-    ? num > 0
-      ? "text-green-400"
-      : num < 0
-      ? "text-red-400"
-      : "text-white"
-    : "text-white";
+      ? num > 0
+        ? "text-green-400"
+        : num < 0
+          ? "text-red-400"
+          : "text-white"
+      : "text-white";
   return <span className={cls}>{value}</span>;
 }
 
@@ -239,7 +239,11 @@ const getGreeting = (name = "Trader") => {
 
 export default function OverviewCards({ trades: propTrades, fromDate, toDate, session }: OverviewCardsProps) {
   const { trades: contextTradesFromHook, importTrades } = useTrade();
-  const contextTrades = Array.isArray(contextTradesFromHook) ? (contextTradesFromHook as TradeType[]) : [];
+
+  const contextTrades = useMemo(() =>
+    Array.isArray(contextTradesFromHook) ? (contextTradesFromHook as TradeType[]) : []
+    , [contextTradesFromHook]);
+
   const { selected: selectedAccount } = useTradingAccount();
 
   const [mounted, setMounted] = useState(false);
@@ -323,9 +327,11 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         setUserName("Trader");
       }
     })();
-  }, []);
+  }, [session?.user?.id, session?.user?.name]);
 
-  const allTrades: TradeType[] = Array.isArray(propTrades) ? propTrades : Array.isArray(contextTrades) ? contextTrades : [];
+  const allTrades = useMemo<TradeType[]>(() =>
+    Array.isArray(propTrades) ? propTrades : contextTrades
+    , [propTrades, contextTrades]);
 
   // Manual account balance wiring: estimate current balance as initial + all-time PnL
   const accountBalance = useMemo(() => {
@@ -966,15 +972,15 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
               </div>
               <div className="flex flex-wrap gap-3 mt-4">
                 <button
-                onClick={async () => {
-                try {
-                const sampleTrades = generateSampleTrades();
-                await importTrades(sampleTrades);
-                } catch (error) {
-                console.error('Failed to load sample data:', error);
-                }
-                }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  onClick={async () => {
+                    try {
+                      const sampleTrades = generateSampleTrades();
+                      await importTrades(sampleTrades);
+                    } catch (error) {
+                      console.error('Failed to load sample data:', error);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
                   Load Sample Data
                 </button>

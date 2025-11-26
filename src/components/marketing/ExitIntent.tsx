@@ -29,7 +29,7 @@ export default function ExitIntent() {
       const next = Math.max(1, stored + 1);
       setStreak(next);
       localStorage.setItem("tradia_session_streak", String(next));
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function ExitIntent() {
         if (sessionStorage.getItem(key) === "1") return;
         sessionStorage.setItem(key, "1");
         setShow(true);
-        try { trackEvent('exit_intent_trigger'); } catch {}
+        try { trackEvent('exit_intent_trigger'); } catch { }
       }
     };
     window.addEventListener("mouseout", onMouseOut);
@@ -57,7 +57,7 @@ export default function ExitIntent() {
   const featuredPowerMoves = useMemo(() => {
     const shuffled = [...POWER_MOVES].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 3);
-  }, [show]);
+  }, []);
 
   const headline = useMemo(() => {
     const index = streak % PLAYBOOK_CALLS.length;
@@ -105,7 +105,7 @@ export default function ExitIntent() {
                 className="flex-1 min-w-[180px] rounded-lg bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:opacity-90"
                 onClick={() => {
                   setShow(false);
-                  try { trackEvent('exit_intent_resume'); } catch {}
+                  try { trackEvent('exit_intent_resume'); } catch { }
                 }}
               >
                 Resume the streak
@@ -114,7 +114,7 @@ export default function ExitIntent() {
                 href="/pricing?source=exit-playbook"
                 className="flex-1 min-w-[180px] rounded-lg border border-indigo-400/60 px-5 py-3 text-center text-sm font-semibold text-indigo-200 hover:bg-indigo-500/10"
                 onClick={() => {
-                  try { trackEvent('exit_intent_cta'); } catch {}
+                  try { trackEvent('exit_intent_cta'); } catch { }
                 }}
               >
                 Unlock Pro Power Moves

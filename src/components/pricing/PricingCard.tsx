@@ -6,7 +6,7 @@ import { Check, Crown, Star } from 'lucide-react';
 import { PlanType, PLAN_LIMITS } from '@/lib/planAccess';
 import { cn } from '@/lib/utils';
 
-interface PricingCardProps {
+export interface PricingCardProps {
   plan: PlanType;
   isPopular?: boolean;
   isCurrentPlan?: boolean;
@@ -16,6 +16,7 @@ interface PricingCardProps {
 
 const planDisplayNames: Record<PlanType, string> = {
   free: 'Free',
+  starter: 'Starter',
   pro: 'Pro',
   plus: 'Plus',
   elite: 'Elite',
@@ -23,6 +24,7 @@ const planDisplayNames: Record<PlanType, string> = {
 
 const planColors: Record<PlanType, string> = {
   free: 'text-gray-500 border-gray-200',
+  starter: 'text-gray-500 border-gray-200',
   pro: 'text-blue-600 border-blue-200',
   plus: 'text-purple-600 border-purple-200',
   elite: 'text-yellow-600 border-yellow-200',

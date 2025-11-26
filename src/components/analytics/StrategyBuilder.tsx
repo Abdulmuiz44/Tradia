@@ -78,7 +78,7 @@ export default function StrategyBuilder({ trades, plan }: Props) {
     return { total, wr, avgWin, avgLoss, pf, pnl, symRank, byWeekday, byHour, bestWeekdayIdx, bestHourIdx, sessionRank };
   }, [trades]);
 
-  const weekdayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const weekdayNames = useMemo(() => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], []);
 
   // Candidate rules
   const rules = useMemo(() => {
@@ -121,7 +121,7 @@ export default function StrategyBuilder({ trades, plan }: Props) {
         ]
       }
     ];
-  }, [agg]);
+  }, [agg, weekdayNames]);
 
   return (
     <div className="space-y-6">
@@ -136,9 +136,9 @@ export default function StrategyBuilder({ trades, plan }: Props) {
         </CardHeader>
         <CardContent>
           <ul className="list-disc pl-5 space-y-2 text-sm">
-            <li>{agg.symRank[0] ? `Primary edge on ${agg.symRank[0].sym} (WR ${Math.round((agg.symRank[0].wins/Math.max(1,agg.symRank[0].count))*100)}%, P&L $${agg.symRank[0].pnl.toFixed(0)})` : 'Identify top instrument by net P&L.'}</li>
+            <li>{agg.symRank[0] ? `Primary edge on ${agg.symRank[0].sym} (WR ${Math.round((agg.symRank[0].wins / Math.max(1, agg.symRank[0].count)) * 100)}%, P&L $${agg.symRank[0].pnl.toFixed(0)})` : 'Identify top instrument by net P&L.'}</li>
             <li>{agg.sessionRank[0] ? `Best session: ${agg.sessionRank[0].s} (WR ${agg.sessionRank[0].wr.toFixed(0)}%)` : 'Determine best session (London/NewYork).'}</li>
-            <li>{Number.isFinite(agg.pf) ? `Profit factor ${agg.pf.toFixed(2)} — ${agg.pf>=1.3? 'edge present':'needs refinement'}` : 'Profit factor ∞ — very strong edge (small sample?)'}</li>
+            <li>{Number.isFinite(agg.pf) ? `Profit factor ${agg.pf.toFixed(2)} — ${agg.pf >= 1.3 ? 'edge present' : 'needs refinement'}` : 'Profit factor ∞ — very strong edge (small sample?)'}</li>
           </ul>
         </CardContent>
       </Card>

@@ -21,7 +21,7 @@ export interface TradiaAIChatHandle {
   selectConversation: (conversationId: string) => Promise<void>;
 }
 
-interface TradiaAIChatProps {
+export interface TradiaAIChatProps {
   className?: string;
   activeConversationId?: string | null;
   onActiveConversationChange?: (conversationId: string | null) => void;

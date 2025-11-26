@@ -2,6 +2,56 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { trackEvent } from '@/lib/analytics';
 
+// Type definitions for Web Speech API
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 interface VoiceInputOptions {
   language?: string;
   continuous?: boolean;
@@ -36,7 +86,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         setIsListening(true);
         setError(null);
         info('Listening...', 'Speak now to send a voice message.');
-        trackEvent('voice_input_started');
+        trackEvent('voice_input_started' as any);
       };
 
       recognition.onresult = (event) => {
@@ -56,7 +106,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         setInterimTranscript(interimTranscript);
 
         if (finalTranscript) {
-          trackEvent('voice_input_transcript', {
+          trackEvent('voice_input_transcript' as any, {
             length: finalTranscript.length,
             language: recognition.lang,
           });
@@ -87,12 +137,12 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
         }
 
         showError('Voice Input Error', errorMessage);
-        trackEvent('voice_input_error', { error: event.error });
+        trackEvent('voice_input_error' as any, { error: event.error });
       };
 
       recognition.onend = () => {
         setIsListening(false);
-        trackEvent('voice_input_ended');
+        trackEvent('voice_input_ended' as any);
       };
 
       recognitionRef.current = recognition;
@@ -107,6 +157,12 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
       }
     };
   }, [options.language, options.continuous, options.interimResults, options.maxAlternatives, info, showError]);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+    }
+  }, [isListening]);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
@@ -125,13 +181,7 @@ export const useVoiceInput = (options: VoiceInputOptions = {}) => {
       console.error('Failed to start voice recognition:', err);
       showError('Voice Error', 'Failed to start voice recognition.');
     }
-  }, [isSupported, isListening, showError]);
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-    }
-  }, [isListening]);
+  }, [isSupported, isListening, showError, stopListening]);
 
   const clearTranscript = useCallback(() => {
     setTranscript('');

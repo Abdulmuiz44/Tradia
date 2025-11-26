@@ -1,7 +1,8 @@
 // src/lib/connection-monitor.ts
 import { MT5Credentials, ConnectionStatus } from '@/types/mt5';
 import { credentialStorage } from '@/lib/credential-storage';
-import { mt5ConnectionManager } from '@/lib/mt5-connection-manager';
+// TODO: Create mt5-connection-manager module when implementing MT5 connection validation
+// import { mt5ConnectionManager } from '@/lib/mt5-connection-manager';
 import { createClient } from '@/utils/supabase/server';
 
 export interface ConnectionHealth {
@@ -47,7 +48,7 @@ export class ConnectionMonitor {
     }
   };
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): ConnectionMonitor {
     if (!ConnectionMonitor.instance) {
@@ -256,12 +257,16 @@ export class ConnectionMonitor {
       }
 
       // Perform connection test (single attempt monitoring)
-      const result = await mt5ConnectionManager.validateConnection(credentials, {
-        maxAttempts: 1, // Single attempt for monitoring
-        initialDelay: 0,
-        maxDelay: config.timeout,
-        backoffMultiplier: 1
-      });
+      // TODO: Implement actual MT5 connection validation when mt5-connection-manager is created
+      // const result = await mt5ConnectionManager.validateConnection(credentials, {
+      //   maxAttempts: 1, // Single attempt for monitoring
+      //   initialDelay: 0,
+      //   maxDelay: config.timeout,
+      //   backoffMultiplier: 1
+      // });
+
+      // Temporary stub - always returns invalid until proper implementation
+      const result = { isValid: false, errorMessage: 'MT5 connection manager not yet implemented' };
 
       const responseTime = Date.now() - startTime;
 

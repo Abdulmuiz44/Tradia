@@ -8,7 +8,6 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   data?: any;
-  actions?: NotificationAction[];
 }
 
 export const usePushNotifications = () => {
@@ -17,17 +16,6 @@ export const usePushNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const { info, error: showError } = useToast();
-
-  useEffect(() => {
-    // Check if push notifications are supported
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true);
-      setPermission(Notification.permission);
-
-      // Check if already subscribed
-      checkSubscriptionStatus();
-    }
-  }, []);
 
   const checkSubscriptionStatus = useCallback(async () => {
     try {
@@ -43,6 +31,17 @@ export const usePushNotifications = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // Check if push notifications are supported
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setIsSupported(true);
+      setPermission(Notification.permission);
+
+      // Check if already subscribed
+      checkSubscriptionStatus();
+    }
+  }, [checkSubscriptionStatus]);
+
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
       showError('Not Supported', 'Push notifications are not supported in this browser.');
@@ -55,11 +54,11 @@ export const usePushNotifications = () => {
 
       if (result === 'granted') {
         info('Permission Granted', 'You will now receive notifications from Tradia.');
-        trackEvent('push_permission_granted');
+        trackEvent('push_permission_granted' as any);
         return true;
       } else {
         showError('Permission Denied', 'Push notifications are disabled. You can enable them in your browser settings.');
-        trackEvent('push_permission_denied');
+        trackEvent('push_permission_denied' as any);
         return false;
       }
     } catch (err) {
@@ -90,7 +89,7 @@ export const usePushNotifications = () => {
 
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
       });
 
       setSubscription(pushSubscription);
@@ -100,7 +99,7 @@ export const usePushNotifications = () => {
       await sendSubscriptionToBackend(pushSubscription);
 
       info('Subscribed', 'You will now receive push notifications from Tradia.');
-      trackEvent('push_subscribed', {
+      trackEvent('push_subscribed' as any, {
         endpoint: pushSubscription.endpoint,
       });
 
@@ -108,7 +107,7 @@ export const usePushNotifications = () => {
     } catch (err) {
       console.error('Error subscribing to push notifications:', err);
       showError('Subscription Failed', 'Failed to subscribe to push notifications.');
-      trackEvent('push_subscription_failed');
+      trackEvent('push_subscription_failed' as any);
       return false;
     }
   }, [isSupported, permission, requestPermission, info, showError]);
@@ -126,7 +125,7 @@ export const usePushNotifications = () => {
         await removeSubscriptionFromBackend(subscription);
 
         info('Unsubscribed', 'You will no longer receive push notifications.');
-        trackEvent('push_unsubscribed');
+        trackEvent('push_unsubscribed' as any);
       }
 
       return success;
@@ -153,12 +152,10 @@ export const usePushNotifications = () => {
         icon: payload.icon || '/icon-192x192.png',
         badge: payload.badge || '/icon-192x192.png',
         data: payload.data,
-        actions: payload.actions,
-        vibrate: [100, 50, 100],
         requireInteraction: false,
       });
 
-      trackEvent('push_notification_sent', {
+      trackEvent('push_notification_sent' as any, {
         title: payload.title,
       });
     } catch (err) {

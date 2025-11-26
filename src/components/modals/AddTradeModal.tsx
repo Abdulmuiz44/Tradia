@@ -7,13 +7,13 @@ import { Trade } from "@/types/trade";
 import { useUser } from "@/context/UserContext";
 import { supabase } from "@/lib/supabaseClient";
 
-type Props = {
+export type AddTradeModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (newTrade: Trade) => void;
+  onSave: (newTrade: Omit<Trade, 'id'>) => void;
 };
 
-export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
+export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModalProps) {
   const [form, setForm] = useState<Partial<Trade>>({});
   const [beforeUrl, setBeforeUrl] = useState<string>("");
   const [afterUrl, setAfterUrl] = useState<string>("");
@@ -72,7 +72,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
       try {
         const saved = localStorage.getItem('customStrategies');
         if (saved) setCustomStrategies(JSON.parse(saved));
-      } catch {}
+      } catch { }
     } else {
       // clear form when closing
       setForm({});
@@ -192,7 +192,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: Props) {
     if (!PREDEFINED_STRATEGIES.includes(s) && !customStrategies.includes(s)) {
       const next = [...customStrategies, s];
       setCustomStrategies(next);
-      try { localStorage.setItem('customStrategies', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('customStrategies', JSON.stringify(next)); } catch { }
     }
     setForm((p) => ({ ...(p ?? {}), strategy: s }));
     setCustomStrategyInput("");

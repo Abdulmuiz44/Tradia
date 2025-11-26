@@ -60,13 +60,13 @@ export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'action', name, path: window.location.pathname, meta: properties })
       });
-    } catch {}
+    } catch { }
   };
 
   const equitySeries = useMemo(() => {
     let balance = 0;
     return trades.map((t) => {
-      balance += t.pnl;
+      balance += t.pnl ?? 0;
 
       // Safely handle date formatting with fallbacks
       let dateToFormat: Date;
@@ -177,10 +177,10 @@ export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {
     const riskScore = maxDD > 50
       ? "Very High Risk"
       : maxDD > 30
-      ? "High Risk"
-      : maxDD > 15
-      ? "Moderate Risk"
-      : "Low Risk";
+        ? "High Risk"
+        : maxDD > 15
+          ? "Moderate Risk"
+          : "Low Risk";
 
     const sharpeNum = Number(sharpe);
     const profitFactorNum = typeof profitFactor === "string" ? (isNaN(Number(profitFactor)) ? 0 : Number(profitFactor)) : Number(profitFactor);
@@ -188,8 +188,8 @@ export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {
     const performanceGrade = sharpeNum > 1.5 && profitFactorNum > 1.5
       ? "Excellent"
       : sharpeNum > 1 && profitFactorNum > 1.2
-      ? "Good"
-      : "Needs Improvement";
+        ? "Good"
+        : "Needs Improvement";
 
     return {
       sharpe,

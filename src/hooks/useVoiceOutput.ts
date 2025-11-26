@@ -86,7 +86,7 @@ export const useVoiceOutput = (options: VoiceOutputOptions = {}) => {
 
       utterance.onstart = () => {
         setIsSpeaking(true);
-        trackEvent('voice_output_started', {
+        trackEvent('voice_output_started' as any, {
           textLength: text.length,
           voice: currentVoice?.name,
           language: utterance.lang,
@@ -95,14 +95,14 @@ export const useVoiceOutput = (options: VoiceOutputOptions = {}) => {
 
       utterance.onend = () => {
         setIsSpeaking(false);
-        trackEvent('voice_output_completed');
+        trackEvent('voice_output_completed' as any);
       };
 
       utterance.onerror = (event) => {
         setIsSpeaking(false);
         console.error('Speech synthesis error:', event);
         showError('Speech Error', 'Failed to synthesize speech.');
-        trackEvent('voice_output_error', { error: event.error });
+        trackEvent('voice_output_error' as any, { error: event.error });
       };
 
       utteranceRef.current = utterance;
@@ -121,27 +121,27 @@ export const useVoiceOutput = (options: VoiceOutputOptions = {}) => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
       setIsSpeaking(false);
-      trackEvent('voice_output_stopped');
+      trackEvent('voice_output_stopped' as any);
     }
   }, []);
 
   const pause = useCallback(() => {
     if (speechSynthesis.speaking && !speechSynthesis.paused) {
       speechSynthesis.pause();
-      trackEvent('voice_output_paused');
+      trackEvent('voice_output_paused' as any);
     }
   }, []);
 
   const resume = useCallback(() => {
     if (speechSynthesis.paused) {
       speechSynthesis.resume();
-      trackEvent('voice_output_resumed');
+      trackEvent('voice_output_resumed' as any);
     }
   }, []);
 
   const setVoice = useCallback((voice: SpeechSynthesisVoice) => {
     setCurrentVoice(voice);
-    trackEvent('voice_output_voice_changed', { voice: voice.name });
+    trackEvent('voice_output_voice_changed' as any, { voice: voice.name });
   }, []);
 
   const getVoicesByLanguage = useCallback((language: string) => {

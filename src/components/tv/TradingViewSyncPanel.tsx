@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,7 +167,7 @@ export default function TradingViewSyncPanel({ className = "" }: TradingViewSync
 
   const { addTrade } = useTrade() as any;
 
-  const refreshUsage = async () => {
+  const refreshUsage = useCallback(async () => {
     setLoadingUsage(true);
     try {
       const res = await fetch("/api/tv/usage", { cache: "no-store" });
@@ -194,11 +194,11 @@ export default function TradingViewSyncPanel({ className = "" }: TradingViewSync
     } finally {
       setLoadingUsage(false);
     }
-  };
+  }, [plan]);
 
   useEffect(() => {
-    refreshUsage().catch(() => {});
-  }, []);
+    refreshUsage().catch(() => { });
+  }, [refreshUsage]);
 
   const featureDisabled = (feature: TvFeatureKey) => {
     const state = usage[feature];
@@ -277,7 +277,7 @@ export default function TradingViewSyncPanel({ className = "" }: TradingViewSync
 
   const copyAlert = () => {
     if (!alertResult) return;
-    navigator.clipboard.writeText(alertResult.pineScript).catch(() => {});
+    navigator.clipboard.writeText(alertResult.pineScript).catch(() => { });
   };
 
   const journalAlert = () => {

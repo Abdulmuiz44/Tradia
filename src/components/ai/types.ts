@@ -3,7 +3,7 @@ export interface Message {
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  mode?: 'coach' | 'mistral' | 'grok';
+  mode?: 'coach' | 'mistral';
   variant?: 'default' | 'upgrade' | 'system';
 }
 
@@ -26,7 +26,7 @@ export interface ChatState {
   searchResults?: Message[];
   inputMessage: string;
   isTyping: boolean;
-  assistantMode: 'coach' | 'mistral' | 'grok';
+  assistantMode: 'coach' | 'mistral';
   userTier: UserTier['type'];
   userEmail: string;
   isAdmin: boolean;
@@ -39,7 +39,7 @@ export type ChatAction =
   | { type: 'ADD_MESSAGE'; payload: Message }
   | { type: 'SET_INPUT'; payload: string }
   | { type: 'SET_TYPING'; payload: boolean }
-  | { type: 'SET_MODE'; payload: 'coach' | 'mistral' | 'grok' }
+  | { type: 'SET_MODE'; payload: 'coach' | 'mistral' }
   | { type: 'SET_USER_TIER'; payload: UserTier['type'] }
   | { type: 'SET_USER_EMAIL'; payload: string }
   | { type: 'SET_MISTRAL_UNLOCKED'; payload: boolean }

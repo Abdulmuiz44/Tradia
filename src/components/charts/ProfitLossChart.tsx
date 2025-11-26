@@ -51,11 +51,11 @@ function parseDate(val: unknown): Date | null {
 }
 
 export default function ProfitLossChart({ trades }: Props) {
-  // normalize input
-  const arr = Array.isArray(trades) ? trades : [];
-
   // derive data once
   const { xLabels, profits, cumulative } = useMemo(() => {
+    // normalize input inside useMemo
+    const arr = Array.isArray(trades) ? trades : [];
+
     if (!arr.length) return { xLabels: [], profits: [], cumulative: [] };
 
     // map each trade to a sortable record with a time (entryTime > closeTime > index)
@@ -84,7 +84,7 @@ export default function ProfitLossChart({ trades }: Props) {
     }, []);
 
     return { xLabels, profits, cumulative };
-  }, [arr]);
+  }, [trades]);
 
   // safe fallback when no data
   if (!xLabels.length) {

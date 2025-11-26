@@ -4,8 +4,6 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-// Charts temporarily disabled - would use recharts if installed
-// import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { Target, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
 import { Trade } from '@/types/trade';
 
@@ -21,7 +19,7 @@ interface OptimizationResult {
   suggestions: string[];
 }
 
-// const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
 const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
   const optimization = useMemo(() => {

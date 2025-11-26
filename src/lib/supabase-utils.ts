@@ -23,14 +23,14 @@ export async function checkDailyLimit(userId: string, limitType: string): Promis
       return false;
     }
 
-    const currentCount = usageData?.[`${limitType}_count`] || 0;
+    const currentCount = (usageData as any)?.[`${limitType}_count`] || 0;
 
     // Get user plan
     const { data: userData, error: userError } = await supabase
-    .from('user_profiles')
+      .from('user_profiles')
       .select('plan')
       .eq('id', userId)
-    .single();
+      .single();
 
     if (userError || !userData) {
       console.error('User plan error:', userError);
@@ -45,8 +45,8 @@ export async function checkDailyLimit(userId: string, limitType: string): Promis
         limit = plan === 'free' ? 20 : plan === 'pro' ? 100 : plan === 'plus' ? 500 : Infinity;
         break;
       case 'uploads':
-      limit = plan === 'free' ? 0 : plan === 'pro' ? 5 : plan === 'plus' ? 20 : 100;
-      break;
+        limit = plan === 'free' ? 0 : plan === 'pro' ? 5 : plan === 'plus' ? 20 : 100;
+        break;
       case 'api_calls':
         limit = 1000; // Default API call limit
         break;
