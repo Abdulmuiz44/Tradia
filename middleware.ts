@@ -26,7 +26,7 @@ export async function middleware(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    if (nextAuthToken?.email) {
+    if (nextAuthToken?.email || (nextAuthToken?.profile as any)?.email) {
       // Enforce trial: if expired and not paid/grandfathered -> redirect to checkout
       try {
         const apiUrl = new URL("/api/user/trial-status", req.url).toString();
@@ -40,7 +40,7 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(url);
           }
         }
-      } catch {}
+      } catch { }
       return res;
     }
 
@@ -69,7 +69,7 @@ export async function middleware(req: NextRequest) {
                 return NextResponse.redirect(url);
               }
             }
-          } catch {}
+          } catch { }
           return res;
         }
       } catch (err) {
@@ -91,7 +91,7 @@ export async function middleware(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    if (nextAuthToken?.email) {
+    if (nextAuthToken?.email || (nextAuthToken?.profile as any)?.email) {
       console.log("middleware: authenticated user trying to access login, redirecting to dashboard");
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
