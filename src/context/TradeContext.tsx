@@ -640,8 +640,6 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
       setImportLoading(true);
       try {
-        const transformedTrades = tradesToImport.map(transformTradeForBackend);
-
         const response = await fetch("/api/trades/import", {
           method: "POST",
           headers: {
@@ -649,7 +647,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
             Accept: "application/json",
           },
           body: JSON.stringify({
-            trades: transformedTrades,
+            trades: tradesToImport,
             source: "csv-import",
           }),
         });

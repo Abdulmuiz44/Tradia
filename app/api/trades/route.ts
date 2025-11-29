@@ -122,39 +122,43 @@ const mapToSnakeCase = (data: any) => {
   return {
     symbol: coalesce(data.symbol, raw.symbol),
     direction: coalesce(data.direction, raw.direction),
-    ordertype: coalesce(data.orderType, data.order_type, raw.orderType),
-    opentime: coalesce(data.openTime, data.entry_time, raw.openTime, raw.entry_time),
-    closetime: coalesce(data.closeTime, data.exit_time, raw.closeTime, raw.exit_time),
+    ordertype: coalesce(data.orderType, data.ordertype, data.order_type, raw.orderType, raw.ordertype),
+    opentime: coalesce(data.openTime, data.opentime, data.entry_time, data.open_time, raw.openTime, raw.entry_time),
+    closetime: coalesce(data.closeTime, data.closetime, data.exit_time, data.close_time, raw.closeTime, raw.exit_time),
     session: coalesce(data.session, raw.session),
-    lotsize: coalesce(data.lotSize, data.lot_size, raw.lotSize, raw.lot_size),
-    entryprice: coalesce(data.entryPrice, data.entry_price, raw.entryPrice, raw.entry_price),
-    exitprice: coalesce(data.exitPrice, data.exit_price, raw.exitPrice, raw.exit_price),
+    lotsize: coalesce(data.lotSize, data.lotsize, data.lot_size, raw.lotSize, raw.lot_size),
+    entryprice: coalesce(data.entryPrice, data.entryprice, data.entry_price, raw.entryPrice, raw.entry_price),
+    exitprice: coalesce(data.exitPrice, data.exitprice, data.exit_price, raw.exitPrice, raw.exit_price),
     stoplossprice: coalesce(
       data.stopLossPrice,
+      data.stoplossprice,
       data.stop_loss_price,
       raw.stopLossPrice,
       raw.stop_loss_price
     ),
     takeprofitprice: coalesce(
       data.takeProfitPrice,
+      data.takeprofitprice,
       data.take_profit_price,
       raw.takeProfitPrice,
       raw.take_profit_price
     ),
     pnl: coalesce(data.pnl, raw.pnl, data.profit, data.netProfit),
-    profitloss: coalesce(data.profitLoss, data.profit_loss, raw.profitLoss, raw.profit_loss),
-    resultrr: coalesce(data.resultRR, data.result_rr, raw.resultRR, raw.result_rr),
+    profitloss: coalesce(data.profitLoss, data.profitloss, data.profit_loss, raw.profitLoss, raw.profit_loss),
+    resultrr: coalesce(data.resultRR, data.resultrr, data.result_rr, raw.resultRR, raw.result_rr),
     rr: coalesce(data.rr, raw.rr),
     outcome: normalizeOutcomeValue(coalesce(data.outcome, raw.outcome)),
     duration: coalesce(data.duration, raw.duration),
     beforescreenshoturl: coalesce(
       data.beforeScreenshotUrl,
+      data.beforescreenshoturl,
       data.before_screenshot_url,
       raw.beforeScreenshotUrl,
       raw.before_screenshot_url
     ),
     afterscreenshoturl: coalesce(
       data.afterScreenshotUrl,
+      data.afterscreenshoturl,
       data.after_screenshot_url,
       raw.afterScreenshotUrl,
       raw.after_screenshot_url
@@ -168,12 +172,14 @@ const mapToSnakeCase = (data: any) => {
     emotion: coalesce(data.emotion, data.emotion_label, raw.emotion, raw.emotion_label),
     reasonfortrade: coalesce(
       data.reasonForTrade,
+      data.reasonfortrade,
       data.reason_for_trade,
       raw.reasonForTrade,
       raw.reason_for_trade
     ),
     journalnotes: coalesce(
       data.journalNotes,
+      data.journalnotes,
       data.journal_notes,
       raw.journalNotes,
       raw.journal_notes

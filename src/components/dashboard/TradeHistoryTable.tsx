@@ -90,9 +90,9 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
   const symbol = String(raw.symbol ?? "");
   const direction = String(
     raw.direction ??
-      (toNumber(raw.takeProfitPrice) >= toNumber(raw.entryPrice)
-        ? "Buy"
-        : "Sell")
+    (toNumber(raw.takeProfitPrice) >= toNumber(raw.entryPrice)
+      ? "Buy"
+      : "Sell")
   );
   const orderType = String(raw.orderType ?? "Market Execution");
   const openTime = String(raw.openTime ?? "");
@@ -133,28 +133,28 @@ const normalizeTrade = (raw: Partial<Trade>): Trade => {
     : undefined;
 
   return {
-  id: String(raw.id ?? ""),
-  symbol,
-  direction,
-  orderType,
-  openTime,
-  closeTime,
-  session,
-  lotSize,
-  entryPrice,
-  stopLossPrice,
-  takeProfitPrice,
-  pnl,
-  resultRR,
-  outcome,
-  duration,
-  reasonForTrade: String(raw.reasonForTrade ?? ""),
-  strategy,
-  emotion: String(raw.emotion ?? "neutral"),
-  journalNotes: String(raw.journalNotes ?? raw.notes ?? ""),
-  notes: String(raw.notes ?? raw.journalNotes ?? ""),
-  beforeScreenshotUrl,
-  afterScreenshotUrl,
+    id: String(raw.id ?? ""),
+    symbol,
+    direction,
+    orderType,
+    openTime,
+    closeTime,
+    session,
+    lotSize,
+    entryPrice,
+    stopLossPrice,
+    takeProfitPrice,
+    pnl,
+    resultRR,
+    outcome,
+    duration,
+    reasonForTrade: String(raw.reasonForTrade ?? ""),
+    strategy,
+    emotion: String(raw.emotion ?? "neutral"),
+    journalNotes: String(raw.journalNotes ?? raw.notes ?? ""),
+    notes: String(raw.notes ?? raw.journalNotes ?? ""),
+    beforeScreenshotUrl,
+    afterScreenshotUrl,
     updated_at: new Date().toISOString(),
   } as Trade;
 };
@@ -215,7 +215,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
 
   const [query, setQuery] = useState<string>("");
   const [sortField, setSortField] = useState<
-  "openTime" | "closeTime" | "pnl" | "symbol" | "direction" | "lotSize" | "entryPrice" | "stopLossPrice" | "takeProfitPrice" | "duration" | "outcome" | "resultRR" | "strategy"
+    "openTime" | "closeTime" | "pnl" | "symbol" | "direction" | "lotSize" | "entryPrice" | "stopLossPrice" | "takeProfitPrice" | "duration" | "outcome" | "resultRR" | "strategy"
   >("closeTime");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState<number>(1);
@@ -235,17 +235,17 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     if (!hasLoaded.current) {
       try {
         if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("userTrades");
-        if (stored) {
-        const parsed = JSON.parse(stored) as unknown;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-        const normalized = (parsed as Partial<Trade>[]).map(normalizeTrade);
-        // Upsert into context-managed state
-        importTrades(normalized).catch(console.error);
-        // Clear legacy key to prevent divergence
-        localStorage.removeItem("userTrades");
-        }
-        }
+          const stored = localStorage.getItem("userTrades");
+          if (stored) {
+            const parsed = JSON.parse(stored) as unknown;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const normalized = (parsed as Partial<Trade>[]).map(normalizeTrade);
+              // Upsert into context-managed state
+              importTrades(normalized).catch(console.error);
+              // Clear legacy key to prevent divergence
+              localStorage.removeItem("userTrades");
+            }
+          }
         }
       } catch {
         // ignore
@@ -312,22 +312,22 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     }
 
     filtered.sort((a, b) => {
-    let aVal: any, bVal: any;
+      let aVal: any, bVal: any;
 
-    switch (sortField) {
-    case "pnl":
-        aVal = toNumber(getField(a, "pnl") ?? getField(a, "profit") ?? getField(a, "netpl"));
-        bVal = toNumber(getField(b, "pnl") ?? getField(b, "profit") ?? getField(b, "netpl"));
-      break;
-    case "symbol":
-    case "direction":
-    case "outcome":
-      case "strategy":
-        aVal = toStringSafe(getField(a, sortField));
-        bVal = toStringSafe(getField(b, sortField));
-        return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      case "lotSize":
-      case "entryPrice":
+      switch (sortField) {
+        case "pnl":
+          aVal = toNumber(getField(a, "pnl") ?? getField(a, "profit") ?? getField(a, "netpl"));
+          bVal = toNumber(getField(b, "pnl") ?? getField(b, "profit") ?? getField(b, "netpl"));
+          break;
+        case "symbol":
+        case "direction":
+        case "outcome":
+        case "strategy":
+          aVal = toStringSafe(getField(a, sortField));
+          bVal = toStringSafe(getField(b, sortField));
+          return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        case "lotSize":
+        case "entryPrice":
         case "stopLossPrice":
         case "takeProfitPrice":
         case "resultRR":
@@ -401,6 +401,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
 
   const handleCsvImport = async (imported: Partial<Trade>[]) => {
     if (!Array.isArray(imported) || imported.length === 0) return;
+    // Normalize for display consistency (fills in derived fields like resultRR, duration)
     const normalized = imported.map(normalizeTrade);
     await importTrades(normalized);
     setCsvOpen(false);
@@ -409,10 +410,10 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
 
   const exportCsv = () => {
     const hdr = [
-      "symbol","direction","orderType","openTime","closeTime","session",
-      "lotSize","entryPrice","stopLossPrice","takeProfitPrice","pnl",
-      "outcome","resultRR","duration","strategy","emotion","reasonForTrade",
-      "journalNotes","notes","commission","swap","tags"
+      "symbol", "direction", "orderType", "openTime", "closeTime", "session",
+      "lotSize", "entryPrice", "stopLossPrice", "takeProfitPrice", "pnl",
+      "outcome", "resultRR", "duration", "strategy", "emotion", "reasonForTrade",
+      "journalNotes", "notes", "commission", "swap", "tags"
     ];
     const rows = processed.map((t) => [
       toStringSafe(getField(t, "symbol")),
@@ -451,7 +452,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     URL.revokeObjectURL(url);
     setExportOpen(false);
 
-    try { notify({ variant: 'success', title: 'Export completed', description: `${processed.length} trades exported to CSV.` }); } catch {}
+    try { notify({ variant: 'success', title: 'Export completed', description: `${processed.length} trades exported to CSV.` }); } catch { }
   };
 
   const headerCell = (
@@ -464,9 +465,8 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     return (
       <th
         key={label}
-        className={`px-3 py-2 font-medium border-b border-gray-600 ${
-          sortable ? "cursor-pointer select-none" : ""
-        }`}
+        className={`px-3 py-2 font-medium border-b border-gray-600 ${sortable ? "cursor-pointer select-none" : ""
+          }`}
         onClick={() => sortable && keyField && toggleSort(keyField)}
         role={sortable ? "button" : undefined}
         aria-sort={
@@ -589,9 +589,8 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                 <div className="px-3 py-2 rounded bg-zinc-800">
                   <div className="text-xs">Total PnL</div>
                   <div
-                    className={`font-medium ${
-                      stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"
-                    }`}
+                    className={`font-medium ${stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"
+                      }`}
                   >
                     ${stats.totalPnl.toFixed(2)}
                   </div>
@@ -614,14 +613,14 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
           </div>
         </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
-              onClick={() => setExportOpen(true)}
-              title="Export"
-            >
-              <DownloadCloud size={18} className="text-gray-300" />
-            </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+            onClick={() => setExportOpen(true)}
+            title="Export"
+          >
+            <DownloadCloud size={18} className="text-gray-300" />
+          </button>
 
           {/* Clicking this icon now opens the CSV import modal directly (no dropdown) */}
           <button
@@ -757,155 +756,155 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         <div className="hidden sm:block overflow-x-auto bg-gray-800 rounded-xl shadow-lg max-h-96 w-full">
           {
             <table className="min-w-full text-sm text-left table-fixed">
-            <thead className="bg-gray-700 text-gray-200 sticky top-0">
-              <tr>
-              {headerCell("Symbol", true, "symbol")}
-              {headerCell("Direction", true, "direction")}
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Order Type</th>
-              {headerCell("Open Time", true, "openTime")}
-              {headerCell("Close Time", true, "closeTime")}
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Session</th>
-              {headerCell("Lot Size", true, "lotSize")}
-              {headerCell("Entry Price", true, "entryPrice")}
-              {headerCell("Stop Loss", true, "stopLossPrice")}
-              {headerCell("Take Profit", true, "takeProfitPrice")}
-              {headerCell("PNL ($)", true, "pnl")}
-              {headerCell("Duration", true, "duration")}
-              {headerCell("Outcome", true, "outcome")}
-              {headerCell("RR", true, "resultRR")}
-              {headerCell("Strategy", true, "strategy")}
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Before</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">After</th>
-              <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageItems.length === 0 ? (
+              <thead className="bg-gray-700 text-gray-200 sticky top-0">
                 <tr>
-                  <td colSpan={18} className="p-4 text-center text-zinc-400">
-                    No trades found.
-                  </td>
+                  {headerCell("Symbol", true, "symbol")}
+                  {headerCell("Direction", true, "direction")}
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">Order Type</th>
+                  {headerCell("Open Time", true, "openTime")}
+                  {headerCell("Close Time", true, "closeTime")}
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">Session</th>
+                  {headerCell("Lot Size", true, "lotSize")}
+                  {headerCell("Entry Price", true, "entryPrice")}
+                  {headerCell("Stop Loss", true, "stopLossPrice")}
+                  {headerCell("Take Profit", true, "takeProfitPrice")}
+                  {headerCell("PNL ($)", true, "pnl")}
+                  {headerCell("Duration", true, "duration")}
+                  {headerCell("Outcome", true, "outcome")}
+                  {headerCell("RR", true, "resultRR")}
+                  {headerCell("Strategy", true, "strategy")}
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">Emotion</th>
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">Notes</th>
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">Before</th>
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">After</th>
+                  <th className="px-3 py-2 font-medium border-b border-gray-600">Action</th>
                 </tr>
-              ) : (
-                pageItems.map((t, idx) => {
-                  const pnl = toNumber(
-                    getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl")
-                  );
-                  const idKey =
-                    toStringSafe(getField(t, "id")) ||
-                    `${toStringSafe(getField(t, "symbol"))}-${idx}`;
-                  return (
-                    <tr key={idKey} className="hover:bg-gray-700 transition-colors">
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "symbol"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "direction"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "orderType"))}</td>
-                      <td className="px-3 py-2">
-                        {toDateOrNull(getField(t, "openTime"))
-                          ? format(toDateOrNull(getField(t, "openTime")) as Date, "Pp")
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        {toDateOrNull(getField(t, "closeTime"))
-                          ? format(toDateOrNull(getField(t, "closeTime")) as Date, "Pp")
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "session"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "lotSize"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "entryPrice"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "stopLossPrice"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "takeProfitPrice"))}</td>
-                      <td className={`px-3 py-2 ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
-                        ${pnl.toFixed(2)}
-                      </td>
-                      <td className="px-3 py-2">{(() => { const o=toDateOrNull(getField(t,"openTime")); const c=toDateOrNull(getField(t,"closeTime")); return (o&&c)? calcDuration(o.toISOString(), c.toISOString()) : toStringSafe(getField(t,"duration")); })()}</td>
-                      {/* Outcome column */}
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "outcome"))}</td>
-                      {/* RR column */}
-                      <td className="px-3 py-2">{formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}</td>
-                      {/* Strategy column */}
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "strategy") || getField(t, "reasonForTrade"))}</td>
-                      <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
-                      <td className="px-3 py-2">
-                        {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}
-                      </td>
-                      <td className="px-3 py-2">
-                        {toStringSafe(getField(t, "beforeScreenshotUrl")) ? (
-                          <a href={toStringSafe(getField(t, "beforeScreenshotUrl"))} target="_blank" rel="noreferrer">
-                            <Image
-                              src={toStringSafe(getField(t, "beforeScreenshotUrl"))}
-                              alt="Before trade screenshot"
-                              width={64}
-                              height={40}
-                              unoptimized
-                              className="h-10 w-16 rounded border border-zinc-800 object-cover"
-                            />
-                          </a>
-                        ) : (
-                          <span className="text-zinc-500">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        {toStringSafe(getField(t, "afterScreenshotUrl")) ? (
-                          <a href={toStringSafe(getField(t, "afterScreenshotUrl"))} target="_blank" rel="noreferrer">
-                            <Image
-                              src={toStringSafe(getField(t, "afterScreenshotUrl"))}
-                              alt="After trade screenshot"
-                              width={64}
-                              height={40}
-                              unoptimized
-                              className="h-10 w-16 rounded border border-zinc-800 object-cover"
-                            />
-                          </a>
-                        ) : (
-                          <span className="text-zinc-500">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 flex items-center gap-2">
-                      <button
-                      onClick={() => setEditingTrade(t)}
-                      className="p-1 hover:text-blue-400"
-                      aria-label="Edit trade"
-                      >
-                      <Pencil size={16} />
-                      </button>
-                      <button
-                      onClick={() => {
-                        // Create a copy of the trade with cleared prices and P&L
-                        const duplicatedTrade = {
-                            ...t,
-                          id: `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                            entryPrice: 0,
-                              exitPrice: undefined,
-                              pnl: 0,
-                              outcome: 'Breakeven' as const,
-                              openTime: new Date().toISOString(),
-                              closeTime: undefined,
-                              resultRR: 0,
-                            };
-                            addTrade(duplicatedTrade);
-                            try { notify({ variant: 'success', title: 'Trade duplicated', description: 'A copy has been created with cleared prices.' }); } catch {}
-                          }}
-                          className="p-1 hover:text-green-400"
-                          aria-label="Duplicate trade"
-                        >
-                          <FilePlus size={16} />
-                        </button>
-                        <button
-                        onClick={() => setTradeToDelete(t)}
-                        className="p-1 hover:text-red-400"
-                        aria-label="Delete trade"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pageItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={18} className="p-4 text-center text-zinc-400">
+                      No trades found.
+                    </td>
+                  </tr>
+                ) : (
+                  pageItems.map((t, idx) => {
+                    const pnl = toNumber(
+                      getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl")
+                    );
+                    const idKey =
+                      toStringSafe(getField(t, "id")) ||
+                      `${toStringSafe(getField(t, "symbol"))}-${idx}`;
+                    return (
+                      <tr key={idKey} className="hover:bg-gray-700 transition-colors">
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "symbol"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "direction"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "orderType"))}</td>
+                        <td className="px-3 py-2">
+                          {toDateOrNull(getField(t, "openTime"))
+                            ? format(toDateOrNull(getField(t, "openTime")) as Date, "Pp")
+                            : "—"}
+                        </td>
+                        <td className="px-3 py-2">
+                          {toDateOrNull(getField(t, "closeTime"))
+                            ? format(toDateOrNull(getField(t, "closeTime")) as Date, "Pp")
+                            : "—"}
+                        </td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "session"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "lotSize"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "entryPrice"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "stopLossPrice"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "takeProfitPrice"))}</td>
+                        <td className={`px-3 py-2 ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                          ${pnl.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2">{(() => { const o = toDateOrNull(getField(t, "openTime")); const c = toDateOrNull(getField(t, "closeTime")); return (o && c) ? calcDuration(o.toISOString(), c.toISOString()) : toStringSafe(getField(t, "duration")); })()}</td>
+                        {/* Outcome column */}
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "outcome"))}</td>
+                        {/* RR column */}
+                        <td className="px-3 py-2">{formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}</td>
+                        {/* Strategy column */}
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "strategy") || getField(t, "reasonForTrade"))}</td>
+                        <td className="px-3 py-2">{toStringSafe(getField(t, "emotion"))}</td>
+                        <td className="px-3 py-2">
+                          {toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}
+                        </td>
+                        <td className="px-3 py-2">
+                          {toStringSafe(getField(t, "beforeScreenshotUrl")) ? (
+                            <a href={toStringSafe(getField(t, "beforeScreenshotUrl"))} target="_blank" rel="noreferrer">
+                              <Image
+                                src={toStringSafe(getField(t, "beforeScreenshotUrl"))}
+                                alt="Before trade screenshot"
+                                width={64}
+                                height={40}
+                                unoptimized
+                                className="h-10 w-16 rounded border border-zinc-800 object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <span className="text-zinc-500">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {toStringSafe(getField(t, "afterScreenshotUrl")) ? (
+                            <a href={toStringSafe(getField(t, "afterScreenshotUrl"))} target="_blank" rel="noreferrer">
+                              <Image
+                                src={toStringSafe(getField(t, "afterScreenshotUrl"))}
+                                alt="After trade screenshot"
+                                width={64}
+                                height={40}
+                                unoptimized
+                                className="h-10 w-16 rounded border border-zinc-800 object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <span className="text-zinc-500">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 flex items-center gap-2">
+                          <button
+                            onClick={() => setEditingTrade(t)}
+                            className="p-1 hover:text-blue-400"
+                            aria-label="Edit trade"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              // Create a copy of the trade with cleared prices and P&L
+                              const duplicatedTrade = {
+                                ...t,
+                                id: `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                entryPrice: 0,
+                                exitPrice: undefined,
+                                pnl: 0,
+                                outcome: 'Breakeven' as const,
+                                openTime: new Date().toISOString(),
+                                closeTime: undefined,
+                                resultRR: 0,
+                              };
+                              addTrade(duplicatedTrade);
+                              try { notify({ variant: 'success', title: 'Trade duplicated', description: 'A copy has been created with cleared prices.' }); } catch { }
+                            }}
+                            className="p-1 hover:text-green-400"
+                            aria-label="Duplicate trade"
+                          >
+                            <FilePlus size={16} />
+                          </button>
+                          <button
+                            onClick={() => setTradeToDelete(t)}
+                            className="p-1 hover:text-red-400"
+                            aria-label="Delete trade"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           }
         </div>
       </div>
@@ -947,40 +946,39 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
           const normalized = normalizeTrade(t);
           updateTrade(normalized);
           setEditingTrade(null);
-          try { notify({ variant: 'info', title: 'Trade updated' }); } catch {}
+          try { notify({ variant: 'info', title: 'Trade updated' }); } catch { }
         }}
       />
 
-      {/* ADD — normalize to compute RR immediately */}
+      {/* ADD — pass raw trade data to context; API will normalize */}
       <AddTradeModal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSave={(t) => {
-          const normalized = normalizeTrade(t);
-          addTrade(normalized);
+          addTrade(t);
           setIsAddOpen(false);
-          try { notify({ variant: 'success', title: 'Trade added' }); } catch {}
+          try { notify({ variant: 'success', title: 'Trade added' }); } catch { }
         }}
       />
 
       {/* CSV Upload modal (responsive): render a bottom-sheet on small screens, centered on larger screens */}
       {csvOpen && (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
-      <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setCsvOpen(false)}
-      aria-hidden
-      />
-      <div className="relative w-full sm:max-w-3xl bg-gray-900 rounded-t-lg sm:rounded-lg p-4 max-h-[90dvh] overflow-auto">
-      {/* CsvUpload is expected to manage its own internal UI. We pass the handlers.
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setCsvOpen(false)}
+            aria-hidden
+          />
+          <div className="relative w-full sm:max-w-3xl bg-gray-900 rounded-t-lg sm:rounded-lg p-4 max-h-[90dvh] overflow-auto">
+            {/* CsvUpload is expected to manage its own internal UI. We pass the handlers.
       Note: we avoid inline // comments inside JSX to prevent parser issues. */}
-      <CsvUpload
-      isOpen={csvOpen}
-      onClose={() => setCsvOpen(false)}
-      onImport={handleCsvImport}
-      />
-        {importLoading && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg sm:rounded-lg">
+            <CsvUpload
+              isOpen={csvOpen}
+              onClose={() => setCsvOpen(false)}
+              onImport={handleCsvImport}
+            />
+            {importLoading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg sm:rounded-lg">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
                   <p className="text-white">Importing trades...</p>
@@ -1049,7 +1047,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
             onClick={() => {
               try {
                 clearTrades();
-                notify({ variant: 'warning', title: 'Trade history cleared', description: 'All local trades have been removed.'});
+                notify({ variant: 'warning', title: 'Trade history cleared', description: 'All local trades have been removed.' });
               } catch (e) {
                 notify({ variant: 'destructive', title: 'Failed to clear history' });
               } finally {
@@ -1091,7 +1089,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
             onClick={() => {
               if (tradeToDelete) {
                 deleteTrade(String(getField(tradeToDelete, "id")));
-                try { notify({ variant: 'warning', title: 'Trade deleted' }); } catch {}
+                try { notify({ variant: 'warning', title: 'Trade deleted' }); } catch { }
                 setTradeToDelete(null);
               }
             }}
