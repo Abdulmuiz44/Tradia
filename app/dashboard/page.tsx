@@ -318,15 +318,17 @@ function DashboardContent() {
   };
 
   const handleMigrationSuccess = () => {
-    setMigrationDismissed(false);
+    setShowMigrationPrompt(false);
+    setMigrationDismissed(true);
+    refreshTrades();
   };
 
   useEffect(() => {
-    if (needsMigration) {
-      if (!migrationDismissed) {
-        setShowMigrationPrompt(true);
-      }
-    } else {
+    if (needsMigration && !migrationDismissed) {
+      setShowMigrationPrompt(true);
+    }
+  }, [needsMigration, migrationDismissed]);
+
 
       // compute filteredTrades based on `filter` and `customRange`
       const filteredTrades = useMemo(() => {
@@ -913,10 +915,10 @@ function DashboardContent() {
             </div>
           </div>
         </main>
-      );
-    }
+  );
+}
 
-    export default function DashboardPage() {
+export default function DashboardPage() {
       return (
         <ClientOnly>
           <NotificationProvider>
