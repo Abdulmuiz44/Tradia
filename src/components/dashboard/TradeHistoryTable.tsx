@@ -955,7 +955,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSave={(t) => {
-          addTrade(t);
+          addTrade(t as Trade);
           setIsAddOpen(false);
           try { notify({ variant: 'success', title: 'Trade added' }); } catch { }
         }}
