@@ -343,84 +343,30 @@ export const ChatArea = ({
                       <Plus className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 border border-indigo-500/40 bg-[#050b18] p-3 text-sm font-semibold text-white shadow-[0_24px_48px_rgba(5,11,24,0.65)]">
-                    <div className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                      Conversation
-                    </div>
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
-                      onSelect={handleShareConversation}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Share conversation
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
-                      onSelect={handleRenameConversation}
-                    >
-                      <NotebookPen className="h-4 w-4" />
-                      Rename conversation
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/60 focus:bg-transparent focus:text-white/70"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      Plan • {planLabel}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
-                      onSelect={handleUpgradePlan}
-                    >
-                      <Crown className="h-4 w-4" />
-                      Upgrade plan
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
-                      onSelect={handleUpgradeAdminPlan}
-                    >
-                      <ShieldCheck className={`h-4 w-4 ${isAdmin ? "text-emerald-300" : "text-white/70"}`} />
-                      Admin: set Elite
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-3 bg-indigo-500/30" />
-                    <div className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-                      Assistant mode
+                  <DropdownMenuContent className="w-48 border border-indigo-500/40 bg-[#050b18] p-2 text-sm font-semibold text-white shadow-[0_24px_48px_rgba(5,11,24,0.65)]">
+                    <div className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                      Assistant Mode
                     </div>
                     <DropdownMenuItem
                       className={`flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white ${assistantMode === "coach" ? "bg-indigo-500/20 text-white" : ""}`}
                       onSelect={() => onAssistantModeChange?.("coach")}
                     >
                       <Sparkles className="h-4 w-4" />
-                      Coach mode
+                      Coach
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className={`flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white ${assistantMode === "mentor" ? "bg-indigo-500/20 text-white" : ""}`}
                       onSelect={() => onAssistantModeChange?.("mentor")}
                     >
                       <GraduationCap className="h-4 w-4" />
-                      Mentor mode
+                      Mentor
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className={`flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white ${assistantMode === "assistant" ? "bg-indigo-500/20 text-white" : ""}`}
                       onSelect={() => onAssistantModeChange?.("assistant")}
                     >
                       <Bot className="h-4 w-4" />
-                      Assistant mode
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-3 bg-indigo-500/30" />
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
-                      onSelect={handleAttachTrades}
-                    >
-                      <Upload className="h-4 w-4" />
-                      Attach selected trades
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="flex items-center gap-2 rounded-lg text-sm font-semibold text-white/90 focus:bg-indigo-500/20 focus:text-white"
-                      onSelect={() => onTradeSelect?.([])}
-                    >
-                      <X className="h-4 w-4" />
-                      Clear attached trades
+                      Assistant
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

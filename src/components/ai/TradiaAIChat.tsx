@@ -45,7 +45,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [model, setModel] = useState('mistral-medium-latest');
   const [selectedTradeIds, setSelectedTradeIds] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [tradeSummary, setTradeSummary] = useState<any>(null);
@@ -361,7 +360,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         })),
         attachedTradeIds: tradeIdsForRequest,
         options: {
-          model,
           max_tokens: 1024,
         },
         mode: assistantMode,
@@ -618,7 +616,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     assistantMode,
     messages,
     activeConversationId,
-    model,
+
     onActiveConversationChange,
     loadConversations,
   ]);
@@ -797,8 +795,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
       onExportConversation={handleExportConversation}
       conversationTitle={activeConversation?.title || "New Conversation"}
       messages={messages}
-      model={model}
-      onModelChange={setModel}
       onSendMessage={handleSendMessage}
       onAttachTrades={handleAttachTrades}
       assistantMode={assistantMode}
