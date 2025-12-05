@@ -44,6 +44,7 @@
     "@supabase/supabase-js": "^2.56.0",
     "@ai-sdk/openai": "^2.0.59",
     "@ai-sdk/xai": "^2.0.30",
+    "@ai-sdk/mistral": "^1.0.0",
     "@tanstack/react-table": "^8.21.3",
     "@types/plotly.js": "^3.0.3",
     "@types/react-plotly.js": "^2.6.3",
