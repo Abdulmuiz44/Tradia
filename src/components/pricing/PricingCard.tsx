@@ -64,7 +64,6 @@ export const PricingCard: React.FC<PricingCardProps> = ({
     {
       category: 'Trading Features',
       items: [
-        `${limits.mt5Accounts === -1 ? 'Unlimited' : limits.mt5Accounts} MT5 account${limits.mt5Accounts !== 1 ? 's' : ''}`,
         `${limits.maxTrades === -1 ? 'Unlimited' : limits.maxTrades} trade${limits.maxTrades !== 1 ? 's' : ''} storage`,
         `${limits.tradeStorageDays === -1 ? 'Unlimited' : limits.tradeStorageDays} days trade history`,
         limits.advancedAnalytics ? 'Advanced analytics & insights' : null,
