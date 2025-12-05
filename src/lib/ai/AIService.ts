@@ -413,42 +413,93 @@ export class AIService {
   }
 
   private async callMistralAI(systemPrompt: string, userPrompt: string): Promise<string | null> {
-    try {
-      const apiKey = process.env.MISTRAL_API_KEY;
-      if (!apiKey) {
-        console.warn('Mistral API key not found');
-        return null;
-      }
-
-      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'mistral-medium-latest',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          max_tokens: 1500,
-          temperature: 0.7,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Mistral API error:', errorText);
-        return null;
-      }
-
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content || null;
-    } catch (error) {
-      console.error('Error calling Mistral AI:', error);
+    const apiKey = process.env.MISTRAL_API_KEY;
+    if (!apiKey) {
+      console.warn('Mistral API key not found');
       return null;
     }
+
+    // Try models in order of preference, falling back to smaller models if rate limited
+    const models = [
+      'mistral-large-latest',
+      'mistral-medium-latest',
+      'mistral-small-latest',
+      'mistral-tiny',
+    ];
+
+    for (const model of models) {
+      try {
+        console.log(`Attempting to call Mistral AI with model: ${model}`);
+        
+        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            max_tokens: 1500,
+            temperature: 0.7,
+          }),
+        });
+
+        // Handle rate limiting with exponential backoff
+        if (response.status === 429) {
+          const errorData = await response.json().catch(() => ({}));
+          console.warn(`Rate limited on model ${model}:`, errorData.message || 'Unknown error');
+          
+          // Try next fallback model
+          if (model !== models[models.length - 1]) {
+            console.log(`Fallback: trying next model...`);
+            continue;
+          }
+          
+          // If all models failed, wait a bit and retry
+          console.warn('All models rate limited, waiting before fallback to local response');
+          return null;
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          console.error(`Mistral API error (${response.status}):`, errorData.message || errorData);
+          
+          // Try next model for server errors
+          if (response.status >= 500 && model !== models[models.length - 1]) {
+            console.log(`Server error, trying next model...`);
+            continue;
+          }
+          
+          return null;
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        
+        if (content) {
+          console.log(`Successfully generated response with ${model}`);
+          return content;
+        }
+        
+        console.warn(`Empty response from ${model}`);
+        return null;
+      } catch (error) {
+        console.error(`Error calling Mistral AI with model ${model}:`, error);
+        
+        // Continue to next model on network/parsing errors
+        if (model !== models[models.length - 1]) {
+          console.log(`Error with ${model}, trying next model...`);
+          continue;
+        }
+      }
+    }
+
+    console.warn('All Mistral models failed, will use local response generation');
+    return null;
   }
 
   // --- Hugging Face integration (free models) ---

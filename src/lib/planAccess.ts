@@ -6,7 +6,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type PlanType = 'pro' | 'plus' | 'elite' | 'free' | 'starter';
 
 export interface PlanLimits {
-  mt5Accounts: number;
   aiChatsPerDay: number;
   tradeStorageDays: number;
   maxTrades: number; // -1 for unlimited
@@ -37,7 +36,6 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   starter: {
-    mt5Accounts: 0,
     aiChatsPerDay: 10,
     tradeStorageDays: 45,
     maxTrades: 100,
@@ -62,7 +60,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvBroker: false,
   },
   free: {
-    mt5Accounts: 0,
     aiChatsPerDay: 5,
     tradeStorageDays: 30,
     maxTrades: 50,
@@ -88,7 +85,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   },
 
   pro: {
-    mt5Accounts: 1,
     aiChatsPerDay: 50,
     tradeStorageDays: 182,
     maxTrades: 500,
@@ -113,7 +109,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvBroker: true,
   },
   plus: {
-    mt5Accounts: 3,
     aiChatsPerDay: 200,
     tradeStorageDays: 365,
     maxTrades: 2000,
@@ -138,7 +133,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvBroker: true,
   },
   elite: {
-    mt5Accounts: -1, // unlimited
     aiChatsPerDay: -1, // unlimited
     tradeStorageDays: -1, // unlimited
     maxTrades: -1, // unlimited
@@ -188,17 +182,6 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
     isActive: true,
     features: []
   };
-}
-
-// Accepts either a UserPlan object or a PlanType string for convenience
-export function canAccessMT5(plan: UserPlan | PlanType): boolean {
-  const type = typeof plan === 'string' ? plan : plan.type;
-  return PLAN_LIMITS[type].mt5Accounts > 0 || PLAN_LIMITS[type].mt5Accounts === -1;
-}
-
-export function getMT5AccountLimit(plan: UserPlan | PlanType): number {
-  const type = typeof plan === 'string' ? plan : plan.type;
-  return PLAN_LIMITS[type].mt5Accounts;
 }
 
 export function canAccessFeature(plan: UserPlan | PlanType, feature: keyof PlanLimits): boolean {

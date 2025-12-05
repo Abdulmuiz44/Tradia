@@ -132,6 +132,8 @@ export async function POST(req: NextRequest) {
     try {
       // Precompute ML analysis (not returned directly but improves responses)
       await aiService.createMLAnalysis(userTrades || []);
+      
+      console.log("Generating personalized AI response...");
       aiResponse = await aiService.generatePersonalizedResponse(
         message || "",
         userTrades || [],
@@ -142,6 +144,7 @@ export async function POST(req: NextRequest) {
           mode: requestedMode
         }
       );
+      console.log("AI response generated successfully, length:", aiResponse?.length || 0);
     } catch (aiErr) {
       console.error("AI generation error:", aiErr);
       // Fall back to a simple deterministic message so the client does not show a hard error
@@ -152,7 +155,7 @@ export async function POST(req: NextRequest) {
     // Ensure we always have a response
     if (!aiResponse || aiResponse.trim().length === 0) {
       const total = Array.isArray(userTrades) ? userTrades.length : 0;
-      aiResponse = `🤖 **Tradia AI Assistant**\n\nI need trading data to provide personalized insights. You currently have ${total} trades in your account.\n\n**To get started, you can:**\n• **Connect your MT5 account**: Go to Settings → MT5 Connection to sync your live trading data\n• **Upload trade history**: Click the upload button (📤) to import CSV/XLSX files\n• **Add trades manually**: Use the upload button to enter trades one by one\n\nOnce you have trades loaded, I can analyze your performance, risk management, and provide personalized recommendations!\n\nWhat would you like to do first?`;
+      aiResponse = `🤖 **Tradia AI Assistant**\n\nI need trading data to provide personalized insights. You currently have ${total} trades in your account.\n\n**To get started, you can:**\n• **Upload trade history**: Click the upload button (📤) to import CSV/XLSX files from your broker\n• **Add trades manually**: Enter trades one by one using the upload form\n\nOnce you have trades loaded, I can analyze your performance, risk management, and provide personalized recommendations!\n\nWhat would you like to do first?`;
     }
 
     return NextResponse.json({

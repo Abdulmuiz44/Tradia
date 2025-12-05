@@ -1,8 +1,17 @@
-export type ConnectionStatus = 'unknown' | 'connected' | 'degraded' | 'error';
+/**
+ * DEPRECATED: MT5 integration has been removed from Tradia
+ * This file is kept for backwards compatibility only
+ * All MT5 type definitions have been removed from the codebase
+ */
 
+export type ConnectionStatus = never;
+
+/**
+ * @deprecated MT5 integration removed
+ */
 export interface MT5Credentials {
-  server: string;
-  login: string;
+  server?: string;
+  login?: string;
   investorPassword?: string;
   password?: string;
   name?: string;

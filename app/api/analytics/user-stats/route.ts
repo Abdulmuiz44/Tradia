@@ -139,7 +139,7 @@ export async function GET() {
 
       // manual added vs imported
       const r2 = await client.query(
-        "SELECT\n          SUM(CASE WHEN source = 'manual' THEN 1 ELSE 0 END)::int AS manual_count,\n          SUM(CASE WHEN source IN ('import','mt5','mt5-import') OR deal_id IS NOT NULL THEN 1 ELSE 0 END)::int AS import_count\n         FROM trades"
+        "SELECT\n          SUM(CASE WHEN source = 'manual' THEN 1 ELSE 0 END)::int AS manual_count,\n          SUM(CASE WHEN source = 'import' OR deal_id IS NOT NULL THEN 1 ELSE 0 END)::int AS import_count\n         FROM trades"
       );
       totalAdded = r2.rows?.[0]?.manual_count ?? 0;
       totalImported = r2.rows?.[0]?.import_count ?? 0;
@@ -228,7 +228,7 @@ export async function GET() {
             let a = 0, im = 0;
             for (const r of data as any[]) {
               const src = (r?.source || '').toString().toLowerCase();
-              if (r?.deal_id || src === 'import' || src === 'mt5' || src === 'mt5-import') im++;
+              if (r?.deal_id || src === 'import') im++;
               else a++;
             }
             totalAdded = a; totalImported = im;
@@ -291,11 +291,7 @@ export async function GET() {
       totalTradePlans = 0;
     }
 
-    // Get MT5 connection statistics
-    const { count: totalMT5Connections, error: mt5Error } = await supabase
-      .from('mt5_credentials')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
+    // MT5 integration removed - connection statistics no longer available
 
     // Get AI chat usage statistics
     let totalAIChats = 0;
@@ -354,7 +350,6 @@ export async function GET() {
       totalTradePlans: totalTradePlans || 0,
 
       // Platform engagement
-      totalMT5Connections: totalMT5Connections || 0,
       totalAIChats: totalAIChats || 0,
 
       // User demographics
