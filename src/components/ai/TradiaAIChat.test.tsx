@@ -13,13 +13,13 @@ import { TradeContext } from '@/context/TradeContext';
 
 // Mock the UserContext and TradeContext for testing
 const MockUserProvider = ({ children, user }: any) => (
-  <UserContext.Provider value={{ user, setUser: jest.fn(), plan: user?.plan || 'free', setPlan: jest.fn(), loading: false, refreshUser: jest.fn() }}>
+  <UserContext.Provider value={{ user, plan: user?.plan || 'free', loading: false, setPlan: jest.fn(), refreshUser: jest.fn() }}>
     {children}
   </UserContext.Provider>
 );
 
 const MockTradeProvider = ({ children, trades = [], addTrade = jest.fn() }: any) => (
-  <TradeContext.Provider value={{ trades, addTrade, removeTrade: jest.fn(), updateTrade: jest.fn(), deleteTrade: jest.fn(), refreshTrades: jest.fn(), clearTrades: jest.fn(), migrationLoading: false, needsMigration: false, migrateLocalTrades: jest.fn(), legacyLocalTrades: [], importTrades: jest.fn(), importLoading: false }}>
+  <TradeContext.Provider value={{ trades, addTrade, updateTrade: jest.fn(), deleteTrade: jest.fn(), refreshTrades: jest.fn(), clearTrades: jest.fn(), migrationLoading: false, needsMigration: false, migrateLocalTrades: jest.fn(), legacyLocalTrades: [], importTrades: jest.fn(), importLoading: false, bulkToggleReviewed: jest.fn() }}>
     {children}
   </TradeContext.Provider>
 );
@@ -87,14 +87,14 @@ describe('TradiaAIChat Access Control', () => {
     renderTradiaAIChat(user);
 
     // Check for the input placeholder which indicates the mode
-    expect(screen.getByPlaceholderText(/Coach: Ask Tradia AI/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Coach: Ask Tradia AI/i)).toBeDefined();
   });
 
   test('renders correctly for a Pro user', () => {
     const user = { email: 'pro@example.com', plan: 'pro' };
     renderTradiaAIChat(user);
 
-    expect(screen.getByPlaceholderText(/Coach: Ask Tradia AI/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Coach: Ask Tradia AI/i)).toBeDefined();
   });
 
   test('allows adding a new trade via modal (mocked interaction)', async () => {
@@ -102,7 +102,7 @@ describe('TradiaAIChat Access Control', () => {
     // We'll just verify the component renders without crashing
     const user = { email: 'pro@example.com', plan: 'pro' };
     renderTradiaAIChat(user);
-    expect(screen.getByText(/Tradia AI Mentor/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tradia AI Mentor/i)).toBeDefined();
   });
 
   test('sends message to AI backend', async () => {
@@ -124,22 +124,22 @@ describe('TradiaAIChat Access Control', () => {
       } as any)
     );
 
-    const textarea = screen.getByPlaceholderText(/Coach: Ask Tradia AI/i);
+    const textarea = screen.getByPlaceholderText(/Coach: Ask Tradia AI/i) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Hello AI' } });
 
     // Find send button (arrow up icon)
     const sendButton = screen.getByRole('button', { name: /Send message/i });
     fireEvent.click(sendButton);
 
-    expect(textarea).toHaveValue('');
+    expect(textarea.value).toBe('');
 
     // Wait for the message to appear in the chat
     await waitFor(() => {
-      expect(screen.getByText(/Hello AI/i)).toBeInTheDocument();
+      expect(screen.getByText(/Hello AI/i)).toBeDefined();
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Mock AI response/i)).toBeInTheDocument();
+      expect(screen.getByText(/Mock AI response/i)).toBeDefined();
     });
   });
 });

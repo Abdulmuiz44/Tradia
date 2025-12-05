@@ -120,7 +120,6 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: 'New Conversation',
-          model,
           mode: assistantMode,
         }),
         credentials: 'include',
@@ -145,7 +144,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
     } catch (error) {
       console.error('Failed to create conversation:', error);
     }
-  }, [model, assistantMode, onActiveConversationChange, user]);
+  }, [assistantMode, onActiveConversationChange, user]);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
     if (!user) {
@@ -167,8 +166,7 @@ const TradiaAIChat = React.forwardRef<TradiaAIChatHandle, TradiaAIChatProps>((pr
           mode: msg.mode as AssistantMode | undefined,
           attachedTrades: [], // Will be populated if needed
         })));
-        const storedModel = data.conversation.model || 'mistral-medium-latest';
-        setModel(storedModel);
+
         if (data.conversation.mode) {
           setAssistantMode(data.conversation.mode as AssistantMode);
         }
