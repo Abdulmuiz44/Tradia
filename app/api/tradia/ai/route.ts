@@ -27,6 +27,12 @@ const MODE_PROMPTS: Record<string, string> = {
 // Client initialized lazily in resolveModel
 
 const DEFAULT_MODEL = "mistral-medium-latest";
+const FALLBACK_MODELS = [
+  "mistral-large-latest",
+  "mistral-medium-latest", 
+  "mistral-small-latest",
+  "mistral-tiny",
+];
 
 interface SystemMessageInput {
   accountSummary: Record<string, any>;
@@ -192,29 +198,65 @@ export async function POST(req: NextRequest) {
         content: msg.content,
       }));
 
-    const result = await streamText({
-      model: resolveModel(modelId),
-      system: systemMessage,
-      messages: trimmedMessages,
-      temperature: options.temperature ?? 0.25,
-      maxOutputTokens: options.max_tokens ?? 1024,
-      onFinish: async ({ text }) => {
-        try {
-          await persistAssistantMessage({
-            supabase,
-            conversationId: currentConversationId!,
-            userId,
-            content: text,
-            mode,
-          });
-        } catch (error) {
-          console.error("Failed to persist assistant message:", error);
+    // Try streaming with fallback models on rate limit errors
+    let result;
+    let lastError: Error | null = null;
+    
+    for (const modelToTry of FALLBACK_MODELS) {
+      try {
+        console.log(`Attempting to stream with model: ${modelToTry}`);
+        
+        const modelClient = createOpenAI({
+          baseURL: 'https://api.mistral.ai/v1',
+          apiKey: process.env.MISTRAL_API_KEY!,
+        });
+
+        result = await streamText({
+          model: modelClient(modelToTry),
+          system: systemMessage,
+          messages: trimmedMessages,
+          temperature: options.temperature ?? 0.25,
+          maxOutputTokens: options.max_tokens ?? 1024,
+          onFinish: async ({ text }) => {
+            try {
+              await persistAssistantMessage({
+                supabase,
+                conversationId: currentConversationId!,
+                userId,
+                content: text,
+                mode,
+              });
+            } catch (error) {
+              console.error("Failed to persist assistant message:", error);
+            }
+          },
+          onError(error) {
+            console.error(`AI stream error on model ${modelToTry}:`, error);
+          },
+        });
+        
+        console.log(`Successfully streaming with model: ${modelToTry}`);
+        break; // Success, exit the retry loop
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(`Model ${modelToTry} failed:`, lastError.message);
+        
+        // Check if it's a rate limit error - if so, try next model
+        if (lastError.message.includes('429') || lastError.message.includes('rate limit') || lastError.message.includes('capacity')) {
+          if (modelToTry !== FALLBACK_MODELS[FALLBACK_MODELS.length - 1]) {
+            console.log(`Rate limited on ${modelToTry}, trying next model...`);
+            continue;
+          }
         }
-      },
-      onError(error) {
-        console.error("AI stream error:", error);
-      },
-    });
+        
+        // For non-rate-limit errors or last model, throw
+        throw lastError;
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error('Failed to stream text - all models exhausted');
+    }
 
     return result.toTextStreamResponse({
       headers: {
@@ -265,7 +307,9 @@ function resolveModel(modelId: string) {
     apiKey: process.env.MISTRAL_API_KEY,
   });
 
-  return mistralClient(DEFAULT_MODEL);
+  // Use the first available model from the fallback list
+  // The AI SDK will handle retries and fallbacks automatically when streaming
+  return mistralClient(FALLBACK_MODELS[0]);
 }
 
 async function persistAssistantMessage({
