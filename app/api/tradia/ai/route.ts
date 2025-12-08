@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { mistral } from "@ai-sdk/mistral";
 import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { mergeTradeSecret } from "@/lib/secure-store";
@@ -26,12 +26,12 @@ const MODE_PROMPTS: Record<string, string> = {
 
 // Client initialized lazily in resolveModel
 
-const DEFAULT_MODEL = "mistral-medium-latest";
+const DEFAULT_MODEL = "pixtral-12b-2409";
 const FALLBACK_MODELS = [
+  "pixtral-12b-2409",
   "mistral-large-latest",
   "mistral-medium-latest", 
   "mistral-small-latest",
-  "mistral-tiny",
 ];
 
 interface SystemMessageInput {
@@ -205,18 +205,13 @@ export async function POST(req: NextRequest) {
     for (const modelToTry of FALLBACK_MODELS) {
       try {
         console.log(`Attempting to stream with model: ${modelToTry}`);
-        
-        const modelClient = createOpenAI({
-          baseURL: 'https://api.mistral.ai/v1',
-          apiKey: process.env.MISTRAL_API_KEY!,
-        });
 
         result = await streamText({
-          model: modelClient(modelToTry),
+          model: mistral(modelToTry) as any,
           system: systemMessage,
           messages: trimmedMessages,
           temperature: options.temperature ?? 0.25,
-          maxOutputTokens: options.max_tokens ?? 1024,
+          maxTokens: options.max_tokens ?? 1024,
           onFinish: async ({ text }) => {
             try {
               await persistAssistantMessage({
@@ -229,9 +224,6 @@ export async function POST(req: NextRequest) {
             } catch (error) {
               console.error("Failed to persist assistant message:", error);
             }
-          },
-          onError(error) {
-            console.error(`AI stream error on model ${modelToTry}:`, error);
           },
         });
         
@@ -301,15 +293,9 @@ function resolveModel(modelId: string) {
     throw new Error("MISTRAL_API_KEY is not configured");
   }
 
-  // Lazy initialization to ensure env vars are loaded
-  const mistralClient = createOpenAI({
-    baseURL: 'https://api.mistral.ai/v1',
-    apiKey: process.env.MISTRAL_API_KEY,
-  });
-
-  // Use the first available model from the fallback list
-  // The AI SDK will handle retries and fallbacks automatically when streaming
-  return mistralClient(FALLBACK_MODELS[0]);
+  // Return mistral model directly
+  // The AI SDK will handle authentication and API calls
+  return mistral(modelId);
 }
 
 async function persistAssistantMessage({

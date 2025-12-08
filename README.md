@@ -33,9 +33,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# OpenAI / XAI Configuration
-OPENAI_API_KEY=your_openai_api_key
-XAI_API_KEY=your_xai_api_key
+# Mistral AI Configuration
 MISTRAL_API_KEY=your_mistral_api_key
 
 # App Configuration
@@ -107,7 +105,7 @@ Payments are processed through Flutterwave; upgrade flows are embedded directly 
 ## 🛠 Troubleshooting Tips
 - Dev server port conflicts: ensure no other Next.js instance is bound to `127.0.0.1:3000`.
 - Supabase policy errors: verify RLS policies align with `auth.uid()` usage shown in the SQL scripts.
-- AI provider limits: set fallback providers in the env file if you toggle between OpenAI and XAI.
+- Mistral API issues: ensure your `MISTRAL_API_KEY` is valid and has sufficient quota.
 - For Windows developers, use the provided PowerShell scripts for deployment (`deploy-vercel.ps1`).
 
 ## 🤝 Contributing

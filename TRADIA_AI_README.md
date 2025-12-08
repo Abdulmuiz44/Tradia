@@ -21,17 +21,16 @@ Tradia AI Chat is a production-ready, ChatGPT-style conversational interface tha
 Create a `.env.local` file in the project root:
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
 MISTRAL_API_KEY=your_mistral_api_key_here
 ```
 
-Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys).
+Get your API key from [Mistral Platform](https://console.mistral.ai/api-keys).
 
 ### Dependencies
 
 The following packages are already included:
+- `@ai-sdk/mistral` for Mistral AI integration
 - `@radix-ui/react-checkbox`
-- `openai` (server-side only)
 - `lucide-react` for icons
 
 ### Running the Application

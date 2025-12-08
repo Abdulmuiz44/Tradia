@@ -1,14 +1,29 @@
 'use client';
 
 import { useChat } from 'ai/react';
-import { useRef, useEffect } from 'react';
-import { Send, User, Bot, StopCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { useRef, useEffect, forwardRef } from 'react';
+import { Send, User, Bot, StopCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 
-export function ChatInterface() {
-    const { messages, input, handleInputChange, handleSubmit, isLoading, stop, reload, error } = useChat({
-        api: '/api/tradia/ai',
+export interface TradiaAIChatProps {
+    className?: string;
+    activeConversationId?: string | null;
+    onActiveConversationChange?: (id: string | null) => void;
+    onConversationsChange?: (conversations: any[]) => void;
+    onLoadingChange?: (loading: boolean) => void;
+}
+
+export interface TradiaAIChatHandle {
+    focus: () => void;
+    createConversation?: () => Promise<void>;
+    selectConversation?: (conversationId: string) => Promise<void>;
+}
+
+const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
+    ({ className, activeConversationId, onActiveConversationChange, onConversationsChange, onLoadingChange }, ref) => {
+    const { messages, input, handleInputChange, handleSubmit, isLoading, stop, error } = useChat({
+        api: '/api/chat',
         initialMessages: [
             {
                 id: 'welcome',
@@ -19,6 +34,7 @@ export function ChatInterface() {
     });
 
     const scrollRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -26,8 +42,14 @@ export function ChatInterface() {
         }
     }, [messages]);
 
+    useEffect(() => {
+        if (onLoadingChange) {
+            onLoadingChange(isLoading);
+        }
+    }, [isLoading, onLoadingChange]);
+
     return (
-        <div className="flex flex-col h-[calc(100vh-80px)] w-full max-w-4xl mx-auto bg-[#0b1221] border border-gray-800 rounded-lg overflow-hidden shadow-2xl">
+        <div className={cn("flex flex-col h-[calc(100vh-80px)] w-full max-w-4xl mx-auto bg-[#0b1221] border border-gray-800 rounded-lg overflow-hidden shadow-2xl", className)}>
             {/* Header */}
             <div className="bg-[#0f172a] p-4 border-b border-gray-800 flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -84,7 +106,7 @@ export function ChatInterface() {
                 {error && (
                     <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mx-auto max-w-md text-center">
                         An error occurred. Please try again or check your connection.
-                        <button onClick={() => reload()} className="block mx-auto mt-2 text-xs underline hover:text-red-300">Retry</button>
+                        <button onClick={() => window.location.reload()} className="block mx-auto mt-2 text-xs underline hover:text-red-300">Retry</button>
                     </div>
                 )}
 
@@ -95,6 +117,7 @@ export function ChatInterface() {
             <div className="p-4 bg-[#0f172a] border-t border-gray-800">
                 <form onSubmit={handleSubmit} className="relative flex items-end gap-2">
                     <textarea
+                        ref={inputRef}
                         className="flex-1 min-h-[50px] max-h-[200px] w-full bg-[#1e293b] text-white border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none custom-scrollbar placeholder:text-gray-500"
                         value={input}
                         onChange={handleInputChange}
@@ -136,4 +159,9 @@ export function ChatInterface() {
             </div>
         </div>
     );
-}
+    }
+);
+
+TradiaAIChat.displayName = 'TradiaAIChat';
+
+export default TradiaAIChat;

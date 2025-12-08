@@ -11,6 +11,8 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import ActivityTracker from "@/components/analytics/ActivityTracker";
 import TrialBanner from "@/components/TrialBanner";
 
+/* eslint-disable @next/next/no-page-custom-font */
+
 
 // SEO Metadata
 export const metadata: Metadata = {

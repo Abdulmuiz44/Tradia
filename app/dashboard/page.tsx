@@ -26,7 +26,6 @@ import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
 import PricingPlans from "@/components/payment/PricingPlans";
 import UserAnalyticsDashboard from "@/components/analytics/UserAnalyticsDashboard";
 
-import TradiaAIChat from "@/components/ai/TradiaAIChat";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -63,9 +62,9 @@ type DashboardTabDef = {
 // Base tabs available to all users
 const BASE_TAB_DEFS: DashboardTabDef[] = [
   { value: "overview", label: "Overview", icon: "BarChart3" },
-  { value: "history", label: "Trade History", icon: "History" },
-  { value: "journal", label: "Trade Journal", icon: "BookOpen" },
-  { value: "analytics", label: "Trade Analytics", icon: "TrendingUp" },
+  { value: "history", label: "Trade History", icon: "History", href: "/dashboard/trade-history" },
+  { value: "journal", label: "Trade Journal", icon: "BookOpen", href: "/dashboard/trade-journal" },
+  { value: "analytics", label: "Trade Analytics", icon: "TrendingUp", href: "/dashboard/trade-analytics" },
 
   {
     value: "chat",
@@ -81,15 +80,15 @@ const BASE_TAB_DEFS: DashboardTabDef[] = [
   },
   { value: "risk", label: "Risk Management", icon: "Shield", href: "/dashboard/risk-management" },
   { value: "reporting", label: "Reporting", icon: "FileText", href: "/dashboard/reporting" },
-  { value: "planner", label: "Trade Planner", icon: "Target" },
-  { value: "position-sizing", label: "Position Sizing", icon: "Calculator" },
-  { value: "education", label: "Trade Education", icon: "GraduationCap" },
+  { value: "planner", label: "Trade Planner", icon: "Target", href: "/dashboard/trade-planner" },
+  { value: "position-sizing", label: "Position Sizing", icon: "Calculator", href: "/dashboard/position-sizing" },
+  { value: "education", label: "Trade Education", icon: "GraduationCap", href: "/dashboard/trade-education" },
   { value: "upgrade", label: "Upgrade", icon: "Crown" },
 ];
 
 // Admin-only tabs
 const ADMIN_TAB_DEFS: DashboardTabDef[] = [
-  { value: "user-analytics", label: "User Analytics", icon: "Users" },
+  { value: "user-analytics", label: "User Analytics", icon: "Users", href: "/dashboard/user-analytics" },
 ];
 
 

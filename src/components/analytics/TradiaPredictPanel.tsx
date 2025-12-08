@@ -104,7 +104,7 @@ const PLAN_CAPABILITIES: Record<NormalizedPlan, {
     refreshMs: 3 * 60 * 60 * 1000, // 3 hours
     refreshLabel: "Refresh available every 3 hours",
     chartLimit: 80,
-    notes: "Plus unlocks every major pair with OpenAI GPT-4-powered predictions, enhanced macro scoring, and quicker refresh cadence for intraday optimization.",
+    notes: "Plus unlocks every major pair with AI-powered predictions, enhanced macro scoring, and quicker refresh cadence for intraday optimization.",
     hasAccess: true,
   },
   elite: {
@@ -114,7 +114,7 @@ const PLAN_CAPABILITIES: Record<NormalizedPlan, {
     refreshMs: 60 * 60 * 1000, // 1 hour
     refreshLabel: "Refresh available every hour",
     chartLimit: 120,
-    notes: "Elite access delivers near real-time OpenAI GPT-4 predictions, extended history depth, and the highest confidence output we expose, including live macro overlays.",
+    notes: "Elite access delivers near real-time AI predictions, extended history depth, and the highest confidence output we expose, including live macro overlays.",
     hasAccess: true,
   },
 };
@@ -404,7 +404,7 @@ export default function TradiaPredictPanel() {
               </Badge>
             </div>
             <CardDescription>
-              AI-powered market predictions using OpenAI GPT-4 to forecast the next possible direction for major currency pairs.
+              AI-powered market predictions to forecast the next possible direction for major currency pairs.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -476,11 +476,11 @@ export default function TradiaPredictPanel() {
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1 bg-purple-500/10 border-purple-500/30">
               <Zap className="w-3 h-3" />
-              Powered by OpenAI
+              Powered by Mistral
             </Badge>
           </div>
           <CardDescription>
-            AI-powered market predictions using OpenAI GPT-4 to analyze liquidity, momentum, and macro trends. Confidence and refresh cadence adapt to your plan tier.
+              AI-powered market predictions to analyze liquidity, momentum, and macro trends. Confidence and refresh cadence adapt to your plan tier.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

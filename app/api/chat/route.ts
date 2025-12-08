@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const result = streamText({
-        model: mistral('mistral-large-latest'),
+        model: mistral('mistral-large-latest') as any,
         system: `You are Tradia AI, an expert trading coach and mentor. 
     Your goal is to help traders improve their psychology, risk management, and strategy.
     
@@ -21,5 +21,5 @@ export async function POST(req: Request) {
         messages,
     });
 
-    return result.toDataStreamResponse();
+    return (await result).toTextStreamResponse();
 }

@@ -46,12 +46,16 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
   const [isLoadingSidebar, setIsLoadingSidebar] = useState(false);
 
   const handleNewChat = useCallback(async () => {
-    await chatRef.current?.createConversation();
+    if (chatRef.current?.createConversation) {
+      await chatRef.current.createConversation();
+    }
   }, []);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
     setActiveConversationId(conversationId);
-    await chatRef.current?.selectConversation(conversationId);
+    if (chatRef.current?.selectConversation) {
+      await chatRef.current.selectConversation(conversationId);
+    }
   }, []);
 
   const filteredConversations = useMemo(() => {
