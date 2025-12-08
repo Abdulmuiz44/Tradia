@@ -12,8 +12,6 @@ import AddTradeModal from "@/components/modals/AddTradeModal";
 import CsvUpload from "@/components/dashboard/CsvUpload";
 import JournalModal from "@/components/modals/JournalModal";
 import { useUser } from "@/context/UserContext";
-import { useTradingAccount } from "@/context/TradingAccountContext";
-import AccountBadge from "@/components/AccountBadge";
 import Modal from "@/components/ui/Modal";
 
 /* ---------------- helpers ---------------- */
@@ -182,7 +180,6 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
   const trades = overrideTrades ?? contextTrades;
   const { plan } = useUser();
   const { notify } = useNotification();
-  const { selected, accounts, select } = useTradingAccount();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -632,29 +629,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
             <FilePlus size={18} className="text-gray-300" />
           </button>
 
-          {/* Current trading account selector */}
-          <div className="hidden md:flex items-center gap-3 mr-2">
-            <span className="text-xs text-zinc-400">Account:</span>
-            <select
-              className="px-2 py-1 bg-zinc-800 text-white text-sm rounded border border-zinc-700"
-              value={selected?.id || ''}
-              onChange={(e) => select(e.target.value || null)}
-              title="Select trading account"
-            >
-              {accounts.length === 0 && <option value="">None</option>}
-              {accounts.map(a => {
-                const isManual = a.mode === 'manual';
-                const bal = isManual ? (typeof (a as any).initial_balance === 'number' ? (a as any).initial_balance : Number((a as any).initial_balance || 0)) : null;
-                const label = isManual && Number.isFinite(bal)
-                  ? `${a.name} (Manual — $${Number(bal).toFixed(2)})`
-                  : `${a.name}${isManual ? ' (Manual)' : ''}`;
-                return (
-                  <option key={a.id} value={a.id}>{label}</option>
-                );
-              })}
-            </select>
-            <AccountBadge compact />
-          </div>
+          {/* Trading account selector removed */}
 
           <button
             className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"

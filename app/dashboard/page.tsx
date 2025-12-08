@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { TradingAccountProvider } from "@/context/TradingAccountContext";
 import { TradePlanProvider } from "@/context/TradePlanContext";
 import { UserProvider } from "@/context/UserContext";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -886,11 +885,9 @@ export default function DashboardPage() {
       <NotificationProvider>
         <UserProvider>
           <TradeProvider>
-            <TradingAccountProvider>
-              <LayoutClient>
-                <DashboardContent />
-              </LayoutClient>
-            </TradingAccountProvider>
+            <LayoutClient>
+              <DashboardContent />
+            </LayoutClient>
           </TradeProvider>
         </UserProvider>
       </NotificationProvider>

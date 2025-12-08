@@ -72,7 +72,6 @@ import OptimalStrategyMatcher from "@/components/analytics/OptimalStrategyMatche
 import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Trade } from "@/types/trade";
-import AccountBadge from "@/components/AccountBadge";
 import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 
 // Types
@@ -914,7 +913,6 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
           <p className="text-muted-foreground">
             Comprehensive analysis of your trading performance
           </p>
-          <div className="mt-2"><AccountBadge compact /></div>
           {isMobile && (
             <div className="mt-2 text-sm text-blue-400 font-medium">
               Current View: {activeView.charAt(0).toUpperCase() + activeView.slice(1)}

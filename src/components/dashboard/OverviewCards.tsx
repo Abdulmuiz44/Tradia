@@ -5,7 +5,6 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTrade } from "@/context/TradeContext";
 import type { Trade as TradeType } from "@/types/trade";
-import { useTradingAccount } from "@/context/TradingAccountContext";
 import { generateSampleTrades } from "@/lib/sampleTrades";
 import { differenceInCalendarDays, format } from "date-fns";
 import {
@@ -244,8 +243,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
     Array.isArray(contextTradesFromHook) ? (contextTradesFromHook as TradeType[]) : []
     , [contextTradesFromHook]);
 
-  const { selected: selectedAccount } = useTradingAccount();
-
   const [mounted, setMounted] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
 
@@ -333,19 +330,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
     Array.isArray(propTrades) ? propTrades : contextTrades
     , [propTrades, contextTrades]);
 
-  // Manual account balance wiring: estimate current balance as initial + all-time PnL
-  const accountBalance = useMemo(() => {
-    if (!selectedAccount) return null;
-    const currency = selectedAccount.currency || 'USD';
-    const initial = selectedAccount.mode === 'manual' ? Number(selectedAccount.initial_balance || 0) : null;
-    if (initial === null) return { currency, initial: null, current: null, name: selectedAccount.name };
-    const totalPnlAll = allTrades.reduce((s, t) => {
-      const v = toNumber((t as any).pnl ?? (t as any).profit ?? (t as any).netpl);
-      return s + v;
-    }, 0);
-    const current = initial + totalPnlAll;
-    return { currency, initial, current, name: selectedAccount.name };
-  }, [selectedAccount, allTrades]);
+  // Account balance calculation removed - TradingAccount context removed
+  const accountBalance = null;
 
   const metrics = useMemo(() => {
     const from = fromDate && !Number.isNaN(new Date(fromDate).getTime()) ? new Date(fromDate) : new Date(-8640000000000000);
@@ -1006,29 +992,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
 
       {/* KPI cards (including avg pnl & avg duration inline among them) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {accountBalance && (
-          renderMetricCard({
-            keyId: "accountBalance",
-            icon: <DollarSign size={16} className="text-emerald-400" />,
-            title: `Current Balance (${accountBalance.currency})`,
-            value:
-              accountBalance.current === null
-                ? "N/A"
-                : `$${Number(accountBalance.current).toFixed(2)}`,
-            small:
-              accountBalance.initial === null
-                ? (accountBalance.name || "")
-                : `${accountBalance.name || "Account"} · Start $${Number(accountBalance.initial).toFixed(2)}`,
-            color:
-              accountBalance.current !== null && accountBalance.initial !== null && accountBalance.current >= accountBalance.initial
-                ? "#10b981"
-                : "#ef4444",
-            valueClass:
-              accountBalance.current !== null && accountBalance.initial !== null && accountBalance.current >= accountBalance.initial
-                ? "text-green-400"
-                : "text-red-400",
-          })
-        )}
         {renderMetricCard({
           keyId: "totalTrades",
           icon: <BarChart2 size={16} className="text-sky-400" />,

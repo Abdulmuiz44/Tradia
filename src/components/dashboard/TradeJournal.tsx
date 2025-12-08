@@ -71,9 +71,7 @@ import {
 } from "chart.js";
 import { generateInsights, Insight } from "@/utils/generateInsights";
 import type { Trade as TradeFromTypes } from "@/types/trade";
-import AccountBadge from "@/components/AccountBadge";
 import { cn } from "@/lib/utils";
-import { useTradingAccount } from "@/context/TradingAccountContext";
 
 import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 /* ChartJS registration */
@@ -1240,15 +1238,6 @@ type NormalizedTrade = Trade & {
   const [suggestedTagsMap, setSuggestedTagsMap] = useState<Record<string, string[]>>({});
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  // Initialize local accountBalance (used for risk calc UI) from selected trading account when available
-  const { selected: selectedAccount } = useTradingAccount();
-  useEffect(() => {
-    if (accountBalance === "" && selectedAccount && selectedAccount.mode === 'manual') {
-      const init = Number(selectedAccount.initial_balance || 0);
-      if (Number.isFinite(init) && init > 0) setAccountBalance(init);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount]);
 
   /* ---------------------------
      Main JSX
@@ -1269,7 +1258,6 @@ type NormalizedTrade = Trade & {
             </p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
-            <AccountBadge className="w-full justify-between rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-white sm:w-auto" />
             <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-slate-300 sm:w-auto">
               <span className="uppercase tracking-wide text-slate-500">Projected risk</span>
               <span className="text-sm font-semibold text-white">{currencyFormatter.format(projectedRisk || 0)}</span>
