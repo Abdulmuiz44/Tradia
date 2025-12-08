@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Fix for Node 22 compatibility - disable custom generateBuildId
+  generateBuildId: undefined,
+
   // Security headers
   async headers() {
     return [
