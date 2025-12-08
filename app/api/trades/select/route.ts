@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import { mergeTradeSecret } from "@/lib/secure-store";
 
 export async function POST(req: Request) {
   try {
@@ -31,9 +30,7 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    const decryptedTrades = (trades || []).map((row: any) => mergeTradeSecret(userId!, row));
-
-    return NextResponse.json({ trades: decryptedTrades });
+    return NextResponse.json({ trades: trades || [] });
   } catch (err: unknown) {
     console.error("Failed to select trades:", err);
     const message = err instanceof Error ? err.message : String(err);

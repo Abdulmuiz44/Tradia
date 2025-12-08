@@ -30,21 +30,12 @@ export function TradingAccountProvider({ children }: { children: React.ReactNode
 
   const refresh = async () => {
     try {
-      const [manualRes, credsRes] = await Promise.all([
-        fetch('/api/trading-accounts', { cache: 'no-store' }),
-        fetch('/api/mt5/credentials', { cache: 'no-store' }),
-      ]);
+      const manualRes = await fetch('/api/trading-accounts', { cache: 'no-store' });
       const manuals = (await manualRes.json()).accounts || [];
-      const credsData = (await credsRes.json());
-      const creds = Array.isArray(credsData?.credentials) ? credsData.credentials : [];
-      const mappedCreds: TradingAccount[] = creds.map((c: any) => ({
-        id: String(c.id), name: c.name || `MT5 ${c.login}`, currency: 'USD', initial_balance: 0,
-        current_balance: null, mode: 'broker', broker: 'MT5', credential_id: String(c.id)
-      }));
-      const list: TradingAccount[] = [...manuals.map((m: any) => ({
+      const list: TradingAccount[] = manuals.map((m: any) => ({
         id: String(m.id), name: m.name, currency: m.currency || 'USD', initial_balance: Number(m.initial_balance || 0),
         current_balance: m.current_balance ?? null, mode: 'manual'
-      })), ...mappedCreds];
+      }));
       setAccounts(list);
       // ensure selection
       const persisted = typeof window !== 'undefined' ? localStorage.getItem('selected-trading-account') : null;

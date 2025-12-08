@@ -78,7 +78,6 @@ describe('PricingCard', () => {
     );
 
     expect(screen.getByText('200 AI chats per day')).toBeInTheDocument();
-    expect(screen.getByText('3 MT5 account connections')).toBeInTheDocument();
     expect(screen.getByText('1 year trade storage')).toBeInTheDocument();
     expect(screen.getByText('Priority support')).toBeInTheDocument();
   });

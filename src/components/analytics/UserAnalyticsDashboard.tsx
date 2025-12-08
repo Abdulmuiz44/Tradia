@@ -20,7 +20,6 @@ interface UserStats {
   totalTrades: number;
   totalPNL: number;
   totalTradePlans: number;
-  totalMT5Connections: number;
   totalAIChats: number;
   tradingStyles: Record<string, number>;
   tradingExperience: Record<string, number>;
@@ -49,7 +48,6 @@ export default function UserAnalyticsDashboard() {
     totalTrades: 0,
     totalPNL: 0,
     totalTradePlans: 0,
-    totalMT5Connections: 0,
     totalAIChats: 0,
     tradingStyles: {},
     tradingExperience: {},
@@ -303,15 +301,7 @@ export default function UserAnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">MT5 Connections</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{formatNumber(stats.totalMT5Connections)}</div>
-            <p className="text-xs text-muted-foreground">Active MT5 accounts</p>
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Trade Breakdown */}
@@ -331,7 +321,7 @@ export default function UserAnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(stats.totalTradesImported || 0)}</div>
-            <p className="text-xs text-muted-foreground">CSV / MT5</p>
+            <p className="text-xs text-muted-foreground">CSV imports</p>
           </CardContent>
         </Card>
         <Card>

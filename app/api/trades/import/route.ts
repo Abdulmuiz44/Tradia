@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from '@/lib/authOptions';
 import { createClient } from '@/utils/supabase/server';
-import { makeSecret, splitTradeFields } from '@/lib/secure-store';
 
 const coalesce = <T>(...values: (T | null | undefined)[]): T | undefined => {
   for (const value of values) {
@@ -136,15 +135,10 @@ export async function POST(request: Request) {
       // Map frontend fields to database fields
       const dbFields = mapToSnakeCase(tradeData);
 
-      // Normalize and validate trade data
-      const { safe, sensitive } = splitTradeFields(dbFields);
-      const secret = makeSecret(userId, 'trade', sensitive);
-
       const normalizedTrade = {
         id: tradeId,
         user_id: userId,
-        ...safe,
-        secret,
+        ...dbFields,
         symbol: String(tradeData.symbol || '').toUpperCase(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

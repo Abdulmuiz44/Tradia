@@ -196,8 +196,8 @@ export default function PricingPlans(): React.ReactElement {
         // fallback to checkout if trial could not be started server-side
         return handleUpgrade(selectedPlan);
       }
-      // Route to MT5 connect with upload prompt for fast time-to-value
-      router.push("/dashboard/mt5/connect?prompt=upload-sample");
+      // Route to dashboard after trial activation
+      router.push("/dashboard");
     } catch (e) {
       // fallback to checkout
       handleUpgrade(selectedPlan);

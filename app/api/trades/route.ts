@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import { makeSecret, mergeTradeSecret, splitTradeFields } from "@/lib/secure-store";
 
 const coalesce = <T>(...values: (T | null | undefined)[]): T | undefined => {
   for (const value of values) {
@@ -94,10 +93,8 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
-    const decrypted = (trades || []).map((row: any) => mergeTradeSecret(userId!, row));
-
     // Map database fields to frontend camelCase
-    const mappedTrades = decrypted.map(mapToCamelCase);
+    const mappedTrades = (trades || []).map(mapToCamelCase);
 
     return NextResponse.json({
       trades: mappedTrades,
@@ -265,15 +262,10 @@ export async function POST(req: Request) {
     // Map frontend fields to database fields
     const dbFields = mapToSnakeCase(tradeData);
 
-    // Normalize and validate trade data
-    const { safe, sensitive } = splitTradeFields(dbFields);
-    const secret = makeSecret(userId, "trade", sensitive);
-
     const normalizedTrade = {
       id: tradeId,
       user_id: userId,
-      ...safe,
-      secret,
+      ...dbFields,
       symbol: String(tradeData.symbol || "").toUpperCase(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -288,7 +280,7 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ trade: mergeTradeSecret(userId, data) });
+    return NextResponse.json({ trade: mapToCamelCase(data) });
   } catch (err: unknown) {
     console.error("Failed to create trade:", err);
     const message = err instanceof Error ? err.message : String(err);
@@ -312,14 +304,10 @@ export async function PATCH(req: Request) {
 
     const supabase = createClient();
 
-    const { safe, sensitive } = splitTradeFields(updates);
-    const secret = makeSecret(userId, "trade", sensitive);
-
     const { data, error } = await supabase
       .from("trades")
       .update({
-        ...safe,
-        secret,
+        ...updates,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -330,8 +318,7 @@ export async function PATCH(req: Request) {
     if (error) throw error;
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const decrypted = mergeTradeSecret(userId, data);
-    const mappedTrade = mapToCamelCase(decrypted);
+    const mappedTrade = mapToCamelCase(data);
 
     return NextResponse.json({ trade: mappedTrade });
   } catch (err: unknown) {

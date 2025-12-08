@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import { mergeTradeSecret } from "@/lib/secure-store";
 import { withDerivedTradeTimes, getTradeCloseTime } from "@/lib/trade-field-utils";
 
 export async function GET(req: Request) {
@@ -46,10 +45,10 @@ export async function GET(req: Request) {
     const { data: trades, error } = await query;
     if (error) throw error;
 
-    const decryptedTrades = (trades || []).map((row: any) => withDerivedTradeTimes(mergeTradeSecret(userId!, row)));
+    const processedTrades = (trades || []).map((row: any) => withDerivedTradeTimes(row));
 
     // Calculate metrics
-    const metrics = calculateTradeMetrics(decryptedTrades);
+    const metrics = calculateTradeMetrics(processedTrades);
 
     return NextResponse.json(metrics);
   } catch (err: unknown) {

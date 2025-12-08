@@ -6,7 +6,6 @@ import { streamText } from "ai";
 import { mistral } from "@ai-sdk/mistral";
 import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { mergeTradeSecret } from "@/lib/secure-store";
 import { withDerivedTradeTimes, getTradeCloseTime, getTradeOpenTime } from "@/lib/trade-field-utils";
 
 const MODE_PROMPTS: Record<string, string> = {
@@ -131,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient();
-    const normalizeTrade = (row: any) => withDerivedTradeTimes(mergeTradeSecret(userId, row));
+    const normalizeTrade = (row: any) => withDerivedTradeTimes(row);
 
     let currentConversationId: string | undefined = conversationId;
     const modelId = DEFAULT_MODEL; // Enforce Mistral
@@ -397,9 +396,9 @@ async function getAccountSummary(userId: string) {
 
   if (error) throw error;
 
-  const decryptedTrades = (trades || []).map((row: any) => withDerivedTradeTimes(mergeTradeSecret(userId, row)));
+  const processedTrades = (trades || []).map((row: any) => withDerivedTradeTimes(row));
 
-  if (decryptedTrades.length === 0) {
+  if (processedTrades.length === 0) {
     return {
       totalTrades: 0,
       winRate: 0,
@@ -409,19 +408,19 @@ async function getAccountSummary(userId: string) {
     };
   }
 
-  const totalTrades = decryptedTrades.length;
-  const winningTrades = decryptedTrades.filter(t => t.outcome === 'win');
+  const totalTrades = processedTrades.length;
+  const winningTrades = processedTrades.filter(t => t.outcome === 'win');
   const winRate = (winningTrades.length / totalTrades) * 100;
 
-  const netPnL = decryptedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+  const netPnL = processedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
-  const losingTrades = decryptedTrades.filter(t => t.outcome === 'loss');
+  const losingTrades = processedTrades.filter(t => t.outcome === 'loss');
   const totalProfit = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
   const totalLoss = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
   const avgRR = losingTrades.length > 0 ? totalProfit / totalLoss : 0;
 
   // Calculate max drawdown
-  const sortedTrades = [...decryptedTrades].sort((a, b) => getSortableTime(a) - getSortableTime(b));
+  const sortedTrades = [...processedTrades].sort((a, b) => getSortableTime(a) - getSortableTime(b));
 
   let peak = 0;
   let maxDrawdown = 0;

@@ -135,26 +135,8 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch MT5 account balance (sum of connected accounts)
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const res = await fetch('/api/mt5/accounts');
-        if (!res.ok) return;
-        const data = await res.json();
-        const accounts = Array.isArray(data?.accounts) ? data.accounts : [];
-        const total = accounts.reduce((sum: number, acc: any) => {
-          const info = acc?.account_info || {};
-          const bal = Number(info.balance ?? info.equity ?? 0);
-          return Number.isFinite(bal) ? sum + bal : sum;
-        }, 0);
-        setAccountBalance(Number.isFinite(total) ? total : 0);
-      } catch (e) {
-        // ignore
-      }
-    };
-    fetchAccounts();
-  }, [session?.user?.id]);
+  // Account balance is fetched from trading accounts context
+  // MT5 integration has been removed
 
   // Touch gesture handling for mobile navigation
   const handleTouchStart = (e: React.TouchEvent) => {

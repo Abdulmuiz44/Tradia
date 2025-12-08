@@ -10,7 +10,6 @@ type Broker = {
 };
 
 const BROKERS: Broker[] = [
-  { id: "mt5", name: "MetaTrader 5 (MT5)" },
   { id: "mt4", name: "MetaTrader 4 (MT4)", tag: "Coming soon", disabled: true },
   { id: "ctrader", name: "cTrader", tag: "Coming soon", disabled: true },
   { id: "binance", name: "Binance", tag: "Coming soon", disabled: true },
