@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
 
 /**
  * GET /api/trades/[id]
@@ -11,23 +12,22 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const supabase = createClient();
+
     const { data, error } = await supabase
       .from("trades")
       .select("*")
       .eq("id", params.id)
-      .eq("user_id", session.user.id)
+      .eq("user_id", session?.user?.id || "")
       .single();
 
     if (error) {
@@ -62,18 +62,16 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const supabase = createClient();
     const body = await request.json();
 
     // Fetch existing trade to get metadata
@@ -81,7 +79,7 @@ export async function PATCH(
       .from("trades")
       .select("metadata")
       .eq("id", params.id)
-      .eq("user_id", session.user.id)
+      .eq("user_id", session?.user?.id || "")
       .single();
 
     if (fetchError) {
@@ -98,7 +96,7 @@ export async function PATCH(
       price: body.entryPrice !== undefined ? body.entryPrice : undefined,
       pnl: body.pnl !== undefined ? body.pnl : undefined,
       timestamp: body.openTime ? new Date(body.openTime).toISOString() : undefined,
-      status: body.outcome === "closed" || body.closeTime ? "closed" : undefined,
+      status: body.closeTime ? "closed" : undefined,
       metadata: {
         ...(existingTrade?.metadata || {}),
         direction: body.direction || undefined,
@@ -131,7 +129,7 @@ export async function PATCH(
       .from("trades")
       .update(updateData)
       .eq("id", params.id)
-      .eq("user_id", session.user.id)
+      .eq("user_id", session?.user?.id || "")
       .select()
       .single();
 
@@ -162,23 +160,22 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const supabase = createClient();
+
     const { error } = await supabase
       .from("trades")
       .delete()
       .eq("id", params.id)
-      .eq("user_id", session.user.id);
+      .eq("user_id", session?.user?.id || "");
 
     if (error) {
       console.error("Supabase delete error:", error);
