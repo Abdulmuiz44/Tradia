@@ -18,7 +18,7 @@ export async function GET() {
     // Get user profile from database
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, plan, created_at")
+      .select("id, email, plan, email_verified, created_at")
       .eq("id", session.user.id as string)
       .single();
 
@@ -33,7 +33,7 @@ export async function GET() {
       name: session.user.name || null,
       email: user.email || session.user.email || '',
       plan: user.plan || 'free',
-      emailVerified: session.user.email_verified || false,
+      emailVerified: user.email_verified || false,
       createdAt: user.created_at,
     });
   } catch (error) {
