@@ -8,10 +8,12 @@ import type { Trade } from "@/types/trade";
  */
 export function useTradeData() {
   const tradeContext = useTrade();
-  const trades = tradeContext?.trades || [];
   const loading = (tradeContext as any)?.loading || false;
   const error = (tradeContext as any)?.error || null;
   const refreshTrades = (tradeContext as any)?.refreshTrades || (() => {});
+
+  // Memoize trades to avoid dependency array issues
+  const trades = useMemo(() => tradeContext?.trades || [], [tradeContext?.trades]);
 
   // Calculate key metrics
   const metrics = useMemo(() => {

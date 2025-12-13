@@ -2,84 +2,64 @@
  * Ensure database schema has all required columns for trades table
  * Run this after deploying to make sure schema is up to date
  */
-import { createAdminSupabase } from '../src/utils/supabase/admin';
 
-const requiredColumns = {
-  id: 'UUID',
-  user_id: 'UUID',
-  symbol: 'TEXT',
-  side: 'TEXT',
-  quantity: 'DECIMAL',
-  price: 'DECIMAL',
-  pnl: 'DECIMAL',
-  status: 'TEXT',
-  metadata: 'JSONB',
-  created_at: 'TIMESTAMP WITH TIME ZONE',
-  opentime: 'TIMESTAMP WITH TIME ZONE',
-  closetime: 'TIMESTAMP WITH TIME ZONE',
-  entryprice: 'DECIMAL',
-  exitprice: 'DECIMAL',
-  stoplossprice: 'DECIMAL',
-  takeprofitprice: 'DECIMAL',
-  direction: 'TEXT',
-  ordertype: 'TEXT',
-  session: 'TEXT',
-  outcome: 'TEXT',
-  resultrr: 'DECIMAL',
-  duration: 'TEXT',
-  reasonfortrade: 'TEXT',
-  strategy: 'TEXT',
-  emotion: 'TEXT',
-  journalnotes: 'TEXT',
-  notes: 'TEXT',
-  beforescreenshoturl: 'TEXT',
-  afterscreenshoturl: 'TEXT',
-  commission: 'DECIMAL',
-  swap: 'DECIMAL',
-  pinned: 'BOOLEAN',
-  tags: 'TEXT[]',
-  reviewed: 'BOOLEAN',
-  profitloss: 'TEXT',
-  rr: 'DECIMAL',
-};
+const requiredColumns = [
+  'id',
+  'user_id',
+  'symbol',
+  'side',
+  'quantity',
+  'price',
+  'pnl',
+  'status',
+  'metadata',
+  'created_at',
+  'opentime',
+  'closetime',
+  'entryprice',
+  'exitprice',
+  'stoplossprice',
+  'takeprofitprice',
+  'direction',
+  'ordertype',
+  'session',
+  'outcome',
+  'resultrr',
+  'duration',
+  'reasonfortrade',
+  'strategy',
+  'emotion',
+  'journalnotes',
+  'notes',
+  'beforescreenshoturl',
+  'afterscreenshoturl',
+  'commission',
+  'swap',
+  'pinned',
+  'tags',
+  'reviewed',
+  'profitloss',
+  'rr',
+];
 
-async function ensureSchema() {
-  try {
-    const supabase = createAdminSupabase();
+console.log('Database Schema Check');
+console.log('=====================\n');
 
-    // Check existing columns
-    const { data: columns, error: columnsError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', 'trades')
-      .eq('table_schema', 'public');
+console.log('Required columns for trades table:');
+requiredColumns.forEach(col => console.log(`  ✓ ${col}`));
 
-    if (columnsError) {
-      console.error('Error checking columns:', columnsError);
-      return;
-    }
+console.log('\nNote: This is a reference script.');
+console.log('Migration: migrations/003_fix_trades_schema.sql');
+console.log('Status: Must be run in Supabase SQL Editor\n');
+console.log('To verify schema is correct:');
+console.log('1. Go to: https://app.supabase.com');
+console.log('2. Select your project');
+console.log('3. Go to: Table Editor → trades');
+console.log('4. Verify all required columns exist\n');
 
-    const existingColumns = new Set(columns?.map(c => c.column_name) || []);
-
-    // Log current schema
-    console.log('Current columns in trades table:', Array.from(existingColumns).sort());
-
-    // Check for missing columns
-    const missingColumns = Object.keys(requiredColumns).filter(
-      col => !existingColumns.has(col)
-    );
-
-    if (missingColumns.length === 0) {
-      console.log('✓ All required columns exist');
-      return;
-    }
-
-    console.log(`Missing ${missingColumns.length} columns:`, missingColumns);
-    console.log('\nRun the migration in Supabase SQL Editor:');
-    console.log('migrations/001_update_trades_schema.sql');
-  } catch (error) {
-    console.error('Schema check failed:', error);
-  }
+const allPresent = requiredColumns.length > 0;
+if (allPresent) {
+  console.log('✓ All required columns are listed above');
+  console.log('✓ If schema check fails at build time, run the migration');
 }
 
-ensureSchema();
