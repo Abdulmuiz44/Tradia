@@ -18,7 +18,7 @@ export async function GET() {
     // Get user profile from database
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, name, email, image, role, plan, email_verified, created_at")
+      .select("id, email, plan, created_at")
       .eq("id", session.user.id as string)
       .single();
 
@@ -27,14 +27,13 @@ export async function GET() {
       return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
     }
 
+    // Combine database data with NextAuth session data
     return NextResponse.json({
       id: user.id,
-      name: user.name,
-      email: user.email,
-      image: user.image,
-      role: user.role || 'user',
+      name: session.user.name || null,
+      email: user.email || session.user.email || '',
       plan: user.plan || 'free',
-      emailVerified: user.email_verified || false,
+      emailVerified: session.user.email_verified || false,
       createdAt: user.created_at,
     });
   } catch (error) {
