@@ -64,7 +64,7 @@ export function useSpreadsheet(initialData?: Spreadsheet) {
               columnId: newColumn.id,
               rowId: row.id,
               value: null,
-              type,
+              type: type as CellType | undefined,
             } as Cell,
           ],
         }));
@@ -120,8 +120,8 @@ export function useSpreadsheet(initialData?: Spreadsheet) {
           columnId: col.id,
           rowId: newRowId,
           value: null,
-          type: col.type,
-        })),
+          type: col.type as CellType | undefined,
+        } as Cell)),
       };
 
       const updatedRows = [...prev.rows, newRow].sort((a, b) => a.position - b.position);
