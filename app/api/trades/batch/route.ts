@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
 import type { Trade } from "@/types/trade";
 
 /**
@@ -9,17 +10,16 @@ import type { Trade } from "@/types/trade";
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
+
+    const supabase = createClient();
 
     const body = await request.json();
     const trades = body.trades || [];

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
+import { createClient } from "@/utils/supabase/server";
 import type { Trade } from "@/types/trade";
 
 /**
@@ -9,22 +10,22 @@ import type { Trade } from "@/types/trade";
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const supabase = createClient();
+    const userId = session.user.id;
+
     const { data, error } = await supabase
       .from("trades")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userId)
       .order("timestamp", { ascending: false });
 
     if (error) {
@@ -51,18 +52,16 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const supabase = createClient();
     const body = await request.json();
 
     const tradeData = {
@@ -73,7 +72,7 @@ export async function POST(request: NextRequest) {
       price: body.entryPrice || 0,
       pnl: body.pnl || 0,
       timestamp: body.openTime ? new Date(body.openTime).toISOString() : new Date().toISOString(),
-      status: body.outcome === "closed" || body.closeTime ? "closed" : "open",
+      status: body.closeTime ? "closed" : "open",
       metadata: {
         direction: body.direction || "Buy",
         orderType: body.orderType || "Market Execution",
@@ -109,7 +108,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json({ trade: data }, { status: 201 });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
