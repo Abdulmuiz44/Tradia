@@ -14,9 +14,9 @@ import type { Trade } from "@/types/trade";
 function EditTradeContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const params = useParams();
+  const params = useParams() || {};
   const { notify } = useNotification();
-  const tradeId = params.id as string;
+  const tradeId = (params as any)?.id as string;
 
   const [trade, setTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -563,7 +563,7 @@ export default function CsvUpload({
           if (typeof controlledOnClose === "function") controlledOnClose();
         }}
         title="Upload trade CSV / XLSX"
-        description="We will attempt to auto-map file columns to trade fields. Preview then import."
+        description="Import trade history from CSV or Excel files. We'll auto-map columns to trade fields."
       >
         <div className="flex flex-col h-[70vh] min-h-[500px] gap-4">
           {/* Top controls */}

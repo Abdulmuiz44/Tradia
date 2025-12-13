@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       price: t.entryPrice || 0,
       pnl: t.pnl || 0,
       timestamp: t.openTime ? new Date(t.openTime).toISOString() : new Date().toISOString(),
-      status: t.outcome === "closed" || t.closeTime ? "closed" : "open",
+      status: t.closeTime ? "closed" : "open",
       metadata: {
         direction: t.direction || "Buy",
         orderType: t.orderType || "Market Execution",

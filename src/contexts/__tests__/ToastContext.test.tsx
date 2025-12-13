@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import { ToastProvider, useToast } from '../ToastContext';
 import { ToastContainer } from '@/components/common/Toast';
 
@@ -22,7 +23,7 @@ const TestComponent = () => {
         Show Info
       </button>
       <div data-testid="toast-count">{toasts.length}</div>
-      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
+      <ToastContainer toasts={toasts as any} onRemoveToast={removeToast} />
     </div>
   );
 };

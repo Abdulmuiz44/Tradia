@@ -7,7 +7,11 @@ import type { Trade } from "@/types/trade";
  * Can be used across multiple pages like trade-journal, trade-analytics, etc.
  */
 export function useTradeData() {
-  const { trades, loading, error, refreshTrades } = useTrade();
+  const tradeContext = useTrade();
+  const trades = tradeContext?.trades || [];
+  const loading = (tradeContext as any)?.loading || false;
+  const error = (tradeContext as any)?.error || null;
+  const refreshTrades = (tradeContext as any)?.refreshTrades || (() => {});
 
   // Calculate key metrics
   const metrics = useMemo(() => {
