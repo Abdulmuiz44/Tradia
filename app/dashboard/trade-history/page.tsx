@@ -9,15 +9,17 @@ import { UserProvider } from "@/context/UserContext";
 import Spinner from "@/components/ui/spinner";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, RefreshCw } from "lucide-react";
+import { User, Settings, RefreshCw, Plus, Upload } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
+import { useTradeData } from "@/hooks/useTradeData";
 
 function TradeHistoryContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { refreshTrades } = useTrade();
+  const { metrics } = useTradeData();
   const [refreshing, setRefreshing] = useState(false);
   const [userInitial, setUserInitial] = useState("U");
 
@@ -205,6 +207,47 @@ function TradeHistoryContent() {
 
           {/* Content */}
           <div className="flex-1 overflow-auto p-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <p className="text-sm text-gray-400">Total Trades</p>
+                <p className="text-3xl font-bold text-white">{metrics.totalTrades}</p>
+              </div>
+              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <p className="text-sm text-gray-400">Win Rate</p>
+                <p className="text-3xl font-bold text-white">{metrics.winRate}%</p>
+              </div>
+              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <p className="text-sm text-gray-400">Total P&L</p>
+                <p className={`text-3xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ${metrics.totalPnL.toFixed(2)}
+                </p>
+              </div>
+              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                <p className="text-sm text-gray-400">Avg RR</p>
+                <p className="text-3xl font-bold text-white">{metrics.avgRR.toFixed(2)}R</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={() => router.push("/dashboard/trades/add")}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <Plus size={18} />
+                Add Trade
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/trades/import")}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                <Upload size={18} />
+                Import Trades
+              </button>
+            </div>
+
+            {/* Trade History Table */}
             <TradeHistoryTable />
           </div>
         </div>

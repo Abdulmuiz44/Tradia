@@ -8,7 +8,6 @@ import { Trash2, Pencil, Filter, DownloadCloud, FilePlus, Trash, UploadCloud } f
 import { useNotification } from "@/context/NotificationContext";
 import { useTrade } from "@/context/TradeContext";
 import type { Trade } from "@/types/trade";
-import AddTradeModal from "@/components/modals/AddTradeModal";
 import CsvUpload from "@/components/dashboard/CsvUpload";
 import JournalModal from "@/components/modals/JournalModal";
 import { useUser } from "@/context/UserContext";
@@ -183,7 +182,6 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
-  const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [filterOpen, setFilterOpen] = useState<boolean>(false);
   const [exportOpen, setExportOpen] = useState<boolean>(false);
 
@@ -648,12 +646,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
             <Trash size={18} className="text-red-300" />
           </button>
 
-          <button
-            className="px-3 py-1 bg-green-600 rounded hover:bg-green-500 text-sm"
-            onClick={() => setIsAddOpen(true)}
-          >
-            Add Trade
-          </button>
+
         </div>
       </div>
 
@@ -925,16 +918,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         }}
       />
 
-      {/* ADD — pass raw trade data to context; API will normalize */}
-      <AddTradeModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onSave={(t) => {
-          addTrade(t as Trade);
-          setIsAddOpen(false);
-          try { notify({ variant: 'success', title: 'Trade added' }); } catch { }
-        }}
-      />
+
 
       {/* CSV Upload modal (responsive): render a bottom-sheet on small screens, centered on larger screens */}
       {csvOpen && (

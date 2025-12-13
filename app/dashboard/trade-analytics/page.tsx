@@ -13,11 +13,13 @@ import { User, Settings, RefreshCw } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
+import { useTradeData } from "@/hooks/useTradeData";
 
 function TradeAnalyticsContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { trades, refreshTrades } = useTrade();
+  const { metrics, performanceBySymbol } = useTradeData();
   const [refreshing, setRefreshing] = useState(false);
   const [userInitial, setUserInitial] = useState("U");
 

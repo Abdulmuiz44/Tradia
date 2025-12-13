@@ -72,6 +72,7 @@ import {
 import { generateInsights, Insight } from "@/utils/generateInsights";
 import type { Trade as TradeFromTypes } from "@/types/trade";
 import { cn } from "@/lib/utils";
+import { useTradeData } from "@/hooks/useTradeData";
 
 import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 /* ChartJS registration */
@@ -393,6 +394,7 @@ export default function TradeJournal(): React.ReactElement {
   const hasPlan = (min: PlanType = "free") => planRank[effectivePlan] >= planRank[min];
 
   const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
+  const tradeDataHook = useTradeData();
 
   const canUseAdvancedAnalytics = Boolean(planLimits.advancedAnalytics);
   const canUsePatterns = Boolean(planLimits.realTimeAnalytics);
