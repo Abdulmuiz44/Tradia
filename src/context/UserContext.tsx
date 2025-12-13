@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useSession } from "next-auth/react";
-import { supabase } from "@/lib/supabaseClient";
 
 export type PlanType = "free" | "plus" | "pro" | "elite";
 
@@ -51,46 +50,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
 
-      // Use session user ID as the primary ID (this is the Supabase auth user ID)
-      const authUserId = session.user.id;
+      // Get user data from server-side API (NextAuth session is already validated)
+      const response = await fetch('/api/user/profile');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
 
-      // Fetch user data from Supabase using auth user ID
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('id, name, email, plan, country, email_verified, created_at')
-        .eq('id', authUserId)
-        .single();
+      const userData = await response.json();
 
-      if (!error && userData) {
+      if (userData) {
         const userInfo: UserData = {
-          id: authUserId, // Use the auth user ID, not the custom table ID
-          name: userData.name,
-          email: userData.email,
+          id: userData.id || session.user.id || '',
+          name: userData.name || session.user.name || null,
+          email: userData.email || session.user.email || '',
           plan: userData.plan || "free",
           country: userData.country,
-          emailVerified: userData.email_verified || false,
-          createdAt: userData.created_at,
+          emailVerified: userData.emailVerified || userData.email_verified || false,
+          createdAt: userData.createdAt || userData.created_at || '',
         };
 
-        // Admin hard-elevation: ensure admin is always Elite in state and DB
+        // Admin hard-elevation: ensure admin is always Elite in state
         if (userInfo.email === 'abdulmuizproject@gmail.com') {
           setUser({ ...userInfo, plan: 'elite' });
           setPlanState('elite');
-          // Best-effort DB sync (non-blocking)
-          try {
-            if (userInfo.plan !== 'elite') {
-              await supabase.from('users').update({ plan: 'elite', role: 'admin' }).eq('id', userInfo.id);
-            }
-          } catch (e) {
-            console.warn('Admin plan sync skipped:', e);
-          }
         } else {
           setUser(userInfo);
           setPlanState(userInfo.plan);
         }
       } else {
-        console.error('Error fetching user data:', error);
-        // Use session user ID as fallback (this should be the auth user ID)
+        // Fallback to session data if API fails
         setUser({
           id: session.user.id || '',
           name: session.user.name || null,
@@ -102,12 +91,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
-      setUser(null);
-      // Admin override even on exception
+      // Fallback to session data on error
+      setUser({
+        id: session.user.id || '',
+        name: session.user.name || null,
+        email: session.user.email || '',
+        plan: session.user.email === 'abdulmuizproject@gmail.com' ? 'elite' : 'free',
+        emailVerified: false,
+        createdAt: '',
+      });
       if (session.user.email === 'abdulmuizproject@gmail.com') {
         setPlanState('elite');
-      } else {
-        setPlanState("free");
       }
     } finally {
       setLoading(false);
@@ -116,21 +110,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const setPlan = async (newPlan: PlanType) => {
     if (!user?.id) {
-      // If no user data, just update local state
       setPlanState(newPlan);
       return;
     }
 
     try {
-      // Update plan in database
-      const { error } = await supabase
-        .from('users')
-        .update({ plan: newPlan })
-        .eq('id', user.id);
+      // Update plan via server-side API
+      const response = await fetch('/api/user/update-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: newPlan }),
+      });
 
-      if (error) {
-        console.error('Error updating plan:', error);
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to update plan');
       }
 
       // Update local state

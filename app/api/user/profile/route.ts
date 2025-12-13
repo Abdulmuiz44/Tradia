@@ -18,7 +18,7 @@ export async function GET() {
     // Get user profile from database
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, name, email, image, role, created_at")
+      .select("id, name, email, image, role, plan, email_verified, created_at")
       .eq("id", session.user.id as string)
       .single();
 
@@ -28,14 +28,14 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      profile: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: user.image,
-        role: user.role || 'user',
-        createdAt: user.created_at,
-      }
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      role: user.role || 'user',
+      plan: user.plan || 'free',
+      emailVerified: user.email_verified || false,
+      createdAt: user.created_at,
     });
   } catch (error) {
     console.error("Profile fetch error:", error);
