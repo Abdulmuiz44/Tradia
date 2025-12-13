@@ -408,19 +408,19 @@ async function getAccountSummary(userId: string) {
     };
   }
 
-  const totalTrades = processedTrades.length;
-  const winningTrades = processedTrades.filter(t => t.outcome === 'win');
+  const totalTrades = decryptedTrades.length;
+  const winningTrades = decryptedTrades.filter(t => t.outcome === 'win');
   const winRate = (winningTrades.length / totalTrades) * 100;
 
-  const netPnL = processedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+  const netPnL = decryptedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
-  const losingTrades = processedTrades.filter(t => t.outcome === 'loss');
+  const losingTrades = decryptedTrades.filter(t => t.outcome === 'loss');
   const totalProfit = winningTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
   const totalLoss = Math.abs(losingTrades.reduce((sum, t) => sum + (t.pnl || 0), 0));
   const avgRR = losingTrades.length > 0 ? totalProfit / totalLoss : 0;
 
   // Calculate max drawdown
-  const sortedTrades = [...processedTrades].sort((a, b) => getSortableTime(a) - getSortableTime(b));
+  const sortedTrades = [...decryptedTrades].sort((a, b) => getSortableTime(a) - getSortableTime(b));
 
   let peak = 0;
   let maxDrawdown = 0;
