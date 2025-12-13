@@ -1,0 +1,92 @@
+================================================================================
+                    QUICK FIX - RUN THIS NOW (5 MINUTES)
+================================================================================
+
+ERROR YOU HAD:
+  ❌ "No API key found in request"
+  ❌ "column trades.timestamp does not exist"
+
+SOLUTION:
+  ✅ Run database migration
+  ✅ Restart app
+  ✅ Done!
+
+================================================================================
+                              STEP 1 (2 min)
+================================================================================
+
+Go to: https://app.supabase.com
+Click: Your Project
+Click: SQL Editor (left sidebar)
+Click: New Query
+
+Copy and paste everything from this file:
+  migrations/003_fix_trades_schema.sql
+
+Click: RUN button
+Wait for: "Success" message
+
+================================================================================
+                              STEP 2 (1 min)
+================================================================================
+
+Stop your dev server:
+  Press: Ctrl+C
+
+Restart it:
+  pnpm dev
+  or
+  npm run dev
+
+Wait for: "ready on http://localhost:3000"
+
+================================================================================
+                              STEP 3 (2 min)
+================================================================================
+
+Test it:
+  1. Open http://localhost:3000
+  2. Go to dashboard/trades
+  3. Click "Add Trade"
+  4. Fill in details
+  5. Click Save
+  6. ✅ Should work!
+
+================================================================================
+                          IF SOMETHING FAILS
+================================================================================
+
+Error: "column ... does not exist"
+  → Migration didn't run. Go back to Step 1.
+
+Error: "No API key found"
+  → App wasn't restarted. Go back to Step 2.
+
+Other error:
+  → Press F12, go to Console tab, copy error message, ask for help.
+
+================================================================================
+                          WHAT WAS CHANGED
+================================================================================
+
+Files Updated:
+  ✅ app/api/trades/route.ts
+  ✅ src/context/TradeContext.tsx
+  ➕ migrations/003_fix_trades_schema.sql (needs to run in Supabase)
+
+Key Changes:
+  - timestamp → opentime (column name)
+  - Added all missing fields to API requests
+  - Added missing PATCH/DELETE handlers
+  - All using Supabase SDK (no REST API issues)
+
+================================================================================
+                              YOU'RE DONE!
+================================================================================
+
+Questions? Check:
+  - SOLUTION_SUMMARY.md (overview)
+  - IMMEDIATE_FIX.md (detailed steps)
+  - SUPABASE_SDK_FIX.md (technical explanation)
+
+Good luck! 🚀

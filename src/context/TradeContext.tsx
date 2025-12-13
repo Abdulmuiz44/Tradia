@@ -535,7 +535,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         const response = await fetch("/api/trades", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(trade),
+          body: JSON.stringify({
+            ...trade,
+            id: trade.id,
+            user_id: user.id,
+          }),
         });
 
         if (!response.ok) {
@@ -760,7 +764,12 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           const response = await fetch("/api/trades", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...trade, reviewed }),
+            body: JSON.stringify({ 
+              ...trade, 
+              id: trade.id,
+              user_id: user.id,
+              reviewed 
+            }),
           });
 
           if (!response.ok) {
