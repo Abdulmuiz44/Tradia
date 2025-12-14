@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        return NextResponse.json({ trade: data }, { status: 201 });
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         console.error("API error:", error);
         return NextResponse.json(

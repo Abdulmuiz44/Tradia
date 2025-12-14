@@ -57,9 +57,9 @@ function ImportTradesContent() {
     return <Spinner />;
   }
 
-  if (!session) {
+  if (status === "unauthenticated") {
     router.push("/login");
-    return <Spinner />;
+    return null;
   }
 
   return (

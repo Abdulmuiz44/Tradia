@@ -58,9 +58,9 @@ function TradeJournalContent() {
     );
   }
 
-  if (!session) {
+  if (status === "unauthenticated") {
     router.push("/login");
-    return <Spinner />;
+    return null;
   }
 
   return (

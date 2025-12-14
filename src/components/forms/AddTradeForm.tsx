@@ -22,9 +22,10 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
     takeProfitPrice: 0,
     pnl: 0,
     outcome: "Breakeven",
-    emotion: "neutral",
+    emotion: "calm",
     journalNotes: "",
     strategy: "",
+    reasonForTrade: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
