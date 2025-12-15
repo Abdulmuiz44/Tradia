@@ -96,25 +96,6 @@ export async function POST(request: NextRequest) {
             pinned: body.pinned || false,
             tags: body.tags || [],
             reviewed: body.reviewed || false,
-            metadata: {
-                direction: body.direction || "Buy",
-                orderType: body.orderType || "Market Execution",
-                openTime: body.openTime || "",
-                closeTime: body.closeTime || "",
-                session: body.session || "",
-                stopLossPrice: body.stopLossPrice || 0,
-                takeProfitPrice: body.takeProfitPrice || 0,
-                outcome: body.outcome || "breakeven",
-                resultRR: body.resultRR || 0,
-                duration: body.duration || "",
-                reasonForTrade: body.reasonForTrade || "",
-                strategy: body.strategy || "",
-                emotion: body.emotion || "neutral",
-                journalNotes: body.journalNotes || body.notes || "",
-                beforeScreenshotUrl: body.beforeScreenshotUrl,
-                afterScreenshotUrl: body.afterScreenshotUrl,
-                created_at: new Date().toISOString(),
-            },
         };
 
         const { data, error } = await supabase
@@ -212,14 +193,6 @@ export async function PATCH(request: NextRequest) {
         if (body.reviewed !== undefined) updateData.reviewed = body.reviewed;
         if (body.resultRR !== undefined) updateData.resultrr = body.resultRR;
 
-        updateData.metadata = {
-            ...(existingTrade?.metadata || {}),
-            ...Object.fromEntries(
-                Object.entries(body).filter(([key]) => !['id', 'user_id', 'created_at'].includes(key))
-            ),
-            updated_at: new Date().toISOString(),
-        };
-
         const { data, error } = await supabase
             .from("trades")
             .update(updateData)
@@ -236,7 +209,7 @@ export async function PATCH(request: NextRequest) {
             );
         }
 
-        return NextResponse.json({ trade: data }, { status: 200 });
+        return NextResponse.json(data, { status: 200 });
     } catch (error) {
         console.error("API error:", error);
         return NextResponse.json(
