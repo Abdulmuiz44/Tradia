@@ -21,7 +21,7 @@ function TradesChatContent() {
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
-      router.push("/auth/signin");
+      router.push("/login");
       return;
     }
 
@@ -31,7 +31,7 @@ function TradesChatContent() {
   if (!isReady) {
     return (
       <div className="flex items-center justify-center w-full h-screen bg-[#061226]">
-        <div className="text-center text-gray-400">
+        <div className="text-center text-white">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
           Loading your trading data...
         </div>
@@ -70,10 +70,10 @@ function TradesChatContent() {
       <div className="bg-[#0f172a] border-b border-gray-800 px-4 py-3">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors"
         >
           <ArrowLeft size={18} />
-          <span className="text-sm">Back to Trades</span>
+          <span className="text-sm font-medium">Back to Trades</span>
         </button>
       </div>
 

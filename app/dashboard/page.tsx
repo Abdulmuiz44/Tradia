@@ -69,7 +69,7 @@ const BASE_TAB_DEFS: DashboardTabDef[] = [
     value: "chat",
     label: "Tradia AI",
     icon: "Bot",
-    href: "/chat",
+    href: "/dashboard/trades/chat",
   },
   {
     value: "tradia-predict",
