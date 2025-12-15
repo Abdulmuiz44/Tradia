@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { Trash2, Pencil, Filter, DownloadCloud, FilePlus, Trash, UploadCloud } from "lucide-react";
 import { useNotification } from "@/context/NotificationContext";
 import { useTrade } from "@/context/TradeContext";
+import { useRouter } from "next/navigation";
 import type { Trade } from "@/types/trade";
 import CsvUpload from "@/components/dashboard/CsvUpload";
 import JournalModal from "@/components/modals/JournalModal";
@@ -179,6 +180,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
   const trades = overrideTrades ?? contextTrades;
   const { plan } = useUser();
   const { notify } = useNotification();
+  const router = useRouter();
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -514,7 +516,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         <div className="flex items-center justify-between gap-2 pt-2">
           <div className="text-xs text-zinc-400 truncate">{toStringSafe(getField(t, "journalNotes") ?? getField(t, "notes"))}</div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setEditingTrade(t)} className="p-1 hover:text-blue-400" aria-label="Edit trade">
+            <button onClick={() => router.push(`/dashboard/trades/edit/${String(getField(t, "id"))}`)} className="p-1 hover:text-blue-400" aria-label="Edit trade">
               <Pencil size={16} />
             </button>
             <button onClick={() => deleteTrade(String(getField(t, "id")))} className="p-1 hover:text-red-400" aria-label="Delete trade">
@@ -831,7 +833,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         </td>
                         <td className="px-3 py-2 flex items-center gap-2">
                           <button
-                            onClick={() => setEditingTrade(t)}
+                            onClick={() => router.push(`/dashboard/trades/edit/${String(getField(t, "id"))}`)}
                             className="p-1 hover:text-blue-400"
                             aria-label="Edit trade"
                           >
