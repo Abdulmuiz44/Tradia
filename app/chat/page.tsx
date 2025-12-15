@@ -1,10 +1,6 @@
-import React from "react";
-import { ChatInterface } from "@/components/chat/ChatInterface";
+import { redirect } from "next/navigation";
 
 export default function ChatPage() {
-  return (
-    <div className="min-h-screen bg-[#061226] flex items-center justify-center p-4">
-      <ChatInterface />
-    </div>
-  );
+  // Redirect to the trades chat page with full context
+  redirect("/dashboard/trades/chat");
 }
