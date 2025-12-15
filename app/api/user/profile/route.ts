@@ -51,7 +51,7 @@ export async function GET() {
       name: session.user.name || null,
       email: session.user.email || '',
       plan: 'free',
-      emailVerified: !!session.user.email_verified,
+      emailVerified: false,
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
