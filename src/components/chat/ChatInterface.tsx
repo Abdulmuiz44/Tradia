@@ -39,16 +39,16 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
 
         const userContent = input;
         handleInputChange({ target: { value: '' } } as any);
-        
+
         // Add user message
         const userMessage = {
             id: `msg_${Date.now()}`,
             role: 'user' as const,
             content: userContent,
         };
-        
+
         setMessages(prev => [...prev, userMessage]);
-        
+
         // Call the API with selected trades
         try {
             const response = await fetch('/api/tradia/ai', {
@@ -72,7 +72,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
 
             let assistantContent = '';
             const decoder = new TextDecoder();
-            
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -130,10 +130,10 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                         <button
                             key={m}
                             className={cn(
-                                "px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                                "px-3 py-1 rounded-full text-xs font-medium transition-colors text-white",
                                 mode === m
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+                                    ? "bg-blue-600"
+                                    : "bg-gray-700/50 hover:bg-gray-700"
                             )}
                         >
                             {m.charAt(0).toUpperCase() + m.slice(1)}
@@ -146,7 +146,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                     <div className="mt-3 flex items-center gap-2">
                         <button
                             onClick={() => setShowTradeSelector(!showTradeSelector)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-xs text-gray-300 transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-xs text-white transition-colors"
                         >
                             <BarChart3 size={14} />
                             {selectedTrades.length} trades attached
@@ -154,7 +154,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                         {selectedTrades.length > 0 && (
                             <button
                                 onClick={() => setSelectedTrades([])}
-                                className="text-xs text-gray-400 hover:text-gray-300"
+                                className="text-xs text-white hover:text-gray-200"
                             >
                                 Clear
                             </button>
@@ -165,10 +165,10 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                 {/* Trade selector dropdown */}
                 {showTradeSelector && trades && trades.length > 0 && (
                     <div className="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700 max-h-40 overflow-y-auto">
-                        <div className="text-xs text-gray-400 mb-2">Select trades to analyze:</div>
+                        <div className="text-xs text-white mb-2">Select trades to analyze:</div>
                         <div className="space-y-2">
                             {trades.slice(0, 10).map((trade) => (
-                                <label key={trade.id} className="flex items-center gap-2 text-xs text-gray-300 hover:text-white cursor-pointer">
+                                <label key={trade.id} className="flex items-center gap-2 text-xs text-white hover:text-gray-200 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={selectedTrades.includes(trade.id)}
@@ -210,10 +210,10 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                         </div>
 
                         <div className={cn(
-                            "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
+                            "p-4 rounded-2xl text-sm leading-relaxed shadow-sm text-white",
                             m.role === 'user'
-                                ? "bg-indigo-600 text-white rounded-tr-none"
-                                : "bg-[#1e293b] text-gray-200 border border-gray-700/50 rounded-tl-none"
+                                ? "bg-indigo-600 rounded-tr-none"
+                                : "bg-[#1e293b] border border-gray-700/50 rounded-tl-none"
                         )}>
                             {m.role === 'user' ? (
                                 <div className="whitespace-pre-wrap">{m.content}</div>
@@ -239,7 +239,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
             {/* Quick suggestions (show when no messages) */}
             {messages.length === 1 && (
                 <div className="px-4 py-3 bg-[#0f172a]/50 border-t border-gray-800/50">
-                    <div className="text-xs text-gray-400 mb-2">Quick analysis:</div>
+                    <div className="text-xs text-white mb-2">Quick analysis:</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
                             { icon: TrendingUp, label: "Win Analysis", prompt: "Which symbols or strategies give me the best win rate and why?" },
@@ -254,7 +254,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                                     onClick={() => {
                                         handleInputChange({ target: { value: item.prompt } } as any);
                                     }}
-                                    className="p-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 border border-gray-700/50 text-xs text-gray-300 hover:text-white transition-colors flex flex-col items-center gap-1"
+                                    className="p-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 border border-gray-700/50 text-xs text-white hover:text-gray-100 transition-colors flex flex-col items-center gap-1"
                                 >
                                     <Icon size={16} />
                                     <span className="text-[10px]">{item.label}</span>
@@ -303,7 +303,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
                     </div>
                 </form>
                 <div className="text-center mt-2">
-                    <p className="text-[10px] text-gray-500">
+                    <p className="text-[10px] text-white">
                         💡 Tip: Select specific trades above for more detailed analysis. AI can make mistakes—verify important insights.
                     </p>
                 </div>
