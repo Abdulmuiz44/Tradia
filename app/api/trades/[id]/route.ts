@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
+import type { Trade } from "@/types/trade";
 
 /**
  * GET /api/trades/[id]
@@ -22,28 +23,23 @@ export async function GET(
     }
 
     const supabase = createClient();
+    const tradeId = params.id;
 
-    const { data, error } = await supabase
+    const { data: trade, error } = await supabase
       .from("trades")
       .select("*")
-      .eq("id", params.id)
-      .eq("user_id", session?.user?.id || "")
+      .eq("id", tradeId)
+      .eq("user_id", session.user.id)
       .single();
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json(
-          { error: "Trade not found" },
-          { status: 404 }
-        );
-      }
+    if (error || !trade) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
+        { error: "Trade not found" },
+        { status: 404 }
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(trade);
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
@@ -55,7 +51,7 @@ export async function GET(
 
 /**
  * PATCH /api/trades/[id]
- * Update a trade
+ * Update a trade by ID
  */
 export async function PATCH(
   request: NextRequest,
@@ -72,76 +68,74 @@ export async function PATCH(
     }
 
     const supabase = createClient();
+    const tradeId = params.id;
     const body = await request.json();
 
-    // Fetch existing trade to get metadata
+    // Fetch existing trade to verify ownership
     const { data: existingTrade, error: fetchError } = await supabase
       .from("trades")
-      .select("metadata")
-      .eq("id", params.id)
-      .eq("user_id", session?.user?.id || "")
+      .select("*")
+      .eq("id", tradeId)
+      .eq("user_id", session.user.id)
       .single();
 
-    if (fetchError) {
+    if (fetchError || !existingTrade) {
       return NextResponse.json(
-        { error: "Trade not found" },
+        { error: "Trade not found or unauthorized" },
         { status: 404 }
       );
     }
 
-    const updateData = {
-      symbol: body.symbol || existingTrade?.metadata?.symbol,
-      side: body.direction ? (body.direction || "buy").toLowerCase() : undefined,
-      quantity: body.lotSize !== undefined ? body.lotSize : undefined,
-      price: body.entryPrice !== undefined ? body.entryPrice : undefined,
-      pnl: body.pnl !== undefined ? body.pnl : undefined,
-      timestamp: body.openTime ? new Date(body.openTime).toISOString() : undefined,
-      status: body.closeTime ? "closed" : undefined,
-      metadata: {
-        ...(existingTrade?.metadata || {}),
-        direction: body.direction || undefined,
-        orderType: body.orderType || undefined,
-        openTime: body.openTime || undefined,
-        closeTime: body.closeTime || undefined,
-        session: body.session || undefined,
-        stopLossPrice: body.stopLossPrice !== undefined ? body.stopLossPrice : undefined,
-        takeProfitPrice: body.takeProfitPrice !== undefined ? body.takeProfitPrice : undefined,
-        outcome: body.outcome || undefined,
-        resultRR: body.resultRR !== undefined ? body.resultRR : undefined,
-        duration: body.duration || undefined,
-        reasonForTrade: body.reasonForTrade || undefined,
-        strategy: body.strategy || undefined,
-        emotion: body.emotion || undefined,
-        journalNotes: body.journalNotes !== undefined ? body.journalNotes : undefined,
-        notes: body.notes !== undefined ? body.notes : undefined,
-        beforeScreenshotUrl: body.beforeScreenshotUrl !== undefined ? body.beforeScreenshotUrl : undefined,
-        afterScreenshotUrl: body.afterScreenshotUrl !== undefined ? body.afterScreenshotUrl : undefined,
-        updated_at: new Date().toISOString(),
-      },
-    };
+    // Build update data - only include fields that are provided
+    const updateData: Record<string, any> = {};
 
-    // Remove undefined values
-    Object.keys(updateData).forEach(
-      (key) => updateData[key as keyof typeof updateData] === undefined && delete updateData[key as keyof typeof updateData]
-    );
+    if (body.symbol !== undefined) updateData.symbol = body.symbol;
+    if (body.direction !== undefined) updateData.direction = body.direction;
+    if (body.orderType !== undefined) updateData.ordertype = body.orderType;
+    if (body.openTime !== undefined) updateData.opentime = new Date(body.openTime).toISOString();
+    if (body.closeTime !== undefined) updateData.closetime = body.closeTime ? new Date(body.closeTime).toISOString() : null;
+    if (body.session !== undefined) updateData.session = body.session;
+    if (body.lotSize !== undefined) updateData.lotsize = body.lotSize;
+    if (body.entryPrice !== undefined) updateData.entryprice = body.entryPrice;
+    if (body.exitPrice !== undefined) updateData.exitprice = body.exitPrice;
+    if (body.stopLossPrice !== undefined) updateData.stoplossprice = body.stopLossPrice;
+    if (body.takeProfitPrice !== undefined) updateData.takeprofitprice = body.takeProfitPrice;
+    if (body.pnl !== undefined) updateData.pnl = body.pnl;
+    if (body.outcome !== undefined) updateData.outcome = body.outcome;
+    if (body.resultRR !== undefined) updateData.resultrr = body.resultRR;
+    if (body.duration !== undefined) updateData.duration = body.duration;
+    if (body.reasonForTrade !== undefined) updateData.reasonfortrade = body.reasonForTrade;
+    if (body.strategy !== undefined) updateData.strategy = body.strategy;
+    if (body.emotion !== undefined) updateData.emotion = body.emotion;
+    if (body.journalNotes !== undefined) updateData.journalnotes = body.journalNotes;
+    if (body.beforeScreenshotUrl !== undefined) updateData.beforescreenshoturl = body.beforeScreenshotUrl;
+    if (body.afterScreenshotUrl !== undefined) updateData.afterscreenshoturl = body.afterScreenshotUrl;
+    if (body.commission !== undefined) updateData.commission = body.commission;
+    if (body.swap !== undefined) updateData.swap = body.swap;
+    if (body.pinned !== undefined) updateData.pinned = body.pinned;
+    if (body.tags !== undefined) updateData.tags = body.tags;
+    if (body.reviewed !== undefined) updateData.reviewed = body.reviewed;
 
-    const { data, error } = await supabase
+    // Always update the updated_at timestamp
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: updatedTrade, error: updateError } = await supabase
       .from("trades")
       .update(updateData)
-      .eq("id", params.id)
-      .eq("user_id", session?.user?.id || "")
+      .eq("id", tradeId)
+      .eq("user_id", session.user.id)
       .select()
       .single();
 
-    if (error) {
-      console.error("Supabase update error:", error);
+    if (updateError) {
+      console.error("Supabase update error:", updateError);
       return NextResponse.json(
-        { error: error.message },
+        { error: updateError.message || "Failed to update trade" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(updatedTrade, { status: 200 });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
@@ -153,7 +147,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/trades/[id]
- * Delete a trade
+ * Delete a trade by ID
  */
 export async function DELETE(
   request: NextRequest,
@@ -170,17 +164,33 @@ export async function DELETE(
     }
 
     const supabase = createClient();
+    const tradeId = params.id;
 
-    const { error } = await supabase
+    // Verify ownership before deleting
+    const { data: trade, error: fetchError } = await supabase
+      .from("trades")
+      .select("id")
+      .eq("id", tradeId)
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (fetchError || !trade) {
+      return NextResponse.json(
+        { error: "Trade not found or unauthorized" },
+        { status: 404 }
+      );
+    }
+
+    const { error: deleteError } = await supabase
       .from("trades")
       .delete()
-      .eq("id", params.id)
-      .eq("user_id", session?.user?.id || "");
+      .eq("id", tradeId)
+      .eq("user_id", session.user.id);
 
-    if (error) {
-      console.error("Supabase delete error:", error);
+    if (deleteError) {
+      console.error("Supabase delete error:", deleteError);
       return NextResponse.json(
-        { error: error.message },
+        { error: deleteError.message || "Failed to delete trade" },
         { status: 500 }
       );
     }
