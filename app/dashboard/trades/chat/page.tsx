@@ -9,7 +9,7 @@ import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { NotificationProvider } from "@/context/NotificationContext";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 function TradesChatContent() {
   const { data: session, status } = useSession();
@@ -65,27 +65,11 @@ function TradesChatContent() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#061226] flex flex-col">
-      {/* Header with back button */}
-      <div className="bg-[#0f172a] border-b border-gray-800 px-4 py-3">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-white hover:text-gray-200 transition-colors"
-        >
-          <ArrowLeft size={18} />
-          <span className="text-sm font-medium">Back to Trades</span>
-        </button>
-      </div>
-
-      {/* Chat Interface */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <ChatInterface
-          trades={normalizedTrades}
-          mode="analysis"
-          conversationId={`chat_${session?.user?.id}_${Date.now()}`}
-        />
-      </div>
-    </div>
+    <ChatInterface
+      trades={normalizedTrades}
+      mode="analysis"
+      conversationId={`chat_${session?.user?.id}_${Date.now()}`}
+    />
   );
 }
 

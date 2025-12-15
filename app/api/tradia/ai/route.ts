@@ -152,6 +152,32 @@ export async function POST(req: NextRequest) {
         throw convError;
       }
       currentConversationId = newConvId;
+    } else {
+      // Verify conversation exists for this user
+      const { data: existingConv, error: checkError } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("id", currentConversationId)
+        .eq("user_id", userId)
+        .single();
+
+      if (checkError || !existingConv) {
+        // Conversation doesn't exist, create it
+        const { error: convError } = await supabase
+          .from("conversations")
+          .insert({
+            id: currentConversationId,
+            user_id: userId,
+            title: "New Conversation",
+            model: modelId,
+            temperature: options.temperature ?? 0.25,
+            mode,
+          });
+
+        if (convError) {
+          throw convError;
+        }
+      }
     }
 
     const lastMessage = messages[messages.length - 1];
