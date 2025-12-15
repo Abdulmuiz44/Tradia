@@ -8,6 +8,7 @@ import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { UserProvider } from "@/context/UserContext";
 import Spinner from "@/components/ui/spinner";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
+import MobileBackButton from "@/components/ui/MobileBackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, RefreshCw, Plus, Upload } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -73,6 +74,7 @@ function TradeHistoryContent() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
             <div className="flex items-center gap-3">
+              <MobileBackButton className="mr-2" />
               {/* User Avatar - visible on desktop */}
               <div className="hidden lg:block">
                 <AnimatedDropdown
