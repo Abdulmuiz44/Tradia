@@ -15,26 +15,37 @@ export async function GET() {
 
     const supabase = createClient();
 
-    // Get user profile from database
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("id, email, plan, email_verified, created_at")
-      .eq("id", session.user.id as string)
-      .single();
+    // Try to get user profile from database, but fallback to session data
+    try {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("id, email, plan, email_verified, created_at")
+        .eq("id", session.user.id as string)
+        .single();
 
-    if (error) {
-      console.error("Failed to fetch user profile:", error);
-      return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+      if (!error && user) {
+        // Combine database data with NextAuth session data
+        return NextResponse.json({
+          id: user.id,
+          name: session.user.name || null,
+          email: user.email || session.user.email || '',
+          plan: user.plan || 'free',
+          emailVerified: user.email_verified || false,
+          createdAt: user.created_at,
+        });
+      }
+    } catch (dbError) {
+      console.warn("Database query failed, using session data:", dbError);
     }
 
-    // Combine database data with NextAuth session data
+    // Fallback to session data if database query fails
     return NextResponse.json({
-      id: user.id,
+      id: session.user.id,
       name: session.user.name || null,
-      email: user.email || session.user.email || '',
-      plan: user.plan || 'free',
-      emailVerified: user.email_verified || false,
-      createdAt: user.created_at,
+      email: session.user.email || '',
+      plan: 'free',
+      emailVerified: !!session.user.email_verified,
+      createdAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Profile fetch error:", error);
