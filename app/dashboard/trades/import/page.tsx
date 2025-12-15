@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
+import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { useNotification } from "@/context/NotificationContext";
 import Spinner from "@/components/ui/spinner";
 import { ArrowLeft, Upload, Check } from "lucide-react";
@@ -15,6 +16,7 @@ function ImportTradesContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { notify } = useNotification();
+  const { refreshTrades } = useTrade();
   const [isLoading, setIsLoading] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
 
@@ -29,11 +31,18 @@ function ImportTradesContent() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to import trades");
+        throw new Error(error.error || error.message || "Failed to import trades");
       }
 
       const result = await response.json();
       setImportedCount(result.count || trades.length);
+
+      // Refresh trades in context to fetch newly imported trades
+      try {
+        await refreshTrades();
+      } catch (e) {
+        console.warn("Failed to refresh trades after import:", e);
+      }
 
       notify({
         variant: "success",
@@ -180,7 +189,9 @@ export default function ImportTradesPage() {
   return (
     <LayoutClient>
       <UserProvider>
-        <ImportTradesContent />
+        <TradeProvider>
+          <ImportTradesContent />
+        </TradeProvider>
       </UserProvider>
     </LayoutClient>
   );

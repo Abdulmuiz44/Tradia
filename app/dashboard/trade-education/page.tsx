@@ -7,6 +7,7 @@ import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import Spinner from "@/components/ui/spinner";
 import TraderEducation from "@/components/dashboard/TraderEducation";
+import MobileBackButton from "@/components/ui/MobileBackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, RefreshCw } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -57,8 +58,9 @@ function TradeEducationContent() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
             <div className="flex items-center gap-3">
-              {/* User Avatar - visible on desktop */}
-              <div className="hidden lg:block">
+               <MobileBackButton className="mr-2" />
+               {/* User Avatar - visible on desktop */}
+               <div className="hidden lg:block">
                 <AnimatedDropdown
                   title="Account"
                   panelClassName="w-[95%] max-w-sm"
