@@ -397,7 +397,6 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         // Normalize for display consistency (fills in derived fields like resultRR, duration)
         const normalized = imported.map(normalizeTrade);
         await importTrades(normalized);
-        setCsvOpen(false);
         // Notification is handled in importTrades
     };
 
