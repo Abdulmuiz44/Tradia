@@ -10,7 +10,7 @@ import Spinner from "@/components/ui/spinner";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import MobileBackButton from "@/components/ui/MobileBackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, RefreshCw, Plus, Upload } from "lucide-react";
+import { User, Settings, RefreshCw, Plus, Upload, Bot } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
@@ -232,7 +232,7 @@ function TradeHistoryContent() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex gap-3 mb-6 flex-wrap">
               <button
                 onClick={() => router.push("/dashboard/trades/add")}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -246,6 +246,13 @@ function TradeHistoryContent() {
               >
                 <Upload size={18} />
                 Import Trades
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/trades/chat")}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              >
+                <Bot size={18} />
+                AI Analysis
               </button>
             </div>
 

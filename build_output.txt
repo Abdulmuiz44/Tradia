@@ -1,0 +1,5 @@
+
+> tradia-frontend-v1@0.1.0 build
+> npx next build
+
+   Creating an optimized production build ...
