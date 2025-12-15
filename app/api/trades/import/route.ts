@@ -142,7 +142,6 @@ export async function POST(request: Request) {
         symbol: String(tradeData.symbol || '').toUpperCase(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        source: source || 'import'
       };
 
       const { data, error } = await supabase
