@@ -7,20 +7,18 @@ import LayoutClient from "@/components/LayoutClient";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { UserProvider } from "@/context/UserContext";
 import Spinner from "@/components/ui/spinner";
-import TradeAnalytics from "@/components/dashboard/TradeAnalytics";
+import TradiaAIAnalysis from "@/components/dashboard/TradiaAIAnalysis";
 import MobileBackButton from "@/components/ui/MobileBackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, RefreshCw } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
-import { useTradeData } from "@/hooks/useTradeData";
 
-function TradeAnalyticsContent() {
+function TradesDataContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { trades, refreshTrades } = useTrade();
-  const { metrics, performanceBySymbol } = useTradeData();
   const [refreshing, setRefreshing] = useState(false);
   const [userInitial, setUserInitial] = useState("U");
 
@@ -55,7 +53,7 @@ function TradeAnalyticsContent() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-[#0D1117] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -67,12 +65,12 @@ function TradeAnalyticsContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
+    <div className="min-h-screen w-full bg-[#0D1117]">
       <div className="flex h-screen">
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-700 bg-[#0D1117]">
             <div className="flex items-center gap-3">
               <MobileBackButton className="mr-2" />
               {/* User Avatar - visible on desktop */}
@@ -109,14 +107,14 @@ function TradeAnalyticsContent() {
                   <div className="p-2">
                     <button
                       onClick={() => router.push("/dashboard/profile")}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-white"
                     >
                       <User className="w-4 h-4" />
                       <span>Profile</span>
                     </button>
                     <button
                       onClick={() => router.push("/dashboard/settings")}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-white"
                     >
                       <Settings className="w-4 h-4" />
                       <span>Settings</span>
@@ -132,9 +130,9 @@ function TradeAnalyticsContent() {
               </div>
 
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-white">Trade Analytics</h1>
+                <h1 className="text-lg md:text-xl font-bold text-white">Trade Data Analysis</h1>
                 <p className="text-white text-xs sm:text-sm hidden sm:block">
-                  Deep insights into your trading performance and patterns
+                  AI-powered analysis of your trading data
                 </p>
               </div>
             </div>
@@ -183,14 +181,14 @@ function TradeAnalyticsContent() {
                   <div className="p-2">
                     <button
                       onClick={() => router.push("/dashboard/profile")}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-white"
                     >
                       <User className="w-4 h-4" />
                       <span>Profile</span>
                     </button>
                     <button
                       onClick={() => router.push("/dashboard/settings")}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-zinc-700 text-left text-white"
                     >
                       <Settings className="w-4 h-4" />
                       <span>Settings</span>
@@ -208,8 +206,8 @@ function TradeAnalyticsContent() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-auto">
-            <TradeAnalytics trades={trades} session={session} isAdmin={false} />
+          <div className="flex-1 overflow-hidden">
+            <TradiaAIAnalysis trades={trades} userId={session?.user?.id} />
           </div>
         </div>
       </div>
@@ -217,12 +215,12 @@ function TradeAnalyticsContent() {
   );
 }
 
-export default function TradeAnalyticsPage() {
+export default function TradesDataPage() {
   return (
     <LayoutClient>
       <UserProvider>
         <TradeProvider>
-          <TradeAnalyticsContent />
+          <TradesDataContent />
         </TradeProvider>
       </UserProvider>
     </LayoutClient>
