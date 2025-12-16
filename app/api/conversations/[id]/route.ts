@@ -35,15 +35,17 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
         if (convError) {
             console.error("Conversation query error:", convError);
-            // Check if it's a PGRST116 error (no rows)
-            if (convError.code === 'PGRST116') {
+            // Check if it's a PGRST116 error (no rows) - this is expected for non-existent conversations
+            if (convError.code === 'PGRST116' || convError.message.includes('No rows')) {
+                console.log("Conversation doesn't exist in database yet");
                 return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
             }
+            console.error("Unexpected database error:", convError.message);
             throw convError;
         }
 
         if (!conversation) {
-            console.error("Conversation not found for ID:", conversationId);
+            console.log("Conversation not found for ID:", conversationId);
             return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
         }
 

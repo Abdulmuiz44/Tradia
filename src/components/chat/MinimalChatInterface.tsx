@@ -38,32 +38,32 @@ export function MinimalChatInterface({
     // Load existing conversation messages
     useEffect(() => {
         const loadConversationMessages = async () => {
-            // Only load if conversationId is provided and is not a new conversation
-            if (!conversationId || conversationId === 'undefined') return;
-
-            // Don't load if it looks like a temporary ID (try to fetch only from DB)
-            if (!conversationId.startsWith('conv_')) {
-                console.warn('Invalid conversation ID format:', conversationId);
+            // Only load if conversationId is provided
+            if (!conversationId || conversationId === 'undefined') {
+                console.log('No conversation ID, starting fresh');
                 setInitialMessagesLoaded(true);
                 return;
             }
 
             try {
-                console.log('Loading conversation:', conversationId);
+                console.log('Attempting to load conversation:', conversationId);
                 const res = await fetch(`/api/conversations/${conversationId}`);
                 
                 if (res.status === 404) {
-                    console.log('Conversation not found, starting new one');
+                    console.log('Conversation not found (404), will create new one on first message');
                     setInitialMessagesLoaded(true);
                     return;
                 }
                 
                 if (!res.ok) {
-                    throw new Error(`Failed to fetch conversation: ${res.status}`);
+                    const errorText = await res.text();
+                    console.error(`Failed to fetch conversation: ${res.status}`, errorText);
+                    setInitialMessagesLoaded(true);
+                    return;
                 }
                 
                 const data = await res.json();
-                console.log('Loaded conversation data:', data);
+                console.log('Successfully loaded conversation:', data.conversation?.id);
                 
                 if (data.messages && data.messages.length > 0) {
                     const loadedMessages = data.messages.map((msg: any) => ({
@@ -71,11 +71,12 @@ export function MinimalChatInterface({
                         role: msg.type === 'user' ? 'user' : 'assistant',
                         content: msg.content,
                     }));
-                    console.log('Setting messages:', loadedMessages.length);
+                    console.log(`Setting ${loadedMessages.length} messages from conversation`);
                     setInitialMessages(loadedMessages);
                     setMessages(loadedMessages);
                 } else {
                     // No messages yet, show welcome message
+                    console.log('Conversation exists but has no messages yet');
                     const welcomeMessage = {
                         id: 'welcome',
                         role: 'assistant' as const,
@@ -85,16 +86,22 @@ export function MinimalChatInterface({
                     setMessages([welcomeMessage]);
                 }
             } catch (err) {
-                console.error('Failed to load conversation:', err);
-                // Still mark as loaded so we don't keep retrying
-                setInitialMessagesLoaded(true);
+                console.error('Error loading conversation:', err);
+                // Mark as loaded and show welcome
+                const welcomeMessage = {
+                    id: 'welcome',
+                    role: 'assistant' as const,
+                    content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
+                };
+                setInitialMessages([welcomeMessage]);
+                setMessages([welcomeMessage]);
             } finally {
                 setInitialMessagesLoaded(true);
             }
         };
 
         // Only load if we have a conversation ID and haven't loaded yet
-        if (!initialMessagesLoaded) {
+        if (!initialMessagesLoaded && conversationId) {
             loadConversationMessages();
         }
     }, [conversationId]);
