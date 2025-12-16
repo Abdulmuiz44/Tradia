@@ -300,91 +300,93 @@ export function MinimalChatInterface({
                 </div>
             </div>
 
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 space-y-6 pb-40">
-                {messages.map((m: any) => (
-                    <div
-                        key={m.id}
-                        className={cn(
-                            "flex gap-4",
-                            m.role === 'user' ? "justify-end" : "justify-start"
-                        )}
-                    >
-                        {m.role === 'assistant' && (
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
-                                AI
-                            </div>
-                        )}
+            {/* Messages Area - Centered */}
+            <div className="flex-1 overflow-y-auto py-6 space-y-6 pb-40 flex flex-col items-center">
+                <div className="w-full max-w-4xl px-4 sm:px-6 md:px-8">
+                    {messages.map((m: any) => (
+                        <div
+                            key={m.id}
+                            className={cn(
+                                "flex gap-4 mb-6",
+                                m.role === 'user' ? "justify-end" : "justify-start"
+                            )}
+                        >
+                            {m.role === 'assistant' && (
+                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                                    AI
+                                </div>
+                            )}
 
-                        <div className={cn(
-                            "max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg",
-                            m.role === 'user'
-                                ? "bg-white/10 text-white"
-                                : "bg-gray-800/70 text-white"
-                        )}>
-                            {m.role === 'user' ? (
-                                <div className="whitespace-pre-wrap text-white">{m.content}</div>
-                            ) : (
-                                <div className="text-white space-y-4 [&_p]:mb-4 [&_li]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
-                                    <ReactMarkdown
-                                        components={{
-                                            p: ({ children }) => <p className="text-white leading-relaxed">{children}</p>,
-                                            h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-4 mb-3">{children}</h1>,
-                                            h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
-                                            h3: ({ children }) => <h3 className="font-semibold text-white mt-2 mb-2">{children}</h3>,
-                                            ul: ({ children }) => <ul className="list-disc list-inside text-white space-y-1">{children}</ul>,
-                                            ol: ({ children }) => <ol className="list-decimal list-inside text-white space-y-1">{children}</ol>,
-                                            li: ({ children }) => <li className="text-white">{children}</li>,
-                                            strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
-                                            em: ({ children }) => <em className="italic text-white">{children}</em>,
-                                            code: ({ children }) => <code className="bg-gray-700 text-white px-2 py-1 rounded text-xs">{children}</code>,
-                                        }}
-                                    >
-                                        {m.content}
-                                    </ReactMarkdown>
+                            <div className={cn(
+                                "max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg",
+                                m.role === 'user'
+                                    ? "bg-white/10 text-white"
+                                    : "bg-gray-800/70 text-white"
+                            )}>
+                                {m.role === 'user' ? (
+                                    <div className="whitespace-pre-wrap text-white">{m.content}</div>
+                                ) : (
+                                    <div className="text-white space-y-4 [&_p]:mb-4 [&_li]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+                                        <ReactMarkdown
+                                            components={{
+                                                p: ({ children }) => <p className="text-white leading-relaxed">{children}</p>,
+                                                h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-4 mb-3">{children}</h1>,
+                                                h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
+                                                h3: ({ children }) => <h3 className="font-semibold text-white mt-2 mb-2">{children}</h3>,
+                                                ul: ({ children }) => <ul className="list-disc list-inside text-white space-y-1">{children}</ul>,
+                                                ol: ({ children }) => <ol className="list-decimal list-inside text-white space-y-1">{children}</ol>,
+                                                li: ({ children }) => <li className="text-white">{children}</li>,
+                                                strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+                                                em: ({ children }) => <em className="italic text-white">{children}</em>,
+                                                code: ({ children }) => <code className="bg-gray-700 text-white px-2 py-1 rounded text-xs">{children}</code>,
+                                            }}
+                                        >
+                                            {m.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
+                            </div>
+
+                            {m.role === 'user' && (
+                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
+                                    U
                                 </div>
                             )}
                         </div>
+                    ))}
 
-                        {m.role === 'user' && (
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
-                                U
+                    {isLoading && (
+                        <div className="flex gap-4 animate-in fade-in duration-300 mb-6">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                                AI
                             </div>
-                        )}
-                    </div>
-                ))}
-
-                {isLoading && (
-                    <div className="flex gap-4 animate-in fade-in duration-300">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
-                            AI
-                        </div>
-                        <div className="max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg bg-gray-800/70 text-white">
-                            <div className="flex items-center gap-3">
-                                <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                                <span>Generating response...</span>
+                            <div className="max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg bg-gray-800/70 text-white">
+                                <div className="flex items-center gap-3">
+                                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                                    <span>Generating response...</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {error && (
-                    <div className="flex gap-4">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-xs font-bold text-red-400">
-                            !
+                    {error && (
+                        <div className="flex gap-4 mb-6">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-xs font-bold text-red-400">
+                                !
+                            </div>
+                            <div className="text-sm text-red-400">
+                                An error occurred. Please try again.
+                            </div>
                         </div>
-                        <div className="text-sm text-red-400">
-                            An error occurred. Please try again.
-                        </div>
-                    </div>
-                )}
+                    )}
 
-                <div ref={scrollRef} />
+                    <div ref={scrollRef} />
+                </div>
             </div>
 
-            {/* Input Area - Sticks to Bottom */}
-            <div className="flex-shrink-0 border-t border-white/5 bg-[#0D0D0D] px-4 sm:px-6 md:px-8 py-4">
-                <form onSubmit={handleSubmit} className="flex items-end gap-3 max-w-4xl mx-auto">
+            {/* Input Area - Sticks to Bottom & Centered */}
+            <div className="flex-shrink-0 border-t border-white/5 bg-[#0D0D0D] py-4 flex justify-center">
+                <form onSubmit={handleSubmit} className="flex items-end gap-3 w-full max-w-4xl px-4 sm:px-6 md:px-8">
                     <textarea
                         className="flex-1 min-h-[44px] max-h-[120px] bg-white/5 text-white border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/20 resize-none placeholder:text-gray-500 focus:bg-white/10 transition-colors"
                         value={input}
