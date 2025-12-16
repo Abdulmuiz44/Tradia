@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ChatInterface } from "@/components/chat/ChatInterface";
+import { MinimalChatInterface } from "@/components/chat/MinimalChatInterface";
 import type { Trade } from "@/types/trade";
 import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
@@ -65,7 +65,7 @@ function TradesChatContent() {
   }));
 
   return (
-    <ChatInterface
+    <MinimalChatInterface
       trades={normalizedTrades}
       mode="analysis"
       conversationId={`chat_${session?.user?.id}_${Date.now()}`}
