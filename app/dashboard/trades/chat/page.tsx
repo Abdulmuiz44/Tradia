@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { MinimalChatInterface } from "@/components/chat/MinimalChatInterface";
 import type { Trade } from "@/types/trade";
-import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -13,26 +12,20 @@ import { Loader2 } from "lucide-react";
 
 function TradesChatContent() {
     const { data: session, status } = useSession();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const conversationIdFromUrl = searchParams?.get("id") || null;
     const { trades } = useTrade();
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
-        if (status === "loading") return;
-
-        if (status === "unauthenticated") {
-            router.push("/login");
-            return;
+        if (status === "authenticated") {
+            setIsReady(true);
         }
-
-        setIsReady(true);
-    }, [status, router]);
+    }, [status]);
 
     if (!isReady) {
         return (
-            <div className="flex items-center justify-center w-full h-screen bg-[#061226]">
+            <div className="flex items-center justify-center w-full h-full bg-[#061226]">
                 <div className="text-center text-white">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
                     Loading your trading data...
@@ -77,14 +70,12 @@ function TradesChatContent() {
 
 export default function TradesChatPage() {
     return (
-        <LayoutClient>
-            <NotificationProvider>
-                <UserProvider>
-                    <TradeProvider>
-                        <TradesChatContent />
-                    </TradeProvider>
-                </UserProvider>
-            </NotificationProvider>
-        </LayoutClient>
+        <NotificationProvider>
+            <UserProvider>
+                <TradeProvider>
+                    <TradesChatContent />
+                </TradeProvider>
+            </UserProvider>
+        </NotificationProvider>
     );
 }

@@ -2,7 +2,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         const conversationId = params.id;
         console.log(`Fetching conversation ${conversationId} for user ${userId}`);
 
-        const supabase = createClient();
+        const supabase = createAdminClient();
 
         // Get conversation
         const { data: conversation, error: convError } = await supabase
@@ -105,7 +105,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         const body = await req.json();
         const { title, pinned, archived, model } = body;
 
-        const supabase = createClient();
+        const supabase = createAdminClient();
         const conversationId = params.id;
 
         const updateData: any = {
@@ -147,7 +147,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const supabase = createClient();
+        const supabase = createAdminClient();
         const conversationId = params.id;
 
         // Delete conversation (messages will be deleted automatically due to CASCADE)

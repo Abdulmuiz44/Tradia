@@ -50,7 +50,6 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
   onExportConversation,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
 
   const { pinnedConversations, regularConversations } = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -84,14 +83,13 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
             <Plus className="h-4 w-4" />
             New Chat
           </Button>
-          <Button
-            type="button"
-            onClick={() => setHistoryModalOpen(true)}
+          <Link
+            href="/dashboard/trades/history"
             className="flex items-center justify-center gap-2 rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 text-sm font-semibold text-white transition hover:border-indigo-300 hover:bg-indigo-500/20"
           >
             <History className="h-4 w-4" />
             History
-          </Button>
+          </Link>
         </div>
 
         <label className="relative mt-6 flex items-center">
@@ -149,13 +147,6 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
       <div className="relative border-t border-indigo-500/20 px-6 py-6">
         <SidebarUserBadge />
       </div>
-
-      <HistoryModal
-        open={historyModalOpen}
-        onClose={() => setHistoryModalOpen(false)}
-        conversations={conversations}
-        onSelectConversation={onSelectConversation}
-      />
     </div>
   );
 };
@@ -490,109 +481,5 @@ export const SidebarUserBadge: React.FC = () => {
   );
 };
 
-interface HistoryModalProps {
-  open: boolean;
-  onClose: () => void;
-  conversations: Conversation[];
-  onSelectConversation?: (id: string) => void;
-}
 
-const HistoryModal: React.FC<HistoryModalProps> = ({
-  open,
-  onClose,
-  conversations,
-  onSelectConversation,
-}) => {
-  if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 px-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-indigo-500/40 bg-[#050b18] text-white shadow-[0_40px_90px_rgba(5,11,24,0.65)]">
-        <div className="flex items-center justify-between border-b border-indigo-500/40 px-6 py-5">
-          <div>
-            <h3 className="text-lg font-semibold text-white">Conversation history</h3>
-            <p className="text-xs text-white/60">Browse and jump back into previous sessions.</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-9 w-9 rounded-full border border-indigo-500/40 text-white/70 hover:border-indigo-300 hover:text-white"
-            aria-label="Close history"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <ScrollArea className="max-h-[420px] px-6 py-6">
-          {conversations.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-indigo-500/40 bg-[#050b18] px-6 py-10 text-center text-sm text-white/70">
-              No conversations yet. Start chatting to build your history.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {conversations.map((conversation) => {
-                const updatedAt =
-                  conversation.updatedAt instanceof Date
-                    ? conversation.updatedAt
-                    : new Date(conversation.updatedAt);
-
-                const lastMessage = conversation.messages[conversation.messages.length - 1];
-
-                return (
-                  <button
-                    key={conversation.id}
-                    type="button"
-                    onClick={() => {
-                      onSelectConversation?.(conversation.id);
-                      onClose();
-                    }}
-                    className="w-full rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-4 text-left transition hover:border-indigo-300 hover:bg-indigo-500/10"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white">
-                          {conversation.title || "Untitled conversation"}
-                        </p>
-                        <p className="mt-1 text-xs text-white/60">
-                          Updated {updatedAt.toLocaleString()}
-                        </p>
-                      </div>
-                      {conversation.pinned && (
-                        <span className="ml-3 rounded-full border border-indigo-500/40 bg-[#050b18] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/80">
-                          Pinned
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-3 line-clamp-2 text-xs text-white/70">
-                      {lastMessage?.content || "No message preview available."}
-                    </p>
-                    <div className="mt-4 flex items-center justify-between text-[11px] text-white/60">
-                      <span>{conversation.messages.length} messages</span>
-                      <span>ID • {conversation.id.slice(0, 8)}...</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-
-        <div className="flex items-center justify-end gap-2 border-t border-indigo-500/40 px-6 py-4">
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            className="h-9 rounded-full border border-indigo-500/40 px-4 text-sm font-semibold text-white/80 hover:border-indigo-300 hover:text-white"
-          >
-            Close
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
