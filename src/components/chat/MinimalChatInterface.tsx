@@ -125,8 +125,23 @@ export function MinimalChatInterface({
                             {m.role === 'user' ? (
                                 <div className="whitespace-pre-wrap text-white">{m.content}</div>
                             ) : (
-                                <div className="prose prose-invert prose-sm max-w-none [&_*]:text-white">
-                                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                                <div className="text-white space-y-4 [&_p]:mb-4 [&_li]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+                                    <ReactMarkdown
+                                        components={{
+                                            p: ({ children }) => <p className="text-white leading-relaxed">{children}</p>,
+                                            h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-4 mb-3">{children}</h1>,
+                                            h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
+                                            h3: ({ children }) => <h3 className="font-semibold text-white mt-2 mb-2">{children}</h3>,
+                                            ul: ({ children }) => <ul className="list-disc list-inside text-white space-y-1">{children}</ul>,
+                                            ol: ({ children }) => <ol className="list-decimal list-inside text-white space-y-1">{children}</ol>,
+                                            li: ({ children }) => <li className="text-white">{children}</li>,
+                                            strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+                                            em: ({ children }) => <em className="italic text-white">{children}</em>,
+                                            code: ({ children }) => <code className="bg-gray-700 text-white px-2 py-1 rounded text-xs">{children}</code>,
+                                        }}
+                                    >
+                                        {m.content}
+                                    </ReactMarkdown>
                                 </div>
                             )}
                         </div>
@@ -140,13 +155,19 @@ export function MinimalChatInterface({
                 ))}
 
                 {isLoading && (
-                    <div className="flex gap-4 items-center">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold">
+                    <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
                             AI
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                            <span className="text-sm text-gray-400">Analyzing...</span>
+                        <div className="max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg bg-gray-800/70 text-white">
+                            <div className="flex items-center gap-2">
+                                <span>Thinking</span>
+                                <span className="flex gap-1">
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 )}
