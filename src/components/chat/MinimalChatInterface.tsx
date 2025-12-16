@@ -224,7 +224,7 @@ export function MinimalChatInterface({
     return (
         <div className="w-full h-screen bg-[#0D0D0D] dark:bg-[#0D0D0D] text-white flex flex-col">
             {/* Header with Menu */}
-            <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-6 md:px-8 py-4 border-b border-white/5 bg-gray-900/50">
+            <div className="flex-shrink-0 flex items-center justify-start px-3 sm:px-6 md:px-8 py-4 border-b border-white/5 bg-gray-900/50">
                 <div className="relative flex items-center gap-2">
                     <button
                         onClick={() => setShowHistoryMenu(!showHistoryMenu)}
@@ -234,7 +234,11 @@ export function MinimalChatInterface({
                     >
                         <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
-                    <span className="text-xs sm:text-sm font-medium hidden sm:inline text-gray-300">History</span>
+                    
+                    <div className="flex items-center gap-2 text-sm sm:text-base font-semibold">
+                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                        <span className="hidden sm:inline text-gray-300">Tradia AI</span>
+                    </div>
 
                     {/* History Menu Dropdown - Mobile & Desktop */}
                     {showHistoryMenu && (
@@ -294,15 +298,10 @@ export function MinimalChatInterface({
                         </div>
                     )}
                 </div>
-
-                <div className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-                    <span className="hidden xs:inline">Tradia AI</span>
-                </div>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 space-y-6 pb-40">
                 {messages.map((m: any) => (
                     <div
                         key={m.id}
@@ -384,10 +383,10 @@ export function MinimalChatInterface({
             </div>
 
             {/* Input Area - Sticks to Bottom */}
-            <div className="flex-shrink-0 w-full px-4 sm:px-6 md:px-8 py-4 border-t border-white/5">
-                <form onSubmit={handleSubmit} className="flex items-end gap-3">
+            <div className="flex-shrink-0 border-t border-white/5 bg-[#0D0D0D] px-4 sm:px-6 md:px-8 py-4">
+                <form onSubmit={handleSubmit} className="flex items-end gap-3 max-w-4xl mx-auto">
                     <textarea
-                        className="flex-1 min-h-[44px] max-h-[120px] bg-white/5 text-white border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/20 resize-none placeholder:text-gray-500"
+                        className="flex-1 min-h-[44px] max-h-[120px] bg-white/5 text-white border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/20 resize-none placeholder:text-gray-500 focus:bg-white/10 transition-colors"
                         value={input}
                         onChange={handleInputChange}
                         placeholder="Ask about your trading..."
