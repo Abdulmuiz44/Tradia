@@ -2,7 +2,8 @@
 
 import { useChat } from 'ai/react';
 import { useRef, useEffect, useState } from 'react';
-import { Send, Loader2, StopCircle } from 'lucide-react';
+import { Send, Loader2, StopCircle, Menu, Clock, Plus, MessageCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import type { Trade } from '@/types/trade';
@@ -18,18 +19,53 @@ export function MinimalChatInterface({
     mode = 'analysis',
     conversationId,
 }: MinimalChatInterfaceProps = {}) {
+    const router = useRouter();
     const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
     const [showTradeSelector, setShowTradeSelector] = useState(false);
+    const [showHistoryMenu, setShowHistoryMenu] = useState(false);
+    const [conversations, setConversations] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
+    const [initialMessages, setInitialMessages] = useState<any[]>([
+        {
+            id: 'welcome',
+            role: 'assistant',
+            content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
+        },
+    ]);
+
+    // Load existing conversation messages
+    useEffect(() => {
+        const loadConversationMessages = async () => {
+            if (!conversationId || initialMessagesLoaded) return;
+
+            try {
+                const res = await fetch(`/api/conversations/${conversationId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.messages && data.messages.length > 0) {
+                        const loadedMessages = data.messages.map((msg: any) => ({
+                            id: msg.id,
+                            role: msg.type === 'user' ? 'user' : 'assistant',
+                            content: msg.content,
+                        }));
+                        setInitialMessages(loadedMessages);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load conversation:', err);
+            } finally {
+                setInitialMessagesLoaded(true);
+            }
+        };
+
+        loadConversationMessages();
+    }, [conversationId, initialMessagesLoaded]);
 
     const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
         api: '/api/tradia/ai',
-        initialMessages: [
-            {
-                id: 'welcome',
-                role: 'assistant',
-                content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
-            },
-        ],
+        initialMessages,
         body: {
             mode,
             conversationId,
@@ -98,8 +134,120 @@ export function MinimalChatInterface({
 
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    // Fetch conversation history
+    useEffect(() => {
+        const fetchConversations = async () => {
+            setLoadingHistory(true);
+            try {
+                const res = await fetch('/api/conversations');
+                if (res.ok) {
+                    const data = await res.json();
+                    const convList = Array.isArray(data) ? data : (data.conversations || []);
+                    setConversations(convList.slice(0, 10)); // Last 10 conversations
+                }
+            } catch (err) {
+                console.error('Failed to load conversations:', err);
+            } finally {
+                setLoadingHistory(false);
+            }
+        };
+
+        if (showHistoryMenu) {
+            fetchConversations();
+        }
+    }, [showHistoryMenu]);
+
+    const startNewConversation = () => {
+        setMessages([
+            {
+                id: 'welcome',
+                role: 'assistant',
+                content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
+            },
+        ]);
+        setShowHistoryMenu(false);
+    };
+
     return (
         <div className="w-full h-screen bg-[#0D0D0D] dark:bg-[#0D0D0D] text-white flex flex-col">
+            {/* Header with Menu */}
+            <div className="flex-shrink-0 flex items-center justify-between px-3 sm:px-6 md:px-8 py-4 border-b border-white/5 bg-gray-900/50">
+                <div className="relative flex items-center gap-2">
+                    <button
+                        onClick={() => setShowHistoryMenu(!showHistoryMenu)}
+                        className="p-2 hover:bg-white/10 rounded-lg transition-colors hover:scale-105 active:scale-95"
+                        title="Conversation history and new chat"
+                        aria-label="Open conversation menu"
+                    >
+                        <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </button>
+                    <span className="text-xs sm:text-sm font-medium hidden sm:inline text-gray-300">History</span>
+
+                    {/* History Menu Dropdown - Mobile & Desktop */}
+                    {showHistoryMenu && (
+                        <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-gray-900 border border-white/10 rounded-lg shadow-2xl z-50 max-h-96 overflow-hidden flex flex-col">
+                            <div className="p-3 border-b border-white/10 flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm font-semibold">
+                                    <Clock className="w-4 h-4" />
+                                    Conversations
+                                </div>
+                                <button
+                                    onClick={startNewConversation}
+                                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                                    title="New conversation"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto">
+                                {loadingHistory ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">
+                                        <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
+                                        Loading...
+                                    </div>
+                                ) : conversations.length === 0 ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">No conversations yet</div>
+                                ) : (
+                                    conversations.map((conv: any) => (
+                                        <button
+                                            key={conv.id}
+                                            onClick={() => {
+                                                router.push(`/dashboard/trades/chat?id=${conv.id}`);
+                                                setShowHistoryMenu(false);
+                                            }}
+                                            className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 active:bg-white/20"
+                                        >
+                                            <div className="text-sm font-semibold text-white truncate">{conv.title || 'Untitled Conversation'}</div>
+                                            <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {new Date(conv.updated_at).toLocaleDateString()} {new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                            {conv.mode && <div className="text-xs text-blue-300 mt-1 capitalize">{conv.mode} mode</div>}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    router.push('/dashboard/trades/chat/history');
+                                    setShowHistoryMenu(false);
+                                }}
+                                className="w-full p-3 text-sm font-medium text-center text-blue-400 hover:bg-white/10 hover:text-blue-300 border-t border-white/10 transition-colors active:bg-white/20"
+                            >
+                                View all conversations →
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2 text-sm sm:text-base font-semibold">
+                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                    <span className="hidden xs:inline">Tradia AI</span>
+                </div>
+            </div>
+
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 space-y-6">
                 {messages.map((m: any) => (
@@ -155,18 +303,14 @@ export function MinimalChatInterface({
                 ))}
 
                 {isLoading && (
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 animate-in fade-in duration-300">
                         <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
                             AI
                         </div>
                         <div className="max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg bg-gray-800/70 text-white">
-                            <div className="flex items-center gap-2">
-                                <span>Thinking</span>
-                                <span className="flex gap-1">
-                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                                </span>
+                            <div className="flex items-center gap-3">
+                                <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                                <span>Generating response...</span>
                             </div>
                         </div>
                     </div>
@@ -222,11 +366,6 @@ export function MinimalChatInterface({
                         </button>
                     )}
                 </form>
-
-                {/* Powered by Mistral AI */}
-                <div className="text-center mt-2 text-xs text-gray-400">
-                    Powered by Mistral AI
-                </div>
             </div>
         </div>
     );

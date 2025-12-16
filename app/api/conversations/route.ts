@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ conversations: conversations || [] });
+    return NextResponse.json(conversations || []);
   } catch (err: unknown) {
     console.error("Failed to fetch conversations:", err);
     const message = err instanceof Error ? err.message : String(err);

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MinimalChatInterface } from "@/components/chat/MinimalChatInterface";
 import type { Trade } from "@/types/trade";
 import LayoutClient from "@/components/LayoutClient";
@@ -14,6 +14,8 @@ import { Loader2 } from "lucide-react";
 function TradesChatContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const conversationIdFromUrl = searchParams?.get("id") || null;
   const { trades } = useTrade();
   const [isReady, setIsReady] = useState(false);
 
@@ -68,7 +70,7 @@ function TradesChatContent() {
     <MinimalChatInterface
       trades={normalizedTrades}
       mode="analysis"
-      conversationId={`chat_${session?.user?.id}_${Date.now()}`}
+      conversationId={conversationIdFromUrl || `chat_${session?.user?.id}_${Date.now()}`}
     />
   );
 }

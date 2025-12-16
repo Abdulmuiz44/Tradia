@@ -1,0 +1,11 @@
+
+> tradia-frontend-v1@0.1.0 build
+> npx next build
+
+   Creating an optimized production build ...
+   Linting and checking validity of types ...
+
+./app/dashboard/risk-management/page.tsx
+39:8  Warning: React Hook useEffect has missing dependencies: 'refreshTrades' and 'trades.length'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
