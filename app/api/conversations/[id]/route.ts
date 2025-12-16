@@ -16,11 +16,14 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         const userId = session?.user?.id;
 
         if (!userId) {
+            console.error("No user ID in session");
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const supabase = createClient();
         const conversationId = params.id;
+        console.log(`Fetching conversation ${conversationId} for user ${userId}`);
+
+        const supabase = createClient();
 
         // Get conversation
         const { data: conversation, error: convError } = await supabase
@@ -30,10 +33,21 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             .eq("user_id", userId)
             .single();
 
-        if (convError) throw convError;
+        if (convError) {
+            console.error("Conversation query error:", convError);
+            // Check if it's a PGRST116 error (no rows)
+            if (convError.code === 'PGRST116') {
+                return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+            }
+            throw convError;
+        }
+
         if (!conversation) {
+            console.error("Conversation not found for ID:", conversationId);
             return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
         }
+
+        console.log("Conversation found:", conversation.id);
 
         // Get messages
         const { data: messages, error: msgError } = await supabase
@@ -43,7 +57,12 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             .eq("user_id", userId)
             .order("created_at", { ascending: true });
 
-        if (msgError) throw msgError;
+        if (msgError) {
+            console.error("Messages query error:", msgError);
+            throw msgError;
+        }
+
+        console.log(`Loaded ${messages?.length || 0} messages for conversation`);
 
         return NextResponse.json({
             conversation,
@@ -52,7 +71,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     } catch (err: unknown) {
         console.error("Failed to fetch conversation:", err);
         const message = err instanceof Error ? err.message : String(err);
-        return NextResponse.json({ error: message || "Failed to fetch conversation" }, { status: 500 });
+        return NextResponse.json(
+            { error: message || "Failed to fetch conversation" },
+            { status: 500 }
+        );
     }
 }
 

@@ -38,35 +38,56 @@ export function MinimalChatInterface({
     // Load existing conversation messages
     useEffect(() => {
         const loadConversationMessages = async () => {
-            if (!conversationId) return;
+            // Only load if conversationId is provided and is not a new conversation
+            if (!conversationId || conversationId === 'undefined') return;
+
+            // Don't load if it looks like a temporary ID (try to fetch only from DB)
+            if (!conversationId.startsWith('conv_')) {
+                console.warn('Invalid conversation ID format:', conversationId);
+                setInitialMessagesLoaded(true);
+                return;
+            }
 
             try {
+                console.log('Loading conversation:', conversationId);
                 const res = await fetch(`/api/conversations/${conversationId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.messages && data.messages.length > 0) {
-                        const loadedMessages = data.messages.map((msg: any) => ({
-                            id: msg.id,
-                            role: msg.type === 'user' ? 'user' : 'assistant',
-                            content: msg.content,
-                        }));
-                        setInitialMessages(loadedMessages);
-                        setMessages(loadedMessages);
-                    } else {
-                        // No messages yet, show welcome message
-                        const welcomeMessage = {
-                            id: 'welcome',
-                            role: 'assistant' as const,
-                            content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
-                        };
-                        setInitialMessages([welcomeMessage]);
-                        setMessages([welcomeMessage]);
-                    }
+                
+                if (res.status === 404) {
+                    console.log('Conversation not found, starting new one');
+                    setInitialMessagesLoaded(true);
+                    return;
+                }
+                
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch conversation: ${res.status}`);
+                }
+                
+                const data = await res.json();
+                console.log('Loaded conversation data:', data);
+                
+                if (data.messages && data.messages.length > 0) {
+                    const loadedMessages = data.messages.map((msg: any) => ({
+                        id: msg.id,
+                        role: msg.type === 'user' ? 'user' : 'assistant',
+                        content: msg.content,
+                    }));
+                    console.log('Setting messages:', loadedMessages.length);
+                    setInitialMessages(loadedMessages);
+                    setMessages(loadedMessages);
                 } else {
-                    console.error('Failed to fetch conversation:', res.status);
+                    // No messages yet, show welcome message
+                    const welcomeMessage = {
+                        id: 'welcome',
+                        role: 'assistant' as const,
+                        content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
+                    };
+                    setInitialMessages([welcomeMessage]);
+                    setMessages([welcomeMessage]);
                 }
             } catch (err) {
                 console.error('Failed to load conversation:', err);
+                // Still mark as loaded so we don't keep retrying
+                setInitialMessagesLoaded(true);
             } finally {
                 setInitialMessagesLoaded(true);
             }
