@@ -64,11 +64,11 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
   }, [conversations, searchQuery]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[#050b18] text-white">
-      <div className="border-b border-indigo-500/40 px-6 pb-6 pt-7">
+    <div className="flex h-full flex-col overflow-hidden bg-[#0D0D0D] text-white">
+      <div className="border-b border-white/5 px-6 pb-6 pt-7">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Workspace</h2>
-          <span className="rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/80">
+          <h2 className="text-lg font-semibold text-white">Conversations</h2>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/60">
             {conversations.length} chats
           </span>
         </div>
@@ -78,14 +78,14 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
             type="button"
             onClick={onCreateConversation}
             disabled={!onCreateConversation}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-3 text-sm font-semibold text-white transition hover:border-indigo-300 hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:border-indigo-500/20 disabled:bg-indigo-500/5 disabled:text-white/50"
+            className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-white/5 disabled:bg-white/2 disabled:text-white/40"
           >
             <Plus className="h-4 w-4" />
             New Chat
           </Button>
           <Link
             href="/dashboard/trades/history"
-            className="flex items-center justify-center gap-2 rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 text-sm font-semibold text-white transition hover:border-indigo-300 hover:bg-indigo-500/20"
+            className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10"
           >
             <History className="h-4 w-4" />
             History
@@ -93,12 +93,12 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
         </div>
 
         <label className="relative mt-6 flex items-center">
-          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-white/60" />
+          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-white/40" />
           <Input
-            placeholder="Search conversation titles"
+            placeholder="Search conversations"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-10 w-full rounded-full border border-indigo-500/40 bg-[#050b18] pl-10 text-sm text-white placeholder:text-white/50 focus:border-indigo-300 focus:outline-none"
+            className="h-10 w-full rounded-lg border border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-white/40 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
           />
         </label>
       </div>
@@ -106,14 +106,14 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
       <ScrollArea className="flex-1 px-6 py-6">
         <div className="space-y-6">
           {loading && (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-8 text-sm text-white/80">
-              <div className="mb-3 h-6 w-6 animate-spin rounded-full border-2 border-indigo-500/40 border-t-white/80" />
+            <div className="flex flex-col items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-8 text-sm text-white/60">
+              <div className="mb-3 h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
               Loading conversations...
             </div>
           )}
 
           {!loading && conversations.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-indigo-500/40 bg-[#050b18] px-4 py-6 text-center text-sm text-white/70">
+            <div className="rounded-lg border border-dashed border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-white/50">
               Start a new chat to begin your AI coaching journey.
             </div>
           )}
@@ -144,7 +144,7 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
         </div>
       </ScrollArea>
 
-      <div className="relative border-t border-indigo-500/20 px-6 py-6">
+      <div className="relative border-t border-white/5 px-6 py-6">
         <SidebarUserBadge />
       </div>
     </div>
@@ -243,10 +243,10 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   return (
     <div
       className={cn(
-        "group relative cursor-pointer rounded-2xl border px-4 py-4 transition-colors duration-150",
+        "group relative cursor-pointer rounded-lg border px-4 py-3 transition-colors duration-150",
         isActive
-          ? "border-white/40 bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30"
-          : "border-indigo-500/20 bg-[#0b152f] text-indigo-100 hover:border-indigo-400/50 hover:bg-indigo-500/15"
+          ? "border-blue-400/50 bg-blue-500/10 text-white"
+          : "border-white/10 bg-white/5 text-white hover:border-white/20 hover:bg-white/10"
       )}
       onClick={onSelect}
     >
@@ -258,7 +258,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
               onChange={(event) => setEditTitle(event.target.value)}
               onKeyDown={handleKeyPress}
               onBlur={handleSaveEdit}
-              className="h-7 w-full rounded-md border border-transparent bg-white/90 px-3 text-sm font-medium text-[#050b18] focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="h-7 w-full rounded-md border border-transparent bg-white/90 px-3 text-sm font-medium text-[#0D0D0D] focus:outline-none focus:ring-2 focus:ring-blue-400"
               autoFocus
             />
           ) : (
@@ -266,18 +266,17 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
               {conversation.title || "Untitled conversation"}
             </div>
           )}
-          <div className="mt-1 text-[11px] uppercase tracking-wide text-indigo-300/70">
-            Updated {normalizedUpdatedAt.toLocaleDateString()} • {conversation.messages.length} messages
+          <div className="mt-1 text-[11px] uppercase tracking-wide text-white/40">
+            {conversation.messages.length} messages
           </div>
         </div>
 
-        <div className="flex flex-none items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-1 text-[11px] font-medium text-indigo-200">
-          <Pin className={cn("h-3 w-3", conversation.pinned ? "text-white" : "text-indigo-300")} />
-          {conversation.pinned ? "Pinned" : "Chat"}
+        <div className="flex flex-none items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-[11px] font-medium text-white/60">
+          <Pin className={cn("h-3 w-3", conversation.pinned ? "text-blue-400" : "text-white/40")} />
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="mt-2 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <SidebarAction
           label={conversation.pinned ? "Unpin" : "Pin"}
           onClick={(event) => {
@@ -340,7 +339,7 @@ const SidebarAction: React.FC<SidebarActionProps> = ({ label, onClick, children,
     size="sm"
     onClick={onClick}
     className={cn(
-      "h-7 rounded-full border border-indigo-500/40 bg-[#050b18] px-3 text-[11px] text-white/80 transition-colors hover:border-indigo-300 hover:bg-indigo-500/10 hover:text-white",
+      "h-7 rounded-lg border border-white/10 bg-white/5 px-3 text-[11px] text-white/60 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white",
       className,
     )}
   >
@@ -382,79 +381,79 @@ export const SidebarUserBadge: React.FC = () => {
     >
       <button
         type="button"
-        className="flex w-full items-center gap-3 rounded-2xl border border-indigo-500/40 bg-[#050b18] px-4 py-3 text-left text-sm text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
+        className="flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-white transition hover:border-white/20 hover:bg-white/10"
       >
-        <Avatar className="h-10 w-10 border border-indigo-500/40 bg-[#050b18]">
+        <Avatar className="h-10 w-10 border border-white/10 bg-white/5">
           <AvatarImage src={avatarSrc} alt={name} />
-          <AvatarFallback className="bg-indigo-500/20 text-sm font-semibold text-white">{userInitial}</AvatarFallback>
+          <AvatarFallback className="bg-white/10 text-sm font-semibold text-white">{userInitial}</AvatarFallback>
         </Avatar>
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-white">{name}</p>
-          {email && <p className="truncate text-xs text-white/60">{email}</p>}
+          {email && <p className="truncate text-xs text-white/40">{email}</p>}
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          <span className="rounded-full border border-indigo-500/40 bg-[#050b18] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/80">
+          <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/60">
             {planDisplay}
           </span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 text-white/70 transition-transform",
-              menuOpen ? "rotate-180 text-white" : ""
+              "h-4 w-4 text-white/40 transition-transform",
+              menuOpen ? "rotate-180 text-white/60" : ""
             )}
           />
         </div>
       </button>
 
       {menuOpen && (
-        <div className="absolute bottom-[calc(100%+12px)] left-0 z-50 w-64 rounded-2xl border border-indigo-500/40 bg-[#050b18] p-3 shadow-[0_24px_60px_rgba(5,11,24,0.6)]">
-          <div className="rounded-xl border border-indigo-500/40 bg-[#050b18] px-3 py-2 text-xs text-white/70">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/50">Signed in as</p>
+        <div className="absolute bottom-[calc(100%+12px)] left-0 z-50 w-64 rounded-lg border border-white/10 bg-[#0D0D0D] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
+          <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40">Signed in as</p>
             <p className="truncate text-sm font-semibold text-white">{email || "Unknown"}</p>
-            <p className="mt-1 text-[10px] uppercase tracking-wide text-white/60">Plan • {planDisplay}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-wide text-white/40">Plan • {planDisplay}</p>
           </div>
 
           <nav className="mt-3 space-y-1 text-sm">
             <Link
               href="/dashboard/profile"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl border border-indigo-500/40 bg-[#050b18] px-3 py-2 text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
+              className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white transition hover:border-white/20 hover:bg-white/10"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/40 bg-[#050b18] text-white/70">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60">
                 <User className="h-4 w-4" />
               </span>
               <div className="flex-1">
                 <p className="font-medium">Profile</p>
-                <p className="text-xs text-white/60">Update account details</p>
+                <p className="text-xs text-white/40">Update account details</p>
               </div>
             </Link>
 
             <Link
               href="/dashboard/settings"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl border border-indigo-500/40 bg-[#050b18] px-3 py-2 text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
+              className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white transition hover:border-white/20 hover:bg-white/10"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/40 bg-[#050b18] text-white/70">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60">
                 <Settings className="h-4 w-4" />
               </span>
               <div className="flex-1">
                 <p className="font-medium">Settings</p>
-                <p className="text-xs text-white/60">Configure preferences</p>
+                <p className="text-xs text-white/40">Configure preferences</p>
               </div>
             </Link>
 
             <Link
               href="/dashboard/billing"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl border border-indigo-500/40 bg-[#050b18] px-3 py-2 text-white transition hover:border-indigo-300 hover:bg-indigo-500/10"
+              className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white transition hover:border-white/20 hover:bg-white/10"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/40 bg-[#050b18] text-white/70">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60">
                 <CreditCard className="h-4 w-4" />
               </span>
               <div className="flex-1">
                 <p className="font-medium">Billing & Usage</p>
-                <p className="text-xs text-white/60">Manage plan & invoices</p>
+                <p className="text-xs text-white/40">Manage plan & invoices</p>
               </div>
             </Link>
 
@@ -462,16 +461,16 @@ export const SidebarUserBadge: React.FC = () => {
               type="button"
               onClick={() => {
                 setMenuOpen(false);
-                signOut({ callbackUrl: "/" }).catch(() => {});
+                signOut({ callbackUrl: "/" }).catch(() => { });
               }}
-              className="flex w-full items-center gap-3 rounded-xl border border-indigo-500/40 bg-[#050b18] px-3 py-2 text-white/70 transition hover:border-red-400/60 hover:bg-red-500/20 hover:text-white"
+              className="flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white/60 transition hover:border-red-400/40 hover:bg-red-500/10 hover:text-white"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/40 bg-[#050b18] text-white/70">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60">
                 <LogOut className="h-4 w-4" />
               </span>
               <div className="flex-1 text-left">
                 <p className="font-medium">Sign out</p>
-                <p className="text-xs text-white/60">Log out of Tradia</p>
+                <p className="text-xs text-white/40">Log out of Tradia</p>
               </div>
             </button>
           </nav>

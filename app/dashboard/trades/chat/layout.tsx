@@ -184,11 +184,11 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
 
   return (
     <div className="flex h-screen w-full bg-[#0D0D0D] overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar - Hidden by default, shown only when clicked */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-40 w-80 border-r border-indigo-500/20 bg-[#050b18]
-          transition-transform duration-300 md:relative md:translate-x-0
+          fixed inset-y-0 left-0 z-40 w-80 border-r border-white/10 bg-[#0D0D0D]
+          transition-transform duration-300
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
@@ -204,20 +204,18 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         />
       </div>
 
-      {/* Mobile sidebar overlay */}
+      {/* Sidebar overlay - visible on all screen sizes when sidebar is open */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/50"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
-
-        {/* Chat content */}
-        <div className="flex-1 overflow-hidden">{children}</div>
+         {/* Chat content */}
+         <div className="flex-1 overflow-hidden">{children}</div>
       </div>
     </div>
   );
