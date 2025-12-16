@@ -38,7 +38,7 @@ export function MinimalChatInterface({
     // Load existing conversation messages
     useEffect(() => {
         const loadConversationMessages = async () => {
-            if (!conversationId || initialMessagesLoaded) return;
+            if (!conversationId) return;
 
             try {
                 const res = await fetch(`/api/conversations/${conversationId}`);
@@ -51,7 +51,19 @@ export function MinimalChatInterface({
                             content: msg.content,
                         }));
                         setInitialMessages(loadedMessages);
+                        setMessages(loadedMessages);
+                    } else {
+                        // No messages yet, show welcome message
+                        const welcomeMessage = {
+                            id: 'welcome',
+                            role: 'assistant' as const,
+                            content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
+                        };
+                        setInitialMessages([welcomeMessage]);
+                        setMessages([welcomeMessage]);
                     }
+                } else {
+                    console.error('Failed to fetch conversation:', res.status);
                 }
             } catch (err) {
                 console.error('Failed to load conversation:', err);
@@ -60,8 +72,11 @@ export function MinimalChatInterface({
             }
         };
 
-        loadConversationMessages();
-    }, [conversationId, initialMessagesLoaded]);
+        // Only load if we have a conversation ID and haven't loaded yet
+        if (!initialMessagesLoaded) {
+            loadConversationMessages();
+        }
+    }, [conversationId]);
 
     const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
         api: '/api/tradia/ai',
@@ -140,13 +155,23 @@ export function MinimalChatInterface({
             setLoadingHistory(true);
             try {
                 const res = await fetch('/api/conversations');
-                if (res.ok) {
-                    const data = await res.json();
-                    const convList = Array.isArray(data) ? data : (data.conversations || []);
-                    setConversations(convList.slice(0, 10)); // Last 10 conversations
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch conversations: ${res.status}`);
                 }
+                const data = await res.json();
+
+                // Handle both array and object responses
+                const convList = Array.isArray(data) ? data : (data.conversations || []);
+
+                // Filter out "New Conversation" entries that have no messages (optional filter for cleaner UX)
+                // But keep them if they have messages - user might be actively using them
+                const filteredConvs = convList.slice(0, 10); // Last 10 conversations
+
+                setConversations(filteredConvs);
+                console.log(`Loaded ${filteredConvs.length} conversations for user`);
             } catch (err) {
                 console.error('Failed to load conversations:', err);
+                setConversations([]);
             } finally {
                 setLoadingHistory(false);
             }
