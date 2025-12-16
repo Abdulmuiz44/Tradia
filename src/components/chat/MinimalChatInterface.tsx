@@ -117,15 +117,15 @@ export function MinimalChatInterface({
                         )}
 
                         <div className={cn(
-                            "max-w-2xl text-sm leading-relaxed font-semibold text-white px-4 py-3 rounded-lg",
+                            "max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg",
                             m.role === 'user'
-                                ? "bg-white/10"
-                                : "bg-white/10"
+                                ? "bg-white/10 text-white"
+                                : "bg-gray-800/70 text-white"
                         )}>
                             {m.role === 'user' ? (
-                                <div className="whitespace-pre-wrap">{m.content}</div>
+                                <div className="whitespace-pre-wrap text-white">{m.content}</div>
                             ) : (
-                                <div className="prose prose-invert prose-sm max-w-none">
+                                <div className="prose prose-invert prose-sm max-w-none [&_*]:text-white">
                                     <ReactMarkdown>{m.content}</ReactMarkdown>
                                 </div>
                             )}
