@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);

@@ -6,6 +6,8 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { createAdminSupabase } from "@/utils/supabase/admin";
 
+export const dynamic = 'force-dynamic';
+
 const JWT_SECRET = process.env.JWT_SECRET!;
 if (!JWT_SECRET) console.warn("JWT_SECRET not set");
 

@@ -8,6 +8,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { withDerivedTradeTimes, getTradeCloseTime, getTradeOpenTime } from "@/lib/trade-field-utils";
 
+export const dynamic = 'force-dynamic';
+
 const MODE_PROMPTS: Record<string, string> = {
   coach:
     "Adopt the Tradia Coach voice. Deliver direct accountability, focus on habit building, and always return a concise action plan with measurable next steps.",

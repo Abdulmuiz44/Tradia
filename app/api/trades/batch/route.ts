@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import type { Trade } from "@/types/trade";
 
+export const dynamic = 'force-dynamic';
+
 const coalesce = <T>(...values: (T | null | undefined)[]): T | undefined => {
     for (const value of values) {
         if (value !== null && value !== undefined) {

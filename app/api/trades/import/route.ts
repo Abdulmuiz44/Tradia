@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from '@/lib/authOptions';
 import { createClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 const coalesce = <T>(...values: (T | null | undefined)[]): T | undefined => {
   for (const value of values) {
     if (value !== null && value !== undefined) {

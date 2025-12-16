@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import type { Trade } from "@/types/trade";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/trades/[id]
  * Fetch a single trade by ID

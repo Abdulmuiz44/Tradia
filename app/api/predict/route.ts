@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 
+export const dynamic = 'force-dynamic';
+
 // Access control: Only Plus and Elite plans can access Tradia Predict
 const ALLOWED_PLANS = ["plus", "elite"];
 

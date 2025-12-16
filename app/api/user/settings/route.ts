@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 
+export const dynamic = 'force-dynamic';
+
 const JWT_SECRET = process.env.JWT_SECRET ?? "";
 
 // Extend default NextAuth session typing

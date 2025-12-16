@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 
+export const dynamic = 'force-dynamic';
+
 // Only Pro and above can set/view broker preference
 const PRO_PLANS = new Set(["pro", "plus", "elite"]);
 

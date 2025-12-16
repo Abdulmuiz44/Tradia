@@ -8,6 +8,8 @@ import { cookies, headers as nextHeaders } from "next/headers";
 import jwt from "jsonwebtoken";
 import { createClient } from "@/utils/supabase/server";
 
+export const dynamic = 'force-dynamic';
+
 type ResolvedUser = { id: string; email: string } | null;
 
 async function resolveUserFromRequest(body?: any): Promise<ResolvedUser> {

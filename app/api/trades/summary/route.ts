@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import { withDerivedTradeTimes, getTradeCloseTime } from "@/lib/trade-field-utils";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);

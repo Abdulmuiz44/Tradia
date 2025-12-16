@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import { makeSecret, splitTradePlanFields } from "@/lib/secure-store";
 
+export const dynamic = 'force-dynamic';
+
 function toCamel(row: any) {
   const base = {
     id: row.id,
