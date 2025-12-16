@@ -36,12 +36,19 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         if (convError) {
             console.error("Conversation query error:", convError);
             // Check if it's a PGRST116 error (no rows) - this is expected for non-existent conversations
-            if (convError.code === 'PGRST116' || convError.message.includes('No rows')) {
+            if (convError.code === 'PGRST116' || convError.message?.includes('No rows')) {
                 console.log("Conversation doesn't exist in database yet");
                 return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
             }
-            console.error("Unexpected database error:", convError.message);
-            throw convError;
+            // For other errors, return a more user-friendly message
+            console.error("Database query error:", {
+                code: (convError as any).code,
+                message: (convError as any).message
+            });
+            return NextResponse.json(
+                { error: "Failed to load conversation from database" },
+                { status: 500 }
+            );
         }
 
         if (!conversation) {
@@ -61,7 +68,12 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
         if (msgError) {
             console.error("Messages query error:", msgError);
-            throw msgError;
+            // Return conversation with empty messages array instead of throwing
+            console.log("Returning conversation with no messages due to query error");
+            return NextResponse.json({
+                conversation,
+                messages: []
+            });
         }
 
         console.log(`Loaded ${messages?.length || 0} messages for conversation`);
@@ -73,6 +85,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     } catch (err: unknown) {
         console.error("Failed to fetch conversation:", err);
         const message = err instanceof Error ? err.message : String(err);
+        console.error("Stack trace:", err instanceof Error ? err.stack : "No stack trace");
         return NextResponse.json(
             { error: message || "Failed to fetch conversation" },
             { status: 500 }
