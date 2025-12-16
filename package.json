@@ -102,8 +102,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@openai/codex": "^0.44.0",
-    "@radix-ui/react-select": "^2.0.0",
-    "@radix-ui/react-separator": "^1.0.0",
     "@radix-ui/react-switch": "^1.0.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^5.0.0",

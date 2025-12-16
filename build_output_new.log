@@ -1,8 +1,0 @@
-
-> tradia-frontend-v1@0.1.0 build C:\Users\Hp\Documents\Github\Tradia
-> npx next build
-
-
-> Build error occurred
-TypeError: generate is not a function
-    at ignore-listed frames
