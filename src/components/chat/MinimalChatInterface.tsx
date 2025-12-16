@@ -98,12 +98,6 @@ export function MinimalChatInterface({
 
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [messages]);
-
     return (
         <div className="w-full h-screen bg-[#0D0D0D] dark:bg-[#0D0D0D] text-white flex flex-col">
             {/* Messages Area */}
@@ -117,16 +111,16 @@ export function MinimalChatInterface({
                         )}
                     >
                         {m.role === 'assistant' && (
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
                                 AI
                             </div>
                         )}
 
                         <div className={cn(
-                            "max-w-2xl text-sm leading-relaxed",
+                            "max-w-2xl text-sm leading-relaxed font-semibold text-white px-4 py-3 rounded-lg",
                             m.role === 'user'
-                                ? "text-white"
-                                : "text-white"
+                                ? "bg-white/10"
+                                : "bg-white/10"
                         )}>
                             {m.role === 'user' ? (
                                 <div className="whitespace-pre-wrap">{m.content}</div>
@@ -138,7 +132,7 @@ export function MinimalChatInterface({
                         </div>
 
                         {m.role === 'user' && (
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
                                 U
                             </div>
                         )}
