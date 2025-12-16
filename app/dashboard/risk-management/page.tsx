@@ -31,6 +31,7 @@ function RiskManagementContent() {
     const [userInitial, setUserInitial] = useState('U');
 
     // Ensure trades are fetched from Supabase for current user
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (session?.user?.id && trades.length === 0) {
             refreshTrades();
