@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 
-export type PlanType = "free" | "plus" | "pro" | "elite";
+export type PlanType = "starter" | "plus" | "pro" | "elite";
 
 interface UserData {
   id: string;
@@ -36,13 +36,13 @@ export const useUser = () => {
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
-  const [plan, setPlanState] = useState<PlanType>("free");
+  const [plan, setPlanState] = useState<PlanType>("starter");
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = useCallback(async () => {
     if (!session?.user?.email) {
       setUser(null);
-      setPlanState("free");
+      setPlanState("starter");
       setLoading(false);
       return;
     }
@@ -64,7 +64,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           id: userData.id || session.user.id || '',
           name: userData.name || session.user.name || null,
           email: userData.email || session.user.email || '',
-          plan: userData.plan || "free",
+          plan: userData.plan || "starter",
           country: userData.country,
           emailVerified: userData.emailVerified || userData.email_verified || false,
           createdAt: userData.createdAt || userData.created_at || '',
@@ -81,13 +81,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Fallback to session data if API fails
         setUser({
-          id: session.user.id || '',
-          name: session.user.name || null,
-          email: session.user.email || '',
-          plan: 'free',
-          emailVerified: false,
-          createdAt: '',
-        });
+           id: session.user.id || '',
+           name: session.user.name || null,
+           email: session.user.email || '',
+           plan: 'starter',
+           emailVerified: false,
+           createdAt: '',
+         });
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
@@ -96,7 +96,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         id: session.user.id || '',
         name: session.user.name || null,
         email: session.user.email || '',
-        plan: session.user.email === 'abdulmuizproject@gmail.com' ? 'elite' : 'free',
+        plan: session.user.email === 'abdulmuizproject@gmail.com' ? 'elite' : 'starter',
         emailVerified: false,
         createdAt: '',
       });
@@ -143,7 +143,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       fetchUserData();
     } else if (status === 'unauthenticated') {
       setUser(null);
-      setPlanState("free");
+      setPlanState("starter");
       setLoading(false);
     }
   }, [status, fetchUserData]);
