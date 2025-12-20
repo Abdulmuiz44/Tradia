@@ -22,7 +22,7 @@ import {
 } from "@/lib/sampleTrades";
 import type { Trade } from "@/types/trade";
 
-const PLAN_KEYS: readonly PlanType[] = ["free", "pro", "plus", "elite"] as const;
+const PLAN_KEYS: readonly PlanType[] = ["starter", "pro", "plus", "elite"] as const;
 
 const isPlanType = (value: string | undefined | null): value is PlanType =>
   PLAN_KEYS.includes(value as PlanType);
@@ -475,7 +475,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const planKey = isPlanType(user.plan) ? user.plan : "free";
+      const planKey = isPlanType(user.plan) ? user.plan : "starter";
       const planLimits = PLAN_LIMITS[planKey];
       const maxTrades = planLimits.maxTrades;
 

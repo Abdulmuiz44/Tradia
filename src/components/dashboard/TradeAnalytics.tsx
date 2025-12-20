@@ -170,7 +170,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
     { label: 'Export PDF', icon: Download, action: () => console.log('Export PDF'), requiresPaid: true },
     { label: 'Share Report', icon: Share2, action: () => console.log('Share Report'), requiresPaid: true },
     { label: 'Set Alerts', icon: Settings, action: () => console.log('Set Alerts'), requiresPaid: true },
-  ].filter(a => (effectivePlan !== 'free') || !a.requiresPaid);
+  ].filter(a => (effectivePlan !== 'starter') || !a.requiresPaid);
 
   // Filter trades based on timeframe with plan clamp
   const filteredTrades = useMemo(() => {
@@ -944,7 +944,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
           )}
 
           {/* Premium Toggle */}
-          {(effectivePlan !== 'free') && (
+          {(effectivePlan !== 'starter') && (
             <Button
               variant="outline"
               size="sm"
@@ -981,7 +981,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
       )}
 
       <div className="grid gap-6">
-        {(effectivePlan !== 'free') && (
+        {(effectivePlan !== 'starter') && (
           <div className="grid md:grid-cols-2 gap-6">
             <WeeklyCoachRecap trades={filteredTrades as any} plan={effectivePlan} />
             <ProInsights trades={filteredTrades as any} plan={effectivePlan} />
@@ -1099,7 +1099,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
   );
 }
 
-type PlanTier = 'free' | 'pro' | 'plus' | 'elite';
+type PlanTier = 'starter' | 'pro' | 'plus' | 'elite';
 
 function RiskControlsAndPropSim({
   plan,
@@ -1191,7 +1191,7 @@ function RiskControlsAndPropSim({
     }
   }, [accountBalance]);
 
-  const canEditBasic = plan !== 'free';
+  const canEditBasic = plan !== 'starter';
   const canEditPhases = plan === 'plus' || plan === 'elite';
   const canUseTemplates = plan === 'plus' || plan === 'elite';
 
