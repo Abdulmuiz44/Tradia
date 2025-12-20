@@ -22,12 +22,12 @@ export function MinimalChatInterface({
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
-    
+
     // Support both route param [id] and query param ?id=
     const conversationIdFromRoute = (params?.id as string) || null;
     const conversationIdFromQuery = searchParams?.get('id') || null;
     const effectiveConversationId = conversationIdFromRoute || conversationIdFromQuery || conversationId;
-    
+
     const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
     const [showTradeSelector, setShowTradeSelector] = useState(false);
     const [showHistoryMenu, setShowHistoryMenu] = useState(false);
@@ -35,6 +35,7 @@ export function MinimalChatInterface({
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
+    const [loadedConversationMessages, setLoadedConversationMessages] = useState<any[] | null>(null);
     const [initialMessages, setInitialMessages] = useState<any[]>([
         {
             id: 'welcome',
@@ -45,7 +46,7 @@ export function MinimalChatInterface({
 
     const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
         api: '/api/tradia/ai',
-        initialMessages,
+        initialMessages: loadedConversationMessages || initialMessages,
         body: {
             mode,
             conversationId: effectiveConversationId,
@@ -59,6 +60,7 @@ export function MinimalChatInterface({
             // Only load if conversationId is provided
             if (!effectiveConversationId || effectiveConversationId === 'undefined') {
                 console.log('No conversation ID, starting fresh');
+                setLoadedConversationMessages(null);
                 setInitialMessagesLoaded(true);
                 return;
             }
@@ -66,53 +68,42 @@ export function MinimalChatInterface({
             try {
                 console.log('Attempting to load conversation:', effectiveConversationId);
                 const res = await fetch(`/api/conversations/${effectiveConversationId}`);
-                
+
                 if (res.status === 404) {
                     console.log('Conversation not found (404), will create new one on first message');
+                    setLoadedConversationMessages(null);
                     setInitialMessagesLoaded(true);
                     return;
                 }
-                
+
                 if (!res.ok) {
                     const errorText = await res.text();
                     console.error(`Failed to fetch conversation: ${res.status}`, errorText);
+                    setLoadedConversationMessages(null);
                     setInitialMessagesLoaded(true);
                     return;
                 }
-                
+
                 const data = await res.json();
                 console.log('Successfully loaded conversation:', data.conversation?.id);
-                
+
                 if (data.messages && data.messages.length > 0) {
                     const loadedMessages = data.messages.map((msg: any) => ({
                         id: msg.id,
                         role: msg.type === 'user' ? 'user' : 'assistant',
                         content: msg.content,
                     }));
-                    console.log(`Setting ${loadedMessages.length} messages from conversation`);
-                    setInitialMessages(loadedMessages);
-                    setMessages(loadedMessages);
+                    console.log(`Loaded ${loadedMessages.length} messages from conversation`);
+                    // Set loaded messages which will be passed to useChat initialMessages
+                    setLoadedConversationMessages(loadedMessages);
                 } else {
                     // No messages yet, show welcome message
                     console.log('Conversation exists but has no messages yet');
-                    const welcomeMessage = {
-                        id: 'welcome',
-                        role: 'assistant' as const,
-                        content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
-                    };
-                    setInitialMessages([welcomeMessage]);
-                    setMessages([welcomeMessage]);
+                    setLoadedConversationMessages(null);
                 }
             } catch (err) {
                 console.error('Error loading conversation:', err);
-                // Mark as loaded and show welcome
-                const welcomeMessage = {
-                    id: 'welcome',
-                    role: 'assistant' as const,
-                    content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
-                };
-                setInitialMessages([welcomeMessage]);
-                setMessages([welcomeMessage]);
+                setLoadedConversationMessages(null);
             } finally {
                 setInitialMessagesLoaded(true);
             }
@@ -122,7 +113,7 @@ export function MinimalChatInterface({
         if (!initialMessagesLoaded && effectiveConversationId) {
             loadConversationMessages();
         }
-    }, [effectiveConversationId, initialMessagesLoaded, setInitialMessages, setMessages]);
+    }, [effectiveConversationId, initialMessagesLoaded]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -242,11 +233,11 @@ export function MinimalChatInterface({
                     >
                         <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
-                    
+
                     <div className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-                                         <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-                                         <span className="hidden sm:inline text-gray-300">Tradia AI Chat</span>
-                                     </div>
+                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                        <span className="hidden sm:inline text-gray-300">Tradia AI Chat</span>
+                    </div>
 
                     {/* History Menu Dropdown - Mobile & Desktop */}
                     {showHistoryMenu && (
@@ -275,14 +266,14 @@ export function MinimalChatInterface({
                                     <div className="p-4 text-center text-sm text-gray-400">No conversations yet</div>
                                 ) : (
                                     conversations.map((conv: any) => (
-                                         <button
-                                             key={conv.id}
-                                             onClick={() => {
-                                                 router.push(`/dashboard/trades/chat/${conv.id}`);
-                                                 setShowHistoryMenu(false);
-                                             }}
-                                             className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 active:bg-white/20"
-                                         >
+                                        <button
+                                            key={conv.id}
+                                            onClick={() => {
+                                                router.push(`/dashboard/trades/chat/${conv.id}`);
+                                                setShowHistoryMenu(false);
+                                            }}
+                                            className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 active:bg-white/20"
+                                        >
                                             <div className="text-sm font-semibold text-white truncate">{conv.title || 'Untitled Conversation'}</div>
                                             <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                                                 <Clock className="w-3 h-3" />
