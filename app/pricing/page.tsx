@@ -42,7 +42,7 @@ import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
       "Personalized strategy recommendations",
     "Risk management & market timing insights"
   ],
-  cta: "Start 30-day trial",
+  cta: "Upgrade to Pro",
   tag: "Popular",
   },
   {
@@ -56,7 +56,7 @@ import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
       "Image processing for trade screenshots",
         "Real-time performance analytics & insights"
       ],
-      cta: "Start 30-day trial",
+      cta: "Upgrade to Plus",
       tag: "For active traders",
     },
     {
@@ -69,7 +69,7 @@ import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
         "Prop-firm dashboard",
         "All AI features included"
       ],
-      cta: "Contact sales",
+      cta: "Upgrade to Elite",
       tag: "Advanced",
     },
   ];
@@ -169,7 +169,7 @@ export default function PricingPage(): React.ReactElement {
         "name": "Do you offer a free trial?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes — Plus and Pro include a 3‑day free trial. You can cancel within the trial without charges."
+          "text": "Start with our free Starter plan to try Tradia. Upgrade to Pro or Plus anytime to unlock advanced AI features and unlimited trade history."
         }
       },
       {
@@ -308,16 +308,7 @@ export default function PricingPage(): React.ReactElement {
                             window.location.href = "/signup";
                             return;
                           }
-                          try {
-                            const res = await fetch('/api/user/trial/activate', { method: 'POST' });
-                            if (res.ok) {
-                              window.location.href = "/dashboard/mt5/connect?prompt=upload-sample";
-                            } else {
-                              window.location.href = `/checkout?plan=${p.id}&billing=${billing}`;
-                            }
-                          } catch {
-                            window.location.href = `/checkout?plan=${p.id}&billing=${billing}`;
-                          }
+                          window.location.href = `/checkout?plan=${p.id}&billing=${billing}`;
                         }}
                         className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-indigo-500 text-white" : "bg-indigo-600 text-white"}`}
                       >
@@ -407,7 +398,7 @@ export default function PricingPage(): React.ReactElement {
                 {[
               { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
                   { q: "Which integrations are supported?", a: "CSV imports are supported today for comprehensive trade analysis." },
-                  { q: "How does the trial work?", a: "Every new account gets a 30‑day free trial of the platform. After 30 days, upgrade to any paid plan to continue." },
+                  { q: "Do I get a free trial?", a: "Start with our free Starter plan to explore Tradia. Upgrade to Pro or Plus anytime to get advanced AI features, longer trade history, and real-time insights — you'll be upgraded immediately after payment." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-white/10">
                     <summary className="font-medium text-gray-100">{fq.q}</summary>

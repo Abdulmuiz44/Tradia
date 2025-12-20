@@ -138,6 +138,8 @@ export default function CheckoutPage() {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 30000);
 
+      console.log("Creating checkout with data:", { plan, selectedPaymentMethod, billing, effectiveEmail });
+
       const response = await fetch("/api/payments/create-checkout", {
         method: "POST",
         headers: {
@@ -149,7 +151,7 @@ export default function CheckoutPage() {
           billingCycle: billing === "yearly" ? "yearly" : "monthly",
           userEmail: effectiveEmail,
           userId: unified.id || undefined,
-          trialDays,
+          trialDays: 0,
           successUrl: `${window.location.origin}/dashboard/billing?success=true`,
           cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
         }),
@@ -160,8 +162,8 @@ export default function CheckoutPage() {
       let data: any = null;
       try {
         data = await response.json();
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.error("Failed to parse response:", e);
       }
 
       if (!response.ok) {
@@ -172,8 +174,11 @@ export default function CheckoutPage() {
           title: "Checkout failed",
           description: String(serverMsg),
         });
+        setIsLoading(false);
         return;
       }
+
+      console.log("Checkout response:", data);
 
       // Initialize Flutterwave payment
       if (!window.FlutterwaveCheckout) {
@@ -182,8 +187,15 @@ export default function CheckoutPage() {
           title: "Payment unavailable",
           description: "Flutterwave payment gateway failed to load. Please try again.",
         });
+        setIsLoading(false);
         return;
       }
+
+      console.log("Initializing Flutterwave with:", { 
+        tx_ref: data.txRef, 
+        amount: data.amount, 
+        currency: data.currency 
+      });
 
       const flutterwave = window.FlutterwaveCheckout({
         public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY || "",
@@ -201,6 +213,7 @@ export default function CheckoutPage() {
           logo: "https://www.tradiaai.app/logo.png",
         },
         callback: async (response: any) => {
+          console.log("Payment callback received:", response);
           // Verify transaction on server
           try {
             const verifyResponse = await fetch("/api/payments/verify", {
@@ -243,10 +256,12 @@ export default function CheckoutPage() {
           }
         },
         onclose: () => {
-          // User closed modal
           console.log("Payment modal closed");
+          setIsLoading(false);
         },
       });
+
+      flutterwave.render();
     } catch (error) {
       console.error("Checkout error:", error);
       notify({
@@ -254,7 +269,6 @@ export default function CheckoutPage() {
         title: "Checkout error",
         description: error instanceof Error ? error.message : "Unexpected error",
       });
-    } finally {
       setIsLoading(false);
     }
   };
