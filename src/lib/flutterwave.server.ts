@@ -133,7 +133,12 @@ export async function createCheckoutForPlan(
   };
 
   const resp = await callFlutterwave("/payments", "POST", payload);
-  const link = resp?.data?.link || resp?.data?.url || resp?.data?.checkout_url;
+  const checkoutUrl = resp?.data?.link || resp?.data?.url || resp?.data?.checkout_url;
+  const paymentId = resp?.data?.id;
+
+  if (!checkoutUrl) {
+    throw new Error("Failed to get checkout URL from Flutterwave response");
+  }
 
   // persist a pending subscription record into user_plans
   // Only persist pending plan if we have a real user id
@@ -157,7 +162,11 @@ export async function createCheckoutForPlan(
     }
   }
 
-  return link;
+  return {
+    checkoutUrl,
+    paymentId: paymentId || txRef,
+    txRef,
+  };
 }
 
 export async function verifyTransactionById(transactionId: string) {

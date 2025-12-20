@@ -7,6 +7,7 @@ export type PaymentMethod = {
   description?: string;
   icon?: string;
   iconSvg?: string;
+  comingSoon?: boolean;
 };
 
 export function getPaymentMethodOptions(): PaymentMethod[] {
@@ -63,6 +64,17 @@ export function getPaymentMethodOptions(): PaymentMethod[] {
   <rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
   <circle cx="12" cy="18" r="0.6" fill="currentColor"></circle>
 </svg>`,
+    },
+    {
+      id: "lemonsqueezy",
+      name: "Lemon Squeezy",
+      description: "Coming soon",
+      icon: "🍋",
+      iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
+  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"></circle>
+  <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+</svg>`,
+      comingSoon: true,
     },
   ];
 }
