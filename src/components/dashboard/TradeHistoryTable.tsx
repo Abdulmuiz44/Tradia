@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import type { Trade } from "@/types/trade";
 import JournalModal from "@/components/modals/JournalModal";
 import { useUser } from "@/context/UserContext";
+import { useAccount } from "@/context/AccountContext";
+import AccountSelector from "@/components/accounts/AccountSelector";
 import Modal from "@/components/ui/Modal";
 
 /* ---------------- helpers ---------------- */
@@ -180,6 +182,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     const { plan } = useUser();
     const { notify } = useNotification();
     const router = useRouter();
+    const { selectedAccount, accounts } = useAccount();
 
     const [mounted, setMounted] = useState<boolean>(false);
     const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -606,6 +609,13 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* Account Selector */}
+                    {accounts.length > 0 && (
+                        <div className="flex-1 max-w-xs">
+                            <AccountSelector showCreateButton={true} />
+                        </div>
+                    )}
+
                     <button
                         className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
                         onClick={() => setExportOpen(true)}
@@ -623,8 +633,6 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                     >
                         <FilePlus size={18} className="text-gray-300" />
                     </button>
-
-                    {/* Trading account selector removed */}
 
                     <button
                         className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
