@@ -82,7 +82,7 @@ const BASE_TAB_DEFS: DashboardTabDef[] = [
   { value: "planner", label: "Trade Planner", icon: "Target", href: "/dashboard/trade-planner" },
   { value: "position-sizing", label: "Position Sizing", icon: "Calculator", href: "/dashboard/position-sizing" },
   { value: "education", label: "Trade Education", icon: "GraduationCap", href: "/dashboard/trade-education" },
-  { value: "upgrade", label: "Upgrade", icon: "Crown" },
+  { value: "upgrade", label: "Upgrade", icon: "Crown", href: "/dashboard/upgrade" },
 ];
 
 // Admin-only tabs
