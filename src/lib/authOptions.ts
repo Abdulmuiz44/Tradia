@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptions = {
             email,
             name: user.name ?? "",
             email_verified: true,
-            plan: "free",
+            plan: "starter",
             role: "trader",
             image: (user as any).image ?? null,
             created_at: new Date().toISOString(),

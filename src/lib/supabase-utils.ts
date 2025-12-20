@@ -118,17 +118,17 @@ export async function getUserPlan(userId: string) {
 
     if (error) {
       console.error('getUserPlan error:', error);
-      return { plan: 'free', isActive: true };
+      return { plan: 'starter', isActive: true };
     }
 
     return {
-      plan: data.plan || 'free',
+      plan: data.plan || 'starter',
       isActive: data.is_active !== false,
       subscriptionStatus: data.subscription_status || 'inactive'
     };
   } catch (error) {
     console.error('getUserPlan error:', error);
-    return { plan: 'free', isActive: true };
+    return { plan: 'starter', isActive: true };
   }
 }
 

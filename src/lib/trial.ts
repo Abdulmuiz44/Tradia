@@ -11,7 +11,7 @@ export type TrialInfo = {
 };
 
 export function isPaidPlan(plan: string | null | undefined): boolean {
-  const p = String(plan || "free").toLowerCase();
+  const p = String(plan || "starter").toLowerCase();
   return p === "pro" || p === "plus" || p === "elite";
 }
 

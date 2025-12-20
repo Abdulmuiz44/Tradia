@@ -16,7 +16,7 @@ type AppNotification = {
 
 function useAnnouncementsByPlan(): AppNotification[] {
   const { data: session } = useSession();
-  const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
+  const plan = String((session?.user as any)?.plan || 'starter').toLowerCase();
   const role = String((session?.user as any)?.role || '').toLowerCase();
   const email = String((session?.user as any)?.email || '').toLowerCase();
   const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
