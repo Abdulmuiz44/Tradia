@@ -86,7 +86,7 @@ export default function UpgradePrompt({
 
   // Filter plans based on current plan
   const availablePlans = plans.filter(plan => {
-    if (currentPlan === 'free') return true;
+    if (currentPlan === 'starter') return true;
     if (currentPlan === 'pro') return plan.type !== 'pro';
     if (currentPlan === 'plus') return plan.type === 'elite';
     return false;
@@ -223,16 +223,16 @@ export default function UpgradePrompt({
               <h4 className="font-medium text-gray-900 mb-2">Your Current {getPlanDisplayName(currentPlan)} Plan Includes:</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
                 <div>
-                  <strong>Advanced Features:</strong> {currentPlan === 'free' ? 'Basic' : currentPlan === 'pro' ? 'Standard' : currentPlan === 'plus' ? 'Professional' : 'Elite'}
+                  <strong>Advanced Features:</strong> {currentPlan === 'starter' ? 'Basic' : currentPlan === 'pro' ? 'Standard' : currentPlan === 'plus' ? 'Professional' : 'Elite'}
                 </div>
                 <div>
-                  <strong>AI Chats:</strong> {currentPlan === 'free' ? '5/day' : currentPlan === 'pro' ? '50/day' : currentPlan === 'plus' ? '200/day' : 'Unlimited'}
+                  <strong>AI Chats:</strong> {currentPlan === 'starter' ? '10/day' : currentPlan === 'pro' ? '50/day' : currentPlan === 'plus' ? '200/day' : 'Unlimited'}
                 </div>
                 <div>
-                  <strong>Trade Storage:</strong> {currentPlan === 'free' ? '30 days' : currentPlan === 'pro' ? '90 days' : currentPlan === 'plus' ? '1 year' : 'Unlimited'}
+                  <strong>Trade Storage:</strong> {currentPlan === 'starter' ? '45 days' : currentPlan === 'pro' ? '182 days' : currentPlan === 'plus' ? '1 year' : 'Unlimited'}
                 </div>
                 <div>
-                  <strong>Advanced Analytics:</strong> {currentPlan === 'free' ? 'No' : 'Yes'}
+                  <strong>Advanced Analytics:</strong> {currentPlan === 'starter' ? 'No' : 'Yes'}
                 </div>
               </div>
             </div>

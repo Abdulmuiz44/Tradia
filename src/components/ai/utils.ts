@@ -2,10 +2,10 @@ import { UserTier, Message, PlanLimits } from './types';
 
 // Helper to normalize user plan tier
 export function normalizeTier(p: string | undefined): UserTier['type'] {
-  if (!p) return 'free';
+  if (!p) return 'starter';
   const v = p.toLowerCase();
-  if (v === 'starter' || v === 'free' || v === 'pro' || v === 'plus' || v === 'elite') return v as UserTier['type'];
-  return 'free';
+  if (v === 'starter' || v === 'pro' || v === 'plus' || v === 'elite') return v as UserTier['type'];
+  return 'starter';
 }
 
 // Debounce function
@@ -95,23 +95,14 @@ export function sanitizeInput(input: string): string {
 // Get plan limits - aligned with pricing page context
 export function getPlanLimits(tier: UserTier['type']): PlanLimits {
   const limits: Record<UserTier['type'], PlanLimits> = {
-    free: {
-      maxMessagesPerDay: 5, // From PLAN_LIMITS.aiChatsPerDay
-      maxFileUploadsPerDay: 0,
-      maxFileSizeMB: 0,
-      canUploadFiles: false,
-      canUseMistral: false,
-      canExportChat: false,
-      messageHistoryDays: 30, // From PLAN_LIMITS.tradeStorageDays
-    },
     starter: {
-      maxMessagesPerDay: 5,
+      maxMessagesPerDay: 10,
       maxFileUploadsPerDay: 0,
       maxFileSizeMB: 0,
       canUploadFiles: false,
       canUseMistral: false,
       canExportChat: false,
-      messageHistoryDays: 30,
+      messageHistoryDays: 45,
     },
     pro: {
       maxMessagesPerDay: 50, // From PLAN_LIMITS.aiChatsPerDay

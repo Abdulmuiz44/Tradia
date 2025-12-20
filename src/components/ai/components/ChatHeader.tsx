@@ -38,7 +38,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = React.memo(({
         <Badge
           className={cn(
             "text-xs",
-            (userTier === 'free' || userTier === 'starter') && "bg-gray-700 text-gray-300",
+            userTier === 'starter' && "bg-gray-700 text-gray-300",
             userTier === 'pro' && "bg-blue-700 text-blue-100",
             userTier === 'plus' && "bg-purple-700 text-purple-100",
             userTier === 'elite' && "bg-yellow-700 text-yellow-100",

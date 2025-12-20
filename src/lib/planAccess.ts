@@ -3,7 +3,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type PlanType = 'pro' | 'plus' | 'elite' | 'free' | 'starter';
+export type PlanType = 'pro' | 'plus' | 'elite' | 'starter';
 
 export interface PlanLimits {
   aiChatsPerDay: number;
@@ -57,30 +57,6 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     tvBacktests: 3,
     tvPatterns: 20,
     tvScreener: true,
-    tvBroker: false,
-  },
-  free: {
-    aiChatsPerDay: 5,
-    tradeStorageDays: 30,
-    maxTrades: 50,
-    advancedAnalytics: false,
-    prioritySupport: false,
-    customIntegrations: false,
-    aiMLAnalysis: true,
-    imageProcessing: false,
-    personalizedStrategy: false,
-    realTimeAnalytics: true,
-    riskManagement: false,
-    marketTiming: false,
-    maxTradePlans: 3,
-    exportData: false,
-    shareReports: false,
-    alerts: false,
-    customizeView: false,
-    tvAlerts: 5,
-    tvBacktests: 2,
-    tvPatterns: 10,
-    tvScreener: false,
     tvBroker: false,
   },
 
@@ -169,7 +145,7 @@ export interface UserPlan {
 export async function getUserPlan(userId: string): Promise<UserPlan> {
   if (!userId) {
     return {
-      type: 'free',
+      type: 'starter',
       isActive: true,
       features: []
     };
@@ -178,7 +154,7 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
   // For client-side usage, return default plan
   // Database queries should be done via API routes
   return {
-    type: 'free',
+    type: 'starter',
     isActive: true,
     features: []
   };
@@ -205,7 +181,7 @@ export function getUpgradeOptions(currentPlan: PlanType): Array<{
 }> {
   const options = [];
 
-  if (currentPlan === 'free') {
+  if (currentPlan === 'starter') {
     options.push({
       name: 'Pro Plan',
       price: 29,
@@ -251,7 +227,6 @@ export function getUpgradeOptions(currentPlan: PlanType): Array<{
 
 export function getPlanDisplayName(plan: PlanType): string {
   const names = {
-    free: 'Free',
     starter: 'Starter',
     pro: 'Pro',
     plus: 'Plus',
@@ -262,7 +237,6 @@ export function getPlanDisplayName(plan: PlanType): string {
 
 export function getPlanColor(plan: PlanType): string {
   const colors = {
-    free: 'text-gray-500',
     starter: 'text-gray-500',
     pro: 'text-blue-500',
     plus: 'text-purple-500',
@@ -272,16 +246,15 @@ export function getPlanColor(plan: PlanType): string {
 }
 
 export function normalizePlanType(value: unknown): PlanType {
-  if (!value) return 'free';
+  if (!value) return 'starter';
   const str = String(value).toLowerCase();
   if (str === 'premium') return 'plus';
-  if (str === 'basic' || str === 'starter') return 'free';
-  const allowed: PlanType[] = ['free', 'pro', 'plus', 'elite'];
-  return allowed.includes(str as PlanType) ? (str as PlanType) : 'free';
+  if (str === 'basic') return 'starter';
+  const allowed: PlanType[] = ['starter', 'pro', 'plus', 'elite'];
+  return allowed.includes(str as PlanType) ? (str as PlanType) : 'starter';
 }
 
 export const PLAN_RANK: Record<PlanType, number> = {
-  free: 0,
   starter: 0,
   pro: 1,
   plus: 2,
@@ -297,7 +270,7 @@ export async function resolvePlanTypeForUser(
   supabase: SupabaseClient,
   userId: string
 ): Promise<PlanType> {
-  if (!userId) return 'free';
+  if (!userId) return 'starter';
   const { data, error } = await supabase
     .from('users')
     .select('plan')
@@ -306,8 +279,8 @@ export async function resolvePlanTypeForUser(
 
   if (error) {
     console.error('resolvePlanTypeForUser error', error);
-    return 'free';
+    return 'starter';
   }
 
-  return normalizePlanType(data?.plan ?? 'free');
+  return normalizePlanType(data?.plan ?? 'starter');
 }

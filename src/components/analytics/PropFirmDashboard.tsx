@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { Trade } from "@/types/trade";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpRight, CheckCircle, Flag, Shield, Target, TrendingDown, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 type PropFirmDashboardProps = {
   trades: Trade[];
@@ -29,7 +29,7 @@ interface ChallengeProfile {
 const DEFAULT_BALANCE = 100000;
 
 const CHALLENGE_BY_PLAN: Record<PlanTier, ChallengeProfile> = {
-  free: { label: "Evaluation Mode", targetPct: 0.1, dailyLossPct: 0.05, maxDrawdownPct: 0.1, phaseDays: 30, phaseCount: 1 },
+  starter: { label: "Evaluation Mode", targetPct: 0.1, dailyLossPct: 0.05, maxDrawdownPct: 0.1, phaseDays: 30, phaseCount: 1 },
   pro: { label: "50k Evaluation", targetPct: 0.08, dailyLossPct: 0.045, maxDrawdownPct: 0.09, phaseDays: 30, phaseCount: 2 },
   plus: { label: "100k Evaluation", targetPct: 0.1, dailyLossPct: 0.04, maxDrawdownPct: 0.08, phaseDays: 35, phaseCount: 2 },
   elite: { label: "200k Funding Sprint", targetPct: 0.12, dailyLossPct: 0.035, maxDrawdownPct: 0.07, phaseDays: 40, phaseCount: 2 },
@@ -135,7 +135,7 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
     : metrics.riskState === "close" ? "bg-yellow-500/10 text-yellow-200 border border-yellow-500/40"
     : "bg-emerald-500/10 text-emerald-200 border border-emerald-500/40";
 
-  const upgradePath = plan === "free" ? "pro" : plan === "pro" ? "plus" : plan === "plus" ? "elite" : "elite";
+  const upgradePath = plan === "starter" ? "pro" : plan === "pro" ? "plus" : plan === "plus" ? "elite" : "elite";
 
   const upgrade = () => {
     try {

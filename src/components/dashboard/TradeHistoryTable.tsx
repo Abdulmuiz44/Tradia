@@ -253,10 +253,10 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     const planLimitedTrades = useMemo(() => {
         const now = new Date();
         let cutoff: Date | null = null;
-        if (plan === 'free') {
-            cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
+        if (plan === 'starter') {
+            cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 45);
         } else if (plan === 'pro') {
-            cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 6);
+            cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 182);
         }
         if (!cutoff) return trades;
         return trades.filter((t) => {

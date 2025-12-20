@@ -47,7 +47,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
 }) => {
   const limits = PLAN_LIMITS[plan];
   const displayName = planDisplayNames[plan];
-  const isFree = plan === 'free';
+  const isStarter = plan === 'starter';
 
   const features = [
     {
@@ -114,8 +114,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
           {displayName}
         </CardTitle>
         <CardDescription className="text-sm">
-          {plan === 'free' && 'Perfect for getting started'}
-          {plan === 'starter' && 'Great for casual traders'}
+          {plan === 'starter' && 'Perfect for getting started'}
           {plan === 'pro' && 'For serious traders'}
           {plan === 'plus' && 'For professional traders'}
           {plan === 'elite' && 'Ultimate trading experience'}

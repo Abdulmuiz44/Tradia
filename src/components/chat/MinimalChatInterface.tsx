@@ -3,7 +3,7 @@
 import { useChat } from 'ai/react';
 import { useRef, useEffect, useState } from 'react';
 import { Send, Loader2, StopCircle, Menu, Clock, Plus, MessageCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import type { Trade } from '@/types/trade';
@@ -20,6 +20,14 @@ export function MinimalChatInterface({
     conversationId,
 }: MinimalChatInterfaceProps = {}) {
     const router = useRouter();
+    const params = useParams();
+    const searchParams = useSearchParams();
+    
+    // Support both route param [id] and query param ?id=
+    const conversationIdFromRoute = (params?.id as string) || null;
+    const conversationIdFromQuery = searchParams?.get('id') || null;
+    const effectiveConversationId = conversationIdFromRoute || conversationIdFromQuery || conversationId;
+    
     const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
     const [showTradeSelector, setShowTradeSelector] = useState(false);
     const [showHistoryMenu, setShowHistoryMenu] = useState(false);
@@ -39,15 +47,15 @@ export function MinimalChatInterface({
     useEffect(() => {
         const loadConversationMessages = async () => {
             // Only load if conversationId is provided
-            if (!conversationId || conversationId === 'undefined') {
+            if (!effectiveConversationId || effectiveConversationId === 'undefined') {
                 console.log('No conversation ID, starting fresh');
                 setInitialMessagesLoaded(true);
                 return;
             }
 
             try {
-                console.log('Attempting to load conversation:', conversationId);
-                const res = await fetch(`/api/conversations/${conversationId}`);
+                console.log('Attempting to load conversation:', effectiveConversationId);
+                const res = await fetch(`/api/conversations/${effectiveConversationId}`);
                 
                 if (res.status === 404) {
                     console.log('Conversation not found (404), will create new one on first message');
@@ -101,17 +109,17 @@ export function MinimalChatInterface({
         };
 
         // Only load if we have a conversation ID and haven't loaded yet
-        if (!initialMessagesLoaded && conversationId) {
+        if (!initialMessagesLoaded && effectiveConversationId) {
             loadConversationMessages();
         }
-    }, [conversationId, initialMessagesLoaded]);
+    }, [effectiveConversationId, initialMessagesLoaded]);
 
     const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
         api: '/api/tradia/ai',
         initialMessages,
         body: {
             mode,
-            conversationId,
+            conversationId: effectiveConversationId,
             attachedTradeIds: selectedTrades,
         },
     });
@@ -139,7 +147,7 @@ export function MinimalChatInterface({
                     messages: [...messages, userMessage],
                     attachedTradeIds: selectedTrades,
                     mode,
-                    conversationId,
+                    conversationId: effectiveConversationId,
                 }),
             });
 
@@ -236,9 +244,9 @@ export function MinimalChatInterface({
                     </button>
                     
                     <div className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-                        <span className="hidden sm:inline text-gray-300">Tradia AI</span>
-                    </div>
+                                         <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                                         <span className="hidden sm:inline text-gray-300">Tradia AI Chat</span>
+                                     </div>
 
                     {/* History Menu Dropdown - Mobile & Desktop */}
                     {showHistoryMenu && (
@@ -267,14 +275,14 @@ export function MinimalChatInterface({
                                     <div className="p-4 text-center text-sm text-gray-400">No conversations yet</div>
                                 ) : (
                                     conversations.map((conv: any) => (
-                                        <button
-                                            key={conv.id}
-                                            onClick={() => {
-                                                router.push(`/dashboard/trades/chat?id=${conv.id}`);
-                                                setShowHistoryMenu(false);
-                                            }}
-                                            className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 active:bg-white/20"
-                                        >
+                                         <button
+                                             key={conv.id}
+                                             onClick={() => {
+                                                 router.push(`/dashboard/trades/chat/${conv.id}`);
+                                                 setShowHistoryMenu(false);
+                                             }}
+                                             className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 active:bg-white/20"
+                                         >
                                             <div className="text-sm font-semibold text-white truncate">{conv.title || 'Untitled Conversation'}</div>
                                             <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                                                 <Clock className="w-3 h-3" />

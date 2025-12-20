@@ -111,17 +111,17 @@ interface AIChatInterfaceProps {
   className?: string;
 }
 
-function normalizeTier(p: string | undefined): 'free' | 'pro' | 'plus' | 'elite' {
-  if (!p) return 'free';
+function normalizeTier(p: string | undefined): 'starter' | 'pro' | 'plus' | 'elite' {
+  if (!p) return 'starter';
   const v = p.toLowerCase();
-  if (v === 'free' || v === 'pro' || v === 'plus' || v === 'elite') return v as any;
-  return 'free';
+  if (v === 'starter' || v === 'pro' || v === 'plus' || v === 'elite') return v as any;
+  return 'starter';
 }
 
 export default function AIChatInterface({ className = "" }: AIChatInterfaceProps) {
   const { trades } = useTrade();
   const { plan } = useUser();
-  const [userTier, setUserTier] = useState<'free' | 'pro' | 'plus' | 'elite'>('free');
+  const [userTier, setUserTier] = useState<'starter' | 'pro' | 'plus' | 'elite'>('starter');
 
   // Sync tier with actual user plan
   useEffect(() => {
@@ -130,10 +130,10 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
 
   const normalizedPlan = plan?.toLowerCase() ?? '';
   const isStarterPlan = normalizedPlan === 'starter';
-  const isFreeLikeTier = userTier === 'free' || isStarterPlan;
+  const isStarterLikeTier = userTier === 'starter';
   const tierBadgeLabel = isStarterPlan ? 'STARTER' : userTier.toUpperCase();
 
-  const effectivePlan = (userTier as PlanType) in PLAN_LIMITS ? (userTier as PlanType) : 'free';
+  const effectivePlan = (userTier as PlanType) in PLAN_LIMITS ? (userTier as PlanType) : 'starter';
   const limits = PLAN_LIMITS[effectivePlan];
   const grokUnlocked = userTier === 'plus' || userTier === 'elite';
   const [assistantMode, setAssistantMode] = useState<'coach' | 'grok'>(() => (grokUnlocked ? 'grok' : 'coach'));
@@ -352,7 +352,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
         content: msg.content
       }));
 
-      if (userTier === 'free' && (uploadedFiles.length > 0 || inputMessage.toLowerCase().includes('screenshot'))) {
+      if (userTier === 'starter' && (uploadedFiles.length > 0 || inputMessage.toLowerCase().includes('screenshot'))) {
         pushUpgradeMessage('PRO feature: Image analysis is available for Pro and above. Upgrade to unlock advanced chart analysis and visual insights.');
         setIsTyping(false);
         setUploadedFiles([]);
@@ -436,12 +436,12 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
           </div>
 
           {/* Subscription Tier Indicator */}
-          <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${isFreeLikeTier ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
+          <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${isStarterLikeTier ? 'bg-gray-900/30 text-gray-400 border-gray-700/50' :
               userTier === 'pro' ? 'bg-blue-900/30 text-blue-400 border-blue-700/50' :
                 userTier === 'plus' ? 'bg-purple-900/30 text-purple-400 border-purple-700/50' :
                   'bg-yellow-900/30 text-yellow-400 border-yellow-700/50'
             }`}>
-            <Crown className={`w-3 h-3 ${isFreeLikeTier ? 'text-gray-400' :
+            <Crown className={`w-3 h-3 ${isStarterLikeTier ? 'text-gray-400' :
                 userTier === 'pro' ? 'text-blue-400' :
                   userTier === 'plus' ? 'text-purple-400' :
                     'text-yellow-400'
@@ -683,30 +683,30 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
               {isRecording ? <MicOff className="w-4 h-4 md:w-5 md:h-5" /> : <Mic className="w-4 h-4 md:w-5 md:h-5" />}
             </button>
             <button
-              onClick={() => {
-                if (isFreeLikeTier) {
-                  setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
-                    type: 'assistant',
-                    content: "PRO feature: Image analysis is available for Pro and above. Upgrade to unlock advanced chart analysis and visual insights.",
-                    timestamp: new Date(),
-                  }]);
-                  return;
-                }
-                fileInputRef.current?.click();
-              }}
-              className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${isFreeLikeTier
-                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-700 text-gray-200 hover:bg-blue-600 hover:text-white'
-                }`}
-              title={isFreeLikeTier ? 'PRO feature: Upgrade to analyze images' : 'Upload trade screenshot or analysis'}
-              disabled={isFreeLikeTier}
+             onClick={() => {
+               if (isStarterLikeTier) {
+                 setMessages(prev => [...prev, {
+                   id: Date.now().toString(),
+                   type: 'assistant',
+                   content: "PRO feature: Image analysis is available for Pro and above. Upgrade to unlock advanced chart analysis and visual insights.",
+                   timestamp: new Date(),
+                 }]);
+                 return;
+               }
+               fileInputRef.current?.click();
+             }}
+             className={`p-2.5 md:p-3 rounded-full transition-all touch-manipulation ${isStarterLikeTier
+                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                 : 'bg-gray-700 text-gray-200 hover:bg-blue-600 hover:text-white'
+               }`}
+             title={isStarterLikeTier ? 'PRO feature: Upgrade to analyze images' : 'Upload trade screenshot or analysis'}
+             disabled={isStarterLikeTier}
             >
-              {isFreeLikeTier ? (
-                <Lock className="w-4 h-4 md:w-5 md:h-5" />
-              ) : (
-                <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
-              )}
+             {isStarterLikeTier ? (
+               <Lock className="w-4 h-4 md:w-5 md:h-5" />
+             ) : (
+               <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+             )}
             </button>
           </div>
 

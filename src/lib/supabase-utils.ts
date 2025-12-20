@@ -37,15 +37,15 @@ export async function checkDailyLimit(userId: string, limitType: string): Promis
       return false;
     }
 
-    const plan = userData.plan || 'free';
+    const plan = userData.plan || 'starter';
     let limit: number;
 
     switch (limitType) {
       case 'messages':
-        limit = plan === 'free' ? 20 : plan === 'pro' ? 100 : plan === 'plus' ? 500 : Infinity;
+        limit = plan === 'starter' ? 10 : plan === 'pro' ? 50 : plan === 'plus' ? 200 : Infinity;
         break;
       case 'uploads':
-        limit = plan === 'free' ? 0 : plan === 'pro' ? 5 : plan === 'plus' ? 20 : 100;
+        limit = plan === 'starter' ? 0 : plan === 'pro' ? 5 : plan === 'plus' ? 20 : 100;
         break;
       case 'api_calls':
         limit = 1000; // Default API call limit

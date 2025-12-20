@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { Trade } from "@/types/trade";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, ShieldCheck, TrendingDown, CalendarRange, Activity } from "lucide-react";
 import { eachDayOfInterval, format, subDays } from "date-fns";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 interface DailyLossDrawdownGuardProps {
   trades: Trade[];

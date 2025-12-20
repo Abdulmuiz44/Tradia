@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Brain, Target, ListChecks, Rocket, Filter, Clock, Calendar } from "lucide-react";
 import type { Trade } from "@/types/trade";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 interface Props {
   trades: Trade[];

@@ -15,6 +15,8 @@ import { useUser } from "@/context/UserContext";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { ChatPlanValidator, CHAT_PLAN_LIMITS } from "@/lib/chatPlanLimits";
+import { normalizePlanType } from "@/lib/planAccess";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -214,17 +216,21 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
       return;
     }
 
+    // Initialize plan validator with current user plan
+    const normalizedPlan = normalizePlanType(plan);
+    const validator = new ChatPlanValidator(normalizedPlan);
+
     // Check mode access based on plan
-    const allowedModes = plan === 'plus' || plan === 'elite' ? ['assistant', 'coach', 'mentor'] : plan === 'pro' ? ['assistant', 'coach'] : ['assistant'];
-    if (!allowedModes.includes(mode)) {
-      alert(`Your ${plan} plan doesn't include ${mode} mode. Upgrade to access more modes.`);
+    const modeCheck = validator.canAccessMode(mode);
+    if (!modeCheck.allowed) {
+      alert(modeCheck.message || `Your ${normalizedPlan} plan doesn't support ${mode} mode.`);
       return;
     }
 
-    // Check plan limits
-    const maxConversations = plan === 'plus' ? 100 : plan === 'pro' ? 25 : 5;
-    if (conversations.length >= maxConversations) {
-      alert(`You've reached the maximum number of conversations for your ${plan} plan. Upgrade to create more.`);
+    // Check conversation limit
+    const convCheck = validator.canCreateConversation(conversations.length);
+    if (!convCheck.allowed) {
+      alert(convCheck.message || 'You have reached the maximum number of conversations for your plan.');
       return;
     }
 
@@ -258,10 +264,14 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
       return;
     }
 
-    // Check plan limits
-    const maxConversations = plan === 'plus' ? 100 : plan === 'pro' ? 25 : 5;
-    if (conversations.length >= maxConversations) {
-      alert(`You've reached the maximum number of conversations for your ${plan} plan. Upgrade to create more.`);
+    // Initialize plan validator with current user plan
+    const normalizedPlan = normalizePlanType(plan);
+    const validator = new ChatPlanValidator(normalizedPlan);
+
+    // Check conversation limit
+    const convCheck = validator.canCreateConversation(conversations.length);
+    if (!convCheck.allowed) {
+      alert(convCheck.message || 'You have reached the maximum number of conversations for your plan.');
       return;
     }
 

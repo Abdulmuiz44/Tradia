@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { TrendingUp, TrendingDown, Brain, LineChart as LineChartIcon, BarChart3, Timer, Layers } from "lucide-react";
 import type { Trade } from "@/types/trade";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 interface Props {
   trades: Trade[];

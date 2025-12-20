@@ -85,7 +85,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       setActiveConversationId(conversation.id);
       
       // Navigate to new conversation
-      router.push(`/dashboard/trades/chat?id=${conversation.id}`);
+      router.push(`/dashboard/trades/chat/${conversation.id}`);
     } catch (error) {
       console.error("Failed to create conversation:", error);
     }
@@ -95,7 +95,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
     (id: string) => {
       setActiveConversationId(id);
       setSidebarOpen(false);
-      router.push(`/dashboard/trades/chat?id=${id}`);
+      router.push(`/dashboard/trades/chat/${id}`);
     },
     [router]
   );

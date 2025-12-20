@@ -419,10 +419,10 @@ export default function CsvUpload({
             // Enforce plan-based time-window limits
             const now = new Date();
             let cutoff: Date | null = null;
-            if (plan === 'free') {
-                cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
+            if (plan === 'starter') {
+                cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 45);
             } else if (plan === 'pro') {
-                cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 6);
+                cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 182);
             }
 
             // If user attempts to import beyond their plan window, force upgrade
@@ -438,7 +438,7 @@ export default function CsvUpload({
                     return d < cutoff!;
                 });
                 if (violates) {
-                    toast.error(`Your ${plan} plan allows importing up to ${plan === 'free' ? '30 days' : '6 months'} of history. Please upgrade to import older trades.`);
+                    toast.error(`Your ${plan} plan allows importing up to ${plan === 'starter' ? '45 days' : '182 days'} of history. Please upgrade to import older trades.`);
                     setOpen(false);
                     // Navigate to upgrade tab (works within dashboard layout)
                     try { (window as any).location.hash = '#upgrade'; } catch { }

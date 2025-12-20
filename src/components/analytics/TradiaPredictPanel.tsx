@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
@@ -130,11 +130,11 @@ const SIGNAL_METADATA: Record<string, { label: string; description: string }> = 
 };
 
 function normalisePlan(plan: string | undefined | null): NormalizedPlan {
-  const value = (plan || "free").toLowerCase();
-  if (value === "starter") return "free";
+  const value = (plan || "starter").toLowerCase();
+  if (value === "starter") return "pro";
   if (value === "plus" || value === "elite") return value as "plus" | "elite";
   if (value === "pro") return "pro";
-  return "free";
+  return "pro";
 }
 
 function timeframeLabel(interval: string, horizon: number): string {

@@ -175,7 +175,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
   // Filter trades based on timeframe with plan clamp
   const filteredTrades = useMemo(() => {
     let days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : timeframe === '90d' ? 90 : timeframe === '1y' ? 365 : Infinity;
-    const allowedDays = effectivePlan === 'free' ? 30 : effectivePlan === 'pro' ? 182 : (effectivePlan === 'plus' || effectivePlan === 'elite') ? Infinity : 30;
+    const allowedDays = effectivePlan === 'starter' ? 45 : effectivePlan === 'pro' ? 182 : (effectivePlan === 'plus' || effectivePlan === 'elite') ? Infinity : 45;
     if (Number.isFinite(allowedDays)) {
       days = Math.min(days, allowedDays as number);
     }
@@ -321,7 +321,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
 
   // Risk metrics (Premium feature)
   const riskMetrics = useMemo((): RiskMetrics => {
-    if (plan === 'free') {
+    if (plan === 'starter') {
       return {
         sharpeRatio: 0,
         maxDrawdown: 0,
@@ -436,7 +436,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
 
   const renderMetricCard = (metric: AnalyticsMetric) => (
     <Card key={metric.label} className="relative overflow-hidden">
-      {metric.premium && plan === 'free' && (
+      {metric.premium && plan === 'starter' && (
         <div className="absolute top-2 right-2 z-10">
           <Badge variant="secondary" className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs">
             <Crown className="w-3 h-3 mr-1" />
@@ -704,7 +704,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
   );
 
   const renderRisk = () => {
-    if (plan === 'free') {
+    if (plan === 'starter') {
       return (
         <Card>
           <CardContent className="p-8 text-center">
@@ -987,8 +987,8 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
             <ProInsights trades={filteredTrades as any} plan={effectivePlan} />
           </div>
         )}
-        {(effectivePlan === 'free') && (
-          <CompactUpgradePrompt currentPlan={'free' as any} feature="Weekly Coach Recap and Pro Insights" onUpgrade={() => { }} className="mb-4" />
+        {(effectivePlan === 'starter') && (
+          <CompactUpgradePrompt currentPlan={'starter' as any} feature="Weekly Coach Recap and Pro Insights" onUpgrade={() => { }} className="mb-4" />
         )}
       </div>
 
@@ -1476,7 +1476,7 @@ function RiskControlsAndPropSim({
       {/* Pre-trade Checklist */}
       <Section title="Pre-Trade Checklist">
         {Checklist}
-        {plan === 'free' && (
+        {plan === 'starter' && (
           <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> More checklist templates in Pro and Plus. {upgradeCta('Upgrade')}</div>
         )}
       </Section>
@@ -1487,7 +1487,7 @@ function RiskControlsAndPropSim({
         <div className="mt-3">
           {GuardStatus}
         </div>
-        {plan === 'free' && (
+        {plan === 'starter' && (
           <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> Auto-stop & cooldown in Pro+. {upgradeCta()}</div>
         )}
       </Section>
@@ -1495,7 +1495,7 @@ function RiskControlsAndPropSim({
       {/* Prop Firm Simulator */}
       <Section title="Prop Firm Simulator">
         {PropSimUI}
-        {plan === 'free' && (
+        {plan === 'starter' && (
           <div className="mt-2 text-xs text-yellow-400 flex items-center gap-2"><Crown className="w-3 h-3" /> Custom prop templates in Elite. {upgradeCta('Unlock Elite')}</div>
         )}
       </Section>

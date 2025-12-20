@@ -7,7 +7,7 @@ import { TrendingUp, TrendingDown, Target, Clock, Calendar, Activity } from "luc
 import { format, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 import type { Trade } from "@/types/trade";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 interface Props {
   trades: Trade[];

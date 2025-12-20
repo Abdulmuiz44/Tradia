@@ -182,7 +182,7 @@ export default function PricingPlans(): React.ReactElement {
   // Start trial: activate 30-day trial and route to sample import
   const handleStartTrial = async (selectedPlan: PlanName) => {
     try {
-      if (selectedPlan === "free") {
+      if (selectedPlan === "starter") {
         router.push("/signup");
         return;
       }
@@ -205,7 +205,7 @@ export default function PricingPlans(): React.ReactElement {
   };
 
   // Build derived view where each tier shows "Everything in previous tier" + its own additions
-  const freePlan = plansData.find((p) => p.name === "free")!;
+  const starterPlan = plansData.find((p) => p.name === "starter")!;
   const plusPlan = plansData.find((p) => p.name === "plus")!;
   const proPlan = plansData.find((p) => p.name === "pro")!;
   const elitePlan = plansData.find((p) => p.name === "elite")!;
@@ -341,11 +341,11 @@ export default function PricingPlans(): React.ReactElement {
                 </div>
 
 
-                {/* Feature presentation: Free shows base features; other tiers show "Everything in previous tier" then additional items */}
+                {/* Feature presentation: Starter shows base features; other tiers show "Everything in previous tier" then additional items */}
                 <div className="mt-5 text-sm text-gray-200">
-                  {p.name === "free" ? (
+                  {p.name === "starter" ? (
                     <ul className="space-y-2">
-                      {freePlan.baseFeatures.map((f, i) => (
+                      {starterPlan.baseFeatures.map((f, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
                           <span>{f}</span>
@@ -354,7 +354,7 @@ export default function PricingPlans(): React.ReactElement {
                     </ul>
                   ) : (
                     <>
-                      <div className="mb-2 font-medium">Everything in Free, plus:</div>
+                      <div className="mb-2 font-medium">Everything in Starter, plus:</div>
                       <ul className="space-y-2">
                         {(p as typeof plusWhole | typeof proWhole | typeof eliteWhole).additions.map((f, i) => (
                           <li key={i} className="flex items-start gap-2">
@@ -382,7 +382,7 @@ export default function PricingPlans(): React.ReactElement {
                   className={`w-full py-2 rounded-lg font-semibold transition ${
                     !canSelect
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                      : p.name === "free"
+                      : p.name === "starter"
                       ? "bg-transparent border border-gray-600 text-gray-200 hover:border-blue-500"
                       : p.highlight
                       ? "bg-blue-600 hover:bg-blue-700 text-white"
@@ -393,15 +393,15 @@ export default function PricingPlans(): React.ReactElement {
                     ? "Current Plan"
                     : isUpgradePlan
                     ? `Upgrade to ${p.label}`
-                    : p.name === "free"
-                    ? "Continue with Free"
+                    : p.name === "starter"
+                    ? "Continue with Starter"
                     : `Start ${p.label}`
                   }
-                  {p.name !== "free" && !isSelected && <span className="text-xs ml-2">3-day trial</span>}
+                  {p.name !== "starter" && !isSelected && <span className="text-xs ml-2">3-day trial</span>}
                 </button>
 
                 <div className="mt-3 text-xs text-gray-400">
-                  {p.name !== "free" ? (
+                  {p.name !== "starter" ? (
                     <span>Cancel anytime during trial. Annual plans are billed upfront and offer 2 months free.</span>
                   ) : (
                     <span>Your account starts on the Free plan — upgrade anytime.</span>

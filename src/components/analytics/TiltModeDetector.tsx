@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { Trade } from "@/types/trade";
@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { AlertTriangle, Brain, Flame, Gauge, Moon, Timer, TrendingUp } from "lucide-react";
 import { differenceInMinutes } from "date-fns";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 type Severity = "low" | "medium" | "high";
 

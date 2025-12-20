@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { Trade } from "@/types/trade";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Compass, Layers, Lightbulb, Sparkles, Trophy } from "lucide-react";
 
-type PlanTier = "free" | "pro" | "plus" | "elite";
+type PlanTier = "starter" | "pro" | "plus" | "elite";
 
 interface OptimalStrategyMatcherProps {
   trades: Trade[];
@@ -60,7 +60,7 @@ function summarizeSessions(trades: Trade[]): SessionSummary[] {
 }
 
 function nextPlan(plan: PlanTier): PlanTier {
-  if (plan === "free") return "pro";
+  if (plan === "starter") return "pro";
   if (plan === "pro") return "plus";
   if (plan === "plus") return "elite";
   return "elite";
@@ -112,7 +112,7 @@ export default function OptimalStrategyMatcher({ trades, plan }: OptimalStrategy
   }
 
   const upgradePlan = nextPlan(plan);
-  const upgradeCopy = plan === "free"
+  const upgradeCopy = plan === "starter"
     ? "Upgrade to PRO to unlock AI setup scoring, risk tags, and one-click journaling."
     : plan === "pro"
       ? "PLUS adds multi-strategy overlays, AI edge heatmaps, and session guardrails."

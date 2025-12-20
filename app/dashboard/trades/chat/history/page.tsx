@@ -109,11 +109,11 @@ function ConversationHistoryContent() {
                         <div className="grid gap-4">
                             {conversations.map((conv) => (
                                 <button
-                                    key={conv.id}
-                                    onClick={() =>
-                                        router.push(`/dashboard/trades/chat?id=${conv.id}`)
-                                    }
-                                    className="group text-left p-4 sm:p-5 border border-white/10 rounded-lg hover:border-blue-400/50 hover:bg-blue-500/5 transition-all duration-200 active:scale-95"
+                                 key={conv.id}
+                                 onClick={() =>
+                                     router.push(`/dashboard/trades/chat/${conv.id}`)
+                                 }
+                                 className="group text-left p-4 sm:p-5 border border-white/10 rounded-lg hover:border-blue-400/50 hover:bg-blue-500/5 transition-all duration-200 active:scale-95"
                                 >
                                     <div className="flex items-start justify-between gap-3 sm:gap-4">
                                         <div className="flex-1 min-w-0">
