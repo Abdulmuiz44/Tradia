@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
-import { useAccount } from "@/context/AccountContext";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { AccountProvider, useAccount } from "@/context/AccountContext";
 import { useNotification } from "@/context/NotificationContext";
 import AccountForm from "@/components/accounts/AccountForm";
 import Spinner from "@/components/ui/spinner";
@@ -97,9 +98,13 @@ function AddAccountContent() {
 export default function AddAccountPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <AddAccountContent />
-      </UserProvider>
+      <NotificationProvider>
+        <UserProvider>
+          <AccountProvider>
+            <AddAccountContent />
+          </AccountProvider>
+        </UserProvider>
+      </NotificationProvider>
     </LayoutClient>
   );
 }

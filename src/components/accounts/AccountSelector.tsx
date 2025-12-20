@@ -55,8 +55,8 @@ export default function AccountSelector({
                                 <div
                                     key={account.id}
                                     className={`border-b border-gray-800 last:border-b-0 transition ${selectedAccount.id === account.id
-                                            ? "bg-blue-500/10"
-                                            : "hover:bg-gray-800/50"
+                                        ? "bg-blue-500/10"
+                                        : "hover:bg-gray-800/50"
                                         }`}
                                 >
                                     <div className="flex items-center justify-between px-4 py-3 group">
