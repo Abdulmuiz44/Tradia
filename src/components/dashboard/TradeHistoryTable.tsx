@@ -275,6 +275,14 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         const q = query.trim().toLowerCase();
         let filtered = planLimitedTrades.slice();
 
+        // Filter by selected account if one is selected
+        if (selectedAccount) {
+            filtered = filtered.filter((t) => {
+                const tradeAccount = toStringSafe(getField(t, "account_id") ?? getField(t, "accountId") ?? "");
+                return tradeAccount === selectedAccount.id || !tradeAccount; // Include trades without account_id
+            });
+        }
+
         filtered = filtered.filter((t) => {
             const pnl = toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
             const sym = toStringSafe(getField(t, "symbol")).toLowerCase();
@@ -615,6 +623,15 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                             <AccountSelector showCreateButton={true} />
                         </div>
                     )}
+
+                    {/* Add Account Button */}
+                    <button
+                        className="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm font-medium text-white transition"
+                        onClick={() => router.push("/dashboard/accounts/add")}
+                        title="Add New Trading Account"
+                    >
+                        Add Account
+                    </button>
 
                     <button
                         className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"

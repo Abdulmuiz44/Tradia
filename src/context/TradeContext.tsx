@@ -123,6 +123,7 @@ const transformTradeForBackend = (trade: Trade): Record<string, unknown> => {
 
   const backendTrade: Record<string, unknown> = {
     user_id: coalesce(trade.user_id, raw.user_id as string),
+    account_id: coalesce(trade.account_id, trade.accountId, raw.account_id as string, raw.accountId as string),
     symbol: String(symbol).toUpperCase(),
     direction: coalesce(trade.direction, raw.direction as string),
     ordertype: coalesce(trade.orderType, raw.orderType as string) ?? "Market Execution",

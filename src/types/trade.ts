@@ -11,6 +11,8 @@ export type TradeOutcome =
 export interface Trade {
   id: string;
   user_id?: string;
+  account_id?: string;
+  accountId?: string;
   symbol: string;
 
   // Canonical camelCase fields used across the application

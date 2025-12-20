@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
 
         const tradeData = {
             user_id: session.user.id,
+            account_id: body.account_id || body.accountId || null,
             symbol: body.symbol || "",
             direction: body.direction || "Buy",
             ordertype: body.orderType || "Market Execution",
@@ -190,6 +191,8 @@ export async function PATCH(request: NextRequest) {
         if (body.tags !== undefined) updateData.tags = body.tags;
         if (body.reviewed !== undefined) updateData.reviewed = body.reviewed;
         if (body.resultRR !== undefined) updateData.resultrr = body.resultRR;
+        if (body.account_id !== undefined) updateData.account_id = body.account_id;
+        if (body.accountId !== undefined) updateData.account_id = body.accountId;
 
         const { data, error } = await supabase
             .from("trades")

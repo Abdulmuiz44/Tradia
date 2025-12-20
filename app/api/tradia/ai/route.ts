@@ -36,7 +36,7 @@ const FALLBACK_MODELS = [
 ];
 
 interface SystemMessageInput {
-    accountSummary: Record<string, any>;
+    accountSummary: Record<string, any> & { accountSize?: number };
     attachedTrades: any[];
     mode: string;
 }
@@ -61,6 +61,7 @@ ${personalityVariation}
 You are Tradia AI, a privacy-conscious trading copilot. Use the following information to ground your response. The trading data you see is ephemeral—never persist or expose it beyond this reply.
 
 ACCOUNT SNAPSHOT:
+- Account Size: $${accountSummary.accountSize?.toFixed(2) ?? 'N/A'}
 - Total Trades: ${accountSummary.totalTrades}
 - Win Rate: ${accountSummary.winRate}%
 - Net P&L: $${accountSummary.netPnL}
@@ -486,6 +487,20 @@ async function getAccountSummary(userId: string) {
 
     if (error) throw error;
 
+    // Fetch user's trading accounts to get account size
+    const { data: accounts, error: accountsError } = await supabase
+        .from("trading_accounts")
+        .select("account_size")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+    if (accountsError) {
+        console.error("Error fetching accounts:", accountsError);
+    }
+
+    // Calculate total account size from all accounts
+    const accountSize = (accounts || []).reduce((sum: number, a: any) => sum + (a.account_size || 0), 0);
+
     const processedTrades = (trades || []).map((row: any) => withDerivedTradeTimes(row));
 
     if (processedTrades.length === 0) {
@@ -494,7 +509,8 @@ async function getAccountSummary(userId: string) {
             winRate: 0,
             netPnL: 0,
             avgRR: 0,
-            maxDrawdown: 0
+            maxDrawdown: 0,
+            accountSize: accountSize > 0 ? accountSize : undefined
         };
     }
 
@@ -529,35 +545,36 @@ async function getAccountSummary(userId: string) {
         netPnL: Math.round(netPnL * 100) / 100,
         avgRR: Math.round(avgRR * 100) / 100,
         maxDrawdown: Math.round(maxDrawdown * 100) / 100,
+        accountSize: accountSize > 0 ? accountSize : undefined
     };
 }
 
 function generateConversationTitle(userMessage: string, mode: string): string {
-     // Extract keywords from user message for title
-     const keywordMatches = userMessage.match(/\b(?:help|analyze|review|lose|win|strategy|risk|entry|exit|psychology|pattern|loss|profit|trade|chart|signal|setup)\b/gi);
- 
-     // Create title based on mode and keywords
-     const modeLabel: Record<string, string> = {
-         coach: 'Coaching Session',
-         mentor: 'Trading Mentorship',
-         analysis: 'Trade Analysis',
-         journal: 'Journal Entry',
-         grok: 'Market Insights',
-         assistant: 'Trading Discussion',
-     };
- 
-     const baseTitle = (modeLabel[mode as keyof typeof modeLabel]) || 'Trading Discussion';
- 
-     // If user mentioned specific keywords, incorporate them
-     if (keywordMatches !== null && keywordMatches.length > 0) {
-         const topKeyword = keywordMatches[0].toLowerCase();
-         return `${baseTitle}: ${topKeyword.charAt(0).toUpperCase() + topKeyword.slice(1)}`;
-     }
- 
-     // Fallback: extract first few words from message
-     const words = userMessage.split(/\s+/).slice(0, 4).join(' ');
-     return words.length > 3 ? words : baseTitle;
- }
+    // Extract keywords from user message for title
+    const keywordMatches = userMessage.match(/\b(?:help|analyze|review|lose|win|strategy|risk|entry|exit|psychology|pattern|loss|profit|trade|chart|signal|setup)\b/gi);
+
+    // Create title based on mode and keywords
+    const modeLabel: Record<string, string> = {
+        coach: 'Coaching Session',
+        mentor: 'Trading Mentorship',
+        analysis: 'Trade Analysis',
+        journal: 'Journal Entry',
+        grok: 'Market Insights',
+        assistant: 'Trading Discussion',
+    };
+
+    const baseTitle = (modeLabel[mode as keyof typeof modeLabel]) || 'Trading Discussion';
+
+    // If user mentioned specific keywords, incorporate them
+    if (keywordMatches !== null && keywordMatches.length > 0) {
+        const topKeyword = keywordMatches[0].toLowerCase();
+        return `${baseTitle}: ${topKeyword.charAt(0).toUpperCase() + topKeyword.slice(1)}`;
+    }
+
+    // Fallback: extract first few words from message
+    const words = userMessage.split(/\s+/).slice(0, 4).join(' ');
+    return words.length > 3 ? words : baseTitle;
+}
 
 const getSortableTime = (trade: Record<string, any>): number => {
     const candidates = [

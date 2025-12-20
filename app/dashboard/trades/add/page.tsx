@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import { useNotification } from "@/context/NotificationContext";
+import { useAccount } from "@/context/AccountContext";
 import Spinner from "@/components/ui/spinner";
 import { ArrowLeft, Save } from "lucide-react";
 import AddTradeForm from "@/components/forms/AddTradeForm";
@@ -15,15 +16,20 @@ function AddTradeContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { notify } = useNotification();
+  const { selectedAccount } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddTrade = async (tradeData: Partial<Trade>) => {
     setIsLoading(true);
     try {
+      const tradeWithAccount = {
+        ...tradeData,
+        account_id: selectedAccount?.id,
+      };
       const response = await fetch("/api/trades", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tradeData),
+        body: JSON.stringify(tradeWithAccount),
       });
 
       if (!response.ok) {
