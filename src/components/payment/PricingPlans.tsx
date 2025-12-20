@@ -9,11 +9,11 @@ import { CheckCircle, X, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 type BillingType = "monthly" | "yearly";
-type PlanName = "free" | "plus" | "pro" | "elite";
+type PlanName = "starter" | "plus" | "pro" | "elite";
 
-// Plan hierarchy for upgrade logic (free -> pro -> plus -> elite)
+// Plan hierarchy for upgrade logic (starter -> pro -> plus -> elite)
 const PLAN_HIERARCHY: Record<PlanName, number> = {
-  free: 0,
+  starter: 0,
   pro: 1,
   plus: 2,
   elite: 3,
@@ -42,68 +42,72 @@ type Plan = {
 
 const plansData: Plan[] = [
   {
-    name: "free",
+    name: "starter",
     label: "Starter",
     priceMonthly: 0,
     priceYearly: 0,
     tagline: "Free forever",
     baseFeatures: [
     "Basic trade analytics",
-    "30 days trade history",
+    "45 days trade history",
     "CSV trade import",
     "Manual risk checklist & journal",
     "Real-time analytics (basic)",
     "Daily loss guard (manual alerts)",
       "5 AI conversations",
-      "20 AI messages per day",
+      "10 AI messages per day",
     ],
   },
   {
     name: "pro",
     label: "Pro",
-    priceMonthly: 9,
-    priceYearly: 90,
-    tagline: "Popular",
-    baseFeatures: [], // will inherit Free
+    priceMonthly: 29,
+    priceYearly: 290,
+    tagline: "Most Popular",
+    baseFeatures: [], // will inherit Starter
     additionalFeatures: [
-    "6 months trade history",
-    "Advanced analytics",
+    "182 days trade history",
+    "Advanced analytics & insights",
     "AI weekly summary",
     "Personalized strategy recommendations",
     "Daily loss & drawdown guard automations",
     "Optimal strategy matcher (core)",
     "Market timing and entry/exit recommendations",
+    "Voice input for commands",
+    "Export chat conversations",
+    "Share chat reports",
       "25 AI conversations",
-      "100 AI messages per day",
+      "50 AI messages per day",
     ],
     highlight: true,
   },
   {
     name: "plus",
     label: "Plus",
-    priceMonthly: 19,
-    priceYearly: 190,
-    tagline: "For active traders",
+    priceMonthly: 79,
+    priceYearly: 790,
+    tagline: "For professional traders",
     baseFeatures: [],
     additionalFeatures: [
-    "Unlimited history",
+    "Unlimited trade history",
     "Advanced AI features",
     "AI trade reviews & SL/TP suggestions",
     "Image processing for trade screenshot analysis",
     "Prop dashboard with challenge tracking",
     "Tilt mode detector & burnout alerts",
     "Real-time performance analytics and insights",
+    "Priority support",
       "100 AI conversations",
-      "500 AI messages per day",
+      "200 AI messages per day",
       "Tradia Predict with Mistral AI (Plus & Elite only)",
     ],
   },
   {
     name: "elite",
     label: "Elite",
-    priceMonthly: 39,
-    priceYearly: 390,
-    tagline: "Advanced",
+    priceMonthly: 199,
+    priceYearly: 1990,
+    tagline: "Ultimate experience",
     baseFeatures: [],
     additionalFeatures: [
     "Premium AI features",
@@ -111,6 +115,8 @@ const plansData: Plan[] = [
     "Prop-firm automation & breach SMS",
     "All risk & AI features included",
     "Tradia Predict with enhanced Mistral predictions",
+    "Custom integrations",
+    "Dedicated support",
       "Unlimited AI conversations",
       "Unlimited AI messages per day",
     ],

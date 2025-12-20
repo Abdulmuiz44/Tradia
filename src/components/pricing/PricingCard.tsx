@@ -15,7 +15,6 @@ export interface PricingCardProps {
 }
 
 const planDisplayNames: Record<PlanType, string> = {
-  free: 'Free',
   starter: 'Starter',
   pro: 'Pro',
   plus: 'Plus',
@@ -23,7 +22,6 @@ const planDisplayNames: Record<PlanType, string> = {
 };
 
 const planColors: Record<PlanType, string> = {
-  free: 'text-gray-500 border-gray-200',
   starter: 'text-gray-500 border-gray-200',
   pro: 'text-blue-600 border-blue-200',
   plus: 'text-purple-600 border-purple-200',
@@ -31,7 +29,6 @@ const planColors: Record<PlanType, string> = {
 };
 
 const planBgColors: Record<PlanType, string> = {
-  free: 'bg-gray-50',
   starter: 'bg-gray-50',
   pro: 'bg-blue-50',
   plus: 'bg-purple-50',
@@ -122,11 +119,19 @@ export const PricingCard: React.FC<PricingCardProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {!isFree && (
+        {plan !== 'starter' && (
           <div className="text-center">
             <div className="text-3xl font-bold">
-              ${plan === 'pro' ? '29' : plan === 'plus' ? '79' : 'Custom'}
+              ${plan === 'pro' ? '29' : plan === 'plus' ? '79' : '199'}
               <span className="text-sm font-normal text-gray-500">/month</span>
+            </div>
+          </div>
+        )}
+        {plan === 'starter' && (
+          <div className="text-center">
+            <div className="text-3xl font-bold">
+              Free
+              <span className="text-sm font-normal text-gray-500"> to start</span>
             </div>
           </div>
         )}
@@ -153,13 +158,13 @@ export const PricingCard: React.FC<PricingCardProps> = ({
           className={cn(
             'w-full',
             isCurrentPlan && 'bg-gray-100 text-gray-500 hover:bg-gray-100',
-            !isFree && !isCurrentPlan && 'bg-blue-600 hover:bg-blue-700'
+            !isCurrentPlan && plan !== 'starter' && 'bg-blue-600 hover:bg-blue-700'
           )}
-          variant={isFree ? 'outline' : 'default'}
+          variant={plan === 'starter' ? 'outline' : 'default'}
           onClick={() => onSelectPlan?.(plan)}
           disabled={isCurrentPlan}
         >
-          {isCurrentPlan ? 'Current Plan' : isFree ? 'Get Started' : 'Upgrade'}
+          {isCurrentPlan ? 'Current Plan' : plan === 'starter' ? 'Get Started' : 'Upgrade'}
         </Button>
       </CardFooter>
     </Card>

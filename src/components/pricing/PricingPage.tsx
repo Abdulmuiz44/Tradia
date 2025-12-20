@@ -16,7 +16,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   const { user } = useUser();
   const currentPlan = normalizePlanType(user?.plan);
 
-  const plans: PlanType[] = ['free', 'pro', 'plus', 'elite'];
+  const plans: PlanType[] = ['starter', 'pro', 'plus', 'elite'];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -32,7 +32,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
           <div className="mt-6 inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
             <span className="text-blue-600 font-semibold">🤖 AI Chat Limits:</span>
             <span className="text-sm text-blue-700">
-              Free: 5 chats/day • Pro: 50/day • Plus: 200/day • Elite: Unlimited
+              Starter: 10/day • Pro: 50/day • Plus: 200/day • Elite: Unlimited
             </span>
           </div>
         )}
@@ -43,7 +43,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({
           <PricingCard
             key={plan}
             plan={plan}
-            isPopular={plan === 'pro'}
+            isPopular={plan === 'plus'}
             isCurrentPlan={plan === currentPlan}
             onSelectPlan={onSelectPlan}
           />
