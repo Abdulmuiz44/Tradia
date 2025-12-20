@@ -295,7 +295,7 @@ export default function SettingsPage() {
           Risk Controls
             </h2>
 
-            <FeatureLock requiredPlan={plan === 'free' ? 'plus' : undefined}>
+            <FeatureLock requiredPlan={plan === 'starter' ? 'plus' : undefined}>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">Daily loss limit (USD)</label>
