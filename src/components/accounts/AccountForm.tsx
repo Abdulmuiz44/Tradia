@@ -1,27 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
-import type { CreateAccountPayload } from "@/types/account";
+import React, { useState, useEffect } from "react";
+import type { CreateAccountPayload, UpdateAccountPayload } from "@/types/account";
 
 interface AccountFormProps {
-  onSubmit: (payload: CreateAccountPayload) => Promise<void>;
+  onSubmit: (payload: CreateAccountPayload | UpdateAccountPayload) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  initialData?: Partial<CreateAccountPayload>;
+  isEdit?: boolean;
 }
 
 export default function AccountForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  initialData,
+  isEdit = false,
 }: AccountFormProps) {
   const [formData, setFormData] = useState<CreateAccountPayload>({
-    name: "",
-    account_size: 0,
-    currency: "USD",
-    platform: "MT5",
-    broker: "",
-    mode: "manual",
+    name: initialData?.name || "",
+    account_size: initialData?.account_size || 0,
+    currency: initialData?.currency || "USD",
+    platform: initialData?.platform || "MT5",
+    broker: initialData?.broker || "",
+    mode: initialData?.mode || "manual",
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        account_size: initialData.account_size || 0,
+        currency: initialData.currency || "USD",
+        platform: initialData.platform || "MT5",
+        broker: initialData.broker || "",
+        mode: initialData.mode || "manual",
+      });
+    }
+  }, [initialData]);
 
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});

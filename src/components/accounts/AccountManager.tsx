@@ -3,20 +3,16 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Edit2, Activity, AlertCircle, Zap } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
-import { useNotification } from "@/context/NotificationContext";
 import { useUser } from "@/context/UserContext";
 import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
 import { useRouter } from "next/navigation";
-import AccountForm from "@/components/accounts/AccountForm";
 import Modal from "@/components/ui/Modal";
-import type { TradingAccount, CreateAccountPayload } from "@/types/account";
+import type { TradingAccount } from "@/types/account";
 
 export default function AccountManager() {
-  const { accounts, selectedAccount, stats, createAccount, deleteAccount, loading } = useAccount();
-  const { notify } = useNotification();
+  const { accounts, selectedAccount, stats, deleteAccount, loading } = useAccount();
   const { plan } = useUser();
   const router = useRouter();
-  const [showForm, setShowForm] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
   const [editingAccount, setEditingAccount] = useState<TradingAccount | null>(null);
 
@@ -26,13 +22,8 @@ export default function AccountManager() {
   const maxAccounts = planLimits.maxTradingAccounts === -1 ? Infinity : planLimits.maxTradingAccounts;
   const accountsRemaining = Math.max(0, maxAccounts - accounts.length);
 
-  const handleCreateAccount = async (payload: CreateAccountPayload) => {
-    try {
-      await createAccount(payload);
-      setShowForm(false);
-    } catch (err) {
-      console.error("Error creating account:", err);
-    }
+  const handleAddAccountClick = () => {
+    router.push("/dashboard/accounts/add");
   };
 
   const handleDeleteAccount = async (accountId: string) => {
@@ -58,8 +49,8 @@ export default function AccountManager() {
             <p className="text-blue-100">Manage your trading accounts and balances</p>
           </div>
           <button
-            onClick={() => setShowForm(true)}
-            disabled={accounts.length >= 10}
+            onClick={handleAddAccountClick}
+            disabled={accounts.length >= maxAccounts && maxAccounts !== Infinity}
             className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             <Plus size={20} />
@@ -106,11 +97,11 @@ export default function AccountManager() {
           <h2 className="text-xl font-semibold mb-2">No Trading Accounts Yet</h2>
           <p className="text-gray-400 mb-6">Create your first trading account to get started</p>
           <button
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+           onClick={handleAddAccountClick}
+           className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
           >
-            <Plus size={20} />
-            Create Account
+           <Plus size={20} />
+           Create Account
           </button>
         </div>
       ) : (
@@ -198,20 +189,6 @@ export default function AccountManager() {
               <Zap size={14} />
               Upgrade Plan
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Create/Edit Account Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold mb-4">Create Trading Account</h2>
-            <AccountForm
-              onSubmit={handleCreateAccount}
-              onCancel={() => setShowForm(false)}
-              isLoading={loading}
-            />
           </div>
         </div>
       )}
