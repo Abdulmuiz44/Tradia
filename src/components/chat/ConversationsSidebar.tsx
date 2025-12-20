@@ -366,8 +366,8 @@ export const SidebarUserBadge: React.FC = () => {
         session?.user?.name?.trim() ||
         (email ? email.split("@")[0] : "Trader");
 
-    const planLabel = (plan || (session?.user as Record<string, unknown>)?.plan || "Free") as string;
-    const planDisplay = planLabel ? planLabel.toString().replace(/_/g, " ").toUpperCase() : "FREE";
+    const planLabel = (plan || (session?.user as Record<string, unknown>)?.plan || "Starter") as string;
+    const planDisplay = planLabel ? planLabel.toString().replace(/_/g, " ").toUpperCase() : "STARTER";
     const userInitial = (name || email).charAt(0).toUpperCase() || "T";
     const avatarSrc =
         session?.user?.image ||

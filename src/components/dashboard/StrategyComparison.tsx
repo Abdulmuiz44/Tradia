@@ -67,7 +67,7 @@ export default function StrategyComparison({ className = "" }: StrategyCompariso
   const [comparisonView, setComparisonView] = useState<'overview' | 'detailed' | 'radar'>('overview');
 
   // Mock subscription tier
-  const userTier = (session?.user as any)?.subscription || 'free';
+  const userTier = (session?.user as any)?.subscription || 'starter';
 
   // Extract unique strategies from trades
   const availableStrategies = useMemo(() => {

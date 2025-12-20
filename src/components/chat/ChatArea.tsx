@@ -121,7 +121,7 @@ export const ChatArea = ({
   const router = useRouter();
   const { user, plan, setPlan } = useUser();
   const isAdmin = useMemo(() => user?.email?.toLowerCase() === "abdulmuizproject@gmail.com", [user?.email]);
-  const planLabel = useMemo(() => (plan ? plan.toUpperCase() : "FREE"), [plan]);
+  const planLabel = useMemo(() => (plan ? plan.toUpperCase() : "STARTER"), [plan]);
   const recognitionRef = useRef<any>(null);
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
 

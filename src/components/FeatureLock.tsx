@@ -13,7 +13,7 @@ type Props = {
 };
 
 const planLevels = {
-  free: 0,
+  starter: 0,
   plus: 1,
   premium: 2,
   pro: 3,

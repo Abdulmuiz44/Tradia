@@ -758,7 +758,7 @@ function generateIntelligentCoachingResponse(
   userMessage: string,
   trades: any[],
   uploadedFiles: File[],
-  userTier: string = 'free',
+  userTier: string = 'starter',
   mode: 'coach' | 'grok' = 'coach'
 ): string {
   const lowerMessage = userMessage.toLowerCase();

@@ -3,7 +3,7 @@
 
 -- Create custom types (optional - can be skipped if issues)
 DO $$ BEGIN
-    CREATE TYPE user_plan AS ENUM ('free', 'pro', 'plus', 'elite');
+    CREATE TYPE user_plan AS ENUM ('starter', 'pro', 'plus', 'elite');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -24,7 +24,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     email TEXT,
-    plan TEXT DEFAULT 'free',
+    plan TEXT DEFAULT 'starter',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

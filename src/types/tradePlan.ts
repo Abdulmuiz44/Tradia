@@ -11,7 +11,7 @@ export interface TradePlan {
   riskReward: number;
   notes?: string;
   status: 'planned' | 'executed' | 'cancelled';
-  tier?: 'free' | 'plus' | 'pro' | 'elite';
+  tier?: 'starter' | 'plus' | 'pro' | 'elite';
   createdAt: string;
   updated_at?: Date;
 }

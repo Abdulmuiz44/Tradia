@@ -12,15 +12,15 @@ describe('PricingCard', () => {
     mockOnSelectPlan.mockClear();
   });
 
-  it('renders free plan correctly', () => {
+  it('renders starter plan correctly', () => {
     render(
       <PricingCard
-        plan="free"
+        plan="starter"
         onSelectPlan={mockOnSelectPlan}
       />
     );
 
-    expect(screen.getByText('Free')).toBeInTheDocument();
+    expect(screen.getByText('Starter')).toBeInTheDocument();
     expect(screen.getByText('$0')).toBeInTheDocument();
     expect(screen.getByText('forever')).toBeInTheDocument();
     expect(screen.getByText('5 AI chats per day')).toBeInTheDocument();

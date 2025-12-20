@@ -13,7 +13,7 @@ import { TradeContext } from '@/context/TradeContext';
 
 // Mock the UserContext and TradeContext for testing
 const MockUserProvider = ({ children, user }: any) => (
-  <UserContext.Provider value={{ user, plan: user?.plan || 'free', loading: false, setPlan: jest.fn(), refreshUser: jest.fn() }}>
+  <UserContext.Provider value={{ user, plan: user?.plan || 'starter', loading: false, setPlan: jest.fn(), refreshUser: jest.fn() }}>
     {children}
   </UserContext.Provider>
 );
@@ -82,8 +82,8 @@ describe('TradiaAIChat Access Control', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('renders correctly for a Free user', () => {
-    const user = { email: 'free@example.com', plan: 'free' };
+  test('renders correctly for a Starter user', () => {
+    const user = { email: 'starter@example.com', plan: 'starter' };
     renderTradiaAIChat(user);
 
     // Check for the input placeholder which indicates the mode

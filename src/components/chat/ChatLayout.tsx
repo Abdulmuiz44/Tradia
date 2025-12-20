@@ -124,7 +124,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   const email = session?.user?.email || "";
   const userDisplayName = (user?.name?.trim?.() || session?.user?.name?.trim?.() || (email ? email.split("@")[0] : "Trader")) as string;
   const isAdmin = React.useMemo(() => user?.email?.toLowerCase() === "abdulmuizproject@gmail.com", [user?.email]);
-  const planDisplay = React.useMemo(() => (plan || "free").toUpperCase(), [plan]);
+  const planDisplay = React.useMemo(() => (plan || "starter").toUpperCase(), [plan]);
   const activeConversation = React.useMemo(() => {
     if (!activeConversationId) return null;
     return conversations.find((conversation) => conversation.id === activeConversationId) ?? null;

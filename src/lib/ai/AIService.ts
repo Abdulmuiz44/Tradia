@@ -521,7 +521,7 @@ export class AIService {
     ];
 
     const plan = this.userPlan?.id || 'starter';
-    const counts: Record<string, number> = { starter: 1, free: 1, pro: 3, plus: 6, elite: 10 } as any;
+    const counts: Record<string, number> = { starter: 1, pro: 3, plus: 6, elite: 10 } as any;
     const n = Math.max(1, counts[plan] || 1);
     return defaultModels.slice(0, n);
   }

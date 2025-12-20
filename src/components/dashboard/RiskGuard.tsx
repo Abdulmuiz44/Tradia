@@ -34,7 +34,7 @@ export default function RiskGuard(): React.ReactElement | null {
     try {
       if (typeof window !== "undefined") {
         const raw = localStorage.getItem("riskControls");
-        if (raw) return { ...loadDefaultsForPlan("free"), ...(JSON.parse(raw) as RiskControls) };
+        if (raw) return { ...loadDefaultsForPlan("starter"), ...(JSON.parse(raw) as RiskControls) };
       }
     } catch {}
     return loadDefaultsForPlan(plan);

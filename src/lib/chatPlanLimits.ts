@@ -249,33 +249,29 @@ export class ChatPlanValidator {
   getUpgradeRecommendation(feature: string): string {
     const upgrades: Record<string, Record<PlanType, string>> = {
       imageProcessing: {
-        free: 'Upgrade to Plus to unlock image processing',
-        starter: 'Upgrade to Plus to unlock image processing',
-        pro: 'Upgrade to Plus to unlock image processing',
-        plus: 'Already available',
-        elite: 'Already available',
-      },
-      voiceInput: {
-        free: 'Upgrade to Pro to unlock voice input',
-        starter: 'Upgrade to Pro to unlock voice input',
-        pro: 'Already available',
-        plus: 'Already available',
-        elite: 'Already available',
-      },
-      exportChat: {
-        free: 'Upgrade to Pro to unlock chat export',
-        starter: 'Upgrade to Pro to unlock chat export',
-        pro: 'Already available',
-        plus: 'Already available',
-        elite: 'Already available',
-      },
-      mentorMode: {
-        free: 'Upgrade to Starter to unlock Mentor mode',
-        starter: 'Upgrade to Pro to unlock Mentor mode',
-        pro: 'Already available',
-        plus: 'Already available',
-        elite: 'Already available',
-      },
+         starter: 'Upgrade to Plus to unlock image processing',
+         pro: 'Upgrade to Plus to unlock image processing',
+         plus: 'Already available',
+         elite: 'Already available',
+       },
+       voiceInput: {
+         starter: 'Upgrade to Pro to unlock voice input',
+         pro: 'Already available',
+         plus: 'Already available',
+         elite: 'Already available',
+       },
+       exportChat: {
+         starter: 'Upgrade to Pro to unlock chat export',
+         pro: 'Already available',
+         plus: 'Already available',
+         elite: 'Already available',
+       },
+       mentorMode: {
+         starter: 'Upgrade to Pro to unlock Mentor mode',
+         pro: 'Already available',
+         plus: 'Already available',
+         elite: 'Already available',
+       },
     };
 
     return upgrades[feature]?.[this.plan] || 'Upgrade your plan to access this feature';

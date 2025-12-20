@@ -40,7 +40,7 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { useRouter } from "next/navigation";
 
 type PaidPlan = "plus" | "elite";
-type NormalizedPlan = PaidPlan | "free" | "pro";
+type NormalizedPlan = PaidPlan | "starter" | "pro";
 
 interface ForecastResponse {
   pair: string;
@@ -75,7 +75,7 @@ const PLAN_CAPABILITIES: Record<NormalizedPlan, {
   preview?: boolean;
   hasAccess: boolean;
 }> = {
-  free: {
+  starter: {
     label: "Upgrade Required",
     allowedPairs: [],
     accuracyCap: 0,

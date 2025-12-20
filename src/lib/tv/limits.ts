@@ -8,7 +8,7 @@ export type TvFeatureKey =
   | "screener"
   | "broker";
 
-const FEATURE_TO_LIMIT: Record<TvFeatureKey, keyof typeof PLAN_LIMITS.free> = {
+const FEATURE_TO_LIMIT: Record<TvFeatureKey, keyof typeof PLAN_LIMITS.starter> = {
   alerts: "tvAlerts",
   backtest: "tvBacktests",
   portfolio: "tvBacktests",
@@ -26,7 +26,7 @@ export interface TvPlanLimit {
 function normalizePlan(plan: PlanType | string | null | undefined): PlanType {
   if (!plan) return "starter";
   const lower = String(plan).toLowerCase();
-  if (["free", "starter", "pro", "plus", "elite"].includes(lower)) {
+  if (["starter", "pro", "plus", "elite"].includes(lower)) {
     return lower as PlanType;
   }
   if (lower === "premium") return "plus";
@@ -39,7 +39,7 @@ export function getTvLimitForPlan(
 ): TvPlanLimit {
   const planKey = normalizePlan(plan as PlanType);
   const limitKey = FEATURE_TO_LIMIT[feature];
-  const value = PLAN_LIMITS[planKey][limitKey as keyof typeof PLAN_LIMITS.free];
+  const value = PLAN_LIMITS[planKey][limitKey as keyof typeof PLAN_LIMITS.starter];
 
   if (typeof value === "boolean") {
     return {

@@ -33,11 +33,11 @@ import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
  */
 
 /* --- Tier types --- */
-const TIERS = ["free", "plus", "pro", "elite"] as const;
+const TIERS = ["starter", "plus", "pro", "elite"] as const;
 type Tier = typeof TIERS[number];
 
 function tierIndex(t: Tier | string) {
-  const i = TIERS.indexOf((t as Tier) ?? "free");
+  const i = TIERS.indexOf((t as Tier) ?? "starter");
   return i === -1 ? 0 : i;
 }
 
@@ -59,17 +59,17 @@ export default function TradePlannerTable() {
   const userPlan: Tier = (() => {
     try {
       const candidate = typeof window !== "undefined" ? window.localStorage.getItem?.("userPlan") : null;
-      if (!candidate) return "free";
+      if (!candidate) return "starter";
       const c = String(candidate).toLowerCase();
-      return (TIERS as readonly string[]).includes(c) ? (c as Tier) : "free";
+      return (TIERS as readonly string[]).includes(c) ? (c as Tier) : "starter";
     } catch {
-      return "free";
+      return "starter";
     }
   })();
 
   const maxPlans = (() => {
-    const key = (userPlan as unknown as PlanType) || 'free';
-    const limits = PLAN_LIMITS[key] || PLAN_LIMITS.free;
+    const key = (userPlan as unknown as PlanType) || 'starter';
+    const limits = PLAN_LIMITS[key] || PLAN_LIMITS.starter;
     return limits.maxTradePlans;
   })();
 
@@ -88,7 +88,7 @@ export default function TradePlannerTable() {
     riskReward: undefined,
     notes: "",
     status: "planned",
-    tier: "free",
+    tier: "starter",
   });
 
   // modals
@@ -128,8 +128,8 @@ export default function TradePlannerTable() {
       riskReward: undefined,
       notes: "",
       status: "planned",
-      tier: "free",
-    });
+      tier: "starter",
+      });
 
   const handleCreatePlan = () => {
     if (!newPlan.symbol || !newPlan.setupType) {
@@ -151,8 +151,8 @@ export default function TradePlannerTable() {
       notes: String(newPlan.notes ?? ""),
       status: (newPlan.status as any) ?? "planned",
       createdAt: new Date().toISOString(),
-      tier: (newPlan.tier as Tier) ?? "free",
-    };
+      tier: (newPlan.tier as Tier) ?? "starter",
+      };
 
     if (typeof addPlan === "function") {
       addPlan(payload);
@@ -211,7 +211,7 @@ export default function TradePlannerTable() {
   const normalizedPlans: LocalPlan[] = (plans ?? []).map((p: any) => ({
     ...p,
     notes: p.notes ?? p.description ?? "",
-    tier: (p.tier as Tier) ?? "free",
+    tier: (p.tier as Tier) ?? "starter",
     createdAt: p.createdAt ?? p.created_at ?? new Date().toISOString(),
   }));
 
@@ -630,7 +630,7 @@ export default function TradePlannerTable() {
           sortedPlans.map((plan: LocalPlan) => {
             const est = computeEst(plan);
             const isEditing = editingId === plan.id;
-            const lockedAdvanced = featureLocked(plan.tier ?? "free");
+            const lockedAdvanced = featureLocked(plan.tier ?? "starter");
 
             return (
               <div key={plan.id} className={cn(cardBase, "relative overflow-hidden")}>
@@ -666,7 +666,7 @@ export default function TradePlannerTable() {
                       <div className="flex items-center gap-3">
                         <div className="rounded px-2 py-1 bg-zinc-900/40 text-sm font-semibold">{plan.symbol}</div>
                         <div className="text-sm text-zinc-300">{plan.setupType}</div>
-                        <div className="text-xs ml-2 px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">{plan.tier ?? "free"}</div>
+                        <div className="text-xs ml-2 px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">{plan.tier ?? "starter"}</div>
                       </div>
 
                       <div className="text-right">
@@ -790,7 +790,7 @@ export default function TradePlannerTable() {
 
                     <div className="text-xs text-zinc-400 text-right">
                       <div>Created: <span className="font-medium">{new Date(plan.createdAt ?? "").toLocaleString()}</span></div>
-                      <div>Tier: <span className="font-medium capitalize">{plan.tier ?? "free"}</span></div>
+                      <div>Tier: <span className="font-medium capitalize">{plan.tier ?? "starter"}</span></div>
                     </div>
 
                     <div className="mt-2 flex flex-col gap-2 items-end">

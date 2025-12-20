@@ -5,7 +5,7 @@
 -- Note: System-level database settings are managed by Supabase automatically
 
 -- Create custom types
-CREATE TYPE user_plan AS ENUM ('free', 'pro', 'plus', 'elite');
+CREATE TYPE user_plan AS ENUM ('starter', 'pro', 'plus', 'elite');
 CREATE TYPE message_type AS ENUM ('user', 'assistant');
 CREATE TYPE assistant_mode AS ENUM ('coach', 'mistral');
 
@@ -13,7 +13,7 @@ CREATE TYPE assistant_mode AS ENUM ('coach', 'mistral');
 CREATE TABLE public.users (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
-    plan user_plan DEFAULT 'free' NOT NULL,
+    plan user_plan DEFAULT 'starter' NOT NULL,
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -229,21 +229,21 @@ BEGIN
     SELECT
         u.plan,
         CASE u.plan
-            WHEN 'free' THEN 5
+            WHEN 'starter' THEN 5
             WHEN 'pro' THEN 50
             WHEN 'plus' THEN 200
             WHEN 'elite' THEN -1
             ELSE 5
         END as ai_chats_per_day,
         CASE u.plan
-            WHEN 'free' THEN 30
+            WHEN 'starter' THEN 30
             WHEN 'pro' THEN 182
             WHEN 'plus' THEN 365
             WHEN 'elite' THEN -1
             ELSE 30
         END as trade_storage_days,
         CASE u.plan
-            WHEN 'free' THEN 50
+            WHEN 'starter' THEN 50
             WHEN 'pro' THEN 500
             WHEN 'plus' THEN 2000
             WHEN 'elite' THEN -1

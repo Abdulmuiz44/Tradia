@@ -6,7 +6,7 @@
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY,
     email TEXT,
-    plan TEXT DEFAULT 'free',
+    plan TEXT DEFAULT 'starter',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

@@ -11,9 +11,9 @@ export const PricingExample: React.FC = () => {
   const [upgradeReason, setUpgradeReason] = useState<'ai-limit' | 'file-limit' | 'export-limit' | 'general'>('general');
 
   // Mock current user data - replace with actual user context
-  const currentPlan: PlanType = 'free';
+  const currentPlan: PlanType = 'starter';
   const usageStats = {
-    messages: 3, // Used 3 out of 5 for free plan
+    messages: 3, // Used 3 out of 5 for starter plan
     uploads: 0,
   };
 
