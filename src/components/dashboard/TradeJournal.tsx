@@ -1824,7 +1824,7 @@ type NormalizedTrade = Trade & {
               </div>
               <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
                 <div className="text-xs text-muted-foreground mb-1">Recommended daily loss</div>
-                <div className="text-sm">{(() => { const bal = typeof accountBalance==='number'? accountBalance : 0; const pct = effectivePlan==='free'? 2 : 1.5; return `$${(bal * (pct/100)).toFixed(0)} (${pct}% of balance)`; })()}</div>
+                <div className="text-sm">{(() => { const bal = typeof accountBalance==='number'? accountBalance : 0; const pct = effectivePlan==='starter'? 2 : 1.5; return `$${(bal * (pct/100)).toFixed(0)} (${pct}% of balance)`; })()}</div>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
