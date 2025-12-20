@@ -150,7 +150,7 @@ export default function PricingPlans(): React.ReactElement {
   useEffect(() => {
     if (!plan) {
       // ensure user has a plan value; useUser likely accepts string
-      setPlan("free");
+      setPlan("starter");
     }
     // we intentionally don't add setPlan to deps here to avoid re-triggering on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -265,15 +265,15 @@ export default function PricingPlans(): React.ReactElement {
               </button>
 
               <button
-                onClick={() => handleUpgrade("free")}
-                disabled={!isUpgrade(plan, "free") && !isSamePlan(plan, "free")}
+                onClick={() => handleUpgrade("starter")}
+                disabled={!isUpgrade(plan, "starter") && !isSamePlan(plan, "starter")}
                 className={`py-2 px-4 rounded-lg font-medium transition ${
-                  !isUpgrade(plan, "free") && !isSamePlan(plan, "free")
+                  !isUpgrade(plan, "starter") && !isSamePlan(plan, "starter")
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
                     : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-600"
                 }`}
               >
-                {isSamePlan(plan, "free") ? "Current Plan" : "Start Free — Always Free"}
+                {isSamePlan(plan, "starter") ? "Current Plan" : "Start Free — Always Free"}
               </button>
 
               <span className="ml-4 inline-flex items-center text-sm text-gray-400 gap-2">
