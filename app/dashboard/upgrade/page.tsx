@@ -143,7 +143,7 @@ export default function UpgradePage() {
             Upgrade Your Plan
           </h1>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl">
-            You're currently on the{" "}
+             You&apos;re currently on the{" "}
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">
               {getPlanDisplayName(currentPlan)}
             </span>{" "}
@@ -280,9 +280,9 @@ export default function UpgradePage() {
           ) : (
             <div className="col-span-full text-center py-12">
               <Crown className="w-16 h-16 mx-auto mb-4 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-2xl font-bold mb-2">You're All Set!</h3>
+              <h3 className="text-2xl font-bold mb-2">You&apos;re All Set!</h3>
               <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                You're already on our highest plan. Enjoy all the premium features!
+                You&apos;re already on our highest plan. Enjoy all the premium features!
               </p>
             </div>
           )}

@@ -104,7 +104,7 @@ export function MinimalChatInterface({
         if (!initialMessagesLoaded && conversationId) {
             loadConversationMessages();
         }
-    }, [conversationId]);
+    }, [conversationId, initialMessagesLoaded]);
 
     const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
         api: '/api/tradia/ai',

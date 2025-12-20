@@ -133,14 +133,14 @@ This can lead to unexpected behavior when compiling on a filesystem with other c
 Use equal casing. Compare these module identifiers:
 * C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\request-idle-callback.js
     Used by 3 module(s), i. e.
-    C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\script.js
+    C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\route-loader.js
 * C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\request-idle-callback.js
     Used by 3 module(s), i. e.
     C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\script.js
 
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/request-idle-callback.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/script.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/route-loader.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/router/router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/resolve-href.js
@@ -719,7 +719,7 @@ Use equal casing. Compare these module identifiers:
     C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\shared\lib\router\router.js
 * C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\shared\lib\router\utils\parse-path.js
     Used by 6 module(s), i. e.
-    C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\shared\lib\router\utils\path-has-prefix.js
+    C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[5].use!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\shared\lib\router\router.js
 
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/router/utils/parse-path.js
@@ -1068,14 +1068,14 @@ This can lead to unexpected behavior when compiling on a filesystem with other c
 Use equal casing. Compare these module identifiers:
 * javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\infinite-promise.js|app-pages-browser
     Used by 3 module(s), i. e.
-    javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\app-router.js|app-pages-browser
+    javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\layout-router.js|app-pages-browser
 * javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\infinite-promise.js|app-pages-browser
     Used by 2 module(s), i. e.
     javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\app-router.js|app-pages-browser
 
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/infinite-promise.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/match-segments.js
 There are multiple modules with names that only differ in casing.
@@ -1146,14 +1146,14 @@ This can lead to unexpected behavior when compiling on a filesystem with other c
 Use equal casing. Compare these module identifiers:
 * javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\redirect-boundary.js|app-pages-browser
     Used by 3 module(s), i. e.
-    javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\app-router.js|app-pages-browser
+    javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\layout-router.js|app-pages-browser
 * javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\redirect-boundary.js|app-pages-browser
     Used by 2 module(s), i. e.
     javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\app-router.js|app-pages-browser
 
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect-boundary.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect.js
 There are multiple modules with names that only differ in casing.
@@ -1169,7 +1169,7 @@ Use equal casing. Compare these module identifiers:
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect-boundary.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/request-async-storage.external.js
 There are multiple modules with names that only differ in casing.
@@ -1186,7 +1186,7 @@ Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/request-async-storage.external.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect-boundary.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/apply-flight-data.js
 There are multiple modules with names that only differ in casing.
@@ -1843,9 +1843,9 @@ Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/page-path/ensure-leading-slash.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/router/utils/app-paths.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/future/helpers/interception-routes.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/compute-changed-path.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/create-initial-router-state.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/app-render/get-segment-param.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/match-segments.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/router/utils/add-path-prefix.js
 There are multiple modules with names that only differ in casing.
@@ -1877,9 +1877,9 @@ Use equal casing. Compare these module identifiers:
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/router/utils/app-paths.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/future/helpers/interception-routes.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/compute-changed-path.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/create-initial-router-state.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/app-render/get-segment-param.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/match-segments.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/shared/lib/router/utils/is-bot.js
 There are multiple modules with names that only differ in casing.
@@ -1995,7 +1995,7 @@ Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/request-async-storage.external.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect.js
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/redirect-boundary.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/app-render/get-segment-param.js
 There are multiple modules with names that only differ in casing.
@@ -2019,32 +2019,29 @@ This can lead to unexpected behavior when compiling on a filesystem with other c
 Use equal casing. Compare these module identifiers:
 * javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\server\future\helpers\interception-routes.js|app-pages-browser
     Used by 4 module(s), i. e.
-    javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\router-reducer\compute-changed-path.js|app-pages-browser
+    javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\server\app-render\get-segment-param.js|app-pages-browser
 * javascript/auto|c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\server\future\helpers\interception-routes.js|app-pages-browser
     Used by 3 module(s), i. e.
     javascript/auto|C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js!C:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js??ruleSet[1].rules[15].oneOf[4].use[1]!c:\Users\Hp\Documents\Github\Tradia\node_modules\.pnpm\next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95\node_modules\next\dist\client\components\router-reducer\compute-changed-path.js|app-pages-browser
 
 Import trace for requested module:
 ./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/future/helpers/interception-routes.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/compute-changed-path.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/router-reducer/create-initial-router-state.js
-./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/app-router.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/server/app-render/get-segment-param.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/match-segments.js
+./node_modules/.pnpm/next@13.5.4_@babel+core@7.2_c41390bf5c3746ee148e28aa7fe89d95/node_modules/next/dist/client/components/layout-router.js
 
    Linting and checking validity of types ...
 
 ./app/dashboard/risk-management/page.tsx
 39:8  Warning: React Hook useEffect has missing dependencies: 'refreshTrades' and 'trades.length'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
 
+./src/components/chat/MinimalChatInterface.tsx
+107:8  Warning: React Hook useEffect has a missing dependency: 'setMessages'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
 info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
-Failed to compile.
-
-./src/components/chat/MinimalChatInterface.tsx:107:48
-Type error: Block-scoped variable 'setMessages' used before its declaration.
-
-[0m [90m 105 | [39m            loadConversationMessages()[33m;[39m[0m
-[0m [90m 106 | [39m        }[0m
-[0m[31m[1m>[22m[39m[90m 107 | [39m    }[33m,[39m [conversationId[33m,[39m initialMessagesLoaded[33m,[39m setMessages])[33m;[39m[0m
-[0m [90m     | [39m                                               [31m[1m^[22m[39m[0m
-[0m [90m 108 | [39m[0m
-[0m [90m 109 | [39m    [36mconst[39m { messages[33m,[39m input[33m,[39m handleInputChange[33m,[39m isLoading[33m,[39m stop[33m,[39m error[33m,[39m setMessages } [33m=[39m useChat({[0m
-[0m [90m 110 | [39m        api[33m:[39m [32m'/api/tradia/ai'[39m[33m,[39m[0m
+   Collecting page data ...
+Static worker unexpectedly exited with code: 1 and signal: null
+Static worker unexpectedly exited with code: 1 and signal: null
+Static worker unexpectedly exited with code: 1 and signal: null
+Static worker unexpectedly exited with code: 1 and signal: null
+Static worker unexpectedly exited with code: 1 and signal: null
