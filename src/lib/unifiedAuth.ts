@@ -8,6 +8,7 @@ type UnifiedAuth = {
   isAuthenticated: boolean;
   email: string | null;
   id: string | null;
+  name: string | null;
   source: "nextauth" | "jwt" | null;
 };
 
@@ -59,10 +60,12 @@ export function useUnifiedAuth(): UnifiedAuth {
     if (status === "authenticated" && nextAuthSession?.user?.email) {
       // Prefer NextAuth when available
       const idVal = (nextAuthSession.user as any).id || null;
+      const nameVal = (nextAuthSession.user as any).name || null;
       return {
         isAuthenticated: true,
         email: String(nextAuthSession.user.email),
         id: idVal ? String(idVal) : null,
+        name: nameVal ? String(nameVal) : null,
         source: "nextauth",
       };
     }
@@ -72,11 +75,12 @@ export function useUnifiedAuth(): UnifiedAuth {
         isAuthenticated: true,
         email: jwtUser.email,
         id: jwtUser.id || null,
+        name: null,
         source: "jwt",
       };
     }
 
-    return { isAuthenticated: false, email: null, id: null, source: null };
+    return { isAuthenticated: false, email: null, id: null, name: null, source: null };
   }, [nextAuthSession, status, jwtUser]);
 }
 

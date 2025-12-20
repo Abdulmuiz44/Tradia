@@ -116,29 +116,9 @@ export async function createCheckoutForPlan(
 
   const txRef = `${planKey}_${userId || 'guest'}_${Date.now()}`;
 
-  // Create payment (first payment that will subscribe the customer to the plan)
-  const payload: any = {
-    tx_ref: txRef,
-    amount: price,
-    currency,
-    redirect_url: successUrl,
-    customer: { email: userEmail },
-    payment_options: "card,bank,ussd,qr", // let Flutterwave pick allowed methods
-    customizations: {
-      title: "Tradia subscription",
-      description: `${planType} (${billingCycle})`,
-    },
-    payment_plan: fwPlanId, // important: include plan ID so the customer is subscribed after first payment
-    meta: { user_id: userId, plan_type: planType, billing_cycle: billingCycle },
-  };
-
-  const resp = await callFlutterwave("/payments", "POST", payload);
-  const checkoutUrl = resp?.data?.link || resp?.data?.url || resp?.data?.checkout_url;
-  const paymentId = resp?.data?.id;
-
-  if (!checkoutUrl) {
-    throw new Error("Failed to get checkout URL from Flutterwave response");
-  }
+  // For Inline payment, we just need to return the transaction reference
+  // The actual payment will be initiated from the frontend using Flutterwave's inline SDK
+  const paymentId = txRef;
 
   // persist a pending subscription record into user_plans
   // Only persist pending plan if we have a real user id
@@ -163,8 +143,8 @@ export async function createCheckoutForPlan(
   }
 
   return {
-    checkoutUrl,
-    paymentId: paymentId || txRef,
+    checkoutUrl: "", // Not needed for inline, but keeping for compatibility
+    paymentId,
     txRef,
   };
 }

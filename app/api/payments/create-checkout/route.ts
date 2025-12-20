@@ -132,18 +132,23 @@ export async function POST(req: Request) {
 
     // Log success for observability
     const userIdForLog = user!.id === 'guest' ? undefined : user!.id;
+    const priceMap = { pro: { monthly: 9, yearly: 90 }, plus: { monthly: 19, yearly: 190 }, elite: { monthly: 39, yearly: 390 } };
+    const price = priceMap[planType as 'pro' | 'plus' | 'elite'][billingCycle as 'monthly' | 'yearly'];
+    
     await logPayment(
       "checkout",
       "info",
       "Created Flutterwave checkout",
-      { planType, billingCycle, checkoutId: checkout.paymentId, txRef: checkout.txRef },
+      { planType, billingCycle, amount: price, txRef: checkout.txRef },
       userIdForLog
     );
 
     return NextResponse.json({
-      checkoutId: checkout.paymentId,
+      paymentId: checkout.paymentId,
       checkoutUrl: checkout.checkoutUrl,
-      txRef: checkout.txRef
+      txRef: checkout.txRef,
+      amount: price,
+      currency
     });
   } catch (error) {
     console.error("Checkout creation error:", error);
