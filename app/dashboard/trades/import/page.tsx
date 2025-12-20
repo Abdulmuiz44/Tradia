@@ -7,6 +7,7 @@ import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { useNotification } from "@/context/NotificationContext";
+import { useAccount } from "@/context/AccountContext";
 import Spinner from "@/components/ui/spinner";
 import { ArrowLeft, Upload, Check } from "lucide-react";
 import CsvUpload from "@/components/dashboard/CsvUpload";
@@ -17,16 +18,34 @@ function ImportTradesContent() {
   const router = useRouter();
   const { notify } = useNotification();
   const { refreshTrades } = useTrade();
+  const { selectedAccount } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
 
   const handleImportTrades = async (trades: Partial<Trade>[]) => {
+    // Validate that a trading account is selected
+    if (!selectedAccount?.id) {
+      notify({
+        variant: "destructive",
+        title: "No Trading Account Selected",
+        description: "Please create and select a trading account before importing trades. Go to the Accounts page to create one.",
+      });
+      setTimeout(() => router.push("/dashboard/accounts"), 500);
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // Add account_id to all trades
+      const tradesWithAccount = trades.map(trade => ({
+        ...trade,
+        account_id: selectedAccount.id,
+      }));
+
       const response = await fetch("/api/trades/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trades }),
+        body: JSON.stringify({ trades: tradesWithAccount }),
       });
 
       if (!response.ok) {
@@ -47,7 +66,7 @@ function ImportTradesContent() {
       notify({
         variant: "success",
         title: "Trades imported successfully",
-        description: `${result.count || trades.length} trades have been added to your history.`,
+        description: `${result.count || trades.length} trades have been added to "${selectedAccount.name}".`,
       });
 
       setTimeout(() => router.push("/dashboard/trade-history"), 1500);
@@ -91,6 +110,29 @@ function ImportTradesContent() {
           </div>
         </div>
 
+        {/* Account Warning */}
+        {!selectedAccount?.id && (
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <h3 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
+                  No Trading Account Selected
+                </h3>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-3">
+                  You must create and select a trading account before importing trades. Each imported trade needs to be associated with a specific account.
+                </p>
+                <button
+                  onClick={() => router.push("/dashboard/accounts")}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition"
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         {importedCount > 0 ? (
           /* Success State */
@@ -126,13 +168,13 @@ function ImportTradesContent() {
             </div>
           </div>
         ) : (
-          /* Upload Area */
-          <div className="bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-gray-700 p-8">
-            <CsvUpload
-              isOpen={true}
-              onClose={() => router.push("/dashboard/trade-history")}
-              onImport={handleImportTrades}
-            />
+           /* Upload Area */
+           <div className={`bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-gray-700 p-8 ${!selectedAccount?.id ? 'opacity-50 pointer-events-none' : ''}`}>
+             <CsvUpload
+               isOpen={true}
+               onClose={() => router.push("/dashboard/trade-history")}
+               onImport={handleImportTrades}
+             />
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">

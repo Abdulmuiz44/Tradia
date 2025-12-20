@@ -20,11 +20,22 @@ function AddTradeContent() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddTrade = async (tradeData: Partial<Trade>) => {
+    // Validate that a trading account is selected
+    if (!selectedAccount?.id) {
+      notify({
+        variant: "destructive",
+        title: "No Trading Account Selected",
+        description: "Please create and select a trading account before adding trades. Go to the Accounts page to create one.",
+      });
+      setTimeout(() => router.push("/dashboard/accounts"), 500);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const tradeWithAccount = {
         ...tradeData,
-        account_id: selectedAccount?.id,
+        account_id: selectedAccount.id,
       };
       const response = await fetch("/api/trades", {
         method: "POST",
@@ -41,7 +52,7 @@ function AddTradeContent() {
       notify({
         variant: "success",
         title: "Trade added successfully",
-        description: `Trade for ${tradeData.symbol} has been created.`,
+        description: `Trade for ${tradeData.symbol} has been created in "${selectedAccount.name}".`,
       });
       
       setTimeout(() => router.push("/dashboard/trade-history"), 500);
@@ -87,8 +98,31 @@ function AddTradeContent() {
           </div>
         </div>
 
+        {/* Account Warning */}
+        {!selectedAccount?.id && (
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <h3 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
+                  No Trading Account Selected
+                </h3>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-3">
+                  You must create and select a trading account before adding trades. Each trade needs to be associated with a specific account.
+                </p>
+                <button
+                  onClick={() => router.push("/dashboard/accounts")}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition"
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Form */}
-        <div className="bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className={`bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-gray-700 p-6 ${!selectedAccount?.id ? 'opacity-50 pointer-events-none' : ''}`}>
           <AddTradeForm
             onSubmit={handleAddTrade}
             isLoading={isLoading}
@@ -101,8 +135,11 @@ function AddTradeContent() {
             💡 Tip
           </h3>
           <p className="text-sm text-blue-800 dark:text-blue-300">
-            Fill in all required fields to create a complete trade entry. You can add additional
-            details like journal notes and screenshots after creation.
+            {selectedAccount ? (
+              <>Trading to: <strong>{selectedAccount.name}</strong> • {/* */}Fill in all required fields to create a complete trade entry.</>
+            ) : (
+              <>First, create a trading account on the Accounts page, then you can add trades to it.</>
+            )}
           </p>
         </div>
       </div>

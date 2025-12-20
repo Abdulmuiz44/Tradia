@@ -66,9 +66,21 @@ export async function POST(request: NextRequest) {
         const supabase = createClient();
         const body = await request.json();
 
+        // Validate that account_id is provided
+        const accountId = body.account_id || body.accountId;
+        if (!accountId) {
+            return NextResponse.json(
+                { 
+                    error: "Trading account is required",
+                    message: "You must select a trading account before adding a trade. Create or select an account first."
+                },
+                { status: 400 }
+            );
+        }
+
         const tradeData = {
             user_id: session.user.id,
-            account_id: body.account_id || body.accountId || null,
+            account_id: accountId,
             symbol: body.symbol || "",
             direction: body.direction || "Buy",
             ordertype: body.orderType || "Market Execution",

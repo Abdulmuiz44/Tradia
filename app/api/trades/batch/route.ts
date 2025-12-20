@@ -144,10 +144,16 @@ export async function POST(request: NextRequest) {
             // Map frontend fields to database fields
             const dbFields = mapToSnakeCase(t);
 
+            // Validate that account_id is provided for each trade
+            const accountId = dbFields.account_id || t.account_id;
+            if (!accountId) {
+                throw new Error(`Trade #${idx + 1}: Account ID is required. All trades must be associated with a trading account.`);
+            }
+
             // Build clean trade object with only valid database columns
             const tradeData: Record<string, any> = {
                 user_id: session.user.id,
-                account_id: dbFields.account_id ?? null,
+                account_id: accountId,
                 symbol: String(t.symbol || '').toUpperCase(),
                 direction: dbFields.direction || "Buy",
                 ordertype: dbFields.ordertype || "Market Execution",
