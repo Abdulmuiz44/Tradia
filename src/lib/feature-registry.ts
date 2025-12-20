@@ -1,4 +1,4 @@
-export type PlanTier = 'free' | 'pro' | 'plus' | 'elite'
+export type PlanTier = 'starter' | 'pro' | 'plus' | 'elite'
 
 export type FeatureAnnouncement = {
   id: string
@@ -31,7 +31,7 @@ export const FEATURES: FeatureAnnouncement[] = [
     title: 'Journal: Review & Risk Tabs',
     body: 'Weekly Review KPIs and a Risk Budget calculator to size 1R and daily loss caps.',
     date: '2025-09-16T00:00:00.000Z',
-    minPlan: 'free',
+    minPlan: 'starter',
   },
   {
     id: 'journal-mistakes',
@@ -52,14 +52,14 @@ export const FEATURES: FeatureAnnouncement[] = [
     title: 'Payments: More Flutterwave Methods',
     body: 'Card, bank transfer, USSD, QR, and mobile money now supported. Plans activate after successful payment.',
     date: '2025-08-29T00:00:00.000Z',
-    minPlan: 'free',
+    minPlan: 'starter',
   },
   {
     id: 'ui-refresh-2025-09',
     title: 'UI Refresh & Light/Dark Polish',
     body: 'Sharper branding, better contrast, and consistent components across dashboard sections.',
     date: '2025-09-15T00:00:00.000Z',
-    minPlan: 'free',
+    minPlan: 'starter',
   },
 ]
 

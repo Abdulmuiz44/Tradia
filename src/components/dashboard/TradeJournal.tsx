@@ -171,15 +171,15 @@ const toDateOrNull = (value: unknown): Date | null => {
 const resolvePlanType = (plan: unknown): PlanType => {
   const normalized = String(plan || '').toLowerCase();
   const aliases: Record<string, PlanType> = {
-    free: 'free',
-    starter: 'free',
-    basic: 'free',
+    free: 'starter',
+    starter: 'starter',
+    basic: 'starter',
     pro: 'pro',
     plus: 'plus',
     premium: 'plus',
     elite: 'elite',
   };
-  return normalized in aliases ? aliases[normalized] : 'free';
+  return normalized in aliases ? aliases[normalized] : 'starter';
 };
 
 /* --------------------------------------------------------------------------
@@ -390,8 +390,8 @@ export default function TradeJournal(): React.ReactElement {
   const planType = resolvePlanType(rawPlan);
   const effectivePlan: PlanType = isAdmin ? "elite" : planType;
   const planLimits = PLAN_LIMITS[effectivePlan];
-  const planRank: Record<PlanType, number> = { free: 0, starter: 0, pro: 1, plus: 2, elite: 3 };
-  const hasPlan = (min: PlanType = "free") => planRank[effectivePlan] >= planRank[min];
+  const planRank: Record<PlanType, number> = { starter: 0, pro: 1, plus: 2, elite: 3 };
+  const hasPlan = (min: PlanType = "starter") => planRank[effectivePlan] >= planRank[min];
 
   const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
   const tradeDataHook = useTradeData();
@@ -1802,9 +1802,9 @@ type NormalizedTrade = Trade & {
           <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
             <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><Target className="h-5 w-5" /><h3 className="font-semibold">Risk Budget</h3></div>
-            {effectivePlan === 'free' && (accountBalance === '' || typeof accountBalance !== 'number') && (
+            {effectivePlan === 'starter' && (accountBalance === '' || typeof accountBalance !== 'number') && (
               <div className="p-3 rounded border border-yellow-600 bg-yellow-900/30 text-yellow-200 text-sm">
-                Free plan: enter your current live account size above to enable risk calculations.
+                Starter plan: enter your current live account size above to enable risk calculations.
               </div>
             )}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
