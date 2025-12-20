@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Trash2, Edit2, Activity } from "lucide-react";
+import { Plus, Trash2, Edit2, Activity, AlertCircle, Zap } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
 import { useNotification } from "@/context/NotificationContext";
+import { useUser } from "@/context/UserContext";
+import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
+import { useRouter } from "next/navigation";
 import AccountForm from "@/components/accounts/AccountForm";
 import Modal from "@/components/ui/Modal";
 import type { TradingAccount, CreateAccountPayload } from "@/types/account";
@@ -11,9 +14,17 @@ import type { TradingAccount, CreateAccountPayload } from "@/types/account";
 export default function AccountManager() {
   const { accounts, selectedAccount, stats, createAccount, deleteAccount, loading } = useAccount();
   const { notify } = useNotification();
+  const { plan } = useUser();
+  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
   const [editingAccount, setEditingAccount] = useState<TradingAccount | null>(null);
+
+  // Get plan-specific limits
+  const userPlan = (plan as PlanType) || 'starter';
+  const planLimits = PLAN_LIMITS[userPlan];
+  const maxAccounts = planLimits.maxTradingAccounts === -1 ? Infinity : planLimits.maxTradingAccounts;
+  const accountsRemaining = Math.max(0, maxAccounts - accounts.length);
 
   const handleCreateAccount = async (payload: CreateAccountPayload) => {
     try {
@@ -56,11 +67,22 @@ export default function AccountManager() {
           </button>
         </div>
 
+        {/* Plan Badge */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm text-blue-100">
+            <span className="capitalize font-semibold">{userPlan}</span> Plan
+          </div>
+          <div className="text-xs text-blue-200 bg-blue-600/30 px-3 py-1 rounded-full">
+            {accountsRemaining === Infinity ? "Unlimited" : `${accountsRemaining} account${accountsRemaining !== 1 ? "s" : ""} remaining`}
+          </div>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-white/10 rounded-lg p-4">
             <div className="text-blue-100 text-sm mb-1">Total Accounts</div>
             <div className="text-2xl font-bold">{stats?.totalAccounts || 0}</div>
+            <div className="text-xs text-blue-200 mt-1">{maxAccounts === Infinity ? "Unlimited" : `of ${maxAccounts}`}</div>
           </div>
           <div className="bg-white/10 rounded-lg p-4">
             <div className="text-blue-100 text-sm mb-1">Active</div>
@@ -163,9 +185,20 @@ export default function AccountManager() {
         </div>
       )}
 
-      {accounts.length >= 10 && (
-        <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 text-yellow-400 text-sm">
-          You have reached the maximum number of trading accounts (10). Delete an account to create a new one.
+      {accounts.length >= maxAccounts && maxAccounts !== Infinity && (
+        <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 text-yellow-400 text-sm flex items-start gap-3">
+          <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold mb-2">Account Limit Reached</p>
+            <p>You have reached the maximum of <strong>{maxAccounts} accounts</strong> for your <strong>{userPlan.toUpperCase()}</strong> plan.</p>
+            <button
+              onClick={() => router.push("/dashboard/billing")}
+              className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-yellow-700 hover:bg-yellow-600 rounded text-sm font-semibold transition"
+            >
+              <Zap size={14} />
+              Upgrade Plan
+            </button>
+          </div>
         </div>
       )}
 

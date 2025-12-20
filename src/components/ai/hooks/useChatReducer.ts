@@ -7,7 +7,7 @@ const initialState: ChatState = {
   inputMessage: '',
   isTyping: false,
   assistantMode: 'coach',
-  userTier: 'free',
+  userTier: 'starter',
   userEmail: '',
   isAdmin: false,
   mistralUnlocked: false,

@@ -5,6 +5,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { TradingAccount, CreateAccountPayload, UpdateAccountPayload, AccountStats } from "@/types/account";
 import { useNotification } from "@/context/NotificationContext";
 import { useUser } from "@/context/UserContext";
+import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
 
 interface AccountContextType {
   accounts: TradingAccount[];
@@ -27,11 +28,17 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<AccountStats | null>(null);
   const { notify } = useNotification();
-  const { user } = useUser();
+  const { user, plan } = useUser();
   const supabase = createClientComponentClient();
 
-  // Constants
-  const MAX_ACCOUNTS = 10; // Limit users to 10 trading accounts
+  // Get max accounts based on user's plan
+  const getMaxAccountsForPlan = useCallback((userPlan: PlanType = 'starter'): number => {
+    const planLimits = PLAN_LIMITS[userPlan];
+    const maxAccounts = planLimits.maxTradingAccounts;
+    return maxAccounts === -1 ? Infinity : maxAccounts;
+  }, []);
+
+  const MAX_ACCOUNTS = getMaxAccountsForPlan((plan as PlanType) || 'starter');
 
   const fetchAccounts = useCallback(async () => {
     if (!user?.id) return;
@@ -101,6 +108,14 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       try {
+        if (accounts.length >= MAX_ACCOUNTS) {
+          const planName = (plan as PlanType) || 'starter';
+          const maxAccounts = getMaxAccountsForPlan(planName);
+          throw new Error(
+            `You have reached the maximum number of accounts (${maxAccounts}) for your ${planName.toUpperCase()} plan. Upgrade your plan to create more accounts.`
+          );
+        }
+
         const newAccount = {
           user_id: user.id,
           name: payload.name,
@@ -141,9 +156,9 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
         throw err;
       }
-    },
-    [user?.id, supabase, accounts.length, notify]
-  );
+      },
+      [user?.id, supabase, accounts.length, plan, MAX_ACCOUNTS, getMaxAccountsForPlan, notify]
+      );
 
   const updateAccount = useCallback(
     async (accountId: string, payload: UpdateAccountPayload): Promise<TradingAccount> => {

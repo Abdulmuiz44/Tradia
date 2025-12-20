@@ -47,7 +47,7 @@ export default function BillingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [currentPlan, setCurrentPlan] = useState<PlanType>('free');
+  const [currentPlan, setCurrentPlan] = useState<PlanType>('starter');
   const [subscription, setSubscription] = useState<any | null>(null);
   const [billingHistory, setBillingHistory] = useState<BillingHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ export default function BillingPage() {
         const planData = await planResponse.json();
         setCurrentPlan(planData.plan);
       } else {
-        setCurrentPlan('free'); // Default to free if error
+        setCurrentPlan('starter'); // Default to starter if error
       }
 
       // Load subscription data
@@ -356,11 +356,11 @@ export default function BillingPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Current Plan</h2>
                 <button
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {currentPlan === 'free' ? 'Upgrade Plan' : 'Change Plan'}
-                </button>
+                   onClick={() => setShowUpgradeModal(true)}
+                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                 >
+                   {currentPlan === 'starter' ? 'Upgrade Plan' : 'Change Plan'}
+                 </button>
               </div>
 
               <div className="flex items-center gap-4 mb-6">
@@ -370,7 +370,7 @@ export default function BillingPage() {
                 <div>
                   <h3 className="text-lg font-semibold capitalize">{getPlanDisplayName(currentPlan)} Plan</h3>
                   <p className="text-gray-400">
-                    {currentPlan === 'free' ? 'Basic features included' :
+                    {currentPlan === 'starter' ? 'Basic features included' :
                      currentPlan === 'pro' ? '$9/month' :
                      currentPlan === 'plus' ? '$19/month' : '$39/month'}
                   </p>
@@ -382,25 +382,25 @@ export default function BillingPage() {
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <span className="text-sm">
-                    {currentPlan === 'free' ? '0' : currentPlan === 'pro' ? '1' : currentPlan === 'plus' ? '3' : 'Unlimited'} MT5 Accounts
+                    {currentPlan === 'starter' ? '2' : currentPlan === 'pro' ? '5' : currentPlan === 'plus' ? '10' : 'Unlimited'} MT5 Accounts
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <span className="text-sm">
-                    {currentPlan === 'free' ? '5' : currentPlan === 'pro' ? '50' : currentPlan === 'plus' ? '200' : 'Unlimited'} AI Chats/Day
+                    {currentPlan === 'starter' ? '10' : currentPlan === 'pro' ? '50' : currentPlan === 'plus' ? '200' : 'Unlimited'} AI Chats/Day
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <span className="text-sm">
-                    {currentPlan === 'free' ? '30 days' : currentPlan === 'pro' ? '90 days' : currentPlan === 'plus' ? '1 year' : 'Unlimited'} Storage
+                    {currentPlan === 'starter' ? '45 days' : currentPlan === 'pro' ? '182 days' : currentPlan === 'plus' ? '365 days' : 'Unlimited'} Storage
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <span className="text-sm">
-                    {currentPlan === 'free' ? 'Basic' : 'Advanced'} Analytics
+                    {currentPlan === 'starter' ? 'Basic' : 'Advanced'} Analytics
                   </span>
                 </div>
               </div>

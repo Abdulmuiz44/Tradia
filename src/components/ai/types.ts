@@ -8,7 +8,7 @@ export interface Message {
 }
 
 export interface UserTier {
-  type: 'free' | 'starter' | 'pro' | 'plus' | 'elite';
+  type: 'starter' | 'pro' | 'plus' | 'elite';
 }
 
 export interface PlanLimits {

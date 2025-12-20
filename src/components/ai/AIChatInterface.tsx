@@ -138,7 +138,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
   const grokUnlocked = userTier === 'plus' || userTier === 'elite';
   const [assistantMode, setAssistantMode] = useState<'coach' | 'grok'>(() => (grokUnlocked ? 'grok' : 'coach'));
 
-  const getOnboardingMessage = useCallback((tier: 'free' | 'pro' | 'plus' | 'elite', mode: 'coach' | 'grok', tradeCount: number) => {
+  const getOnboardingMessage = useCallback((tier: 'starter' | 'pro' | 'plus' | 'elite', mode: 'coach' | 'grok', tradeCount: number) => {
     const hasTrades = tradeCount > 0;
 
     if (mode === 'grok' && (tier === 'plus' || tier === 'elite')) {
@@ -184,7 +184,7 @@ export default function AIChatInterface({ className = "" }: AIChatInterfaceProps
     {
       id: 'ai-welcome',
       type: 'assistant',
-      content: getOnboardingMessage('free', grokUnlocked ? 'grok' : 'coach', trades.length),
+      content: getOnboardingMessage('starter', grokUnlocked ? 'grok' : 'coach', trades.length),
       timestamp: new Date(),
       mode: grokUnlocked ? 'grok' : 'coach',
       variant: 'system',

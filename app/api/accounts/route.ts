@@ -2,6 +2,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { PLAN_LIMITS, normalizePlanType, type PlanType } from "@/lib/planAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check account limit (max 10 accounts per user)
+    // Get user's plan to check account limit
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("plan")
+      .eq("id", user.id)
+      .single();
+
+    if (userError) {
+      return NextResponse.json({ error: userError.message }, { status: 400 });
+    }
+
+    const userPlan = normalizePlanType(userData?.plan || "starter");
+    const planLimits = PLAN_LIMITS[userPlan];
+    const maxAccounts = planLimits.maxTradingAccounts === -1 ? Infinity : planLimits.maxTradingAccounts;
+
+    // Check account limit based on plan
     const { data: accountsData, error: countError } = await supabase
       .from("trading_accounts")
       .select("id", { count: "exact" })
@@ -70,9 +86,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: countError.message }, { status: 400 });
     }
 
-    if ((accountsData?.length || 0) >= 10) {
+    if ((accountsData?.length || 0) >= maxAccounts) {
       return NextResponse.json(
-        { error: "Maximum number of accounts (10) reached" },
+        {
+          error: `Maximum number of accounts (${maxAccounts}) reached for your ${userPlan.toUpperCase()} plan. Upgrade your plan to create more accounts.`,
+          code: "ACCOUNT_LIMIT_REACHED",
+          planLimit: maxAccounts,
+          currentPlan: userPlan,
+        },
         { status: 403 }
       );
     }

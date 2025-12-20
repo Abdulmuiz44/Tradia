@@ -19,7 +19,7 @@ interface PlanOption {
 
 const PLANS: PlanOption[] = [
   {
-    type: "free",
+    type: "starter",
     name: "Starter",
     price: 0,
     yearlyPrice: 0,
@@ -77,13 +77,13 @@ const PLANS: PlanOption[] = [
   },
 ];
 
-const PLAN_ORDER = ["free", "pro", "plus", "elite"];
+const PLAN_ORDER = ["starter", "pro", "plus", "elite"];
 
 export default function UpgradePage() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const [currentPlan, setCurrentPlan] = useState<PlanType>("free");
+  const [currentPlan, setCurrentPlan] = useState<PlanType>("starter");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
@@ -97,7 +97,7 @@ export default function UpgradePage() {
         const res = await fetch("/api/user/plan");
         if (res.ok) {
           const data = await res.json();
-          setCurrentPlan(data.plan || "free");
+          setCurrentPlan(data.plan || "starter");
         }
       } catch (error) {
         console.error("Failed to fetch current plan:", error);

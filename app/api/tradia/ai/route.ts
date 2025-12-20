@@ -533,31 +533,31 @@ async function getAccountSummary(userId: string) {
 }
 
 function generateConversationTitle(userMessage: string, mode: string): string {
-    // Extract keywords from user message for title
-    const keywords = userMessage.match(/\b(?:help|analyze|review|lose|win|strategy|risk|entry|exit|psychology|pattern|loss|profit|trade|chart|signal|setup)\b/gi);
-
-    // Create title based on mode and keywords
-    const modeLabel: Record<string, string> = {
-        coach: 'Coaching Session',
-        mentor: 'Trading Mentorship',
-        analysis: 'Trade Analysis',
-        journal: 'Journal Entry',
-        grok: 'Market Insights',
-        assistant: 'Trading Discussion',
-    };
-
-    const baseTitle = (modeLabel[mode as keyof typeof modeLabel]) || 'Trading Discussion';
-
-    // If user mentioned specific keywords, incorporate them
-    if (keywords && keywords.length > 0) {
-        const topKeyword = keywords[0].toLowerCase();
-        return `${baseTitle}: ${topKeyword.charAt(0).toUpperCase() + topKeyword.slice(1)}`;
-    }
-
-    // Fallback: extract first few words from message
-    const words = userMessage.split(/\s+/).slice(0, 4).join(' ');
-    return words.length > 3 ? words : baseTitle;
-}
+     // Extract keywords from user message for title
+     const keywordMatches = userMessage.match(/\b(?:help|analyze|review|lose|win|strategy|risk|entry|exit|psychology|pattern|loss|profit|trade|chart|signal|setup)\b/gi);
+ 
+     // Create title based on mode and keywords
+     const modeLabel: Record<string, string> = {
+         coach: 'Coaching Session',
+         mentor: 'Trading Mentorship',
+         analysis: 'Trade Analysis',
+         journal: 'Journal Entry',
+         grok: 'Market Insights',
+         assistant: 'Trading Discussion',
+     };
+ 
+     const baseTitle = (modeLabel[mode as keyof typeof modeLabel]) || 'Trading Discussion';
+ 
+     // If user mentioned specific keywords, incorporate them
+     if (keywordMatches !== null && keywordMatches.length > 0) {
+         const topKeyword = keywordMatches[0].toLowerCase();
+         return `${baseTitle}: ${topKeyword.charAt(0).toUpperCase() + topKeyword.slice(1)}`;
+     }
+ 
+     // Fallback: extract first few words from message
+     const words = userMessage.split(/\s+/).slice(0, 4).join(' ');
+     return words.length > 3 ? words : baseTitle;
+ }
 
 const getSortableTime = (trade: Record<string, any>): number => {
     const candidates = [

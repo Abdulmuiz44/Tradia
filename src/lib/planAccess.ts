@@ -21,6 +21,8 @@ export interface PlanLimits {
   marketTiming: boolean; // Market timing and entry/exit recommendations
   // Planner limits
   maxTradePlans: number; // -1 for unlimited
+  // Multi-account limits
+  maxTradingAccounts: number; // Max trading accounts per user (-1 for unlimited)
   // UI/Actions
   exportData: boolean; // Enable export buttons
   shareReports: boolean; // Enable share report
@@ -49,6 +51,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     riskManagement: false,
     marketTiming: true,
     maxTradePlans: 5,
+    maxTradingAccounts: 2,
     exportData: false,
     shareReports: false,
     alerts: false,
@@ -74,6 +77,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     riskManagement: true,
     marketTiming: true,
     maxTradePlans: 25,
+    maxTradingAccounts: 5,
     exportData: true,
     shareReports: true,
     alerts: true,
@@ -98,6 +102,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     riskManagement: true,
     marketTiming: true,
     maxTradePlans: 100,
+    maxTradingAccounts: 10,
     exportData: true,
     shareReports: true,
     alerts: true,
@@ -122,6 +127,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     riskManagement: true,
     marketTiming: true,
     maxTradePlans: -1,
+    maxTradingAccounts: -1, // unlimited
     exportData: true,
     shareReports: true,
     alerts: true,
