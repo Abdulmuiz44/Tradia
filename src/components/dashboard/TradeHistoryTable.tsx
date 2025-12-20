@@ -364,7 +364,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         });
 
         return filtered;
-    }, [planLimitedTrades, filters, query, sortField, sortDir]);
+    }, [planLimitedTrades, filters, query, sortField, sortDir, selectedAccount]);
 
     /* summary stats */
     const stats = useMemo(() => {
