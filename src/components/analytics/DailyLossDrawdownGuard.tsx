@@ -38,13 +38,13 @@ interface GuardSummary {
 }
 
 const PLAN_RULES: Record<PlanTier, { dailyPct: number; weeklyPct: number; maxDrawdownPct: number; lookback: number; autopilot: boolean }> = {
-  free: { dailyPct: 0.03, weeklyPct: 0.08, maxDrawdownPct: 0.18, lookback: 21, autopilot: false },
+  starter: { dailyPct: 0.03, weeklyPct: 0.08, maxDrawdownPct: 0.18, lookback: 21, autopilot: false },
   pro: { dailyPct: 0.025, weeklyPct: 0.07, maxDrawdownPct: 0.14, lookback: 30, autopilot: true },
   plus: { dailyPct: 0.02, weeklyPct: 0.06, maxDrawdownPct: 0.11, lookback: 45, autopilot: true },
   elite: { dailyPct: 0.015, weeklyPct: 0.05, maxDrawdownPct: 0.09, lookback: 60, autopilot: true },
 };
 
-const PLAN_RANK: Record<PlanTier, number> = { free: 0, pro: 1, plus: 2, elite: 3 };
+const PLAN_RANK: Record<PlanTier, number> = { starter: 0, pro: 1, plus: 2, elite: 3 };
 
 function formatCurrency(v: number): string {
   const rounded = Math.round(v * 100) / 100;

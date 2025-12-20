@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const userPlan = planData[0];
-    const canUpload = userPlan.plan !== 'free'; // Only free plan can't upload
+    const canUpload = userPlan.plan !== 'starter'; // Only starter plan can't upload
 
     if (!canUpload) {
       return res.status(403).json({

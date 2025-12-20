@@ -117,11 +117,11 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
   const [showQuickActions, setShowQuickActions] = useState(false);
 
   // Plan/role from session
-  const rawPlan = String((session?.user as any)?.plan || 'free').toLowerCase();
-  const plan = rawPlan === 'starter' ? 'free' : rawPlan;
-  const effectivePlan = (isAdmin ? 'elite' : plan) as 'free' | 'pro' | 'plus' | 'elite';
-  const planRank: Record<'free' | 'pro' | 'plus' | 'elite', number> = { free: 0, pro: 1, plus: 2, elite: 3 };
-  const hasPlan = (min: 'free' | 'pro' | 'plus' | 'elite' = 'free') => planRank[effectivePlan] >= planRank[min];
+  const rawPlan = String((session?.user as any)?.plan || 'starter').toLowerCase();
+  const plan = (rawPlan === 'free' ? 'starter' : rawPlan) as 'starter' | 'pro' | 'plus' | 'elite';
+  const effectivePlan = (isAdmin ? 'elite' : plan) as 'starter' | 'pro' | 'plus' | 'elite';
+  const planRank: Record<'starter' | 'pro' | 'plus' | 'elite', number> = { starter: 0, pro: 1, plus: 2, elite: 3 };
+  const hasPlan = (min: 'starter' | 'pro' | 'plus' | 'elite' = 'starter') => planRank[effectivePlan] >= planRank[min];
 
 
   // Mobile detection

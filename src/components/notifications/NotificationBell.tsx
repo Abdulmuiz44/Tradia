@@ -20,10 +20,10 @@ function useAnnouncementsByPlan(): AppNotification[] {
   const role = String((session?.user as any)?.role || '').toLowerCase();
   const email = String((session?.user as any)?.email || '').toLowerCase();
   const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
-  const effectivePlan = (isAdmin ? 'elite' : plan) as 'free' | 'pro' | 'plus' | 'elite';
-  const planRank: Record<'free'|'pro'|'plus'|'elite', number> = { free:0, pro:1, plus:2, elite:3 };
-  const hasPlan = (min: 'free'|'pro'|'plus'|'elite'='free') => planRank[effectivePlan] >= planRank[min];
-  const visible: FeatureAnnouncement[] = FEATURES.filter(f => hasPlan((f.minPlan ?? 'free') as any));
+  const effectivePlan = (isAdmin ? 'elite' : plan) as 'starter' | 'pro' | 'plus' | 'elite';
+  const planRank: Record<'starter'|'pro'|'plus'|'elite', number> = { starter:0, pro:1, plus:2, elite:3 };
+  const hasPlan = (min: 'starter'|'pro'|'plus'|'elite'='starter') => planRank[effectivePlan] >= planRank[min];
+  const visible: FeatureAnnouncement[] = FEATURES.filter(f => hasPlan((f.minPlan ?? 'starter') as any));
   return visible.map<AppNotification>((f) => ({ id: f.id, title: f.title, body: f.body, date: f.date }));
 }
 
