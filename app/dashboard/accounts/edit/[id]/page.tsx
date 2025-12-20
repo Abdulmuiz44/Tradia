@@ -15,12 +15,12 @@ import type { UpdateAccountPayload } from "@/types/account";
 function EditAccountContent() {
   const router = useRouter();
   const params = useParams();
-  const accountId = params.id as string;
+  const accountId = (params?.id || "") as string;
   const { accounts, updateAccount, deleteAccount, loading } = useAccount();
   const { notify } = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [account, setAccount] = useState(accounts.find((a) => a.id === accountId));
+  const [account, setAccount] = useState(accountId ? accounts.find((a) => a.id === accountId) : undefined);
 
   useEffect(() => {
     const foundAccount = accounts.find((a) => a.id === accountId);
