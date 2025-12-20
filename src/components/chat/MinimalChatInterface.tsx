@@ -43,6 +43,16 @@ export function MinimalChatInterface({
         },
     ]);
 
+    const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
+        api: '/api/tradia/ai',
+        initialMessages,
+        body: {
+            mode,
+            conversationId: effectiveConversationId,
+            attachedTradeIds: selectedTrades,
+        },
+    });
+
     // Load existing conversation messages
     useEffect(() => {
         const loadConversationMessages = async () => {
@@ -112,17 +122,7 @@ export function MinimalChatInterface({
         if (!initialMessagesLoaded && effectiveConversationId) {
             loadConversationMessages();
         }
-    }, [effectiveConversationId, initialMessagesLoaded, setInitialMessages]);
-
-    const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
-        api: '/api/tradia/ai',
-        initialMessages,
-        body: {
-            mode,
-            conversationId: effectiveConversationId,
-            attachedTradeIds: selectedTrades,
-        },
-    });
+    }, [effectiveConversationId, initialMessagesLoaded, setInitialMessages, setMessages]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

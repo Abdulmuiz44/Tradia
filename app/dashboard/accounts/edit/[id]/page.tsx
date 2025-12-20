@@ -88,7 +88,7 @@ function EditAccountContent() {
         <div className="text-center">
           <h2 className="text-2xl font-bold dark:text-white mb-2">Account Not Found</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            The account you're looking for doesn't exist.
+            The account you&apos;re looking for doesn&apos;t exist.
           </p>
           <button
             onClick={() => router.push("/dashboard/accounts")}
