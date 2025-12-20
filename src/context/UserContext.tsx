@@ -33,6 +33,12 @@ export const useUser = () => {
   return context;
 };
 
+const normalizePlan = (rawPlan: any): PlanType => {
+  if (rawPlan === 'free') return 'starter';
+  if (['starter', 'pro', 'plus', 'elite'].includes(rawPlan)) return rawPlan;
+  return 'starter';
+};
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
@@ -60,11 +66,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const userData = await response.json();
 
       if (userData) {
+        const normalizedPlan = normalizePlan(userData.plan);
         const userInfo: UserData = {
           id: userData.id || session.user.id || '',
           name: userData.name || session.user.name || null,
           email: userData.email || session.user.email || '',
-          plan: userData.plan || "starter",
+          plan: normalizedPlan,
           country: userData.country,
           emailVerified: userData.emailVerified || userData.email_verified || false,
           createdAt: userData.createdAt || userData.created_at || '',
