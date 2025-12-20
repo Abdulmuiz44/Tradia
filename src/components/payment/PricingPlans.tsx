@@ -219,23 +219,23 @@ export default function PricingPlans(): React.ReactElement {
   // Compose lists
   const plusWhole = {
     ...plusPlan,
-    inherited: [...freePlan.baseFeatures],
+    inherited: [...starterPlan.baseFeatures],
     additions: plusPlan.additionalFeatures ?? [],
   };
 
   const proWhole = {
     ...proPlan,
-    inherited: [...freePlan.baseFeatures, ...(plusPlan.additionalFeatures ?? [])],
+    inherited: [...starterPlan.baseFeatures, ...(plusPlan.additionalFeatures ?? [])],
     additions: proPlan.additionalFeatures ?? [],
   };
 
   const eliteWhole = {
     ...elitePlan,
-    inherited: [...freePlan.baseFeatures, ...(plusPlan.additionalFeatures ?? []), ...(proPlan.additionalFeatures ?? [])],
+    inherited: [...starterPlan.baseFeatures, ...(plusPlan.additionalFeatures ?? []), ...(proPlan.additionalFeatures ?? [])],
     additions: elitePlan.additionalFeatures ?? [],
   };
 
-  const allPlansView = [freePlan, plusWhole, proWhole, eliteWhole];
+  const allPlansView = [starterPlan, plusWhole, proWhole, eliteWhole];
 
   return (
     <div className="p-6 md:p-10 min-h-screen bg-gradient-to-br from-[#0f111a] via-[#111827] to-[#0c1118] text-white">
@@ -435,7 +435,7 @@ export default function PricingPlans(): React.ReactElement {
             </thead>
 
             <tbody>
-              {freePlan.baseFeatures.map((feature) => (
+              {starterPlan.baseFeatures.map((feature) => (
                 <tr key={feature} className="border-t border-gray-800">
                   <td className="py-3 px-3 text-gray-300 max-w-sm">{feature}</td>
                   {plansData.map((p) => (
