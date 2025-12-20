@@ -197,7 +197,7 @@ export default function CheckoutPage() {
         currency: data.currency 
       });
 
-      const flutterwave = window.FlutterwaveCheckout({
+      window.FlutterwaveCheckout({
         public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY || "",
         tx_ref: data.txRef,
         amount: data.amount,
@@ -214,6 +214,7 @@ export default function CheckoutPage() {
         },
         callback: async (response: any) => {
           console.log("Payment callback received:", response);
+          setIsLoading(false);
           // Verify transaction on server
           try {
             const verifyResponse = await fetch("/api/payments/verify", {
@@ -260,8 +261,6 @@ export default function CheckoutPage() {
           setIsLoading(false);
         },
       });
-
-      flutterwave.render();
     } catch (error) {
       console.error("Checkout error:", error);
       notify({
