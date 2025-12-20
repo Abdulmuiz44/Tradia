@@ -44,6 +44,7 @@ const normalizeTags = (value: any) => {
 const mapToSnakeCase = (data: any) => {
     const raw = (data.raw ?? {}) as any;
     return {
+        account_id: coalesce(data.account_id, data.accountId, raw.account_id, raw.accountId),
         symbol: coalesce(data.symbol, raw.symbol),
         direction: coalesce(data.direction, raw.direction),
         ordertype: coalesce(data.orderType, data.ordertype, data.order_type, raw.orderType, raw.ordertype),
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
             // Build clean trade object with only valid database columns
             const tradeData: Record<string, any> = {
                 user_id: session.user.id,
-                account_id: dbFields.account_id || null,
+                account_id: dbFields.account_id ?? null,
                 symbol: String(t.symbol || '').toUpperCase(),
                 direction: dbFields.direction || "Buy",
                 ordertype: dbFields.ordertype || "Market Execution",
