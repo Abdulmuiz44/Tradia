@@ -44,6 +44,11 @@
     "tradia-backend",
     "tradia-backend/**",
     "tradia-smc-forecaster",
-    "tradia-smc-forecaster/**"
+    "tradia-smc-forecaster/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }
