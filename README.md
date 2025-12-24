@@ -2,7 +2,7 @@
 
 **Your Personal AI Trading Coach That Helps You Trade Smarter, Not Harder**
 
-Transform your trading results with Tradia—the all-in-one AI-powered platform that analyzes your trades, explains what went wrong, and helps you build winning strategies.
+Transform your trading results with Tradia—the all-in-one AI-Powered Trade Analytics platform that analyzes your trades, explains what went wrong, and helps you build winning strategies, discipline and consistency.
 
 ## 🎯 Why Tradia?
 
@@ -112,7 +112,7 @@ Manage multiple prop accounts, optimize strategies at scale, and unlock advanced
 ## 🚀 Get Started in 2 Minutes
 
 1. **Sign up free** – No credit card required
-2. **Import your trades** – Upload a CSV from your broker
+2. **Import your trades** – Upload a CSV from your broker into your trade history
 3. **Get insights** – AI analyzes your performance instantly
 4. **Improve** – Follow personalized recommendations and track progress
 

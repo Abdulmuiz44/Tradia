@@ -91,7 +91,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3 no-underline" aria-label="Tradia Home">
             <Image
-              src="/Tradia-logo-ONLY.png"
+              src="/TRADIA-LOGO.png"
               alt="Tradia logo"
               width={48}
               height={48}

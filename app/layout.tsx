@@ -150,17 +150,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Favicon and Icons - Using Tradia Logo */}
-        <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="any" />
-              <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="16x16" />
-              <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="32x32" />
-              <link rel="icon" href="/Tradia-logo-ONLY.png" type="image/png" sizes="48x48" />
-              <link rel="shortcut icon" href="/Tradia-logo-ONLY.png" type="image/png" />
-              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="180x180" />
-              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="152x152" />
-              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="120x120" />
-              <link rel="apple-touch-icon" href="/Tradia-logo-ONLY.png" sizes="76x76" />
-              <link rel="mask-icon" href="/Tradia-logo-ONLY.png" color="#0f172a" />        <script
+        {/* Favicon and Icons - Using Tradia Logo ONLY */}
+         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="any" />
+         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="16x16" />
+         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="32x32" />
+         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="48x48" />
+         <link rel="shortcut icon" href="/TRADIA-LOGO.png" type="image/png" />
+         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="180x180" />
+         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="152x152" />
+         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="120x120" />
+         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="76x76" />
+         <link rel="mask-icon" href="/TRADIA-LOGO.png" color="#0f172a" />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),
