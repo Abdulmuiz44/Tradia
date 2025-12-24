@@ -13,11 +13,12 @@ import OverviewCards from "@/components/dashboard/OverviewCards";
 import AccountSelector from "@/components/accounts/AccountSelector";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, X, Menu, Sun, RefreshCw, Filter, Lock, Crown } from "lucide-react";
+import { User, Settings, X, Menu, Sun, Moon, RefreshCw, Filter, Lock, Crown } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useTheme } from "next-themes";
 
 type DashboardTabDef = {
     value: string;
@@ -123,6 +124,8 @@ function OverviewContent() {
     const router = useRouter();
     const { trades, refreshTrades } = useTrade();
     const { selectedAccount } = useAccount();
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<string>("overview");
@@ -138,6 +141,7 @@ function OverviewContent() {
     });
 
     React.useEffect(() => {
+        setMounted(true);
         if (!session?.user?.email || adminChecked) return;
         const userEmail = session.user.email || session.user.name || '';
         const isAdminUser = userEmail === "abdulmuizproject@gmail.com" ||
@@ -419,8 +423,12 @@ function OverviewContent() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button onClick={() => { }} className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] hidden sm:inline-flex">
-                                <Sun className="w-4 h-4" />
+                            <button
+                                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                                className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] hidden sm:inline-flex"
+                                title="Toggle theme"
+                            >
+                                {mounted && theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                             </button>
 
                             <AnimatedDropdown
