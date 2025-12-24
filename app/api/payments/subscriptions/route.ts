@@ -63,7 +63,10 @@ export async function PATCH(req: Request) {
         })
         .match(
           subscriptionId
-            ? { flutterwave_subscription_id: subscriptionId, user_id: session.user.id }
+            ? {
+                or: `flutterwave_subscription_id.eq.${subscriptionId},lemonsqueezy_subscription_id.eq.${subscriptionId}`,
+                user_id: session.user.id
+              }
             : { id: planRowId, user_id: session.user.id }
         )
         .select()
@@ -86,7 +89,10 @@ export async function PATCH(req: Request) {
         })
         .match(
           subscriptionId
-            ? { flutterwave_subscription_id: subscriptionId, user_id: session.user.id }
+            ? {
+                or: `flutterwave_subscription_id.eq.${subscriptionId},lemonsqueezy_subscription_id.eq.${subscriptionId}`,
+                user_id: session.user.id
+              }
             : { id: planRowId, user_id: session.user.id }
         )
         .select()

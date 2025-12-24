@@ -121,17 +121,23 @@ export default function BillingPage() {
     }
   }, [session?.user, loadBillingData]);
 
-  // If redirected from Flutterwave with tx_ref, verify explicitly to avoid waiting for webhook
+  // If redirected from payment provider with success, verify explicitly to avoid waiting for webhook
   useEffect(() => {
-    if (!success || !txRef) return;
+    if (!success) return;
 
     const runVerification = async () => {
       try {
-        await fetch('/api/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ txRef })
-        });
+        // With LemonSqueezy, webhook-based activation is primary
+        // But still try to verify in case webhook is slow
+        if (txRef) {
+          await fetch('/api/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ txRef })
+          });
+        }
+        // Give webhook time to process (LemonSqueezy typically instant)
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await loadBillingData();
       } catch {
         // swallow errors; UI already reflects previous subscription state
@@ -183,8 +189,8 @@ export default function BillingPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subscriptionId: subscription.flutterwave_subscription_id || undefined,
-          planRowId: !subscription?.flutterwave_subscription_id ? subscription.id : undefined,
+          subscriptionId: subscription.flutterwave_subscription_id || subscription.lemonsqueezy_subscription_id || undefined,
+          planRowId: !subscription?.flutterwave_subscription_id && !subscription?.lemonsqueezy_subscription_id ? subscription.id : undefined,
           action: 'cancel'
         })
       });

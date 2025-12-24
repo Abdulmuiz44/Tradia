@@ -25,13 +25,13 @@ export function getPaymentMethodOptions(): PaymentMethod[] {
     {
       id: "lemonsqueezy",
       name: "Lemon Squeezy",
-      description: "Coming soon",
+      description: "Recommended for global payments",
       icon: "🍋",
       iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden>
   <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"></circle>
   <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
 </svg>`,
-      comingSoon: true,
+      comingSoon: false,
     },
   ];
 }

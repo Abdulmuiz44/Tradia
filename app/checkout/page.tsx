@@ -13,12 +13,7 @@ import { motion } from "framer-motion";
 import PaymentMethodSelector from "@/components/payment/PaymentMethodSelector";
 import { useUnifiedAuth } from "@/lib/unifiedAuth";
 
-// Declare Flutterwave window type
-declare global {
-  interface Window {
-    FlutterwaveCheckout: any;
-  }
-}
+// LemonSqueezy is loaded via URL redirect, no window declaration needed
 
 interface PlanDetails {
   name: string;
@@ -99,29 +94,9 @@ export default function CheckoutPage() {
     if (unified.email && !email) setEmail(unified.email);
   }, [unified.email, email]);
 
-  // Load Flutterwave script
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.flutterwave.com/v3.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  // No script loading needed for LemonSqueezy - it's a redirect-based checkout
 
   const handleCreateCheckout = async () => {
-    // Validate payment method
-    if (selectedPaymentMethod === "lemonsqueezy") {
-      notify({
-        variant: "warning",
-        title: "Coming Soon",
-        description: "Lemon Squeezy payment method is coming soon.",
-      });
-      return;
-    }
-
     // Allow guest checkout: require an email if not authenticated
     const effectiveEmail = unified.email || email;
     if (!effectiveEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail)) {
@@ -180,87 +155,19 @@ export default function CheckoutPage() {
 
       console.log("Checkout response:", data);
 
-      // Initialize Flutterwave payment
-      if (!window.FlutterwaveCheckout) {
+      // Redirect to LemonSqueezy checkout
+      if (!data?.checkoutUrl) {
         notify({
           variant: "destructive",
           title: "Payment unavailable",
-          description: "Flutterwave payment gateway failed to load. Please try again.",
+          description: "Failed to generate checkout URL. Please try again.",
         });
         setIsLoading(false);
         return;
       }
 
-      console.log("Initializing Flutterwave with:", { 
-        tx_ref: data.txRef, 
-        amount: data.amount, 
-        currency: data.currency 
-      });
-
-      window.FlutterwaveCheckout({
-        public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY || "",
-        tx_ref: data.txRef,
-        amount: data.amount,
-        currency: data.currency || "USD",
-        payment_options: "card",
-        customer: {
-          email: effectiveEmail,
-          name: unified.name || "Customer",
-        },
-        customizations: {
-          title: "Tradia Subscription",
-          description: `${plan.toUpperCase()} Plan - ${billing === "yearly" ? "Yearly" : "Monthly"}`,
-          logo: "https://www.tradiaai.app/logo.png",
-        },
-        callback: async (response: any) => {
-          console.log("Payment callback received:", response);
-          setIsLoading(false);
-          // Verify transaction on server
-          try {
-            const verifyResponse = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                txRef: data.txRef,
-                transaction_id: response.transaction_id,
-              }),
-            });
-
-            const verifyData = await verifyResponse.json();
-
-            if (verifyResponse.ok && verifyData.success) {
-              notify({
-                variant: "default",
-                title: "Payment Successful",
-                description: "Your subscription has been activated.",
-              });
-              // Redirect to dashboard
-              setTimeout(() => {
-                router.push("/dashboard/billing?success=true");
-              }, 1000);
-            } else {
-              notify({
-                variant: "destructive",
-                title: "Payment Verification Failed",
-                description: verifyData.error || "Unable to verify payment. Please contact support.",
-              });
-            }
-          } catch (err) {
-            console.error("Verification error:", err);
-            notify({
-              variant: "destructive",
-              title: "Verification Error",
-              description: "An error occurred while verifying your payment.",
-            });
-          }
-        },
-        onclose: () => {
-          console.log("Payment modal closed");
-          setIsLoading(false);
-        },
-      });
+      console.log("Redirecting to LemonSqueezy checkout:", data.checkoutUrl);
+      window.location.href = data.checkoutUrl;
     } catch (error) {
       console.error("Checkout error:", error);
       notify({
@@ -336,7 +243,7 @@ export default function CheckoutPage() {
 
               <div className="flex items-center gap-3 text-gray-400 text-sm mt-4">
                 <Shield className="w-4 h-4" />
-                Secure payment by Flutterwave
+                Secure payment powered by Lemon Squeezy
               </div>
             </div>
           </div>

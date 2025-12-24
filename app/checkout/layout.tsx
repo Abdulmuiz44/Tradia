@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Checkout — Tradia",
-  description: "Secure checkout powered by Flutterwave. Complete your Tradia subscription.",
+  description: "Secure checkout powered by Lemon Squeezy. Complete your Tradia subscription.",
   alternates: { canonical: "/checkout" },
   // Best practice: avoid indexing checkout pages
   robots: {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Tradia Checkout",
-    description: "Secure payment and subscription activation via Flutterwave.",
+    description: "Secure payment and subscription activation via Lemon Squeezy.",
     url: "/checkout",
     siteName: "Tradia",
     images: [
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Tradia Checkout",
-    description: "Secure payment and subscription activation via Flutterwave.",
+    description: "Secure payment and subscription activation via Lemon Squeezy.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },

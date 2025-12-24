@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { createCheckoutForPlan } from "@/lib/flutterwave.server";
+import { createCheckoutForPlan } from "@/lib/lemonsqueezy.server";
 import { logPayment } from "@/lib/payment-logging.server";
 import { cookies, headers as nextHeaders } from "next/headers";
 import jwt from "jsonwebtoken";
@@ -63,8 +63,8 @@ export async function POST(req: Request) {
   // make request body visible in catch scope too
   let body: any = {};
   try {
-    if (!process.env.FLUTTERWAVE_SECRET_KEY) {
-      console.error("FLUTTERWAVE_SECRET_KEY is not set in environment");
+    if (!process.env.LEMONSQUEEZY_API_KEY) {
+      console.error("LEMONSQUEEZY_API_KEY is not set in environment");
     }
     // Parse body once
     try { body = await req.json(); } catch { body = {}; }
@@ -138,15 +138,15 @@ export async function POST(req: Request) {
     await logPayment(
       "checkout",
       "info",
-      "Created Flutterwave checkout",
-      { planType, billingCycle, amount: price, txRef: checkout.txRef },
+      "Created LemonSqueezy checkout",
+      { planType, billingCycle, amount: price, checkoutId: checkout.checkoutId },
       userIdForLog
     );
 
     return NextResponse.json({
-      paymentId: checkout.paymentId,
+      checkoutId: checkout.checkoutId,
       checkoutUrl: checkout.checkoutUrl,
-      txRef: checkout.txRef,
+      variantId: checkout.variantId,
       amount: price,
       currency
     });
