@@ -39,7 +39,7 @@ const BASE_TAB_DEFS: DashboardTabDef[] = [
     { value: "planner", label: "Trade Planner", icon: "Target", href: "/dashboard/trade-planner" },
     { value: "position-sizing", label: "Position Sizing", icon: "Calculator", href: "/dashboard/position-sizing" },
     { value: "education", label: "Trade Education", icon: "GraduationCap", href: "/dashboard/trade-education" },
-    { value: "upgrade", label: "Upgrade", icon: "Crown" },
+    { value: "upgrade", label: "Upgrade", icon: "Crown", href: "/dashboard/upgrade" },
 ];
 
 const ADMIN_TAB_DEFS: DashboardTabDef[] = [
@@ -125,7 +125,7 @@ function OverviewContent() {
     const { selectedAccount } = useAccount();
 
     const [isLoading, setIsLoading] = useState(false);
-    const [activeTab] = useState<string>("overview");
+    const [activeTab, setActiveTab] = useState<string>("overview");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminChecked, setAdminChecked] = useState(false);
@@ -366,6 +366,38 @@ function OverviewContent() {
                                     </button>
                                 </div>
                             </AnimatedDropdown>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile Sidebar Overlay */}
+                <div
+                    className={`fixed inset-0 z-40 lg:hidden ${mobileMenuOpen ? 'block' : 'hidden'
+                        }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                >
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute left-0 top-0 h-full w-64 max-w-[80vw] bg-white dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a] transform transition-transform duration-300 overflow-y-auto">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2f3a]">
+                            <div className="flex items-center gap-3">
+                                <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={28} height={28} className="h-7 w-auto" priority />
+                                <h1 className="text-black dark:text-white font-extrabold text-lg">Tradia</h1>
+                            </div>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-gray-400 hover:text-black dark:hover:text-white"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <DashboardSidebar
+                                tabs={TAB_DEFS}
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
+                                isMobile={true}
+                                onClose={() => setMobileMenuOpen(false)}
+                            />
                         </div>
                     </div>
                 </div>
