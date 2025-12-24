@@ -80,7 +80,7 @@ export default function AboutPage(): React.ReactElement {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100">
         {/* Structured data for breadcrumbs and this page */}
         <Script id="ld-breadcrumb" type="application/ld+json" strategy="afterInteractive">
           {JSON.stringify(breadcrumbLd)}
@@ -158,7 +158,7 @@ export default function AboutPage(): React.ReactElement {
                   "Turn your trade history into action. Our AI highlights mistakes, position sizing issues, and timing mismatches so you can improve faster.",
               },
             ].map((c) => (
-              <div key={c.title} className="bg-white/70 dark:bg-[#0b1220]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-6">
+              <div key={c.title} className="bg-white/70 dark:bg-[#0f1319]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{c.title}</h3>
                 <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{c.body}</p>
               </div>
@@ -183,7 +183,7 @@ export default function AboutPage(): React.ReactElement {
               { title: "Position Sizing", desc: "Size positions with data, not guesswork." },
               { title: "AI Insights", desc: "Uncover mistakes and optimize execution." },
             ].map((f) => (
-              <div key={f.title} className="bg-white/70 dark:bg-[#0b1220]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-5">
+              <div key={f.title} className="bg-white/70 dark:bg-[#0f1319]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-5">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">{f.title}</h3>
                 <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{f.desc}</p>
               </div>
@@ -193,7 +193,7 @@ export default function AboutPage(): React.ReactElement {
 
         {/* SOCIAL PROOF */}
         <section className="max-w-7xl mx-auto px-6 py-10">
-          <div className="bg-white/70 dark:bg-[#0b1220]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-6">
+          <div className="bg-white/70 dark:bg-[#0f1319]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-6">
             <h2 className="text-2xl font-bold">Trusted by growing traders worldwide</h2>
             <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
               From first journal entry to funded consistency — traders choose Tradia to level up
@@ -235,7 +235,7 @@ export default function AboutPage(): React.ReactElement {
                 a: "Your data is encrypted and protected by industry-standard best practices. You control your trading journal and exports.",
               },
             ].map((f) => (
-              <div key={f.q} className="bg-white/70 dark:bg-[#0b1220]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-5">
+              <div key={f.q} className="bg-white/70 dark:bg-[#0f1319]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-5">
                 <h3 className="text-base font-semibold">{f.q}</h3>
                 <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{f.a}</p>
               </div>

@@ -21,8 +21,8 @@ function useAnnouncementsByPlan(): AppNotification[] {
   const email = String((session?.user as any)?.email || '').toLowerCase();
   const isAdmin = role === 'admin' || email === 'abdulmuizproject@gmail.com';
   const effectivePlan = (isAdmin ? 'elite' : plan) as 'starter' | 'pro' | 'plus' | 'elite';
-  const planRank: Record<'starter'|'pro'|'plus'|'elite', number> = { starter:0, pro:1, plus:2, elite:3 };
-  const hasPlan = (min: 'starter'|'pro'|'plus'|'elite'='starter') => planRank[effectivePlan] >= planRank[min];
+  const planRank: Record<'starter' | 'pro' | 'plus' | 'elite', number> = { starter: 0, pro: 1, plus: 2, elite: 3 };
+  const hasPlan = (min: 'starter' | 'pro' | 'plus' | 'elite' = 'starter') => planRank[effectivePlan] >= planRank[min];
   const visible: FeatureAnnouncement[] = FEATURES.filter(f => hasPlan((f.minPlan ?? 'starter') as any));
   return visible.map<AppNotification>((f) => ({ id: f.id, title: f.title, body: f.body, date: f.date }));
 }
@@ -53,12 +53,12 @@ function useNotificationState(announcements: AppNotification[]) {
         localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(announcements));
         setItems(announcements);
       }
-    } catch {}
+    } catch { }
   }, [announcements]);
 
   const persist = (next: string[]) => {
     setReadIds(next);
-    try { localStorage.setItem(STORAGE_KEY_READ, JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY_READ, JSON.stringify(next)); } catch { }
   };
 
   const markAllRead = () => persist(Array.from(new Set([...readIds, ...announcements.map(a => a.id)])));
@@ -66,12 +66,12 @@ function useNotificationState(announcements: AppNotification[]) {
 
   const persistItems = (list: AppNotification[]) => {
     setItems(list);
-    try { localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(list)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(list)); } catch { }
   };
 
   const persistDeleted = (list: string[]) => {
     setDeletedIds(list);
-    try { localStorage.setItem(STORAGE_KEY_DELETED, JSON.stringify(list)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY_DELETED, JSON.stringify(list)); } catch { }
   };
 
   // Merge any new announcements not yet stored and not deleted
@@ -85,7 +85,7 @@ function useNotificationState(announcements: AppNotification[]) {
         const merged = [...items, ...toAdd];
         persistItems(merged);
       }
-    } catch {}
+    } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deletedIds, announcements]);
 
@@ -138,13 +138,13 @@ export default function NotificationBell() {
             <motion.div
               role="dialog"
               aria-modal="true"
-              className="absolute right-4 top-16 w-[95%] max-w-lg bg-white dark:bg-[#111827] text-black dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+              className="absolute right-4 top-16 w-[95%] max-w-lg bg-white dark:bg-[#0f1319] text-black dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0B1220]">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0f1319]">
                 <div className="font-light text-black dark:text-white">Inbox</div>
                 <div className="flex items-center gap-2">
                   {unread.length > 0 && (

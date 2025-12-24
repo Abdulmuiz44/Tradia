@@ -88,7 +88,7 @@ export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0D1117]">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-[#0D1117] py-16 px-4 sm:px-6 lg:px-8">
+      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-[#0f1319] py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center">
             How Tradia Works
@@ -141,7 +141,7 @@ export default function HowItWorksPage() {
       </div>
 
       {/* Features Section */}
-      <div className="bg-gray-50 dark:bg-gray-900 py-16 px-4 sm:px-6 lg:px-8">
+      <div className="bg-gray-50 dark:bg-[#0f1319] py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 text-center">
             Powerful Features at Every Step

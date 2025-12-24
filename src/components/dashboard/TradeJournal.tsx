@@ -203,7 +203,7 @@ function HeuristicForecast({ trades, summary }: { trades: Trade[]; summary: any 
   const score = 2.0 * recentWinRate + 1.2 * streakFactor + 1.5 * (expectancyNorm || 0);
   const p = Math.round(sigmoid(score - 1.5) * 100);
   return (
-    <div className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30">
+    <div className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-[#0f1319]/30">
       <div className="text-sm text-muted-foreground">Probability next trade will be a WIN</div>
       <div className="text-3xl font-semibold my-3">{p}%</div>
       <div className="text-xs text-zinc-400">Recent WR {(recentWinRate * 100).toFixed(1)}% - streak {streak} - expectancy {summary.expectancy.toFixed(2)}</div>
@@ -271,7 +271,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
   }, [trades, propInitial, propTargetPercent, propMaxDrawdownPercent, propMinWinRate]);
 
   return (
-    <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+    <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Flag className="h-5 w-5" />
@@ -529,7 +529,7 @@ export default function TradeJournal(): React.ReactElement {
   const duplicateCount = storageFiltered.duplicates;
   const storageCutoff = storageFiltered.cutoff;
   const storageLimitLabel = storageLimitDays === -1 ? 'unlimited' : `${storageLimitDays} day${storageLimitDays === 1 ? '' : 's'}`;
-type NormalizedTrade = Trade & {
+  type NormalizedTrade = Trade & {
     openAt: Date | null;
     closeAt: Date | null;
     durationMinutes: number | null;
@@ -745,7 +745,7 @@ type NormalizedTrade = Trade & {
   }, [canExportData, normalizedTrades, selected, selectedCount]);
 
   const Toolbar = (
-    <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+    <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-[#0f1319]/30">
       <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           {[
@@ -1245,7 +1245,7 @@ type NormalizedTrade = Trade & {
      Main JSX
      --------------------------- */
   return (
-  <div className="space-y-6 pb-10 max-h-full overflow-y-auto max-w-full overflow-x-hidden">
+    <div className="space-y-6 pb-10 max-h-full overflow-y-auto max-w-full overflow-x-hidden">
       <Card className="overflow-hidden border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-xl">
         <div className="h-1 w-full" style={{ backgroundImage: activeTabConfig.accent }} />
         <CardContent className="flex flex-col gap-5 py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -1320,7 +1320,7 @@ type NormalizedTrade = Trade & {
                   )}
                 </div>
                 {planLimits.tradeStorageDays > 0 && (
-                  <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Extended journal history" onUpgrade={() => {}} className="bg-transparent p-0" />
+                  <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Extended journal history" onUpgrade={() => { }} className="bg-transparent p-0" />
                 )}
               </CardContent>
             </Card>
@@ -1358,31 +1358,31 @@ type NormalizedTrade = Trade & {
           )}
           <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
             <CardContent className="p-0">
-            <div className="px-4 pt-4 pb-2 text-xs text-zinc-400">
-              Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `- filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
-            </div>
-            <div className="px-4 pb-2 text-[11px] text-zinc-500">
-              Tip: Use strategy tags, SL/TP optimizer, bulk actions and the quick review checklist to speed up journaling.
-            </div>
-            <div className="px-4 overflow-x-auto">
-              <div className="min-w-[720px]">
-                <div className="hidden md:grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-muted-foreground text-xs border-b border-white/10 py-2">
-                  <div>Date</div>
-                  <div>Symbol</div>
-                  <div>Outcome</div>
-                  <div>Strategy / Tags</div>
-                  <div>Note</div>
-                  <div className="text-right">Actions</div>
-                </div>
-                <div className="divide-y divide-white/10">
-                  {sorted.length ? (
-                    sorted.map((t) => <JournalRow key={getTradeId(t)} trade={t} />)
-                  ) : (
-                    <div className="py-10 text-center text-zinc-400">No trades found.</div>
-                  )}
+              <div className="px-4 pt-4 pb-2 text-xs text-zinc-400">
+                Showing {sorted.length} trade{sorted.length === 1 ? "" : "s"} {selectedDay ? `- filtered ${format(selectedDay, "dd MMM yyyy")}` : ""}
+              </div>
+              <div className="px-4 pb-2 text-[11px] text-zinc-500">
+                Tip: Use strategy tags, SL/TP optimizer, bulk actions and the quick review checklist to speed up journaling.
+              </div>
+              <div className="px-4 overflow-x-auto">
+                <div className="min-w-[720px]">
+                  <div className="hidden md:grid md:grid-cols-[1.3fr,1fr,1fr,1.3fr,1fr,auto] gap-3 text-muted-foreground text-xs border-b border-white/10 py-2">
+                    <div>Date</div>
+                    <div>Symbol</div>
+                    <div>Outcome</div>
+                    <div>Strategy / Tags</div>
+                    <div>Note</div>
+                    <div className="text-right">Actions</div>
+                  </div>
+                  <div className="divide-y divide-white/10">
+                    {sorted.length ? (
+                      sorted.map((t) => <JournalRow key={getTradeId(t)} trade={t} />)
+                    ) : (
+                      <div className="py-10 text-center text-zinc-400">No trades found.</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
             </CardContent>
           </Card>
 
@@ -1418,10 +1418,10 @@ type NormalizedTrade = Trade & {
                   </div>
                 ))}
               </div>
-              </CardContent>
+            </CardContent>
           </Card>
         ) : (
-          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Advanced analytics" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Advanced analytics" onUpgrade={() => { }} className="max-w-xl mx-auto" />
         )
       )}
 
@@ -1429,134 +1429,134 @@ type NormalizedTrade = Trade & {
       {subTab === "patterns" && (
         canUsePatterns ? (
           <div className="space-y-6">
-          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Strategy Performance Analysis
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Detailed breakdown of your trading strategies and their effectiveness
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {patterns.stratMap && Object.entries(patterns.stratMap).map(([strategy, data]) => (
-                  <div key={strategy} className="min-w-0 p-4 bg-muted/50 rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm">{strategy}</h4>
-                      <Badge variant={data.netPL >= 0 ? "default" : "destructive"}>
-                        {data.netPL >= 0 ? "Profit" : "Loss"}
-                      </Badge>
+            <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Strategy Performance Analysis
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Detailed breakdown of your trading strategies and their effectiveness
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {patterns.stratMap && Object.entries(patterns.stratMap).map(([strategy, data]) => (
+                    <div key={strategy} className="min-w-0 p-4 bg-muted/50 rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-sm">{strategy}</h4>
+                        <Badge variant={data.netPL >= 0 ? "default" : "destructive"}>
+                          {data.netPL >= 0 ? "Profit" : "Loss"}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span>Trades:</span>
+                          <span className="font-medium">{data.trades}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Win Rate:</span>
+                          <span className="font-medium">{data.trades > 0 ? ((data.wins / data.trades) * 100).toFixed(1) : 0}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>P&L:</span>
+                          <span className={`font-medium ${data.netPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ${data.netPL.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Trades:</span>
-                        <span className="font-medium">{data.trades}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Win Rate:</span>
-                        <span className="font-medium">{data.trades > 0 ? ((data.wins / data.trades) * 100).toFixed(1) : 0}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>P&L:</span>
-                        <span className={`font-medium ${data.netPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          ${data.netPL.toFixed(2)}
-                        </span>
-                      </div>
+                  ))}
+                  {(!patterns.stratMap || Object.keys(patterns.stratMap).length === 0) && (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No strategy data available</p>
+                      <p className="text-sm">Start tagging your trades with strategies to see performance analysis</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
+              <CardContent className="p-5 space-y-6">
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-2">Top Symbols</h4>
+                    <div className="space-y-2">
+                      {patterns.topSymbols.length ? patterns.topSymbols.map(s => (
+                        <div key={s.symbol} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                          <span className="font-medium">{s.symbol}</span>
+                          <span className="text-xs text-zinc-300">{s.trades} trades - {s.winRate.toFixed(0)}% WR - <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
+                        </div>
+                      )) : <p className="text-zinc-400 text-sm">No data</p>}
                     </div>
                   </div>
-                ))}
-                {(!patterns.stratMap || Object.keys(patterns.stratMap).length === 0) && (
-                  <div className="col-span-full text-center py-8 text-muted-foreground">
-                    <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No strategy data available</p>
-                    <p className="text-sm">Start tagging your trades with strategies to see performance analysis</p>
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-2">By Day of Week</h4>
+                    <div className="space-y-2">
+                      {(Object.entries(patterns.byDOW ?? {}) as Array<[string, { trades: number; pl: number }]>).map(([dow, stats]) => (
+                        <div key={dow} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                          <span className="font-medium">{dow}</span>
+                          <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-              </CardContent>
-          </Card>
-          <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
-            <CardContent className="p-5 space-y-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <h4 className="text-sm font-semibold text-white mb-2">Top Symbols</h4>
-                  <div className="space-y-2">
-                    {patterns.topSymbols.length ? patterns.topSymbols.map(s => (
-                      <div key={s.symbol} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
-                        <span className="font-medium">{s.symbol}</span>
-                        <span className="text-xs text-zinc-300">{s.trades} trades - {s.winRate.toFixed(0)}% WR - <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
-                      </div>
-                    )) : <p className="text-zinc-400 text-sm">No data</p>}
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-2">Session Performance (UTC)</h4>
+                    <div className="space-y-2">
+                      {(Object.entries(patterns.sessions ?? {}) as Array<[string, { count: number; pl: number }]>).map(([name, stats]) => (
+                        <div key={name} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm capitalize">
+                          <span className="font-medium">{name}</span>
+                          <span className="text-xs text-zinc-300">{stats.count} trades - <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span></span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-white mb-2">By Day of Week</h4>
-                  <div className="space-y-2">
-                    {(Object.entries(patterns.byDOW ?? {}) as Array<[string, { trades: number; pl: number }]>).map(([dow, stats]) => (
-                      <div key={dow} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
-                        <span className="font-medium">{dow}</span>
-                        <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span>
-                      </div>
-                    ))}
+                  <h4 className="text-sm font-semibold text-white mb-2">Hourly Performance (UTC)</h4>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 lg:grid-cols-24 gap-1 sm:gap-2">
+                    {patterns.hours.map((h, idx) => {
+                      const bg = h.pl >= 0 ? `bg-emerald-600/15` : `bg-red-600/15`;
+                      return (
+                        <div key={idx} className={`p-1 sm:p-2 rounded border border-zinc-800 text-[10px] sm:text-xs text-zinc-200 ${bg}`}>
+                          <div className="font-semibold">{idx}:00</div>
+                          <div className="text-[9px] sm:text-[11px] text-zinc-300">{h.trades} trades</div>
+                          <div className={`${h.pl >= 0 ? "text-green-400" : "text-red-400"} text-[10px] sm:text-sm`}>${h.pl.toFixed(2)}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-white mb-2">Session Performance (UTC)</h4>
-                  <div className="space-y-2">
-                    {(Object.entries(patterns.sessions ?? {}) as Array<[string, { count: number; pl: number }]>).map(([name, stats]) => (
-                      <div key={name} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm capitalize">
-                        <span className="font-medium">{name}</span>
-                        <span className="text-xs text-zinc-300">{stats.count} trades - <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span></span>
-                      </div>
-                    ))}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
+                    <h5 className="text-sm text-zinc-200 mb-2">Equity Curve</h5>
+                    {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.pnp} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
                   </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-white mb-2">Hourly Performance (UTC)</h4>
-                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 lg:grid-cols-24 gap-1 sm:gap-2">
-                  {patterns.hours.map((h, idx) => {
-                    const bg = h.pl >= 0 ? `bg-emerald-600/15` : `bg-red-600/15`;
-                    return (
-                      <div key={idx} className={`p-1 sm:p-2 rounded border border-zinc-800 text-[10px] sm:text-xs text-zinc-200 ${bg}`}>
-                        <div className="font-semibold">{idx}:00</div>
-                        <div className="text-[9px] sm:text-[11px] text-zinc-300">{h.trades} trades</div>
-                        <div className={`${h.pl >= 0 ? "text-green-400" : "text-red-400"} text-[10px] sm:text-sm`}>${h.pl.toFixed(2)}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
-                  <h5 className="text-sm text-zinc-200 mb-2">Equity Curve</h5>
-                  {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.pnp} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+                  <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
+                    <h5 className="text-sm text-zinc-200 mb-2">Rolling Win Rate</h5>
+                    {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.rollingWinData} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+                  </div>
                 </div>
                 <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
-                  <h5 className="text-sm text-zinc-200 mb-2">Rolling Win Rate</h5>
-                  {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.rollingWinData} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
+                  <h5 className="text-sm text-zinc-200 mb-2">PnL Distribution</h5>
+                  {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.pnlHistogram} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
                 </div>
-              </div>
-              <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
-                <h5 className="text-sm text-zinc-200 mb-2">PnL Distribution</h5>
-                {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.pnlHistogram} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
-              </div>
               </CardContent>
-          </Card>
-        </div>
+            </Card>
+          </div>
         ) : (
-          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Pattern analytics" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Pattern analytics" onUpgrade={() => { }} className="max-w-xl mx-auto" />
         )
       )}
 
       {/* Forecast */}
       {!canUseForecast && subTab === 'forecast' && (
-        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="AI Forecast" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="AI Forecast" onUpgrade={() => { }} className="max-w-xl mx-auto" />
       )}
       {subTab === "forecast" && canUseForecast && (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200">
               <ArrowUpRight className="h-5 w-5" />
@@ -1576,10 +1576,10 @@ type NormalizedTrade = Trade & {
 
       {/* Optimizer */}
       {!canUseOptimizer && subTab === 'optimizer' && (
-        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="SL/TP Optimizer" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="SL/TP Optimizer" onUpgrade={() => { }} className="max-w-xl mx-auto" />
       )}
-            {subTab === "optimizer" && canUseOptimizer && (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+      {subTab === "optimizer" && canUseOptimizer && (
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200"><Target className="h-5 w-5" /><h3 className="font-semibold">SL/TP Optimization</h3></div>
             <div className="grid md:grid-cols-2 gap-4">
@@ -1588,8 +1588,8 @@ type NormalizedTrade = Trade & {
                 <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : ""}</div>
                 <div className="text-xs text-zinc-400">{sltpSuggestion?.note}</div>
                 <div className="mt-4 flex gap-2">
-                  <Button variant="secondary" onClick={()=> applySltpToSelected(sltpSuggestion?.recommendedRR ?? 1)}>Apply to selected</Button>
-                  <Button variant="ghost" onClick={()=> alert("Heuristic: uses average wins/losses. Use backtests or model-based optimizer for production.")}>Explain</Button>
+                  <Button variant="secondary" onClick={() => applySltpToSelected(sltpSuggestion?.recommendedRR ?? 1)}>Apply to selected</Button>
+                  <Button variant="ghost" onClick={() => alert("Heuristic: uses average wins/losses. Use backtests or model-based optimizer for production.")}>Explain</Button>
                 </div>
               </div>
               <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
@@ -1607,7 +1607,7 @@ type NormalizedTrade = Trade & {
                         </div>
                         <div className="flex gap-2">
                           <div className="text-xs text-zinc-200">Suggest {recommended}R</div>
-                          <Button variant="ghost" onClick={()=> applySltpToSelected(recommended)}>Apply</Button>
+                          <Button variant="ghost" onClick={() => applySltpToSelected(recommended)}>Apply</Button>
                         </div>
                       </div>
                     );
@@ -1621,24 +1621,24 @@ type NormalizedTrade = Trade & {
 
       {/* Prop-Firm */}
       {!canUsePropDesk && subTab === 'prop' && (
-        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop-Firm Dashboard" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+        <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Prop-Firm Dashboard" onUpgrade={() => { }} className="max-w-xl mx-auto" />
       )}
       {subTab === "prop" && canUsePropDesk && <PropTracker trades={trades as Trade[]} />}
 
       {/* Psychology */}
       {subTab === "psychology" && (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><Activity className="h-5 w-5" /><h3 className="font-semibold">Psychology & Behavior</h3></div>
             <div className="flex flex-wrap gap-2">
-              {moods.map(m => <button key={m} className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-xs text-zinc-200" onClick={()=> addMoodStamp(m)}>{m}</button>)}
+              {moods.map(m => <button key={m} className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-xs text-zinc-200" onClick={() => addMoodStamp(m)}>{m}</button>)}
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <textarea className="w-full min-h-[180px] rounded-md bg-zinc-900 text-zinc-100 border border-zinc-700 p-3 text-sm" placeholder="Free-write journaling..." value={psychNote} onChange={(e)=> setPsychNote(e.target.value)} />
+                <textarea className="w-full min-h-[180px] rounded-md bg-zinc-900 text-zinc-100 border border-zinc-700 p-3 text-sm" placeholder="Free-write journaling..." value={psychNote} onChange={(e) => setPsychNote(e.target.value)} />
                 <div className="flex gap-2 justify-end mt-2">
-                  <Button variant="secondary" onClick={()=> setPsychNote("")}><X className="h-4 w-4 mr-2" />Clear</Button>
-                  <Button variant="secondary" onClick={()=> { alert("Saved locally."); }}><Save className="h-4 w-4 mr-2" />Save</Button>
+                  <Button variant="secondary" onClick={() => setPsychNote("")}><X className="h-4 w-4 mr-2" />Clear</Button>
+                  <Button variant="secondary" onClick={() => { alert("Saved locally."); }}><Save className="h-4 w-4 mr-2" />Save</Button>
                 </div>
               </div>
               <div>
@@ -1651,7 +1651,7 @@ type NormalizedTrade = Trade & {
                 <div className="mt-4 bg-zinc-900/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Guided Prompts</h5>
                   <div className="mt-2 text-xs text-zinc-200">{randomPrompt()}</div>
-                  <div className="mt-3"><Button variant="secondary" onClick={()=> setPsychNote(prev => prev + "\n" + randomPrompt())}>Add prompt to note</Button></div>
+                  <div className="mt-3"><Button variant="secondary" onClick={() => setPsychNote(prev => prev + "\n" + randomPrompt())}>Add prompt to note</Button></div>
                 </div>
               </div>
             </div>
@@ -1661,13 +1661,13 @@ type NormalizedTrade = Trade & {
 
       {/* Calendar */}
       {subTab === "calendar" && (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-3"><CalendarIcon /><h3 className="font-semibold">Calendar & Timeline</h3>
               <div className="ml-auto flex items-center gap-2">
-                <Button variant="ghost" onClick={()=> setCalendarMonth(m => subMonths(m,1))}>Prev</Button>
-                <div className="text-sm text-zinc-300">{format(calendarMonth,"MMMM yyyy")}</div>
-                <Button variant="ghost" onClick={()=> setCalendarMonth(m => addMonths(m,1))}>Next</Button>
+                <Button variant="ghost" onClick={() => setCalendarMonth(m => subMonths(m, 1))}>Prev</Button>
+                <div className="text-sm text-zinc-300">{format(calendarMonth, "MMMM yyyy")}</div>
+                <Button variant="ghost" onClick={() => setCalendarMonth(m => addMonths(m, 1))}>Next</Button>
               </div>
             </div>
             <div className="bg-zinc-900/40 rounded-lg p-4 border border-zinc-800">
@@ -1715,15 +1715,15 @@ type NormalizedTrade = Trade & {
                 return (
                   <button
                     key={d.toISOString()}
-                    onClick={() => { setSelectedDay(prev => prev && isSameDay(prev,d) ? null : d); setSubTab("journal"); }}
+                    onClick={() => { setSelectedDay(prev => prev && isSameDay(prev, d) ? null : d); setSubTab("journal"); }}
                     className={`p-1 sm:p-3 rounded border ${isSameDay(d, selectedDay ?? new Date(0)) ? "border-green-500" : "border-zinc-800"} ${bg} text-left`}
                     data-track="journal_calendar_day_click"
                     data-track-meta={`{"date":"${format(d, "yyyy-MM-dd")}","trades":${ds.trades}}`}
                     title={`${ds.trades} trade(s) - ${net >= 0 ? "+" : ""}${net.toFixed(2)} USD`}
                   >
-                    <div className="text-[10px] sm:text-xs text-zinc-300">{format(d,"dd")}</div>
+                    <div className="text-[10px] sm:text-xs text-zinc-300">{format(d, "dd")}</div>
                     <div className="text-[9px] sm:text-[11px] text-zinc-200">{ds.trades} trades</div>
-                    <div className={`text-[9px] sm:text-[11px] ${net>=0 ? "text-green-400" : "text-red-400"}`}>${net.toFixed(0)}</div>
+                    <div className={`text-[9px] sm:text-[11px] ${net >= 0 ? "text-green-400" : "text-red-400"}`}>${net.toFixed(0)}</div>
                   </button>
                 );
               })}
@@ -1735,8 +1735,8 @@ type NormalizedTrade = Trade & {
 
       {/* Review */}
       {subTab === "review" && (
-          <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
-            <CardContent className="p-5 space-y-4">
+        <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
+          <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><FileText className="h-5 w-5" /><h3 className="font-semibold">Weekly Review</h3></div>
             {(() => {
               const now = new Date();
@@ -1751,15 +1751,15 @@ type NormalizedTrade = Trade & {
               const wr = recent.length ? (wins / recent.length) * 100 : 0;
               let peak = 0, eq = 0, maxDD = 0;
               recent.forEach(t => { eq += parsePL(t.pnl); peak = Math.max(peak, eq); maxDD = Math.max(maxDD, peak - eq); });
-              const best = [...recent].sort((a,b)=>parsePL(b.pnl)-parsePL(a.pnl))[0];
-              const worst = [...recent].sort((a,b)=>parsePL(a.pnl)-parsePL(b.pnl))[0];
+              const best = [...recent].sort((a, b) => parsePL(b.pnl) - parsePL(a.pnl))[0];
+              const worst = [...recent].sort((a, b) => parsePL(a.pnl) - parsePL(b.pnl))[0];
               const topNotes = computedInsights.slice(0, 3);
               return (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-1">Net PnL</div>
-                      <div className={`text-2xl font-semibold ${pnl>=0?'text-emerald-400':'text-red-400'}`}>${pnl.toFixed(2)}</div>
+                      <div className={`text-2xl font-semibold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>${pnl.toFixed(2)}</div>
                     </div>
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-1">Win / Loss</div>
@@ -1779,13 +1779,13 @@ type NormalizedTrade = Trade & {
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-2">Highlights</div>
                       <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                        {topNotes.length ? topNotes.map((i)=> (<li key={i.id}>{i.title}: {i.detail}</li>)) : (<li>Keep executing your plan consistently.</li>)}
+                        {topNotes.length ? topNotes.map((i) => (<li key={i.id}>{i.title}: {i.detail}</li>)) : (<li>Keep executing your plan consistently.</li>)}
                       </ul>
                     </div>
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-2">Next actions</div>
                       <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                        {topNotes.length ? topNotes.map((i)=> (<li key={i.id}>{i.title}: {i.detail}</li>)) : (<li>Keep executing your plan consistently.</li>)}
+                        {topNotes.length ? topNotes.map((i) => (<li key={i.id}>{i.title}: {i.detail}</li>)) : (<li>Keep executing your plan consistently.</li>)}
                       </ul>
                     </div>
                   </div>
@@ -1801,46 +1801,46 @@ type NormalizedTrade = Trade & {
         canUseRiskTab ? (
           <Card className="w-full overflow-hidden border border-white/10 bg-white/5 dark:bg-black/30">
             <CardContent className="p-5 space-y-4">
-            <div className="flex items-center gap-2"><Target className="h-5 w-5" /><h3 className="font-semibold">Risk Budget</h3></div>
-            {effectivePlan === 'starter' && (accountBalance === '' || typeof accountBalance !== 'number') && (
-              <div className="p-3 rounded border border-yellow-600 bg-yellow-900/30 text-yellow-200 text-sm">
-                Starter plan: enter your current live account size above to enable risk calculations.
-              </div>
-            )}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
-                <div className="text-xs text-muted-foreground mb-1">Account balance</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">$</span>
-                  <input type="number" min={100} step={50} value={accountBalance === '' ? '' : Number(accountBalance)} onChange={(e)=>setAccountBalance(e.target.value === '' ? '' : parseFloat(e.target.value))} className="w-32 bg-transparent border rounded px-2 py-1 border-white/10" />
+              <div className="flex items-center gap-2"><Target className="h-5 w-5" /><h3 className="font-semibold">Risk Budget</h3></div>
+              {effectivePlan === 'starter' && (accountBalance === '' || typeof accountBalance !== 'number') && (
+                <div className="p-3 rounded border border-yellow-600 bg-yellow-900/30 text-yellow-200 text-sm">
+                  Starter plan: enter your current live account size above to enable risk calculations.
+                </div>
+              )}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">Account balance</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">$</span>
+                    <input type="number" min={100} step={50} value={accountBalance === '' ? '' : Number(accountBalance)} onChange={(e) => setAccountBalance(e.target.value === '' ? '' : parseFloat(e.target.value))} className="w-32 bg-transparent border rounded px-2 py-1 border-white/10" />
+                  </div>
+                </div>
+                <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">Risk per trade</div>
+                  <div className="flex items-center gap-2">
+                    <input type="range" min={0.25} max={3} step={0.25} value={riskPercent} onChange={(e) => setRiskPercent(parseFloat(e.target.value))} className="w-full" />
+                    <span className="text-sm font-medium">{riskPercent.toFixed(2)}%</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">Recommended daily loss</div>
+                  <div className="text-sm">{(() => { const bal = typeof accountBalance === 'number' ? accountBalance : 0; const pct = effectivePlan === 'starter' ? 2 : 1.5; return `$${(bal * (pct / 100)).toFixed(0)} (${pct}% of balance)`; })()}</div>
                 </div>
               </div>
-              <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
-                <div className="text-xs text-muted-foreground mb-1">Risk per trade</div>
-                <div className="flex items-center gap-2">
-                  <input type="range" min={0.25} max={3} step={0.25} value={riskPercent} onChange={(e)=>setRiskPercent(parseFloat(e.target.value))} className="w-full" />
-                  <span className="text-sm font-medium">{riskPercent.toFixed(2)}%</span>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="rounded-lg border border-white/10 p-4">
+                  <div className="text-sm text-muted-foreground">Per-trade dollar risk (1R)</div>
+                  <div className="text-2xl font-semibold">{(() => { const bal = typeof accountBalance === 'number' ? accountBalance : 0; return `$${(bal * (riskPercent / 100)).toFixed(2)}`; })()}</div>
+                </div>
+                <div className="rounded-lg border border-white/10 p-4">
+                  <div className="text-sm text-muted-foreground">Max lots guidance (heuristic)</div>
+                  <div className="text-xs text-muted-foreground">Use broker pip value to convert 1R to lots for your symbol.</div>
                 </div>
               </div>
-              <div className="p-3 rounded bg-white/5 dark:bg-black/20 border border-white/10">
-                <div className="text-xs text-muted-foreground mb-1">Recommended daily loss</div>
-                <div className="text-sm">{(() => { const bal = typeof accountBalance==='number'? accountBalance : 0; const pct = effectivePlan==='starter'? 2 : 1.5; return `$${(bal * (pct/100)).toFixed(0)} (${pct}% of balance)`; })()}</div>
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div className="rounded-lg border border-white/10 p-4">
-                <div className="text-sm text-muted-foreground">Per-trade dollar risk (1R)</div>
-                <div className="text-2xl font-semibold">{(() => { const bal = typeof accountBalance==='number'? accountBalance : 0; return `$${(bal * (riskPercent/100)).toFixed(2)}`; })()}</div>
-              </div>
-              <div className="rounded-lg border border-white/10 p-4">
-                <div className="text-sm text-muted-foreground">Max lots guidance (heuristic)</div>
-                <div className="text-xs text-muted-foreground">Use broker pip value to convert 1R to lots for your symbol.</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         ) : (
-          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Risk management toolkit" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Risk management toolkit" onUpgrade={() => { }} className="max-w-xl mx-auto" />
         )
 
       )}
@@ -1855,12 +1855,12 @@ type NormalizedTrade = Trade & {
                 const by = (key: 'strategy' | 'symbol') => {
                   const map = new Map<string, number>();
                   tradesTyped.forEach(t => { const k = String((t as any)[key] || 'Unknown'); map.set(k, (map.get(k) || 0) + parsePL(t.pnl)); });
-                  return Array.from(map.entries()).sort((a,b)=>a[1]-b[1]).slice(0,3);
+                  return Array.from(map.entries()).sort((a, b) => a[1] - b[1]).slice(0, 3);
                 };
                 const byHour = () => {
                   const map = new Map<number, number>();
-                  tradesTyped.forEach(t => { const d = new Date((t.closeTime||t.openTime||'') as any); const h = d.getHours(); map.set(h, (map.get(h)||0)+parsePL(t.pnl)); });
-                  return Array.from(map.entries()).sort((a,b)=>a[1]-b[1]).slice(0,3);
+                  tradesTyped.forEach(t => { const d = new Date((t.closeTime || t.openTime || '') as any); const h = d.getHours(); map.set(h, (map.get(h) || 0) + parsePL(t.pnl)); });
+                  return Array.from(map.entries()).sort((a, b) => a[1] - b[1]).slice(0, 3);
                 };
                 const worstStrats = by('strategy');
                 const worstSymbols = by('symbol');
@@ -1869,17 +1869,17 @@ type NormalizedTrade = Trade & {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-2">Top recurring losses by strategy</div>
-                      <ul className="text-sm space-y-1">{worstStrats.map(([k,v])=> (<li key={k} className="flex justify-between"><span>{k}</span><span className={v<0? 'text-red-400':'text-emerald-400'}>${v.toFixed(2)}</span></li>))}</ul>
+                      <ul className="text-sm space-y-1">{worstStrats.map(([k, v]) => (<li key={k} className="flex justify-between"><span>{k}</span><span className={v < 0 ? 'text-red-400' : 'text-emerald-400'}>${v.toFixed(2)}</span></li>))}</ul>
                     </div>
                     <div className="rounded-lg border border-white/10 p-4">
                       <div className="text-sm font-semibold mb-2">Worst symbols</div>
-                      <ul className="text-sm space-y-1">{worstSymbols.map(([k,v])=> (<li key={k} className="flex justify-between"><span>{k}</span><span className={v<0? 'text-red-400':'text-emerald-400'}>${v.toFixed(2)}</span></li>))}</ul>
+                      <ul className="text-sm space-y-1">{worstSymbols.map(([k, v]) => (<li key={k} className="flex justify-between"><span>{k}</span><span className={v < 0 ? 'text-red-400' : 'text-emerald-400'}>${v.toFixed(2)}</span></li>))}</ul>
                     </div>
                     <div className="rounded-lg border border-white/10 p-4 md:col-span-2">
                       <div className="text-sm font-semibold mb-2">Risky trading hours (UTC)</div>
                       <div className="grid grid-cols-3 gap-2 text-sm">
-                        {worstHours.map(([h,v])=> (
-                          <div key={h} className="rounded border border-white/10 px-2 py-1 flex items-center justify-between"><span>{h}:00</span><span className={v<0? 'text-red-400':'text-emerald-400'}>${v.toFixed(2)}</span></div>
+                        {worstHours.map(([h, v]) => (
+                          <div key={h} className="rounded border border-white/10 px-2 py-1 flex items-center justify-between"><span>{h}:00</span><span className={v < 0 ? 'text-red-400' : 'text-emerald-400'}>${v.toFixed(2)}</span></div>
                         ))}
                       </div>
                       <div className="mt-3 text-xs text-muted-foreground">Set cooldowns or avoid these windows to reduce tilt.</div>
@@ -1887,10 +1887,10 @@ type NormalizedTrade = Trade & {
                   </div>
                 );
               })()}
-              </CardContent>
+            </CardContent>
           </Card>
         ) : (
-          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Mistake Analyzer" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Mistake Analyzer" onUpgrade={() => { }} className="max-w-xl mx-auto" />
         )
       )}
 
@@ -1910,15 +1910,15 @@ type NormalizedTrade = Trade & {
                 {playbooks.map((p, idx) => (
                   <div key={p.id} className="rounded-lg border border-white/10 p-4 bg-white/5 dark:bg-black/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <input className="flex-1 bg-transparent border border-white/10 rounded px-2 py-1 text-sm" value={p.name} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, name: e.target.value }: pb))} />
-                      <Button size="sm" variant="ghost" onClick={()=> setPlaybooks(playbooks.filter(pb=> pb.id!==p.id))}><Trash2 className="w-4 h-4" /></Button>
+                      <input className="flex-1 bg-transparent border border-white/10 rounded px-2 py-1 text-sm" value={p.name} onChange={(e) => setPlaybooks(playbooks.map(pb => pb.id === p.id ? { ...pb, name: e.target.value } : pb))} />
+                      <Button size="sm" variant="ghost" onClick={() => setPlaybooks(playbooks.filter(pb => pb.id !== p.id))}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                     <div className="text-xs text-muted-foreground mb-1">Entry rules</div>
-                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.entry} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, entry: e.target.value }: pb))} />
+                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.entry} onChange={(e) => setPlaybooks(playbooks.map(pb => pb.id === p.id ? { ...pb, entry: e.target.value } : pb))} />
                     <div className="text-xs text-muted-foreground mb-1">Exit rules</div>
-                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.exit} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, exit: e.target.value }: pb))} />
+                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm mb-2" rows={3} value={p.exit} onChange={(e) => setPlaybooks(playbooks.map(pb => pb.id === p.id ? { ...pb, exit: e.target.value } : pb))} />
                     <div className="text-xs text-muted-foreground mb-1">Notes</div>
-                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm" rows={2} value={p.notes || ''} onChange={(e)=> setPlaybooks(playbooks.map(pb=> pb.id===p.id? { ...pb, notes: e.target.value }: pb))} />
+                    <textarea className="w-full bg-transparent border border-white/10 rounded px-2 py-1 text-sm" rows={2} value={p.notes || ''} onChange={(e) => setPlaybooks(playbooks.map(pb => pb.id === p.id ? { ...pb, notes: e.target.value } : pb))} />
                     <div className="mt-3 text-xs text-muted-foreground">Tip: Pin one setup and focus until it&apos;s consistent.</div>
                   </div>
                 ))}
@@ -1926,21 +1926,21 @@ type NormalizedTrade = Trade & {
               {playbooks.length >= playbookLimit && (
                 <div className="text-xs text-yellow-400">Reached playbook limit for your plan. Upgrade to add more.</div>
               )}
-              </CardContent>
+            </CardContent>
           </Card>
         ) : (
-          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Strategy Playbook" onUpgrade={() => {}} className="max-w-xl mx-auto" />
+          <CompactUpgradePrompt currentPlan={effectivePlan as any} feature="Strategy Playbook" onUpgrade={() => { }} className="max-w-xl mx-auto" />
         )
       )}
 
       {/* Import preview */}
       {importPreview && (
-        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0b1220] border-[#202830]">
+        <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm text-zinc-200">Import preview ({importPreview.length} rows)</div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={()=> setImportPreview(null)}>Close</Button>
+                <Button variant="ghost" onClick={() => setImportPreview(null)}>Close</Button>
               </div>
             </div>
             <div className="max-h-64 overflow-auto text-sm">
@@ -1955,7 +1955,7 @@ type NormalizedTrade = Trade & {
                   </tr>
                 </thead>
                 <tbody>
-                  {importPreview.map((r,i)=> (
+                  {importPreview.map((r, i) => (
                     <tr key={i} className="border-t border-zinc-800">
                       <td className="py-1">{fmtDateTime(r.openTime)}</td>
                       <td className="py-1">{r.symbol}</td>

@@ -109,7 +109,7 @@ export default function CheckoutPage() {
     try {
       const billingCycle = billing === "yearly" ? "yearly" : "monthly";
       const checkoutUrl = getCheckoutUrl(plan as "pro" | "plus" | "elite", billingCycle as "monthly" | "yearly");
-      
+
       // Add email as query parameter for pre-fill
       const urlWithEmail = new URL(checkoutUrl);
       urlWithEmail.searchParams.append("checkout[email]", effectiveEmail);
@@ -132,7 +132,7 @@ export default function CheckoutPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors flex items-center justify-center">
+      <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-white transition-colors flex items-center justify-center">
         <div>Loading...</div>
       </div>
     );
@@ -141,7 +141,7 @@ export default function CheckoutPage() {
   return (
     <LayoutClient>
       <NotificationProvider>
-        <div className="min-h-screen bg-[var(--surface-primary)] dark:bg-[#0D1117] text-gray-900 dark:text-white transition-colors">
+        <div className="min-h-screen bg-[var(--surface-primary)] dark:bg-[#0f1319] text-gray-900 dark:text-white transition-colors">
           <div className="max-w-4xl mx-auto p-4 md:p-6">
             <button
               onClick={() => router.back()}
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
-                        className="w-full bg-[var(--surface-primary)] dark:bg-[#0B1220] border border-[var(--surface-border)] dark:border-gray-700 rounded px-3 py-2 text-[var(--text-primary)] dark:text-gray-100 outline-none focus:border-blue-500"
+                        className="w-full bg-[var(--surface-primary)] dark:bg-[#0f1319] border border-[var(--surface-border)] dark:border-gray-700 rounded px-3 py-2 text-[var(--text-primary)] dark:text-gray-100 outline-none focus:border-blue-500"
                       />
                       <div className="text-xs text-[var(--text-muted)] dark:text-gray-500 mt-1">
                         We&apos;ll send your payment receipt and account link to this email.

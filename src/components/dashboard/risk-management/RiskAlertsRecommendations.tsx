@@ -255,7 +255,7 @@ Format your response as a JSON array of recommendation objects with: title, desc
       case 'high': return 'border-red-500 bg-red-900/20';
       case 'medium': return 'border-yellow-500 bg-yellow-900/20';
       case 'low': return 'border-blue-500 bg-blue-900/20';
-      default: return 'border-gray-500 bg-gray-900/20';
+      default: return 'border-gray-500 bg-[#0f1319]/20';
     }
   };
 
@@ -276,7 +276,7 @@ Format your response as a JSON array of recommendation objects with: title, desc
           <h2 className="text-2xl font-bold text-white">Risk Alerts & Recommendations</h2>
         </div>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-8 text-center">
             <Shield className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Risk Data Available</h3>
@@ -328,7 +328,7 @@ Format your response as a JSON array of recommendation objects with: title, desc
         {insights.map((insight) => (
           <Card
             key={insight.id}
-            className={`bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 ${getPriorityColor(insight.priority)}`}
+            className={`bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 ${getPriorityColor(insight.priority)}`}
           >
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -341,11 +341,10 @@ Format your response as a JSON array of recommendation objects with: title, desc
                     <h3 className="text-lg font-semibold text-white">{insight.title}</h3>
                     <div className="flex items-center gap-2">
                       <Badge
-                        className={`text-xs ${
-                          insight.impact === 'positive' ? 'bg-green-600' :
+                        className={`text-xs ${insight.impact === 'positive' ? 'bg-green-600' :
                           insight.impact === 'negative' ? 'bg-red-600' :
-                          'bg-gray-600'
-                        }`}
+                            'bg-gray-600'
+                          }`}
                       >
                         {insight.impact}
                       </Badge>
@@ -373,7 +372,7 @@ Format your response as a JSON array of recommendation objects with: title, desc
       </div>
 
       {/* Summary Stats */}
-      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
+      <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">

@@ -49,7 +49,7 @@ export const Modal: React.FC<ModalProps> = ({
         <Dialog.Content
           className={classNames(
             "fixed left-1/2 top-1/2 z-50 w-full translate-x-[-50%] translate-y-[-50%]",
-            "rounded-lg border border-zinc-800 bg-gray-900 text-white shadow-2xl p-6",
+            "rounded-lg border border-zinc-800 bg-[#0f1319] text-white shadow-2xl p-6",
             sizeClass[size]
           )}
         >

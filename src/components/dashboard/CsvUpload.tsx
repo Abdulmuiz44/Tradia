@@ -531,7 +531,7 @@ export default function CsvUpload({
 
         return (
             <div>
-                <div className="max-h-56 overflow-auto border border-zinc-700 rounded bg-[#0b1220] p-2">
+                <div className="max-h-56 overflow-auto border border-zinc-700 rounded bg-[#0f1319] p-2">
                     <table className="w-full text-xs">
                         <thead>
                             <tr>
@@ -544,7 +544,7 @@ export default function CsvUpload({
                         </thead>
                         <tbody>
                             {show.map((r, i) => (
-                                <tr key={i} className={i % 2 === 0 ? "bg-[#061025]/10" : ""}>
+                                <tr key={i} className={i % 2 === 0 ? "bg-[#0f1319]/10" : ""}>
                                     {headers.map((h) => (
                                         <td key={h} className="px-2 py-1 text-zinc-200">
                                             {String((r as Record<string, unknown>)[h] ?? "")}
@@ -666,7 +666,7 @@ export default function CsvUpload({
 
                         <div className="mb-4">
                             <div className="text-sm font-semibold text-zinc-200 mb-2">Auto-mapping preview</div>
-                            <div className="max-h-36 overflow-auto border border-zinc-700 rounded p-2 bg-[#0b1220]">
+                            <div className="max-h-36 overflow-auto border border-zinc-700 rounded p-2 bg-[#0f1319]">
                                 <table className="w-full text-xs">
                                     <thead>
                                         <tr>
@@ -683,7 +683,7 @@ export default function CsvUpload({
                                             </tr>
                                         ) : (
                                             Object.entries(mappedHeaders).map(([raw, mapped]) => (
-                                                <tr key={raw} className="odd:bg-[#061025]/10">
+                                                <tr key={raw} className="odd:bg-[#0f1319]/10">
                                                     <td className="px-2 py-1 text-zinc-200">{raw}</td>
                                                     <td className="px-2 py-1 text-zinc-300">{mapped}</td>
                                                 </tr>

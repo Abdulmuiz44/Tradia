@@ -294,7 +294,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-50 w-full max-w-3xl bg-gray-900 text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
+      <div className="relative z-50 w-full max-w-3xl bg-[#0f1319] text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
         <h2 className="text-2xl font-semibold mb-4">Add New Trade</h2>
 
         <div className="grid grid-cols-2 gap-4">

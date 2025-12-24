@@ -213,7 +213,7 @@ export default function UploadCsvModal({
         role="dialog"
         aria-modal="true"
         aria-label="Import trades from CSV"
-        className="relative z-10 w-full max-w-3xl bg-gray-900 text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]"
+        className="relative z-10 w-full max-w-3xl bg-[#0f1319] text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]"
       >
         <header className="flex items-center justify-between mb-4">
           <div>

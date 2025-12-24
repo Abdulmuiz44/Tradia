@@ -77,7 +77,7 @@ function ConversationHistoryContent() {
     return (
         <div className="w-full min-h-screen bg-[#0D0D0D] text-white">
             {/* Header */}
-            <div className="border-b border-white/5 px-4 sm:px-6 md:px-8 py-6 bg-gray-900/50">
+            <div className="border-b border-white/5 px-4 sm:px-6 md:px-8 py-6 bg-[#0f1319]/50">
                 <button
                     onClick={() => router.back()}
                     className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-4 transition-colors hover:scale-105 active:scale-95"
@@ -109,11 +109,11 @@ function ConversationHistoryContent() {
                         <div className="grid gap-4">
                             {conversations.map((conv) => (
                                 <button
-                                 key={conv.id}
-                                 onClick={() =>
-                                     router.push(`/dashboard/trades/chat/${conv.id}`)
-                                 }
-                                 className="group text-left p-4 sm:p-5 border border-white/10 rounded-lg hover:border-blue-400/50 hover:bg-blue-500/5 transition-all duration-200 active:scale-95"
+                                    key={conv.id}
+                                    onClick={() =>
+                                        router.push(`/dashboard/trades/chat/${conv.id}`)
+                                    }
+                                    className="group text-left p-4 sm:p-5 border border-white/10 rounded-lg hover:border-blue-400/50 hover:bg-blue-500/5 transition-all duration-200 active:scale-95"
                                 >
                                     <div className="flex items-start justify-between gap-3 sm:gap-4">
                                         <div className="flex-1 min-w-0">

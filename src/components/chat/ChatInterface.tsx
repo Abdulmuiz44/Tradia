@@ -103,9 +103,9 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
     }, [messages]);
 
     return (
-        <div className="flex flex-col h-screen w-full bg-[#061226] overflow-hidden">
+        <div className="flex flex-col h-screen w-full bg-[#0f1319] overflow-hidden">
             {/* Header */}
-            <div className="bg-[#0f172a] px-6 py-3 border-b border-gray-800 flex-shrink-0">
+            <div className="bg-[#0f1319] px-6 py-3 border-b border-gray-800 flex-shrink-0">
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
@@ -238,7 +238,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
 
             {/* Quick suggestions (show when no messages) */}
             {messages.length === 1 && (
-                <div className="px-6 py-3 bg-[#0f172a]/50 border-t border-gray-800/50 flex-shrink-0">
+                <div className="px-6 py-3 bg-[#0f1319]/50 border-t border-gray-800/50 flex-shrink-0">
                     <div className="text-xs text-gray-400 mb-2">Quick analysis:</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
@@ -266,7 +266,7 @@ export function ChatInterface({ trades = [], mode = 'coach', conversationId }: C
             )}
 
             {/* Input Area */}
-            <div className="px-6 py-3 bg-[#0f172a] border-t border-gray-800 flex-shrink-0">
+            <div className="px-6 py-3 bg-[#0f1319] border-t border-gray-800 flex-shrink-0">
                 <form onSubmit={handleSubmit} className="relative flex items-end gap-3">
                     <textarea
                         className="flex-1 min-h-[48px] max-h-[200px] w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none custom-scrollbar placeholder:text-gray-500"

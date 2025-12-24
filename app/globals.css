@@ -15,7 +15,7 @@
   --surface-border: rgba(5, 5, 9, 0.08);
   --surface-border-strong: rgba(5, 5, 9, 0.16);
 
-  --text-primary: #050509;
+  --text-primary: #0f1319;
   --text-secondary: #3d3d4e;
   --text-muted: #6e6e80;
   --text-inverse: #f7f7f8;
@@ -39,8 +39,8 @@
   --brand-800: #3730a3;
   --brand-900: #312e81;
   --brand-accent: #06b6d4;
-  --brand-bg-dark: #0b1220;
-  --brand-text-dark: #0f172a;
+  --brand-bg-dark: #0f1319;
+  --brand-text-dark: #0f1319;
   --brand-text-light: #ffffff;
 }
 
@@ -81,7 +81,7 @@ html {
 }
 
 .dark body {
-  background-color: #0f172a;
+  background-color: #0f1319;
   color: #e5e7eb;
 }
 
@@ -241,7 +241,7 @@ html:not(.dark) .hover\:bg-slate-100:hover {
 
 html:not(.dark) .bg-gray-800,
 html:not(.dark) .bg-slate-800 {
-  background-color: #111827 !important;
+  background-color: #0f1319 !important;
   color: var(--text-inverse) !important;
 }
 
@@ -260,44 +260,44 @@ html:not(.dark) .bg-slate-800 {
 
 .dark .dashboard-sidebar__item {
   color: var(--text-muted);
- font-weight: 500;
+  font-weight: 500;
 }
 
 .dashboard-sidebar__item:hover {
   background-color: #f8f9fa;
- color: #000000;
-border-color: transparent;
+  color: #000000;
+  border-color: transparent;
 }
 
 .dark .dashboard-sidebar__item:hover {
-background-color: var(--surface-hover);
-color: var(--text-primary);
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .dashboard-sidebar__item.is-active {
   background-color: #ffffff;
-color: #000000;
-border-color: #e9ecef;
-box-shadow: var(--shadow-soft);
+  color: #000000;
+  border-color: #e9ecef;
+  box-shadow: var(--shadow-soft);
 }
 
 .dark .dashboard-sidebar__item.is-active {
-background-color: var(--surface-secondary);
-color: var(--text-primary);
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
   border-color: var(--surface-border);
 }
 
 .dashboard-sidebar__item .dashboard-sidebar__icon {
- color: #000000;
+  color: #000000;
 }
 
 .dark .dashboard-sidebar__item .dashboard-sidebar__icon {
-color: var(--text-muted);
+  color: var(--text-muted);
 }
 
 .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
 .dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-color: #000000;
+  color: #000000;
 }
 
 .dark .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,

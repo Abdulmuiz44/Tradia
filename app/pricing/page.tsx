@@ -23,7 +23,7 @@ import { getCheckoutUrl } from "@/lib/checkout-urls";
  * - Testimonials, FAQ, and benefits
  */
 
-  const PLANS = [
+const PLANS = [
   {
     id: "free",
     name: "Starter",
@@ -107,7 +107,7 @@ export default function PricingPage(): React.ReactElement {
       try {
         const res = await fetch('/api/coach/points', { cache: 'no-store' });
         if (res.ok) { const j = await res.json(); setCoachPoints(Number(j.points || 0)); }
-      } catch {}
+      } catch { }
     })();
   }, []);
 
@@ -204,7 +204,7 @@ export default function PricingPage(): React.ReactElement {
       />
       <Navbar />
 
-      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
@@ -229,7 +229,7 @@ export default function PricingPage(): React.ReactElement {
                   </Link>
 
                   <a className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20" href="#plans">
-                  See plans
+                    See plans
                   </a>
                 </div>
 
@@ -280,8 +280,8 @@ export default function PricingPage(): React.ReactElement {
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {PLANS.map((p) => {
-              const price = priceFor(p.id);
-              const selected = selectedPlan === p.id;
+                const price = priceFor(p.id);
+                const selected = selectedPlan === p.id;
                 return (
                   <motion.div
                     key={p.id}
@@ -301,13 +301,13 @@ export default function PricingPage(): React.ReactElement {
                     </div>
 
                     <ul className="mb-6 space-y-2 text-left">
-                     {p.highlights.map((h, i) => (
-                         <li key={i} className="flex items-start gap-3">
-                           <AiOutlineCheck className="mt-1 text-indigo-400 flex-shrink-0 text-lg" />
-                           <span className="font-semibold text-white">{h}</span>
-                         </li>
-                       ))}
-                     </ul>
+                      {p.highlights.map((h, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <AiOutlineCheck className="mt-1 text-indigo-400 flex-shrink-0 text-lg" />
+                          <span className="font-semibold text-white">{h}</span>
+                        </li>
+                      ))}
+                    </ul>
 
                     <div className="flex flex-col gap-3">
                       <button
@@ -405,17 +405,17 @@ export default function PricingPage(): React.ReactElement {
               <h3 className="text-2xl font-bold mb-4">Frequently asked questions</h3>
 
               <div className="space-y-3">
-                 {[
-               { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics, CSV import, and 30 days of trade history. No credit card required." },
-                   { q: "Which integrations are supported?", a: "CSV imports are supported for comprehensive trade analysis. Email us at support@tradiaai.app for API integration requests." },
-                   { q: "Can I upgrade or downgrade anytime?", a: "Yes, you can upgrade, downgrade, or cancel anytime. Annual plans get a 20% discount and are billed upfront. Monthly plans are billed every 30 days." },
-                 ].map((fq, i) => (
-                   <details key={i} className="p-4 rounded-xl border border-white/10">
-                     <summary className="font-medium text-white">{fq.q}</summary>
-                     <p className="mt-2 text-white">{fq.a}</p>
-                   </details>
-                 ))}
-               </div>
+                {[
+                  { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics, CSV import, and 30 days of trade history. No credit card required." },
+                  { q: "Which integrations are supported?", a: "CSV imports are supported for comprehensive trade analysis. Email us at support@tradiaai.app for API integration requests." },
+                  { q: "Can I upgrade or downgrade anytime?", a: "Yes, you can upgrade, downgrade, or cancel anytime. Annual plans get a 20% discount and are billed upfront. Monthly plans are billed every 30 days." },
+                ].map((fq, i) => (
+                  <details key={i} className="p-4 rounded-xl border border-white/10">
+                    <summary className="font-medium text-white">{fq.q}</summary>
+                    <p className="mt-2 text-white">{fq.a}</p>
+                  </details>
+                ))}
+              </div>
             </div>
 
             <div className="rounded-xl p-8 border border-white/10 bg-gradient-to-br from-indigo-600/8 to-pink-500/6">
@@ -431,7 +431,7 @@ export default function PricingPage(): React.ReactElement {
           </div>
         </section>
 
-        
+
 
         <Footer />
       </main>

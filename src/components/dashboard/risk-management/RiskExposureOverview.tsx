@@ -141,7 +141,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
       </div>
 
       {/* Risk Level Indicator */}
-      <Card className={`bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 ${getRiskBgColor(riskMetrics.riskLevel)}`}>
+      <Card className={`bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 ${getRiskBgColor(riskMetrics.riskLevel)}`}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -160,7 +160,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+        <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -183,7 +183,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+        <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -206,7 +206,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+        <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -220,10 +220,9 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-gray-700 rounded-full h-2">
                 <div
-                  className={`h-2 rounded-full transition-all duration-1000 ${
-                    riskMetrics.maxDrawdown > 20 ? 'bg-red-500' :
-                    riskMetrics.maxDrawdown > 10 ? 'bg-orange-500' : 'bg-green-500'
-                  }`}
+                  className={`h-2 rounded-full transition-all duration-1000 ${riskMetrics.maxDrawdown > 20 ? 'bg-red-500' :
+                      riskMetrics.maxDrawdown > 10 ? 'bg-orange-500' : 'bg-green-500'
+                    }`}
                   style={{ width: `${Math.min(riskMetrics.maxDrawdown * 2, 100)}%` }}
                 />
               </div>
@@ -232,7 +231,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+        <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -246,10 +245,9 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-gray-700 rounded-full h-2">
                 <div
-                  className={`h-2 rounded-full transition-all duration-1000 ${
-                    riskMetrics.riskOfRuin > 15 ? 'bg-red-500' :
-                    riskMetrics.riskOfRuin > 5 ? 'bg-orange-500' : 'bg-green-500'
-                  }`}
+                  className={`h-2 rounded-full transition-all duration-1000 ${riskMetrics.riskOfRuin > 15 ? 'bg-red-500' :
+                      riskMetrics.riskOfRuin > 5 ? 'bg-orange-500' : 'bg-green-500'
+                    }`}
                   style={{ width: `${Math.min(riskMetrics.riskOfRuin * 3, 100)}%` }}
                 />
               </div>
@@ -260,7 +258,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
       </div>
 
       {/* Additional Context */}
-      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
+      <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">

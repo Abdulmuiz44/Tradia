@@ -952,7 +952,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         onClick={() => setExportOpen(false)}
                         aria-hidden
                     />
-                    <div className="relative w-full sm:max-w-md bg-gray-900 rounded-t-lg sm:rounded-lg p-6 z-10">
+                    <div className="relative w-full sm:max-w-md bg-[#0f1319] rounded-t-lg sm:rounded-lg p-6 z-10">
                         <h3 className="text-lg text-gray-200 mb-4">Export As</h3>
                         <div className="flex gap-4">
                             <button

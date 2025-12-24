@@ -80,7 +80,7 @@ export default function FloatingFeedbackButton({
         <div className="flex items-center">
           {/* optional label (hidden on xs screens to save space) */}
           <div className="hidden sm:flex items-center mr-2">
-            <div className="rounded-full bg-slate-900/80 border border-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow">
+            <div className="rounded-full bg-[#0f1319]/80 border border-zinc-700 px-3 py-2 text-xs text-zinc-200 shadow">
               Feedback
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function FloatingFeedbackButton({
             aria-label="Send feedback"
             title="Send feedback"
             onClick={() => setOpen(true)}
-            className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 inline-flex items-center justify-center w-12 h-12 sm:w-12 sm:h-12 rounded-full bg-slate-900/90 hover:scale-105 transition-transform shadow-xl border border-zinc-700"
+            className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 inline-flex items-center justify-center w-12 h-12 sm:w-12 sm:h-12 rounded-full bg-[#0f1319]/90 hover:scale-105 transition-transform shadow-xl border border-zinc-700"
           >
             <MessageSquare size={18} className="text-zinc-100 group-hover:text-sky-300" />
           </button>

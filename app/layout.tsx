@@ -151,16 +151,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon and Icons - Using Tradia Logo ONLY */}
-         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="any" />
-         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="16x16" />
-         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="32x32" />
-         <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="48x48" />
-         <link rel="shortcut icon" href="/TRADIA-LOGO.png" type="image/png" />
-         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="180x180" />
-         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="152x152" />
-         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="120x120" />
-         <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="76x76" />
-         <link rel="mask-icon" href="/TRADIA-LOGO.png" color="#0f172a" />
+        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="any" />
+        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="16x16" />
+        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="32x32" />
+        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="48x48" />
+        <link rel="shortcut icon" href="/TRADIA-LOGO.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="152x152" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="120x120" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="76x76" />
+        <link rel="mask-icon" href="/TRADIA-LOGO.png" color="#0f1319" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -184,7 +184,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Hector Analytics */}
           <script defer src="https://www.hectoranalytics.com/script.js"></script>
           <PostHogInit />
-           <GoogleAnalytics />
+          <GoogleAnalytics />
           <Analytics />
           {/* App activity tracking */}
           <ActivityTracker />

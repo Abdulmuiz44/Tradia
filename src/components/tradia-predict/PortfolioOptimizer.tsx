@@ -39,7 +39,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
   if (trades.length === 0) {
     return (
       <div className="p-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-8 text-center">
             <Target className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Portfolio Data</h3>
@@ -56,7 +56,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
     <div className="p-6 space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -70,7 +70,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -84,7 +84,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -98,7 +98,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -115,7 +115,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
 
       {/* Asset Allocation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Recommended Asset Allocation</CardTitle>
           </CardHeader>
@@ -149,7 +149,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Performance vs Risk</CardTitle>
           </CardHeader>
@@ -166,7 +166,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
       </div>
 
       {/* Optimization Suggestions */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Target className="h-5 w-5" />
@@ -190,7 +190,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white">Quick Actions</CardTitle>
         </CardHeader>

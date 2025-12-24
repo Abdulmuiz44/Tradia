@@ -48,12 +48,12 @@ const plansData: Plan[] = [
     priceYearly: 0,
     tagline: "Free forever",
     baseFeatures: [
-    "Basic trade analytics",
-    "45 days trade history",
-    "CSV trade import",
-    "Manual risk checklist & journal",
-    "Real-time analytics (basic)",
-    "Daily loss guard (manual alerts)",
+      "Basic trade analytics",
+      "45 days trade history",
+      "CSV trade import",
+      "Manual risk checklist & journal",
+      "Real-time analytics (basic)",
+      "Daily loss guard (manual alerts)",
       "5 AI conversations",
       "10 AI messages per day",
     ],
@@ -66,16 +66,16 @@ const plansData: Plan[] = [
     tagline: "Most Popular",
     baseFeatures: [], // will inherit Starter
     additionalFeatures: [
-    "182 days trade history",
-    "Advanced analytics & insights",
-    "AI weekly summary",
-    "Personalized strategy recommendations",
-    "Daily loss & drawdown guard automations",
-    "Optimal strategy matcher (core)",
-    "Market timing and entry/exit recommendations",
-    "Voice input for commands",
-    "Export chat conversations",
-    "Share chat reports",
+      "182 days trade history",
+      "Advanced analytics & insights",
+      "AI weekly summary",
+      "Personalized strategy recommendations",
+      "Daily loss & drawdown guard automations",
+      "Optimal strategy matcher (core)",
+      "Market timing and entry/exit recommendations",
+      "Voice input for commands",
+      "Export chat conversations",
+      "Share chat reports",
       "25 AI conversations",
       "50 AI messages per day",
     ],
@@ -89,14 +89,14 @@ const plansData: Plan[] = [
     tagline: "For professional traders",
     baseFeatures: [],
     additionalFeatures: [
-    "Unlimited trade history",
-    "Advanced AI features",
-    "AI trade reviews & SL/TP suggestions",
-    "Image processing for trade screenshot analysis",
-    "Prop dashboard with challenge tracking",
-    "Tilt mode detector & burnout alerts",
-    "Real-time performance analytics and insights",
-    "Priority support",
+      "Unlimited trade history",
+      "Advanced AI features",
+      "AI trade reviews & SL/TP suggestions",
+      "Image processing for trade screenshot analysis",
+      "Prop dashboard with challenge tracking",
+      "Tilt mode detector & burnout alerts",
+      "Real-time performance analytics and insights",
+      "Priority support",
       "100 AI conversations",
       "200 AI messages per day",
       "Tradia Predict with Mistral AI (Plus & Elite only)",
@@ -110,13 +110,13 @@ const plansData: Plan[] = [
     tagline: "Ultimate experience",
     baseFeatures: [],
     additionalFeatures: [
-    "Premium AI features",
-    "AI strategy builder",
-    "Prop-firm automation & breach SMS",
-    "All risk & AI features included",
-    "Tradia Predict with enhanced Mistral predictions",
-    "Custom integrations",
-    "Dedicated support",
+      "Premium AI features",
+      "AI strategy builder",
+      "Prop-firm automation & breach SMS",
+      "All risk & AI features included",
+      "Tradia Predict with enhanced Mistral predictions",
+      "Custom integrations",
+      "Dedicated support",
       "Unlimited AI conversations",
       "Unlimited AI messages per day",
     ],
@@ -238,7 +238,7 @@ export default function PricingPlans(): React.ReactElement {
   const allPlansView = [starterPlan, plusWhole, proWhole, eliteWhole];
 
   return (
-    <div className="p-6 md:p-10 min-h-screen bg-gradient-to-br from-[#0f111a] via-[#111827] to-[#0c1118] text-white">
+    <div className="p-6 md:p-10 min-h-screen bg-[#0f1319] text-white">
       {/* HERO */}
       <div className="max-w-6xl mx-auto mb-8">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -254,11 +254,10 @@ export default function PricingPlans(): React.ReactElement {
               <button
                 onClick={() => handleUpgrade("plus")}
                 disabled={!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")}
-                className={`font-semibold py-2 px-4 rounded-lg transition ${
-                  !isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
+                className={`font-semibold py-2 px-4 rounded-lg transition ${!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
                 aria-label="Start Plus free trial"
               >
                 {isSamePlan(plan, "plus") ? "Current Plan" : "Start Plus — 3-Day Trial"}
@@ -267,11 +266,10 @@ export default function PricingPlans(): React.ReactElement {
               <button
                 onClick={() => handleUpgrade("starter")}
                 disabled={!isUpgrade(plan, "starter") && !isSamePlan(plan, "starter")}
-                className={`py-2 px-4 rounded-lg font-medium transition ${
-                  !isUpgrade(plan, "starter") && !isSamePlan(plan, "starter")
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
-                    : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-600"
-                }`}
+                className={`py-2 px-4 rounded-lg font-medium transition ${!isUpgrade(plan, "starter") && !isSamePlan(plan, "starter")
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
+                  : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-600"
+                  }`}
               >
                 {isSamePlan(plan, "starter") ? "Current Plan" : "Start Free — Always Free"}
               </button>
@@ -309,22 +307,22 @@ export default function PricingPlans(): React.ReactElement {
       {/* PRICING CARDS */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 gap-6 lg:grid-cols-4">
         {allPlansView.map((p) => {
-           const isSelected = plan === p.name;
-           const isUpgradePlan = isUpgrade(plan, p.name);
-           const isSame = isSamePlan(plan, p.name);
-           const canSelect = isUpgradePlan || isSame;
-           const displayPrice = getDisplayPrice(
-             plansData.find((x) => x.name === p.name) ?? p,
-             billingType
-           );
+          const isSelected = plan === p.name;
+          const isUpgradePlan = isUpgrade(plan, p.name);
+          const isSame = isSamePlan(plan, p.name);
+          const canSelect = isUpgradePlan || isSame;
+          const displayPrice = getDisplayPrice(
+            plansData.find((x) => x.name === p.name) ?? p,
+            billingType
+          );
 
-           return (
-             <motion.div
-               key={p.name}
-               whileHover={canSelect ? { scale: 1.02 } : {}}
-               transition={{ type: "spring", stiffness: 220 }}
-               className={`rounded-2xl p-5 flex flex-col justify-between border ${p.highlight ? "border-blue-500 bg-[#0f1724]/70 shadow-2xl" : "border-gray-700 bg-[#0b1220]/60"} ${!canSelect ? "opacity-60" : ""}`}
-             >
+          return (
+            <motion.div
+              key={p.name}
+              whileHover={canSelect ? { scale: 1.02 } : {}}
+              transition={{ type: "spring", stiffness: 220 }}
+              className={`rounded-2xl p-5 flex flex-col justify-between border ${p.highlight ? "border-blue-500 bg-[#0f1319]/70 shadow-2xl" : "border-gray-700 bg-[#0f1319]/60"} ${!canSelect ? "opacity-60" : ""}`}
+            >
               <div>
                 <div className="flex items-start justify-between">
                   <div>
@@ -385,23 +383,22 @@ export default function PricingPlans(): React.ReactElement {
                 <button
                   onClick={() => handleUpgrade(p.name)}
                   disabled={!canSelect}
-                  className={`w-full py-2 rounded-lg font-semibold transition ${
-                    !canSelect
-                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                      : p.name === "starter"
+                  className={`w-full py-2 rounded-lg font-semibold transition ${!canSelect
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : p.name === "starter"
                       ? "bg-transparent border border-gray-600 text-gray-200 hover:border-blue-500"
                       : p.highlight
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-gray-800 hover:bg-gray-700 text-white"
-                  }`}
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-800 hover:bg-gray-700 text-white"
+                    }`}
                 >
                   {isSelected
                     ? "Current Plan"
                     : isUpgradePlan
-                    ? `Upgrade to ${p.label}`
-                    : p.name === "starter"
-                    ? "Continue with Starter"
-                    : `Start ${p.label}`
+                      ? `Upgrade to ${p.label}`
+                      : p.name === "starter"
+                        ? "Continue with Starter"
+                        : `Start ${p.label}`
                   }
                   {p.name !== "starter" && !isSelected && <span className="text-xs ml-2">3-day trial</span>}
                 </button>
@@ -420,7 +417,7 @@ export default function PricingPlans(): React.ReactElement {
       </div>
 
       {/* COMPARISON TABLE */}
-      <div className="max-w-6xl mx-auto mt-12 bg-[#071024]/60 rounded-2xl p-6 border border-gray-800">
+      <div className="max-w-6xl mx-auto mt-12 bg-[#0f1319]/60 rounded-2xl p-6 border border-gray-800">
         <h4 className="text-xl font-bold mb-4">Compare plans</h4>
 
         <div className="overflow-x-auto">
@@ -506,22 +503,20 @@ export default function PricingPlans(): React.ReactElement {
             <button
               onClick={() => handleStartTrial("plus")}
               disabled={!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")}
-              className={`py-2 px-4 rounded-lg font-semibold ${
-                !isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
-                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
+              className={`py-2 px-4 rounded-lg font-semibold ${!isUpgrade(plan, "plus") && !isSamePlan(plan, "plus")
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
             >
               {isSamePlan(plan, "plus") ? "Current Plan" : "Start 30-day Trial"}
             </button>
             <button
               onClick={() => handleStartTrial("pro")}
               disabled={!isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")}
-              className={`py-2 px-4 rounded-lg ${
-                !isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")
-                  ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
-                  : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-500"
-              }`}
+              className={`py-2 px-4 rounded-lg ${!isUpgrade(plan, "pro") && !isSamePlan(plan, "pro")
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed border-gray-600"
+                : "bg-transparent border border-gray-700 text-gray-200 hover:border-blue-500"
+                }`}
             >
               {isSamePlan(plan, "pro") ? "Current Plan" : "Start 30-day Trial"}
             </button>
@@ -532,7 +527,7 @@ export default function PricingPlans(): React.ReactElement {
       {/* TESTIMONIALS */}
       <div className="max-w-6xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
         {testimonials.map((t, i) => (
-          <div key={i} className="bg-[#071026]/50 border border-gray-800 rounded-xl p-4">
+          <div key={i} className="bg-[#0f1319]/50 border border-gray-800 rounded-xl p-4">
             <p className="text-gray-200">&ldquo;{t.quote}&rdquo;</p>
             <div className="mt-3 text-sm text-gray-400 font-semibold">{t.name}</div>
           </div>
@@ -540,7 +535,7 @@ export default function PricingPlans(): React.ReactElement {
       </div>
 
       {/* GUARANTEE / FAQ */}
-      <div className="max-w-6xl mx-auto mt-8 p-6 bg-[#061226]/60 rounded-2xl border border-gray-800">
+      <div className="max-w-6xl mx-auto mt-8 p-6 bg-[#0f1319]/60 rounded-2xl border border-gray-800">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h5 className="text-lg font-bold">Risk-free 30-day trial</h5>

@@ -252,7 +252,7 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0D1117]">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-[#0D1117] py-16 px-4 sm:px-6 lg:px-8">
+      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-[#0f1319] dark:to-[#0f1319] py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center">
             Documentation
@@ -296,14 +296,13 @@ export default function DocsPage() {
                   </p>
                 </div>
                 <ChevronDown
-                  className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${
-                    expandedSections.includes(doc.id) ? "rotate-180" : ""
-                  }`}
+                  className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${expandedSections.includes(doc.id) ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
               {expandedSections.includes(doc.id) && (
-                <div className="border-t border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-gray-900">
+                <div className="border-t border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-[#0f1319]">
                   <div className="space-y-6">
                     {doc.subsections.map((subsection, index) => (
                       <div key={index}>
@@ -332,11 +331,11 @@ export default function DocsPage() {
       </div>
 
       {/* Tips Section */}
-      <div className="bg-blue-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-blue-50 dark:bg-[#0f1319] py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-             Can&apos;t find what you&apos;re looking for?
-           </h2>
+            Can&apos;t find what you&apos;re looking for?
+          </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Check out our learning resources or contact support for help.
           </p>

@@ -36,7 +36,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
   if (trades.length === 0) {
     return (
       <div className="p-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-8 text-center">
             <Search className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Pattern Data</h3>
@@ -53,7 +53,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
     <div className="p-6 space-y-6">
       {/* Pattern Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -67,7 +67,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -81,7 +81,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -95,7 +95,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -113,7 +113,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
       {/* Pattern Analysis */}
       <div className="space-y-6">
         {patterns.map((pattern) => (
-          <Card key={pattern.id} className="bg-gray-900 border-gray-700">
+          <Card key={pattern.id} className="bg-[#0f1319] border-gray-700">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
@@ -206,7 +206,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
       </div>
 
       {/* Pattern Insights */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Zap className="h-5 w-5" />

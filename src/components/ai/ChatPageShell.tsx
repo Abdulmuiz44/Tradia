@@ -91,9 +91,9 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
   }, []);
 
   return (
-    <div className="flex h-screen w-full bg-slate-50/80 text-slate-700 dark:bg-[#0d1117] dark:text-slate-100">
+    <div className="flex h-screen w-full bg-slate-50/80 text-slate-700 dark:bg-[#0f1319] dark:text-slate-100">
       <aside
-        className="hidden h-full shrink-0 flex-col border-r border-slate-200 bg-white/85 backdrop-blur dark:border-[#1f2937] dark:bg-[#111827]/75 md:flex"
+        className="hidden h-full shrink-0 flex-col border-r border-slate-200 bg-white/85 backdrop-blur dark:border-[#1f2937] dark:bg-[#0f1319]/75 md:flex"
         style={{ width: "clamp(260px, 20vw, 320px)" }}
       >
         <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4 dark:border-[#1f2937]">
@@ -163,11 +163,10 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectConversation(conversation.id)}
-                      className={`group flex w-full flex-col gap-1 rounded-xl px-3 py-3 text-left transition ${
-                        conversation.id === activeConversationId
+                      className={`group flex w-full flex-col gap-1 rounded-xl px-3 py-3 text-left transition ${conversation.id === activeConversationId
                           ? "bg-slate-900 text-white shadow"
                           : "hover:bg-slate-100/70 dark:hover:bg-[#1b2436]"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
                         <span className="flex items-center gap-1">
@@ -204,11 +203,10 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectConversation(conversation.id)}
-                      className={`group flex w-full flex-col gap-1 rounded-xl px-3 py-3 text-left transition ${
-                        conversation.id === activeConversationId
+                      className={`group flex w-full flex-col gap-1 rounded-xl px-3 py-3 text-left transition ${conversation.id === activeConversationId
                           ? "bg-slate-900 text-white shadow"
                           : "hover:bg-slate-100/70 dark:hover:bg-[#1b2436]"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
                         <span className="flex items-center gap-1">
@@ -255,7 +253,7 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
       </aside>
 
       <div className="flex h-full flex-1 flex-col overflow-hidden">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white/70 px-5 py-4 backdrop-blur dark:border-[#1f2937] dark:bg-[#0d1117]/80">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white/70 px-5 py-4 backdrop-blur dark:border-[#1f2937] dark:bg-[#0f1319]/80">
           <div className="flex flex-col gap-1 text-slate-500 dark:text-slate-400">
             <span className="text-xs font-medium uppercase tracking-[0.3em]">Trading Copilot</span>
             <h1 className="text-2xl font-light text-slate-800 dark:text-slate-100">Ready when you are.</h1>
@@ -272,7 +270,7 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
           </div>
         </header>
 
-        <main className="flex flex-1 overflow-hidden bg-white dark:bg-[#0f172a]">
+        <main className="flex flex-1 overflow-hidden bg-white dark:bg-[#0f1319]">
           <TradiaAIChat
             ref={chatRef}
             className="h-full w-full"

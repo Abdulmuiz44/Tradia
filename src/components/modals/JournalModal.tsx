@@ -302,7 +302,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
         }}
         aria-hidden
       />
-      <div className="relative z-10 w-full max-w-3xl bg-gray-900 text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
+      <div className="relative z-10 w-full max-w-3xl bg-[#0f1319] text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold">
@@ -339,7 +339,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
               placeholder="e.g. EURUSD"
             />
           </div>
@@ -350,7 +350,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             <select
               value={direction ?? "Buy"}
               onChange={(e) => setDirection(e.target.value as Trade["direction"])}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             >
               <option>Buy</option>
               <option>Sell</option>
@@ -363,7 +363,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             <select
               value={orderType}
               onChange={(e) => setOrderType(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             >
               {ORDER_TYPES.map((o) => (
                 <option key={o} value={o}>
@@ -379,7 +379,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             <select
               value={session}
               onChange={(e) => setSession(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             >
               {SESSIONS.map((s) => (
                 <option key={s} value={s}>
@@ -396,7 +396,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               type="datetime-local"
               value={openTimeInput}
               onChange={(e) => setOpenTimeInput(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -407,7 +407,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               type="datetime-local"
               value={closeTimeInput}
               onChange={(e) => setCloseTimeInput(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -420,7 +420,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               step="0.01"
               value={lotSize}
               onChange={(e) => setLotSize(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -432,7 +432,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               value={entryPrice}
               onChange={(e) => setEntryPrice(e.target.value)}
               placeholder="Full precision allowed (e.g. 1.234567)"
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -443,7 +443,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               type="text"
               value={stopLossPrice}
               onChange={(e) => setStopLossPrice(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -454,7 +454,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               type="text"
               value={takeProfitPrice}
               onChange={(e) => setTakeProfitPrice(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -464,7 +464,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             <select
               value={outcome}
               onChange={(e) => setOutcome(e.target.value as Trade["outcome"])}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             >
               <option value="Win">Win</option>
               <option value="Loss">Loss</option>
@@ -480,7 +480,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               step="any"
               value={pnl}
               onChange={(e) => setPnl(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 
@@ -492,7 +492,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
                 <select
                   value={strategy}
                   onChange={(e) => setStrategy(e.target.value)}
-                  className="flex-1 p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+                  className="flex-1 p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
                 >
                   <option value="">Select a strategy...</option>
                   {allStrategies.map((strategy) => (
@@ -517,7 +517,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
                   value={customStrategyInput}
                   onChange={(e) => setCustomStrategyInput(e.target.value)}
                   placeholder="Enter custom strategy..."
-                  className="flex-1 p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+                  className="flex-1 p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -561,7 +561,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
             <select
               value={emotion}
               onChange={(e) => setEmotion(e.target.value)}
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             >
               {EMOTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -579,7 +579,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Write your trade hindsight, what went well, what you can improve..."
-              className="w-full p-2 rounded bg-[#0b1220] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
             />
           </div>
 

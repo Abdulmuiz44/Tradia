@@ -128,7 +128,7 @@ export default function ConversationHistoryPage() {
     <LayoutClient>
       <div className="w-full h-screen flex flex-col bg-[#0D0D0D]">
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-indigo-500/20 bg-gray-900/50 px-6 py-6">
+        <div className="flex-shrink-0 border-b border-indigo-500/20 bg-[#0f1319]/50 px-6 py-6">
           <div className="flex items-center gap-4 mb-6">
             <Link
               href="/dashboard/trades/chat"
@@ -288,9 +288,8 @@ function ConversationCard({
               title={conversation.pinned ? "Unpin" : "Pin"}
             >
               <Pin
-                className={`w-4 h-4 ${
-                  conversation.pinned ? "fill-current" : ""
-                }`}
+                className={`w-4 h-4 ${conversation.pinned ? "fill-current" : ""
+                  }`}
               />
             </button>
             <button

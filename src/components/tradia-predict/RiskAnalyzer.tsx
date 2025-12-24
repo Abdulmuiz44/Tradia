@@ -65,7 +65,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
   if (trades.length === 0) {
     return (
       <div className="p-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-8 text-center">
             <Shield className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Risk Data Available</h3>
@@ -81,7 +81,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
   return (
     <div className="p-6 space-y-6">
       {/* Overall Risk Score */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
 
       {/* Risk Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
@@ -166,7 +166,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <Clock className="h-5 w-5" />
@@ -182,17 +182,16 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
                     {[1, 2, 3, 4, 5].map((level) => (
                       <div
                         key={level}
-                        className={`w-3 h-3 rounded ${
-                          level <= item.riskLevel
+                        className={`w-3 h-3 rounded ${level <= item.riskLevel
                             ? item.riskLevel >= 4
                               ? 'bg-red-500'
                               : item.riskLevel >= 3
-                              ? 'bg-orange-500'
-                              : item.riskLevel >= 2
-                              ? 'bg-yellow-500'
-                              : 'bg-green-500'
+                                ? 'bg-orange-500'
+                                : item.riskLevel >= 2
+                                  ? 'bg-yellow-500'
+                                  : 'bg-green-500'
                             : 'bg-gray-700'
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -204,7 +203,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
       </div>
 
       {/* Recommendations */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
@@ -234,7 +233,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
       </Card>
 
       {/* Risk Scenarios */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white">Worst-Case Scenarios</CardTitle>
         </CardHeader>

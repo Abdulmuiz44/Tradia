@@ -69,11 +69,11 @@ const PLANS = [
     tag: "Free forever",
   },
   {
-  id: "pro",
-  name: "Pro",
-  monthly: 9,
-  yearly: 90,
-  highlights: [
+    id: "pro",
+    name: "Pro",
+    monthly: 9,
+    yearly: 90,
+    highlights: [
       "All Starter features",
       "6 months trade history",
       "Advanced analytics",
@@ -179,7 +179,7 @@ export default function Home(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors">
+      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 -z-10 pointer-events-none">
@@ -372,7 +372,7 @@ export default function Home(): React.ReactElement {
               <div className="text-center">
                 <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AiOutlineGlobal className="w-8 h-8 text-white" />
-               </div>
+                </div>
                 <h3 className="text-xl font-semibold mb-3">Comprehensive Trading Analytics</h3>
                 <p className="text-gray-400">
                   Get detailed insights into your trading performance with advanced analytics and AI-powered recommendations.
@@ -465,7 +465,7 @@ export default function Home(): React.ReactElement {
         {/* Pricing */}
         <section className="py-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-white">Simple, Transparent Pricing</h2>
+            <h2 className="text-3xl font-bold text-white">Simple, Transparent Pricing</h2>
             <p className="mt-2 text-white">Start free with Starter plan — upgrade to unlock advanced AI features, extended history, and real-time insights.</p>
 
             <div className="mt-6 inline-flex rounded-full bg-white/5 p-1 shadow-sm">
@@ -614,15 +614,15 @@ export default function Home(): React.ReactElement {
               <h3 className="text-2xl font-bold mb-4">Frequently asked questions</h3>
 
               <div className="space-y-3">
-                 {[
-                   { q: "Is there a free plan?", a: "Yes — Starter is free forever with 30-day trade history, basic analytics, and CSV import. Upgrade anytime to unlock advanced AI features." },
-                   { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons to improve your trading." },
-                   { q: "Can I change plans anytime?", a: "Yes, upgrade or downgrade anytime. Annual plans get a 20% discount and are billed upfront." },
-                 ].map((fq, i) => (
-                <details key={i} className="p-4 rounded-xl border border-white/10">
-                <summary className="font-medium text-white">{fq.q}</summary>
-                <p className="mt-2 text-white">{fq.a}</p>
-                 </details>
+                {[
+                  { q: "Is there a free plan?", a: "Yes — Starter is free forever with 30-day trade history, basic analytics, and CSV import. Upgrade anytime to unlock advanced AI features." },
+                  { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons to improve your trading." },
+                  { q: "Can I change plans anytime?", a: "Yes, upgrade or downgrade anytime. Annual plans get a 20% discount and are billed upfront." },
+                ].map((fq, i) => (
+                  <details key={i} className="p-4 rounded-xl border border-white/10">
+                    <summary className="font-medium text-white">{fq.q}</summary>
+                    <p className="mt-2 text-white">{fq.a}</p>
+                  </details>
                 ))}
               </div>
             </div>

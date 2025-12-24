@@ -33,11 +33,11 @@ export default function Navbar() {
   useEffect(() => setMounted(true), []);
 
   const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Chat", href: "/chat" },
-  { label: "Pricing", href: "/pricing" }, // replaced /insights -> /pricing
-  { label: "About", href: "/about" },
+    { label: "Home", href: "/" },
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Chat", href: "/chat" },
+    { label: "Pricing", href: "/pricing" }, // replaced /insights -> /pricing
+    { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
   ];
 
@@ -49,24 +49,24 @@ export default function Navbar() {
 
   const authLinks: AuthLink[] = session
     ? [
-        {
-          label: "Log Out",
-          href: "#",
-          onClick: async () => {
-            // ensure menu closes and then sign out
-            setMenuOpen(false);
-            try {
-              await signOut({ callbackUrl: "/" });
-            } catch {
-              // ignore
-            }
-          },
+      {
+        label: "Log Out",
+        href: "#",
+        onClick: async () => {
+          // ensure menu closes and then sign out
+          setMenuOpen(false);
+          try {
+            await signOut({ callbackUrl: "/" });
+          } catch {
+            // ignore
+          }
         },
-      ]
+      },
+    ]
     : [
-        { label: "Log In", href: "/login" },
-        { label: "Get Started", href: "/signup" },
-      ];
+      { label: "Log In", href: "/login" },
+      { label: "Get Started", href: "/signup" },
+    ];
 
   const toggleTheme = () => {
     if (!mounted) return;
@@ -83,7 +83,7 @@ export default function Navbar() {
 
   return (
     <header
-      className="w-full px-6 py-3 sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-[#0b1220]/60 bg-white/80 dark:bg-[#0b1220]/80 border-b border-white/20 dark:border-white/10"
+      className="w-full px-6 py-3 sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-[#0f1319]/60 bg-white/80 dark:bg-[#0f1319]/80 border-b border-white/20 dark:border-white/10"
       aria-label="Main navigation"
     >
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
@@ -113,11 +113,10 @@ export default function Navbar() {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
-                    isActive(href)
+                  className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${isActive(href)
                       ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"
                       : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                    }`}
                 >
                   {label}
                 </Link>
@@ -156,11 +155,10 @@ export default function Navbar() {
                       onClick();
                     }
                   }}
-                  className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${
-                    isCta
+                  className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${isCta
                       ? "bg-indigo-600 text-white hover:bg-indigo-500"
                       : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                    }`}
                 >
                   {label}
                 </Link>
@@ -200,7 +198,7 @@ export default function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div
-          className="md:hidden mt-3 w-full backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-[#0b1220]/80 bg-white/90 dark:bg-[#0b1220]/90 border-t border-white/20 dark:border-white/10 shadow-lg"
+          className="md:hidden mt-3 w-full backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-[#0f1319]/80 bg-white/90 dark:bg-[#0f1319]/90 border-t border-white/20 dark:border-white/10 shadow-lg"
           role="dialog"
           aria-modal="true"
         >
@@ -210,11 +208,10 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className={`text-base px-2 py-2 rounded-md transition-colors ${
-                  isActive(href)
+                className={`text-base px-2 py-2 rounded-md transition-colors ${isActive(href)
                     ? "text-indigo-600 dark:text-indigo-300 bg-indigo-500/10"
                     : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
+                  }`}
               >
                 {label}
               </Link>
@@ -232,11 +229,10 @@ export default function Navbar() {
                       onClick();
                     }
                   }}
-                  className={`text-base px-3 py-2 rounded-md ${
-                    label === "Get Started"
+                  className={`text-base px-3 py-2 rounded-md ${label === "Get Started"
                       ? "bg-indigo-600 text-white text-center"
                       : "text-gray-700 dark:text-gray-300"
-                  }`}
+                    }`}
                 >
                   {label}
                 </Link>
@@ -246,7 +242,7 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    signOut().catch(() => {});
+                    signOut().catch(() => { });
                   }}
                   className="w-full text-left flex items-center gap-2 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5"
                 >
@@ -269,7 +265,7 @@ function CoachPill() {
       try {
         const res = await fetch('/api/coach/points', { cache: 'no-store' });
         if (res.ok) { const j = await res.json(); setPoints(Number(j.points || 0)); }
-      } catch {}
+      } catch { }
     })();
   }, []);
   const { data: session } = useSession();
@@ -308,7 +304,7 @@ function CoachPill() {
         </Link>
         <button
           onClick={() => {
-            signOut({ callbackUrl: "/" }).catch(() => {});
+            signOut({ callbackUrl: "/" }).catch(() => { });
           }}
           className="w-full text-left px-3 py-2 hover:bg-zinc-700 rounded text-red-400 hover:text-red-300"
         >

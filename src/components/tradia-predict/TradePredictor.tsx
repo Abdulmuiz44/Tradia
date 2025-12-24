@@ -97,14 +97,14 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
       case 'low': return 'text-green-400 bg-green-900/20';
       case 'medium': return 'text-yellow-400 bg-yellow-900/20';
       case 'high': return 'text-red-400 bg-red-900/20';
-      default: return 'text-gray-400 bg-gray-900/20';
+      default: return 'text-gray-400 bg-[#0f1319]/20';
     }
   };
 
   if (trades.length === 0) {
     return (
       <div className="p-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-8 text-center">
             <Target className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Trading History</h3>
@@ -124,7 +124,7 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
     <div className="p-6 space-y-6">
       {/* Performance Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -138,7 +138,7 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -152,7 +152,7 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -168,7 +168,7 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
       </div>
 
       {/* AI Predictions */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Target className="h-5 w-5" />
@@ -239,7 +239,7 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
       </Card>
 
       {/* Trading Insights */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-[#0f1319] border-gray-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />

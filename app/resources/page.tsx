@@ -140,9 +140,9 @@ export default function ResourcesPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0D1117]">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-[#0D1117] py-16 px-4 sm:px-6 lg:px-8">
+      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-[#0f1319] dark:to-[#0f1319] py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-[#0f1319] dark:text-white mb-4 text-center">
             Learning Resources
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 text-center max-w-3xl mx-auto">
@@ -163,7 +163,7 @@ export default function ResourcesPage() {
                 <div className="text-blue-600 dark:text-blue-400">
                   {resourceCategory.icon}
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-[#0f1319] dark:text-white">
                   {resourceCategory.category}
                 </h2>
               </div>
@@ -174,7 +174,7 @@ export default function ResourcesPage() {
                     onClick={() => item.link !== "#" && router.push(item.link)}
                     className="w-full text-left p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
                   >
-                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <h3 className="font-semibold text-[#0f1319] dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       {item.title}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -189,9 +189,9 @@ export default function ResourcesPage() {
       </div>
 
       {/* Tips Section */}
-      <div className="bg-blue-50 dark:bg-gray-900 py-16 px-4 sm:px-6 lg:px-8">
+      <div className="bg-blue-50 dark:bg-[#0f1319] py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+          <h2 className="text-3xl font-bold text-[#0f1319] dark:text-white mb-8 text-center">
             Pro Tips for Trading Success
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
@@ -222,7 +222,7 @@ export default function ResourcesPage() {
               },
             ].map((tip, index) => (
               <div key={index} className="bg-white dark:bg-[#0F1623] p-6 rounded-lg">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="font-semibold text-[#0f1319] dark:text-white mb-2">
                   {tip.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">

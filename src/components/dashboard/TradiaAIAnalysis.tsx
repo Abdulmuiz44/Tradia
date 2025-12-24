@@ -124,7 +124,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
           <div className="flex items-center gap-3">
             <Sparkles className="w-5 h-5 text-blue-500 dark:text-blue-400" />
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tradia AI</h2>
+              <h2 className="text-lg font-semibold text-[#0f1319] dark:text-white">Tradia AI</h2>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">{trades.length} trades analyzed</p>
             </div>
           </div>
@@ -178,8 +178,8 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
               >
                 <div
                   className={`max-w-2xl rounded-lg p-4 ${msg.role === 'user'
-                      ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none'
+                    ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
+                    : 'bg-gray-100 dark:bg-gray-800 text-[#0f1319] dark:text-white rounded-bl-none'
                     }`}
                 >
                   {msg.role === 'assistant' ? (
@@ -195,7 +195,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
                           li: ({ node, ...props }) => <li className="mb-1 text-sm" {...props} />,
                           strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
                           em: ({ node, ...props }) => <em className="italic" {...props} />,
-                          code: ({ node, ...props }) => <code className={`px-1 py-0.5 rounded text-xs ${msg.role === 'assistant' ? 'bg-gray-200 dark:bg-gray-900' : 'bg-blue-400'}`} {...props} />,
+                          code: ({ node, ...props }) => <code className={`px-1 py-0.5 rounded text-xs ${msg.role === 'assistant' ? 'bg-gray-200 dark:bg-[#0f1319]' : 'bg-blue-400'}`} {...props} />,
                           blockquote: ({ node, ...props }) => <blockquote className={`border-l-4 pl-3 italic text-sm my-2 ${msg.role === 'assistant' ? 'border-gray-400' : 'border-blue-300'}`} {...props} />,
                           table: ({ node, ...props }) => <div className="overflow-x-auto mb-2"><table className="w-full text-xs" {...props} /></div>,
                           thead: ({ node, ...props }) => <thead className="font-semibold" {...props} />,
@@ -214,7 +214,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg rounded-bl-none p-4">
+                <div className="bg-gray-100 dark:bg-gray-800 text-[#0f1319] dark:text-white rounded-lg rounded-bl-none p-4">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Analyzing...</span>
@@ -240,7 +240,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
             }}
             placeholder={trades.length === 0 ? "No trades yet. Add trades to get started." : "Ask anything about your trades... (Ctrl+Enter to send)"}
             disabled={trades.length === 0 || loading}
-            className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
+            className="flex-1 bg-gray-50 dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-[#0f1319] dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
             rows={2}
           />
           <Button

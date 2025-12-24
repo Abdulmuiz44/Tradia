@@ -77,7 +77,7 @@ const MarketOverview: React.FC = () => {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <Card key={i} className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 animate-pulse">
+            <Card key={i} className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 animate-pulse">
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <div className="h-4 bg-gray-700 rounded w-3/4"></div>
@@ -97,14 +97,13 @@ const MarketOverview: React.FC = () => {
       {/* Market Sentiment Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {indicators.map((indicator, index) => (
-          <Card key={indicator.name} className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 hover:scale-105 group">
+          <Card key={indicator.name} className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 hover:scale-105 group">
             <CardContent className="p-4 relative overflow-hidden">
               {/* Animated background glow */}
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 bg-gradient-to-r ${
-                indicator.status === 'positive' ? 'from-green-500 to-blue-500' :
-                indicator.status === 'negative' ? 'from-red-500 to-orange-500' :
-                'from-yellow-500 to-purple-500'
-              }`} />
+              <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 bg-gradient-to-r ${indicator.status === 'positive' ? 'from-green-500 to-blue-500' :
+                  indicator.status === 'negative' ? 'from-red-500 to-orange-500' :
+                    'from-yellow-500 to-purple-500'
+                }`} />
 
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-2">
@@ -118,11 +117,10 @@ const MarketOverview: React.FC = () => {
                 </div>
                 <div className={`h-1 bg-gray-700 rounded-full overflow-hidden`}>
                   <div
-                    className={`h-full transition-all duration-1000 ease-out ${
-                      indicator.status === 'positive' ? 'bg-gradient-to-r from-green-500 to-green-400' :
-                      indicator.status === 'negative' ? 'bg-gradient-to-r from-red-500 to-red-400' :
-                      'bg-gradient-to-r from-yellow-500 to-yellow-400'
-                    }`}
+                    className={`h-full transition-all duration-1000 ease-out ${indicator.status === 'positive' ? 'bg-gradient-to-r from-green-500 to-green-400' :
+                        indicator.status === 'negative' ? 'bg-gradient-to-r from-red-500 to-red-400' :
+                          'bg-gradient-to-r from-yellow-500 to-yellow-400'
+                      }`}
                     style={{ width: `${Math.min(indicator.value, 100)}%` }}
                   />
                 </div>
@@ -136,7 +134,7 @@ const MarketOverview: React.FC = () => {
       </div>
 
       {/* Market Data Table */}
-      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300">
+      <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-white">
             <div className="relative">
@@ -185,11 +183,10 @@ const MarketOverview: React.FC = () => {
                       ${item.price.toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className={`font-medium px-2 py-1 rounded transition-all duration-300 ${
-                        item.change >= 0
+                      <span className={`font-medium px-2 py-1 rounded transition-all duration-300 ${item.change >= 0
                           ? 'text-green-400 bg-green-900/20 hover:bg-green-900/40 group-hover:scale-105'
                           : 'text-red-400 bg-red-900/20 hover:bg-red-900/40 group-hover:scale-105'
-                      }`}>
+                        }`}>
                         {item.change >= 0 ? '+' : ''}{item.change.toFixed(4)}
                         <span className="text-xs ml-1">
                           ({item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%)
@@ -203,13 +200,12 @@ const MarketOverview: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <Badge
-                        className={`${
-                          item.sentiment === 'bullish'
+                        className={`${item.sentiment === 'bullish'
                             ? 'bg-green-900/50 text-green-400 border-green-700 hover:bg-green-900/70'
                             : item.sentiment === 'bearish'
-                            ? 'bg-red-900/50 text-red-400 border-red-700 hover:bg-red-900/70'
-                            : 'bg-yellow-900/50 text-yellow-400 border-yellow-700 hover:bg-yellow-900/70'
-                        } border transition-all duration-300 hover:scale-110`}
+                              ? 'bg-red-900/50 text-red-400 border-red-700 hover:bg-red-900/70'
+                              : 'bg-yellow-900/50 text-yellow-400 border-yellow-700 hover:bg-yellow-900/70'
+                          } border transition-all duration-300 hover:scale-110`}
                       >
                         {item.sentiment.toUpperCase()}
                       </Badge>
@@ -224,7 +220,7 @@ const MarketOverview: React.FC = () => {
 
       {/* Market Analysis Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+        <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-400 group-hover:animate-pulse" />
@@ -275,7 +271,7 @@ const MarketOverview: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
+        <Card className="bg-gradient-to-br from-[#0f1319] to-gray-800 border-gray-700 hover:border-gray-600 transition-all duration-300 group">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-yellow-400 group-hover:animate-bounce" />

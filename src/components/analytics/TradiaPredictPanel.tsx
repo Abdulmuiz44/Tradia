@@ -293,7 +293,7 @@ export default function TradiaPredictPanel() {
 
   const fetchForecast = async (pair: string, { force = false } = {}) => {
     if (!hasAccess) return;
-    
+
     if (!force && !canRefresh && forecast) {
       return;
     }
@@ -480,7 +480,7 @@ export default function TradiaPredictPanel() {
             </Badge>
           </div>
           <CardDescription>
-              AI-powered market predictions to analyze liquidity, momentum, and macro trends. Confidence and refresh cadence adapt to your plan tier.
+            AI-powered market predictions to analyze liquidity, momentum, and macro trends. Confidence and refresh cadence adapt to your plan tier.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -617,7 +617,7 @@ export default function TradiaPredictPanel() {
                     {signalEntries.map(({ key, label, description, active }) => (
                       <div
                         key={key}
-                        className={`rounded-lg border p-3 text-xs ${active ? "border-green-500/40 bg-green-500/10" : "border-gray-700 bg-gray-900/40"}`}
+                        className={`rounded-lg border p-3 text-xs ${active ? "border-green-500/40 bg-green-500/10" : "border-gray-700 bg-[#0f1319]/40"}`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-semibold text-sm">{label}</span>
@@ -656,7 +656,7 @@ export default function TradiaPredictPanel() {
                         <XAxis dataKey="time" minTickGap={24} tick={{ fontSize: 12, fill: "#9ca3af" }} />
                         <YAxis tick={{ fontSize: 12, fill: "#9ca3af" }} domain={["auto", "auto"]} width={70} />
                         <Tooltip
-                          contentStyle={{ background: "#111827", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "0.75rem" }}
+                          contentStyle={{ background: "#0f1319", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "0.75rem" }}
                           labelStyle={{ color: "#e5e7eb" }}
                           formatter={(value: number) => [value.toFixed(5), "Close"]}
                         />

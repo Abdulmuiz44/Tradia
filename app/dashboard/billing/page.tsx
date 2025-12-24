@@ -284,7 +284,7 @@ export default function BillingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-white transition-colors">
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -362,11 +362,11 @@ export default function BillingPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Current Plan</h2>
                 <button
-                   onClick={() => setShowUpgradeModal(true)}
-                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                 >
-                   {currentPlan === 'starter' ? 'Upgrade Plan' : 'Change Plan'}
-                 </button>
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {currentPlan === 'starter' ? 'Upgrade Plan' : 'Change Plan'}
+                </button>
               </div>
 
               <div className="flex items-center gap-4 mb-6">
@@ -377,8 +377,8 @@ export default function BillingPage() {
                   <h3 className="text-lg font-semibold capitalize">{getPlanDisplayName(currentPlan)} Plan</h3>
                   <p className="text-gray-400">
                     {currentPlan === 'starter' ? 'Basic features included' :
-                     currentPlan === 'pro' ? '$9/month' :
-                     currentPlan === 'plus' ? '$19/month' : '$39/month'}
+                      currentPlan === 'pro' ? '$9/month' :
+                        currentPlan === 'plus' ? '$19/month' : '$39/month'}
                   </p>
                 </div>
               </div>
@@ -465,11 +465,10 @@ export default function BillingPage() {
                       </div>
                       <div className="text-right">
                         <div className="font-medium">${invoice.amount}</div>
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          invoice.status === 'paid' ? 'bg-green-900 text-green-300' :
-                          invoice.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
-                          'bg-red-900 text-red-300'
-                        }`}>
+                        <span className={`text-xs px-2 py-1 rounded ${invoice.status === 'paid' ? 'bg-green-900 text-green-300' :
+                            invoice.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
+                              'bg-red-900 text-red-300'
+                          }`}>
                           {invoice.status}
                         </span>
                       </div>
@@ -508,11 +507,10 @@ export default function BillingPage() {
                     {plans.map((plan) => (
                       <div
                         key={plan.type}
-                        className={`relative p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${
-                          plan.popular
+                        className={`relative p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${plan.popular
                             ? 'border-purple-500 bg-purple-900/20'
                             : 'border-gray-600 hover:border-gray-500'
-                        }`}
+                          }`}
                         onClick={() => setSelectedPlan(plan.type)}
                       >
                         {plan.popular && (
@@ -546,11 +544,10 @@ export default function BillingPage() {
                             handleUpgrade(plan.type);
                           }}
                           disabled={upgrading}
-                          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-                            plan.popular
+                          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${plan.popular
                               ? 'bg-purple-600 hover:bg-purple-700'
                               : 'bg-blue-600 hover:bg-blue-700'
-                          } disabled:bg-gray-600`}
+                            } disabled:bg-gray-600`}
                         >
                           {upgrading ? (
                             <>

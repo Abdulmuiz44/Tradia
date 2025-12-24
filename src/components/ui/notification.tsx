@@ -5,7 +5,7 @@ import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 
 const notificationVariants = cva(
   // Solid dark card to match Add/Edit modal style
-  "relative w-full rounded-lg border border-zinc-800 bg-gray-900 text-white shadow-2xl p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-white/80",
+  "relative w-full rounded-lg border border-zinc-800 bg-[#0f1319] text-white shadow-2xl p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-white/80",
   {
     variants: {
       variant: {
@@ -31,7 +31,7 @@ const icons = {
 
 export interface NotificationProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof notificationVariants> {
+  VariantProps<typeof notificationVariants> {
   title?: string;
   description?: string;
   onClose?: () => void;

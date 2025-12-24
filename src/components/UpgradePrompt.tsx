@@ -156,11 +156,10 @@ export default function UpgradePrompt({
               {availablePlans.map((plan) => (
                 <div
                   key={plan.type}
-                  className={`relative bg-white border-2 rounded-xl p-6 transition-all duration-300 hover:shadow-lg ${
-                    plan.popular
-                      ? 'border-purple-500 shadow-purple-100'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`relative bg-white border-2 rounded-xl p-6 transition-all duration-300 hover:shadow-lg ${plan.popular
+                    ? 'border-purple-500 shadow-purple-100'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                 >
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -171,10 +170,10 @@ export default function UpgradePrompt({
                   )}
 
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                    <h3 className="text-xl font-bold text-[#0f1319] mb-2">{plan.name}</h3>
                     <div className="mb-2">
                       <div className="flex items-center justify-center gap-1">
-                        <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
+                        <span className="text-3xl font-bold text-[#0f1319]">${plan.price}</span>
                         <span className="text-gray-600">/month</span>
                       </div>
                       <div className="text-sm text-gray-500">
@@ -196,11 +195,10 @@ export default function UpgradePrompt({
                   <button
                     onClick={() => handleUpgrade(plan.type)}
                     disabled={upgrading}
-                    className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-                      plan.popular
-                        ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    } disabled:bg-gray-600 disabled:cursor-not-allowed`}
+                    className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${plan.popular
+                      ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
+                      : 'bg-[#0f1319] text-white hover:bg-gray-800'
+                      } disabled:bg-gray-600 disabled:cursor-not-allowed`}
                   >
                     {upgrading ? (
                       <>
@@ -220,7 +218,7 @@ export default function UpgradePrompt({
 
             {/* Current Plan Benefits Reminder */}
             <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">Your Current {getPlanDisplayName(currentPlan)} Plan Includes:</h4>
+              <h4 className="font-medium text-[#0f1319] mb-2">Your Current {getPlanDisplayName(currentPlan)} Plan Includes:</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
                 <div>
                   <strong>Advanced Features:</strong> {currentPlan === 'starter' ? 'Basic' : currentPlan === 'pro' ? 'Standard' : currentPlan === 'plus' ? 'Professional' : 'Elite'}

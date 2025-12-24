@@ -148,7 +148,7 @@ export default function UpgradePage() {
     };
 
     const UpgradePageContent = () => (
-        <div className="min-h-screen bg-[var(--surface-primary)] dark:bg-[#0D1117] text-gray-900 dark:text-gray-100 transition-colors">
+        <div className="min-h-screen bg-[var(--surface-primary)] dark:bg-[#0f1319] text-gray-900 dark:text-gray-100 transition-colors">
             <div className="max-w-7xl mx-auto px-6 py-12">
                 {/* Header */}
                 <div className="mb-12">
@@ -170,8 +170,8 @@ export default function UpgradePage() {
                         <button
                             onClick={() => setBillingCycle("monthly")}
                             className={`px-6 py-2 rounded-full font-semibold transition-all ${billingCycle === "monthly"
-                                    ? "bg-indigo-600 text-white shadow-lg"
-                                    : "text-gray-700 dark:text-gray-300"
+                                ? "bg-indigo-600 text-white shadow-lg"
+                                : "text-gray-700 dark:text-gray-300"
                                 }`}
                         >
                             Monthly
@@ -179,8 +179,8 @@ export default function UpgradePage() {
                         <button
                             onClick={() => setBillingCycle("yearly")}
                             className={`px-6 py-2 rounded-full font-semibold transition-all ${billingCycle === "yearly"
-                                    ? "bg-indigo-600 text-white shadow-lg"
-                                    : "text-gray-700 dark:text-gray-300"
+                                ? "bg-indigo-600 text-white shadow-lg"
+                                : "text-gray-700 dark:text-gray-300"
                                 }`}
                         >
                             Yearly (Save 20%)
@@ -198,8 +198,8 @@ export default function UpgradePage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                                 className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden ${plan.badge === "Most Popular"
-                                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-2xl scale-105"
-                                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-indigo-300 dark:hover:border-indigo-600"
+                                    ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-2xl scale-105"
+                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-indigo-300 dark:hover:border-indigo-600"
                                     }`}
                             >
                                 {/* Badge */}
@@ -267,8 +267,8 @@ export default function UpgradePage() {
                                         onClick={() => handleUpgrade(plan.type)}
                                         disabled={upgrading}
                                         className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${plan.badge === "Most Popular"
-                                                ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
-                                                : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+                                            : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
                                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                                     >
                                         {upgrading ? (

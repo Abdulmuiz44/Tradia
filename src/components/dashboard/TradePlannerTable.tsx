@@ -129,7 +129,7 @@ export default function TradePlannerTable() {
       notes: "",
       status: "planned",
       tier: "starter",
-      });
+    });
 
   const handleCreatePlan = () => {
     if (!newPlan.symbol || !newPlan.setupType) {
@@ -152,7 +152,7 @@ export default function TradePlannerTable() {
       status: (newPlan.status as any) ?? "planned",
       createdAt: new Date().toISOString(),
       tier: (newPlan.tier as Tier) ?? "starter",
-      };
+    };
 
     if (typeof addPlan === "function") {
       addPlan(payload);
@@ -228,7 +228,7 @@ export default function TradePlannerTable() {
   /* UI helpers (styling) */
   // card style consistent with dark dashboard (like OverviewCards)
   const cardBase =
-    "bg-[#071022]/60 backdrop-blur-sm rounded-lg p-4 shadow-sm transition-shadow duration-150 border border-zinc-700";
+    "bg-[#0f1319]/60 backdrop-blur-sm rounded-lg p-4 shadow-sm transition-shadow duration-150 border border-zinc-700";
 
   // transparent input style used throughout (no white backgrounds)
   const inputClass =
@@ -335,7 +335,7 @@ export default function TradePlannerTable() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-        <div className="relative z-10 w-full max-w-lg bg-[#071022] border border-zinc-700 rounded-lg p-4 shadow-xl">
+        <div className="relative z-10 w-full max-w-lg bg-[#0f1319] border border-zinc-700 rounded-lg p-4 shadow-xl">
           {title && <div className="text-lg font-semibold text-white mb-2">{title}</div>}
           <div>{children}</div>
           <div className="mt-4 flex justify-end">
@@ -823,19 +823,19 @@ export default function TradePlannerTable() {
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="p-3 rounded bg-[#0b1220]/50 border border-zinc-800">
+                    <div className="p-3 rounded bg-[#0f1319]/50 border border-zinc-800">
                       <div className="text-xs text-zinc-400">Templates</div>
                       <div className="text-sm font-medium mt-1">Save & reuse trade templates</div>
                       <div className="text-xs text-zinc-400 mt-2">Save time creating common setups.</div>
                     </div>
 
-                    <div className="p-3 rounded bg-[#0b1220]/50 border border-zinc-800">
+                    <div className="p-3 rounded bg-[#0f1319]/50 border border-zinc-800">
                       <div className="text-xs text-zinc-400">Alerts</div>
                       <div className="text-sm font-medium mt-1">Price alerts & execution reminders</div>
                       <div className="text-xs text-zinc-400 mt-2">Get notified when price hits your zones.</div>
                     </div>
 
-                    <div className="p-3 rounded bg-[#0b1220]/50 border border-zinc-800">
+                    <div className="p-3 rounded bg-[#0f1319]/50 border border-zinc-800">
                       <div className="text-xs text-zinc-400">Backtest (basic)</div>
                       <div className="text-sm font-medium mt-1">Simulate historical performance</div>
                       <div className="text-xs text-zinc-400 mt-2">Understand how setups performed historically.</div>

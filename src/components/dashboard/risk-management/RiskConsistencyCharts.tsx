@@ -109,15 +109,14 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg">
+        <div className="bg-[#0f1319] border border-gray-700 rounded-lg p-3 shadow-lg">
           <p className="text-white font-medium">{`Trade ${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {`${entry.dataKey === 'riskPercent' ? 'Risk' : entry.dataKey === 'equity' ? 'Equity' : 'Drawdown'}: ${
-                entry.dataKey === 'riskPercent' ? `${entry.value.toFixed(2)}%` :
-                entry.dataKey === 'equity' ? `$${entry.value.toLocaleString()}` :
-                `$${Math.abs(entry.value).toLocaleString()}`
-              }`}
+              {`${entry.dataKey === 'riskPercent' ? 'Risk' : entry.dataKey === 'equity' ? 'Equity' : 'Drawdown'}: ${entry.dataKey === 'riskPercent' ? `${entry.value.toFixed(2)}%` :
+                  entry.dataKey === 'equity' ? `$${entry.value.toLocaleString()}` :
+                    `$${Math.abs(entry.value).toLocaleString()}`
+                }`}
             </p>
           ))}
         </div>
@@ -134,7 +133,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
           <h2 className="text-2xl font-bold text-white">Risk Consistency Charts</h2>
         </div>
 
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="bg-[#0f1319] border-gray-700">
           <CardContent className="p-8 text-center">
             <BarChart3 className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No Chart Data Available</h3>
@@ -336,8 +335,8 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
               <Badge className="bg-purple-600">
                 {chartData.riskDistribution.length > 0
                   ? chartData.riskDistribution.reduce((max, curr) =>
-                      curr.count > max.count ? curr : max
-                    ).bin
+                    curr.count > max.count ? curr : max
+                  ).bin
                   : 'N/A'
                 }
               </Badge>
