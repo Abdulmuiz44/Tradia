@@ -12,6 +12,8 @@ import { CheckCircle, CreditCard, Shield, Clock, ArrowLeft } from "lucide-react"
 import { motion } from "framer-motion";
 import PaymentMethodSelector from "@/components/payment/PaymentMethodSelector";
 import { useUnifiedAuth } from "@/lib/unifiedAuth";
+import LayoutClient from "@/components/LayoutClient";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 // LemonSqueezy is loaded via URL redirect, no window declaration needed
 
@@ -97,7 +99,8 @@ export default function CheckoutPage() {
   // No script loading needed for LemonSqueezy - it's a redirect-based checkout
 
   const handleCreateCheckout = async () => {
-    // Allow guest checkout: require an email if not authenticated
+    const { getCheckoutUrl } = await import("@/lib/checkout-urls");
+
     const effectiveEmail = unified.email || email;
     if (!effectiveEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(effectiveEmail)) {
       notify({
@@ -110,64 +113,18 @@ export default function CheckoutPage() {
 
     setIsLoading(true);
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
-
-      console.log("Creating checkout with data:", { plan, selectedPaymentMethod, billing, effectiveEmail });
-
-      const response = await fetch("/api/payments/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          planType: plan,
-          paymentMethod: selectedPaymentMethod,
-          billingCycle: billing === "yearly" ? "yearly" : "monthly",
-          userEmail: effectiveEmail,
-          userId: unified.id || undefined,
-          trialDays: 0,
-          successUrl: `${window.location.origin}/dashboard/billing?success=true`,
-          cancelUrl: `${window.location.origin}/dashboard/billing?canceled=true`,
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-
-      let data: any = null;
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.error("Failed to parse response:", e);
+      const billingCycle = billing === "yearly" ? "yearly" : "monthly";
+      const checkoutUrl = getCheckoutUrl(plan as "pro" | "plus" | "elite", billingCycle as "monthly" | "yearly");
+      
+      // Add email as query parameter for pre-fill
+      const urlWithEmail = new URL(checkoutUrl);
+      urlWithEmail.searchParams.append("checkout[email]", effectiveEmail);
+      if (unified.id) {
+        urlWithEmail.searchParams.append("checkout[custom][user_id]", unified.id);
       }
 
-      if (!response.ok) {
-        const serverMsg = data?.error || `HTTP ${response.status}`;
-        console.error("Create checkout failed:", serverMsg);
-        notify({
-          variant: "destructive",
-          title: "Checkout failed",
-          description: String(serverMsg),
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      console.log("Checkout response:", data);
-
-      // Redirect to LemonSqueezy checkout
-      if (!data?.checkoutUrl) {
-        notify({
-          variant: "destructive",
-          title: "Payment unavailable",
-          description: "Failed to generate checkout URL. Please try again.",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      console.log("Redirecting to LemonSqueezy checkout:", data.checkoutUrl);
-      window.location.href = data.checkoutUrl;
+      console.log("Redirecting to LemonSqueezy checkout:", urlWithEmail.toString());
+      window.location.href = urlWithEmail.toString();
     } catch (error) {
       console.error("Checkout error:", error);
       notify({
@@ -188,89 +145,93 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors">
-      <div className="max-w-4xl mx-auto p-6">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 inline-flex items-center gap-2 text-gray-300 hover:text-white"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
+    <LayoutClient>
+      <NotificationProvider>
+        <div className="min-h-screen bg-[var(--surface-primary)] dark:bg-[#0D1117] text-gray-900 dark:text-white transition-colors">
+          <div className="max-w-4xl mx-auto p-4 md:p-6">
+            <button
+              onClick={() => router.back()}
+              className="mb-4 inline-flex items-center gap-2 text-[var(--text-secondary)] dark:text-gray-400 hover:text-[var(--text-primary)] dark:hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
 
-        {reason === "trial_expired" && (
-          <div className="mb-4 p-3 rounded-lg bg-red-900/30 border border-red-700 text-red-200">
-            Your 30-day free trial has ended. Please upgrade to continue using Tradia.
-          </div>
-        )}
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 bg-[#0F1623] rounded-lg border border-gray-800">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-2">Checkout</h2>
-              <p className="text-gray-400 mb-4">You&apos;re upgrading to {currentPlan.displayName}.</p>
-
-              {/* Payment method selection */}
-              <div className="mb-6">
-                <PaymentMethodSelector
-                  selectedMethod={selectedPaymentMethod}
-                  onMethodChange={setSelectedPaymentMethod}
-                />
+            {reason === "trial_expired" && (
+              <div className="mb-4 p-3 rounded-lg bg-red-900/20 border border-red-700/50 text-red-200 dark:text-red-300">
+                Your 30-day free trial has ended. Please upgrade to continue using Tradia.
               </div>
+            )}
 
-              {/* Guest email input when not authenticated */}
-              {!unified.isAuthenticated && (
-                <div className="mb-4">
-                  <label htmlFor="email" className="block text-sm text-gray-300 mb-1">
-                    Email for receipt and account
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full bg-[#0B1220] border border-gray-700 rounded px-3 py-2 text-gray-100 outline-none focus:border-blue-500"
-                  />
-                  <div className="text-xs text-gray-500 mt-1">
-                    We&apos;ll send your payment receipt and account link to this email.
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 bg-[var(--surface-secondary)] dark:bg-[#161B22] rounded-lg border border-[var(--surface-border)] dark:border-[#2a2f3a]">
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold mb-2 text-[var(--text-primary)] dark:text-white">Checkout</h2>
+                  <p className="text-[var(--text-secondary)] dark:text-gray-400 mb-4">You&apos;re upgrading to {currentPlan.displayName}.</p>
+
+                  {/* Payment method selection */}
+                  <div className="mb-6">
+                    <PaymentMethodSelector
+                      selectedMethod={selectedPaymentMethod}
+                      onMethodChange={setSelectedPaymentMethod}
+                    />
+                  </div>
+
+                  {/* Guest email input when not authenticated */}
+                  {!unified.isAuthenticated && (
+                    <div className="mb-4">
+                      <label htmlFor="email" className="block text-sm text-[var(--text-secondary)] dark:text-gray-400 mb-1">
+                        Email for receipt and account
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full bg-[var(--surface-primary)] dark:bg-[#0B1220] border border-[var(--surface-border)] dark:border-gray-700 rounded px-3 py-2 text-[var(--text-primary)] dark:text-gray-100 outline-none focus:border-blue-500"
+                      />
+                      <div className="text-xs text-[var(--text-muted)] dark:text-gray-500 mt-1">
+                        We&apos;ll send your payment receipt and account link to this email.
+                      </div>
+                    </div>
+                  )}
+
+                  <Button onClick={handleCreateCheckout} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                    {isLoading ? "Preparing payment..." : "Continue to Payment"}
+                  </Button>
+
+                  <div className="flex items-center gap-3 text-[var(--text-secondary)] dark:text-gray-400 text-sm mt-4">
+                    <Shield className="w-4 h-4" />
+                    Secure payment powered by Lemon Squeezy
                   </div>
                 </div>
-              )}
-
-              <Button onClick={handleCreateCheckout} disabled={isLoading} className="w-full">
-                {isLoading ? "Preparing payment..." : "Continue to Payment"}
-              </Button>
-
-              <div className="flex items-center gap-3 text-gray-400 text-sm mt-4">
-                <Shield className="w-4 h-4" />
-                Secure payment powered by Lemon Squeezy
               </div>
-            </div>
-          </div>
 
-          <div className="bg-[#0F1623] rounded-lg border border-gray-800">
-            <div className="p-6">
-              <h3 className="font-semibold mb-3">Plan Summary</h3>
-              <div className="flex items-end gap-2 mb-2">
-                <span className="text-3xl font-bold">${currentPlan.price}</span>
-                <span className="text-gray-400">/ {currentPlan.billing}</span>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm text-gray-300">
-                {currentPlan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" /> {f}
-                  </li>
-                ))}
-              </ul>
-              {currentPlan.trialDays > 0 && (
-                <div className="mt-4 text-xs text-gray-400">
-                  Includes a {currentPlan.trialDays}-day free trial.
+              <div className="bg-[var(--surface-secondary)] dark:bg-[#161B22] rounded-lg border border-[var(--surface-border)] dark:border-[#2a2f3a]">
+                <div className="p-6">
+                  <h3 className="font-semibold mb-3 text-[var(--text-primary)] dark:text-white">Plan Summary</h3>
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">${currentPlan.price}</span>
+                    <span className="text-[var(--text-secondary)] dark:text-gray-400">/ {currentPlan.billing}</span>
+                  </div>
+                  <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)] dark:text-gray-300">
+                    {currentPlan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {currentPlan.trialDays > 0 && (
+                    <div className="mt-4 text-xs text-[var(--text-muted)] dark:text-gray-400">
+                      Includes a {currentPlan.trialDays}-day free trial.
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </NotificationProvider>
+    </LayoutClient>
   );
 }

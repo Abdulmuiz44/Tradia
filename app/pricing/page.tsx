@@ -9,6 +9,7 @@ import { AiOutlineCheck, AiOutlineArrowRight } from "react-icons/ai";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
+import { getCheckoutUrl } from "@/lib/checkout-urls";
 
 
 /**
@@ -308,7 +309,8 @@ export default function PricingPage(): React.ReactElement {
                             window.location.href = "/signup";
                             return;
                           }
-                          window.location.href = `/checkout?plan=${p.id}&billing=${billing}`;
+                          const checkoutUrl = getCheckoutUrl(p.id as "pro" | "plus" | "elite", billing as "monthly" | "yearly");
+                          window.location.href = checkoutUrl;
                         }}
                         className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-indigo-500 text-white" : "bg-indigo-600 text-white"}`}
                       >

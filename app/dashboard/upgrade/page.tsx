@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { Crown, ArrowRight, Zap, TrendingUp, Shield, Loader2 } from "lucide-react";
 import { getPlanDisplayName, PlanType } from "@/lib/planAccess";
 import { motion } from "framer-motion";
+import LayoutClient from "@/components/LayoutClient";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { getCheckoutUrl } from "@/lib/checkout-urls";
 
 interface PlanOption {
     type: PlanType;
@@ -140,11 +143,12 @@ export default function UpgradePage() {
     });
 
     const handleUpgrade = (planType: PlanType) => {
-        router.push(`/checkout?plan=${planType}&billing=${billingCycle}`);
+        const checkoutUrl = getCheckoutUrl(planType as "pro" | "plus" | "elite", billingCycle as "monthly" | "yearly");
+        window.location.href = checkoutUrl;
     };
 
-    return (
-        <div className="min-h-screen bg-white text-gray-900 dark:bg-[#061226] dark:text-gray-100 transition-colors">
+    const UpgradePageContent = () => (
+        <div className="min-h-screen bg-[var(--surface-primary)] dark:bg-[#0D1117] text-gray-900 dark:text-gray-100 transition-colors">
             <div className="max-w-7xl mx-auto px-6 py-12">
                 {/* Header */}
                 <div className="mb-12">
@@ -346,5 +350,13 @@ export default function UpgradePage() {
                 </div>
             </div>
         </div>
+    );
+
+    return (
+        <LayoutClient>
+            <NotificationProvider>
+                <UpgradePageContent />
+            </NotificationProvider>
+        </LayoutClient>
     );
 }

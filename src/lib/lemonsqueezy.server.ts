@@ -1,5 +1,6 @@
 // src/lib/lemonsqueezy.server.ts
 import { createClient } from "@/utils/supabase/server";
+import { LEMON_SQUEEZY_CHECKOUT_URLS } from "./checkout-urls";
 
 const API_BASE = "https://api.lemonsqueezy.com/v1";
 const API_KEY = process.env.LEMONSQUEEZY_API_KEY || "";
@@ -13,20 +14,21 @@ const PLAN_PRICE_MAP: Record<string, { monthly: number; yearly: number }> = {
   elite: { monthly: 39, yearly: 390 },
 };
 
-// LemonSqueezy variant IDs - configure these based on your store setup
-// You'll need to create variants in LemonSqueezy and update these IDs
+
+
+// LemonSqueezy variant IDs - for database tracking
 const VARIANT_ID_MAP: Record<string, Record<string, string>> = {
   pro: {
-    monthly: process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY || "",
-    yearly: process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY || "",
+    monthly: process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY || "4e714c31-287d-4dff-8f00-a4e99de0a7b2",
+    yearly: process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY || "4e714c31-287d-4dff-8f00-a4e99de0a7b2",
   },
   plus: {
-    monthly: process.env.LEMONSQUEEZY_VARIANT_PLUS_MONTHLY || "",
-    yearly: process.env.LEMONSQUEEZY_VARIANT_PLUS_YEARLY || "",
+    monthly: process.env.LEMONSQUEEZY_VARIANT_PLUS_MONTHLY || "7c44062f-4ac6-4c8e-8650-af7e9aa832e2",
+    yearly: process.env.LEMONSQUEEZY_VARIANT_PLUS_YEARLY || "7c44062f-4ac6-4c8e-8650-af7e9aa832e2",
   },
   elite: {
-    monthly: process.env.LEMONSQUEEZY_VARIANT_ELITE_MONTHLY || "",
-    yearly: process.env.LEMONSQUEEZY_VARIANT_ELITE_YEARLY || "",
+    monthly: process.env.LEMONSQUEEZY_VARIANT_ELITE_MONTHLY || "f2d05080-421d-4692-b87a-e67cac06aa6c",
+    yearly: process.env.LEMONSQUEEZY_VARIANT_ELITE_YEARLY || "f2d05080-421d-4692-b87a-e67cac06aa6c",
   },
 };
 
@@ -38,19 +40,21 @@ function getCheckoutURL(
   cancelUrl: string,
   billingCycle: BillingCycle
 ) {
+  // Use the direct checkout URLs from LEMON_SQUEEZY_CHECKOUT_URLS
+  // LemonSqueezy handles email collection in their hosted checkout
+  const planKey = Object.keys(VARIANT_ID_MAP).find(
+    plan => VARIANT_ID_MAP[plan as keyof typeof VARIANT_ID_MAP]?.[billingCycle] === variantId
+  ) as keyof typeof LEMON_SQUEEZY_CHECKOUT_URLS || 'plus';
+
+  const baseUrl = LEMON_SQUEEZY_CHECKOUT_URLS[planKey]?.[billingCycle] || 
+                  LEMON_SQUEEZY_CHECKOUT_URLS.plus.monthly;
+
   const params = new URLSearchParams({
-    checkout_data: JSON.stringify({
-      email,
-      name: "",
-      custom: {
-        user_id: userId || "guest",
-        billing_cycle: billingCycle,
-      },
-      redirect_url: successUrl,
-    }),
+    'checkout[email]': email,
+    'checkout[custom][user_id]': userId || "guest",
   });
 
-  return `https://checkout.lemonsqueezy.com/checkout/buy/${variantId}?${params.toString()}`;
+  return `${baseUrl}?${params.toString()}`;
 }
 
 async function callLemonSqueezy(
