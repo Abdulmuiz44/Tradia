@@ -324,7 +324,7 @@ export default function DocsPage() {
           {filteredDocs.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-400 text-lg">
-                No documentation found for "{searchQuery}". Try a different search term.
+                No documentation found for &quot;{searchQuery}&quot;. Try a different search term.
               </p>
             </div>
           )}
@@ -335,8 +335,8 @@ export default function DocsPage() {
       <div className="bg-blue-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Can't find what you're looking for?
-          </h2>
+             Can&apos;t find what you&apos;re looking for?
+           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Check out our learning resources or contact support for help.
           </p>
