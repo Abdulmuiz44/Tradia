@@ -28,8 +28,8 @@ export default function TermsPage() {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-2">Subscriptions & Trials</h2>
-              <p className="text-gray-300">Paid plans include a 3-day free trial (where applicable). You can cancel anytime before the trial ends to avoid charges.</p>
+              <h2 className="text-xl font-semibold mb-2">Subscriptions & Billing</h2>
+              <p className="text-gray-300">Paid subscriptions are billed monthly or annually. You can upgrade, downgrade, or cancel anytime. No hidden fees or commitments required.</p>
             </div>
 
             <div>

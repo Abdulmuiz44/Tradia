@@ -63,6 +63,7 @@ const PLANS = [
     id: "starter",
     name: "Starter",
     monthly: 0,
+    yearly: 0,
     highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
     cta: "Get started (Free)",
     tag: "Free forever",
@@ -71,20 +72,23 @@ const PLANS = [
   id: "pro",
   name: "Pro",
   monthly: 9,
+  yearly: 90,
   highlights: [
       "All Starter features",
       "6 months trade history",
+      "Advanced analytics",
       "AI weekly summary",
       "Personalized strategy recommendations",
-      "Risk management & market timing insights"
+      "Risk management analysis & optimization"
     ],
-    cta: "Start 30-day trial",
-    tag: "Popular",
+    cta: "Upgrade to Pro",
+    tag: "Most popular",
   },
   {
     id: "plus",
     name: "Plus",
     monthly: 19,
+    yearly: 190,
     highlights: [
       "All Pro features",
       "Unlimited history",
@@ -92,20 +96,22 @@ const PLANS = [
       "Image processing for trade screenshots",
       "Real-time performance analytics & insights"
     ],
-    cta: "Start 30-day trial",
+    cta: "Upgrade to Plus",
     tag: "For active traders",
   },
   {
     id: "elite",
     name: "Elite",
     monthly: 39,
+    yearly: 390,
     highlights: [
       "Everything in Plus",
       "AI strategy builder",
       "Prop-firm dashboard",
-      "All AI features included"
+      "All AI features included",
+      "Priority support"
     ],
-    cta: "Contact sales",
+    cta: "Upgrade to Elite",
     tag: "Advanced",
   },
 ];
@@ -166,7 +172,7 @@ export default function Home(): React.ReactElement {
 
   const priceFor = (planId: string) => {
     const p = PLANS.find((x) => x.id === planId)!;
-    return billing === "monthly" ? p.monthly : Math.round(p.monthly * 12 * 0.8);
+    return billing === "monthly" ? p.monthly : p.yearly;
   };
 
   return (
@@ -459,8 +465,8 @@ export default function Home(): React.ReactElement {
         {/* Pricing */}
         <section className="py-16 px-6">
           <div className="max-w-6xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-white">Pricing</h2>
-            <p className="mt-2 text-gray-400">Start free — upgrade when you need advanced AI and history.</p>
+              <h2 className="text-3xl font-bold text-white">Simple, Transparent Pricing</h2>
+            <p className="mt-2 text-white">Start free with Starter plan — upgrade to unlock advanced AI features, extended history, and real-time insights.</p>
 
             <div className="mt-6 inline-flex rounded-full bg-white/5 p-1 shadow-sm">
               <button
@@ -499,11 +505,11 @@ export default function Home(): React.ReactElement {
                       </div>
                     </div>
 
-                    <ul className="mb-6 text-gray-400 space-y-2 text-left">
+                    <ul className="mb-6 space-y-2 text-left">
                       {p.highlights.map((h, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <AiOutlineCheck className="mt-1 text-indigo-400" />
-                          <span>{h}</span>
+                          <span className="text-white font-medium">{h}</span>
                         </li>
                       ))}
                     </ul>
@@ -609,12 +615,13 @@ export default function Home(): React.ReactElement {
 
               <div className="space-y-3">
                  {[
-                   { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                   { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons." },
+                   { q: "Is there a free plan?", a: "Yes — Starter is free forever with 30-day trade history, basic analytics, and CSV import. Upgrade anytime to unlock advanced AI features." },
+                   { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons to improve your trading." },
+                   { q: "Can I change plans anytime?", a: "Yes, upgrade or downgrade anytime. Annual plans get a 20% discount and are billed upfront." },
                  ].map((fq, i) => (
                 <details key={i} className="p-4 rounded-xl border border-white/10">
-                <summary className="font-medium text-gray-100">{fq.q}</summary>
-                <p className="mt-2 text-gray-400">{fq.a}</p>
+                <summary className="font-medium text-white">{fq.q}</summary>
+                <p className="mt-2 text-white">{fq.a}</p>
                  </details>
                 ))}
               </div>

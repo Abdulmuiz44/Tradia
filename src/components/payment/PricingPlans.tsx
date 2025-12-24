@@ -61,8 +61,8 @@ const plansData: Plan[] = [
   {
     name: "pro",
     label: "Pro",
-    priceMonthly: 29,
-    priceYearly: 290,
+    priceMonthly: 9,
+    priceYearly: 90,
     tagline: "Most Popular",
     baseFeatures: [], // will inherit Starter
     additionalFeatures: [
@@ -84,8 +84,8 @@ const plansData: Plan[] = [
   {
     name: "plus",
     label: "Plus",
-    priceMonthly: 79,
-    priceYearly: 790,
+    priceMonthly: 19,
+    priceYearly: 190,
     tagline: "For professional traders",
     baseFeatures: [],
     additionalFeatures: [
@@ -105,8 +105,8 @@ const plansData: Plan[] = [
   {
     name: "elite",
     label: "Elite",
-    priceMonthly: 199,
-    priceYearly: 1990,
+    priceMonthly: 39,
+    priceYearly: 390,
     tagline: "Ultimate experience",
     baseFeatures: [],
     additionalFeatures: [

@@ -245,7 +245,7 @@ export default function UpgradePage() {
                                         {plan.features.map((feature) => (
                                             <li key={feature} className="flex items-start gap-3">
                                                 <svg
-                                                    className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5"
+                                                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
                                                     fill="currentColor"
                                                     viewBox="0 0 20 20"
                                                 >
@@ -255,7 +255,7 @@ export default function UpgradePage() {
                                                         clipRule="evenodd"
                                                     />
                                                 </svg>
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                <span className="font-semibold text-gray-900 dark:text-white">
                                                     {feature}
                                                 </span>
                                             </li>

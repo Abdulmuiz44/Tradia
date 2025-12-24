@@ -4,13 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useNotification } from "@/context/NotificationContext";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { CheckCircle, CreditCard, Shield, Clock, ArrowLeft } from "lucide-react";
-import { motion } from "framer-motion";
-import PaymentMethodSelector from "@/components/payment/PaymentMethodSelector";
+import { CheckCircle, Shield, ArrowLeft } from "lucide-react";
 import { useUnifiedAuth } from "@/lib/unifiedAuth";
 import LayoutClient from "@/components/LayoutClient";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -33,7 +28,6 @@ export default function CheckoutPage() {
   const unified = useUnifiedAuth();
   const { notify } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("card");
   const [email, setEmail] = useState<string>("");
 
   const plan = (searchParams?.get("plan") as keyof typeof planDetails) || "plus";
@@ -47,7 +41,7 @@ export default function CheckoutPage() {
       displayName: "Pro",
       price: billing === "yearly" ? 90 : 9,
       billing: billing === "yearly" ? "year" : "month",
-      trialDays,
+      trialDays: 0, // No trial
       features: [
         "All Starter features",
         "6 months trade history",
@@ -63,7 +57,7 @@ export default function CheckoutPage() {
       displayName: "Plus",
       price: billing === "yearly" ? 190 : 19,
       billing: billing === "yearly" ? "year" : "month",
-      trialDays,
+      trialDays: 0, // No trial
       features: [
         "All Pro features",
         "Unlimited history",
@@ -78,7 +72,7 @@ export default function CheckoutPage() {
       displayName: "Elite",
       price: billing === "yearly" ? 390 : 39,
       billing: billing === "yearly" ? "year" : "month",
-      trialDays,
+      trialDays: 0, // No trial
       features: [
         "Everything in Plus",
         "Premium AI features",
@@ -165,16 +159,8 @@ export default function CheckoutPage() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="md:col-span-2 bg-[var(--surface-secondary)] dark:bg-[#161B22] rounded-lg border border-[var(--surface-border)] dark:border-[#2a2f3a]">
                 <div className="p-6">
-                  <h2 className="text-xl font-semibold mb-2 text-[var(--text-primary)] dark:text-white">Checkout</h2>
-                  <p className="text-[var(--text-secondary)] dark:text-gray-400 mb-4">You&apos;re upgrading to {currentPlan.displayName}.</p>
-
-                  {/* Payment method selection */}
-                  <div className="mb-6">
-                    <PaymentMethodSelector
-                      selectedMethod={selectedPaymentMethod}
-                      onMethodChange={setSelectedPaymentMethod}
-                    />
-                  </div>
+                  <h2 className="text-xl font-semibold mb-2 text-[var(--text-primary)] dark:text-white">Complete Your Purchase</h2>
+                  <p className="text-[var(--text-secondary)] dark:text-gray-400 mb-6">Secure payment via LemonSqueezy</p>
 
                   {/* Guest email input when not authenticated */}
                   {!unified.isAuthenticated && (
@@ -210,22 +196,20 @@ export default function CheckoutPage() {
               <div className="bg-[var(--surface-secondary)] dark:bg-[#161B22] rounded-lg border border-[var(--surface-border)] dark:border-[#2a2f3a]">
                 <div className="p-6">
                   <h3 className="font-semibold mb-3 text-[var(--text-primary)] dark:text-white">Plan Summary</h3>
-                  <div className="flex items-end gap-2 mb-2">
-                    <span className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">${currentPlan.price}</span>
-                    <span className="text-[var(--text-secondary)] dark:text-gray-400">/ {currentPlan.billing}</span>
+                  <div className="flex items-end gap-2 mb-6">
+                    <span className="text-4xl font-bold text-[var(--text-primary)] dark:text-white">${currentPlan.price}</span>
+                    <span className="text-[var(--text-secondary)] dark:text-gray-400 mb-1">/ {currentPlan.billing}</span>
                   </div>
-                  <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)] dark:text-gray-300">
+                  <ul className="space-y-3">
                     {currentPlan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" /> {f}
+                      <li key={f} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span className="font-semibold text-[var(--text-primary)] dark:text-white">
+                          {f}
+                        </span>
                       </li>
                     ))}
                   </ul>
-                  {currentPlan.trialDays > 0 && (
-                    <div className="mt-4 text-xs text-[var(--text-muted)] dark:text-gray-400">
-                      Includes a {currentPlan.trialDays}-day free trial.
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

@@ -27,53 +27,61 @@ import { getCheckoutUrl } from "@/lib/checkout-urls";
   {
     id: "free",
     name: "Starter",
-  monthly: 0,
-  highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
-  cta: "Get started (Free)",
-  tag: "Free forever",
+    monthly: 0,
+    yearly: 0,
+    highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
+    cta: "Get started (Free)",
+    tag: "Free forever",
   },
   {
-  id: "pro",
-  name: "Pro",
-  monthly: 9,
-  highlights: [
-    "All Starter features",
-    "6 months trade history",
+    id: "pro",
+    name: "Pro",
+    monthly: 9,
+    yearly: 90,
+    highlights: [
+      "All Starter features",
+      "6 months trade history",
+      "Advanced analytics",
       "AI weekly summary",
       "Personalized strategy recommendations",
-    "Risk management & market timing insights"
-  ],
-  cta: "Upgrade to Pro",
-  tag: "Popular",
+      "Risk management analysis & optimization"
+    ],
+    cta: "Upgrade to Pro",
+    tag: "Most popular",
   },
   {
     id: "plus",
-      name: "Plus",
+    name: "Plus",
     monthly: 19,
+    yearly: 190,
     highlights: [
       "All Pro features",
       "Unlimited history",
+      "Advanced AI features",
       "AI trade reviews & SL/TP suggestions",
       "Image processing for trade screenshots",
-        "Real-time performance analytics & insights"
-      ],
-      cta: "Upgrade to Plus",
-      tag: "For active traders",
-    },
-    {
-      id: "elite",
-      name: "Elite",
-      monthly: 39,
-      highlights: [
-        "Everything in Plus",
-        "AI strategy builder",
-        "Prop-firm dashboard",
-        "All AI features included"
-      ],
-      cta: "Upgrade to Elite",
-      tag: "Advanced",
-    },
-  ];
+      "Real-time performance analytics & insights"
+    ],
+    cta: "Upgrade to Plus",
+    tag: "For active traders",
+  },
+  {
+    id: "elite",
+    name: "Elite",
+    monthly: 39,
+    yearly: 390,
+    highlights: [
+      "Everything in Plus",
+      "Premium AI features",
+      "AI strategy builder",
+      "Prop-firm dashboard",
+      "All AI features included",
+      "Priority support"
+    ],
+    cta: "Upgrade to Elite",
+    tag: "Advanced",
+  },
+];
 
 const FEATURES = [
   { title: "Smart Performance Tracking", desc: "Real-time metrics, charts and behavioral insights to level-up your trading." },
@@ -110,7 +118,7 @@ export default function PricingPage(): React.ReactElement {
 
   const priceFor = (planId: string) => {
     const p = PLANS.find((x) => x.id === planId)!;
-    return billing === "monthly" ? p.monthly : Math.round(p.monthly * 12 * 0.8);
+    return billing === "monthly" ? p.monthly : p.yearly;
   };
 
   // JSON-LD: Offer catalog and pricing FAQ
@@ -162,23 +170,23 @@ export default function PricingPage(): React.ReactElement {
         "name": "Is there a free plan?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes — the Starter plan is free forever and includes core analytics, CSV import, and 30 days of trade history."
+          "text": "Yes — the Starter plan is free forever and includes core analytics, CSV import, and 30 days of trade history. No credit card required."
         }
       },
       {
         "@type": "Question",
-        "name": "Do you offer a free trial?",
+        "name": "Can I upgrade or downgrade anytime?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Start with our free Starter plan to try Tradia. Upgrade to Pro or Plus anytime to unlock advanced AI features and unlimited trade history."
+          "text": "Yes, you can upgrade, downgrade, or cancel anytime. Annual plans get a 20% discount and are billed upfront. Monthly plans are billed every 30 days."
         }
       },
       {
         "@type": "Question",
-        "name": "Can I cancel or change plans anytime?",
+        "name": "What payment methods do you accept?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You can upgrade, downgrade, or cancel anytime. Annual plans are billed up‑front and include a discount."
+          "text": "We accept all major credit cards through our secure payment processor. Billing happens automatically on your billing date each month or year."
         }
       }
     ]
@@ -211,8 +219,8 @@ export default function PricingPage(): React.ReactElement {
                   Simple pricing. Powerful results.
                 </motion.h1>
 
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
-                  Start free and upgrade when you need advanced AI trade analysis and longer trade history. No surprise fees — cancel anytime.
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-white max-w-2xl">
+                  Start free with Starter plan. Upgrade to Pro, Plus, or Elite for advanced AI analysis, extended history, and real-time insights. No hidden fees — upgrade or downgrade anytime.
                 </motion.p>
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
@@ -292,14 +300,14 @@ export default function PricingPage(): React.ReactElement {
                       </div>
                     </div>
 
-                    <ul className="mb-6 text-gray-400 space-y-2 text-left">
-                    {p.highlights.map((h, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <AiOutlineCheck className="mt-1 text-indigo-400" />
-                          <span>{h}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <ul className="mb-6 space-y-2 text-left">
+                     {p.highlights.map((h, i) => (
+                         <li key={i} className="flex items-start gap-3">
+                           <AiOutlineCheck className="mt-1 text-indigo-400 flex-shrink-0 text-lg" />
+                           <span className="font-semibold text-white">{h}</span>
+                         </li>
+                       ))}
+                     </ul>
 
                     <div className="flex flex-col gap-3">
                       <button
@@ -397,17 +405,17 @@ export default function PricingPage(): React.ReactElement {
               <h3 className="text-2xl font-bold mb-4">Frequently asked questions</h3>
 
               <div className="space-y-3">
-                {[
-              { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics and a 30-day history." },
-                  { q: "Which integrations are supported?", a: "CSV imports are supported today for comprehensive trade analysis." },
-                  { q: "Do I get a free trial?", a: "Start with our free Starter plan to explore Tradia. Upgrade to Pro or Plus anytime to get advanced AI features, longer trade history, and real-time insights — you'll be upgraded immediately after payment." },
-                ].map((fq, i) => (
-                  <details key={i} className="p-4 rounded-xl border border-white/10">
-                    <summary className="font-medium text-gray-100">{fq.q}</summary>
-                    <p className="mt-2 text-gray-400">{fq.a}</p>
-                  </details>
-                ))}
-              </div>
+                 {[
+               { q: "Is there a free plan?", a: "Yes — Starter is free forever and includes core analytics, CSV import, and 30 days of trade history. No credit card required." },
+                   { q: "Which integrations are supported?", a: "CSV imports are supported for comprehensive trade analysis. Email us at support@tradiaai.app for API integration requests." },
+                   { q: "Can I upgrade or downgrade anytime?", a: "Yes, you can upgrade, downgrade, or cancel anytime. Annual plans get a 20% discount and are billed upfront. Monthly plans are billed every 30 days." },
+                 ].map((fq, i) => (
+                   <details key={i} className="p-4 rounded-xl border border-white/10">
+                     <summary className="font-medium text-white">{fq.q}</summary>
+                     <p className="mt-2 text-white">{fq.a}</p>
+                   </details>
+                 ))}
+               </div>
             </div>
 
             <div className="rounded-xl p-8 border border-white/10 bg-gradient-to-br from-indigo-600/8 to-pink-500/6">
