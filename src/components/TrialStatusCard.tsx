@@ -22,13 +22,13 @@ export default function TrialStatusCard() {
         if (!mounted || !data?.info) return;
         setInfo(data.info as TrialInfo);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { mounted = false; };
   }, []);
 
   if (!info) return null;
   if (info.isPaid || info.isGrandfathered) return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <div className="bg-[#0f1319] rounded-lg p-4 border border-gray-700">
       <div className="text-sm text-gray-300">Subscription status</div>
       <div className="mt-1 text-green-400 font-medium">Active paid plan</div>
     </div>
@@ -37,7 +37,7 @@ export default function TrialStatusCard() {
   const daysLeft = typeof info.daysLeft === 'number' ? Math.max(0, info.daysLeft) : null;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+    <div className="bg-[#0f1319] rounded-lg p-4 border border-gray-700">
       <div className="text-sm text-gray-300">Trial status</div>
       {info.expired ? (
         <div className="mt-1 text-red-400 font-medium">Trial ended — <a href="/checkout?reason=trial_expired" className="underline">upgrade to continue</a></div>

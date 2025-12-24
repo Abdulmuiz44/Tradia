@@ -279,12 +279,12 @@ function PropTracker({ trades }: { trades: Trade[] }) {
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
+          <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
             <div className="text-xs text-zinc-400">Initial funded account</div>
             <input
               type="number"
               placeholder="Initial capital"
-              className="w-full mt-2 p-2 rounded bg-zinc-800"
+              className="w-full mt-2 p-2 rounded bg-[#0f1319]"
               value={propInitial === "" ? "" : String(propInitial)}
               onChange={(e) => setPropInitial(e.target.value === "" ? "" : Number(e.target.value))}
             />
@@ -292,14 +292,14 @@ function PropTracker({ trades }: { trades: Trade[] }) {
               <input
                 type="number"
                 placeholder="Target %"
-                className="w-1/2 p-2 rounded bg-zinc-800"
+                className="w-1/2 p-2 rounded bg-[#0f1319]"
                 value={String(propTargetPercent)}
                 onChange={(e) => setPropTargetPercent(Number(e.target.value))}
               />
               <input
                 type="number"
                 placeholder="Max DD %"
-                className="w-1/2 p-2 rounded bg-zinc-800"
+                className="w-1/2 p-2 rounded bg-[#0f1319]"
                 value={String(propMaxDrawdownPercent)}
                 onChange={(e) => setPropMaxDrawdownPercent(Number(e.target.value))}
               />
@@ -308,14 +308,14 @@ function PropTracker({ trades }: { trades: Trade[] }) {
               <input
                 type="number"
                 placeholder="Min WR %"
-                className="w-1/2 p-2 rounded bg-zinc-800"
+                className="w-1/2 p-2 rounded bg-[#0f1319]"
                 value={String(propMinWinRate)}
                 onChange={(e) => setPropMinWinRate(Number(e.target.value))}
               />
             </div>
           </div>
 
-          <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
+          <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
             <div className="text-sm text-zinc-300">Progress</div>
             <div className="text-2xl text-white my-2">{propStatus.pctGain.toFixed(2)}%</div>
             <div className="text-xs text-zinc-400">
@@ -324,7 +324,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
             <div className="mt-3 text-xs text-zinc-300 mb-2">
               Max Drawdown: {propStatus.maxDD.toFixed(2)}% (limit {propMaxDrawdownPercent}%)
             </div>
-            <div className="w-full bg-zinc-800 rounded h-3 overflow-hidden">
+            <div className="w-full bg-[#0f1319] rounded h-3 overflow-hidden">
               <div
                 style={{ width: `${Math.min(100, Math.max(0, propStatus.maxDD))}%` }}
                 className={`h-3 ${propStatus.maxDD <= propMaxDrawdownPercent ? "bg-green-500" : "bg-red-500"}`}
@@ -364,7 +364,7 @@ function PropTracker({ trades }: { trades: Trade[] }) {
             {propStatus.milestones.map(m => (
               <div
                 key={m.percent}
-                className={`p-3 rounded-md ${m.achieved ? "bg-green-800" : "bg-zinc-900/30"} border border-zinc-800 text-sm`}
+                className={`p-3 rounded-md ${m.achieved ? "bg-green-800" : "bg-[#0f1319]/30"} border border-zinc-800 text-sm`}
               >
                 {m.percent}% - {m.achieved ? "Achieved" : "Pending"}
               </div>
@@ -1282,7 +1282,7 @@ export default function TradeJournal(): React.ReactElement {
                   className="group flex min-w-[140px] items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/10 data-[state=active]:border-white/20 data-[state=active]:bg-white/15 data-[state=active]:text-white data-[state=active]:shadow-lg"
                 >
                   <span
-                    className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-800/40 text-slate-300 transition group-data-[state=active]:text-white"
+                    className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#0f1319]/40 text-slate-300 transition group-data-[state=active]:text-white"
                     style={isActive ? { backgroundImage: tab.accent } : undefined}
                   >
                     {tab.icon}
@@ -1484,7 +1484,7 @@ export default function TradeJournal(): React.ReactElement {
                     <h4 className="text-sm font-semibold text-white mb-2">Top Symbols</h4>
                     <div className="space-y-2">
                       {patterns.topSymbols.length ? patterns.topSymbols.map(s => (
-                        <div key={s.symbol} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                        <div key={s.symbol} className="min-w-0 flex items-center justify-between rounded-md bg-[#0f1319]/50 border border-[#0f1319] px-3 py-2 text-sm">
                           <span className="font-medium">{s.symbol}</span>
                           <span className="text-xs text-zinc-300">{s.trades} trades - {s.winRate.toFixed(0)}% WR - <span className={s.netPL >= 0 ? "text-green-400" : "text-red-400"}>${s.netPL.toFixed(2)}</span></span>
                         </div>
@@ -1495,7 +1495,7 @@ export default function TradeJournal(): React.ReactElement {
                     <h4 className="text-sm font-semibold text-white mb-2">By Day of Week</h4>
                     <div className="space-y-2">
                       {(Object.entries(patterns.byDOW ?? {}) as Array<[string, { trades: number; pl: number }]>).map(([dow, stats]) => (
-                        <div key={dow} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm">
+                        <div key={dow} className="min-w-0 flex items-center justify-between rounded-md bg-[#0f1319]/50 border border-[#0f1319] px-3 py-2 text-sm">
                           <span className="font-medium">{dow}</span>
                           <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span>
                         </div>
@@ -1506,7 +1506,7 @@ export default function TradeJournal(): React.ReactElement {
                     <h4 className="text-sm font-semibold text-white mb-2">Session Performance (UTC)</h4>
                     <div className="space-y-2">
                       {(Object.entries(patterns.sessions ?? {}) as Array<[string, { count: number; pl: number }]>).map(([name, stats]) => (
-                        <div key={name} className="min-w-0 flex items-center justify-between rounded-md bg-zinc-900/50 border border-zinc-800 px-3 py-2 text-sm capitalize">
+                        <div key={name} className="min-w-0 flex items-center justify-between rounded-md bg-[#0f1319]/50 border border-[#0f1319] px-3 py-2 text-sm capitalize">
                           <span className="font-medium">{name}</span>
                           <span className="text-xs text-zinc-300">{stats.count} trades - <span className={stats.pl >= 0 ? "text-green-400" : "text-red-400"}>${stats.pl.toFixed(2)}</span></span>
                         </div>
@@ -1530,16 +1530,16 @@ export default function TradeJournal(): React.ReactElement {
                   </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
+                  <div className="bg-[#0f1319]/40 rounded p-4 border border-zinc-800">
                     <h5 className="text-sm text-zinc-200 mb-2">Equity Curve</h5>
                     {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.pnp} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
                   </div>
-                  <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
+                  <div className="bg-[#0f1319]/40 rounded p-4 border border-zinc-800">
                     <h5 className="text-sm text-zinc-200 mb-2">Rolling Win Rate</h5>
                     {mounted ? <div className="w-full h-48 md:h-64"><Line data={charts.rollingWinData} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
                   </div>
                 </div>
-                <div className="bg-zinc-900/40 rounded p-4 border border-zinc-800">
+                <div className="bg-[#0f1319]/40 rounded p-4 border border-zinc-800">
                   <h5 className="text-sm text-zinc-200 mb-2">PnL Distribution</h5>
                   {mounted ? <div className="w-full h-48 md:h-64"><Bar data={charts.pnlHistogram} options={{ responsive: true, maintainAspectRatio: false }} /></div> : <div className="h-48 md:h-64" />}
                 </div>
@@ -1564,7 +1564,7 @@ export default function TradeJournal(): React.ReactElement {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <HeuristicForecast trades={trades as Trade[]} summary={summary} />
-              <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
+              <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
                 <h5 className="text-sm text-zinc-300">Actionable suggestion</h5>
                 <p className="mt-2 text-white">Combine the probability shown with your plan — do not rely only on this. This is not financial advice.</p>
                 <div className="mt-4 text-xs text-zinc-400">For a production-grade forecast, integrate a trained model server-side and surface calibrated probabilities here.</div>
@@ -1583,7 +1583,7 @@ export default function TradeJournal(): React.ReactElement {
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2 text-zinc-200"><Target className="h-5 w-5" /><h3 className="font-semibold">SL/TP Optimization</h3></div>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
+              <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
                 <div className="text-sm text-zinc-300">Global suggested RR</div>
                 <div className="text-2xl text-white my-2">{sltpSuggestion ? `${sltpSuggestion.recommendedRR}R` : ""}</div>
                 <div className="text-xs text-zinc-400">{sltpSuggestion?.note}</div>
@@ -1592,7 +1592,7 @@ export default function TradeJournal(): React.ReactElement {
                   <Button variant="ghost" onClick={() => alert("Heuristic: uses average wins/losses. Use backtests or model-based optimizer for production.")}>Explain</Button>
                 </div>
               </div>
-              <div className="rounded-lg border border-zinc-800 p-4 bg-zinc-900/50">
+              <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
                 <div className="text-sm text-zinc-300">Per-strategy suggestions</div>
                 <div className="mt-2 space-y-2">
                   {(Object.entries(patterns.stratMap ?? {}) as Array<[string, { trades?: number; wins?: number; losses?: number; netPL?: number; avgRR?: number | null }]>).map(([name, stats]) => {
@@ -1600,7 +1600,7 @@ export default function TradeJournal(): React.ReactElement {
                     const netPl = stats.netPL ?? 0;
                     const recommended = Math.max(1, Math.round(((netPl / Math.max(1, tradeCount)) / (Math.abs(summary.avgLoss) || 1)) * 10) / 10 || 1);
                     return (
-                      <div key={name} className="rounded p-2 bg-zinc-900/40 border border-zinc-800 flex justify-between items-center text-sm">
+                      <div key={name} className="rounded p-2 bg-[#0f1319]/40 border border-zinc-800 flex justify-between items-center text-sm">
                         <div>
                           <div className="font-medium">{name}</div>
                           <div className="text-xs text-zinc-400">{tradeCount} trades - WR: {tradeCount ? (((stats.wins ?? 0) / tradeCount) * 100).toFixed(1) : "0"}%</div>
@@ -1631,24 +1631,24 @@ export default function TradeJournal(): React.ReactElement {
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center gap-2"><Activity className="h-5 w-5" /><h3 className="font-semibold">Psychology & Behavior</h3></div>
             <div className="flex flex-wrap gap-2">
-              {moods.map(m => <button key={m} className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-xs text-zinc-200" onClick={() => addMoodStamp(m)}>{m}</button>)}
+              {moods.map(m => <button key={m} className="px-3 py-1 rounded-full bg-[#0f1319] border border-zinc-700 text-xs text-zinc-200" onClick={() => addMoodStamp(m)}>{m}</button>)}
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <textarea className="w-full min-h-[180px] rounded-md bg-zinc-900 text-zinc-100 border border-zinc-700 p-3 text-sm" placeholder="Free-write journaling..." value={psychNote} onChange={(e) => setPsychNote(e.target.value)} />
+                <textarea className="w-full min-h-[180px] rounded-md bg-[#0f1319] text-zinc-100 border border-zinc-700 p-3 text-sm" placeholder="Free-write journaling..." value={psychNote} onChange={(e) => setPsychNote(e.target.value)} />
                 <div className="flex gap-2 justify-end mt-2">
                   <Button variant="secondary" onClick={() => setPsychNote("")}><X className="h-4 w-4 mr-2" />Clear</Button>
                   <Button variant="secondary" onClick={() => { alert("Saved locally."); }}><Save className="h-4 w-4 mr-2" />Save</Button>
                 </div>
               </div>
               <div>
-                <div className="bg-zinc-900/40 rounded p-3 border border-zinc-800">
+                <div className="bg-[#0f1319]/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Behavioral Insights</h5>
                   <div className="mt-2 text-xs text-zinc-400">Max win streak: {streaks.maxWinStreak} - Max loss streak: {streaks.maxLossStreak}</div>
                   <div className="mt-2 text-xs text-zinc-400">Avg trade time: {summary.avgLengthMin.toFixed(1)} min - Sharpe-like: {summary.sharpe.toFixed(2)}</div>
                   {revengeDetector.flagged ? <div className="mt-3 p-2 bg-red-900/30 rounded text-xs text-red-300">! {revengeDetector.reason}</div> : null}
                 </div>
-                <div className="mt-4 bg-zinc-900/40 rounded p-3 border border-zinc-800">
+                <div className="mt-4 bg-[#0f1319]/40 rounded p-3 border border-zinc-800">
                   <h5 className="text-sm text-zinc-300">Guided Prompts</h5>
                   <div className="mt-2 text-xs text-zinc-200">{randomPrompt()}</div>
                   <div className="mt-3"><Button variant="secondary" onClick={() => setPsychNote(prev => prev + "\n" + randomPrompt())}>Add prompt to note</Button></div>
@@ -1670,7 +1670,7 @@ export default function TradeJournal(): React.ReactElement {
                 <Button variant="ghost" onClick={() => setCalendarMonth(m => addMonths(m, 1))}>Next</Button>
               </div>
             </div>
-            <div className="bg-zinc-900/40 rounded-lg p-4 border border-zinc-800">
+            <div className="bg-[#0f1319]/40 rounded-lg p-4 border border-zinc-800">
               <h4 className="text-sm font-semibold text-white mb-3">Weekly Net PnL Summary</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[1, 2, 3, 4].map(weekNum => {
@@ -1686,7 +1686,7 @@ export default function TradeJournal(): React.ReactElement {
                   const weekPnL = weekTrades.reduce((sum, t) => sum + parsePL(t.pnl), 0);
                   const isProfitable = weekPnL >= 0;
                   return (
-                    <div key={weekNum} className="bg-zinc-800/50 rounded p-3 border border-zinc-700">
+                    <div key={weekNum} className="bg-[#0f1319]/50 rounded p-3 border border-zinc-700">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-zinc-300">Week {weekNum}</span>
                         <span className={`text-xs px-2 py-0.5 rounded ${isProfitable ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}`}>

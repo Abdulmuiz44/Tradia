@@ -112,7 +112,7 @@ export default function NotificationBell() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="relative p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
+        className="relative p-2 rounded-lg bg-white dark:bg-[#0f1319] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5 text-black dark:text-gray-200" />

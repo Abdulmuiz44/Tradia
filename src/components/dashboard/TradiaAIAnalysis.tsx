@@ -162,7 +162,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
                   key={item.label}
                   onClick={() => analyzeWithAI(item.prompt)}
                   disabled={loading || trades.length === 0}
-                  className="p-3 text-sm text-left rounded-lg bg-blue-50 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-gray-700 border border-blue-200 dark:border-gray-700 text-blue-900 dark:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-3 text-sm text-left rounded-lg bg-blue-50 dark:bg-[#0f1319] hover:bg-blue-100 dark:hover:bg-[#0f1319]/80 border border-blue-200 dark:border-gray-700 text-blue-900 dark:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {item.label}
                 </button>
@@ -179,7 +179,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
                 <div
                   className={`max-w-2xl rounded-lg p-4 ${msg.role === 'user'
                     ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
-                    : 'bg-gray-100 dark:bg-gray-800 text-[#0f1319] dark:text-white rounded-bl-none'
+                    : 'bg-gray-100 dark:bg-[#0f1319] text-[#0f1319] dark:text-white rounded-bl-none'
                     }`}
                 >
                   {msg.role === 'assistant' ? (
@@ -214,7 +214,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 text-[#0f1319] dark:text-white rounded-lg rounded-bl-none p-4">
+                <div className="bg-gray-100 dark:bg-[#0f1319] text-[#0f1319] dark:text-white rounded-lg rounded-bl-none p-4">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Analyzing...</span>

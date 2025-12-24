@@ -252,7 +252,7 @@ export default function TradePlannerTable() {
   }> = ({ entry = 0, sl = 0, tp = 0, className }) => {
     const values = [sl, entry, tp].filter((v) => Number.isFinite(v));
     if (values.length === 0) {
-      return <div className={cn("h-2 rounded bg-zinc-800 w-full", className)} />;
+      return <div className={cn("h-2 rounded bg-[#0f1319] w-full", className)} />;
     }
     const min = Math.min(...values);
     const max = Math.max(...values) === min ? min + 1 : Math.max(...values);
@@ -272,7 +272,7 @@ export default function TradePlannerTable() {
 
     return (
       <div className={cn("w-full", className)}>
-        <div className="h-2 rounded bg-zinc-800 relative overflow-hidden">
+        <div className="h-2 rounded bg-[#0f1319] relative overflow-hidden">
           {/* risk portion */}
           <div
             className="absolute top-0 bottom-0 rounded"
@@ -408,13 +408,13 @@ export default function TradePlannerTable() {
   /* Skeleton */
   const SkeletonCard = () => (
     <div className={cn(cardBase, "animate-pulse")}>
-      <div className="h-5 bg-zinc-800 rounded w-1/3 mb-3" />
-      <div className="h-3 bg-zinc-800 rounded w-full mb-2" />
-      <div className="h-3 bg-zinc-800 rounded w-full mb-2" />
-      <div className="h-3 bg-zinc-800 rounded w-2/3 mb-2" />
+      <div className="h-5 bg-[#0f1319] rounded w-1/3 mb-3" />
+      <div className="h-3 bg-[#0f1319] rounded w-full mb-2" />
+      <div className="h-3 bg-[#0f1319] rounded w-full mb-2" />
+      <div className="h-3 bg-[#0f1319] rounded w-2/3 mb-2" />
       <div className="flex gap-2 mt-4">
-        <div className="h-9 w-24 bg-zinc-800 rounded" />
-        <div className="h-9 w-24 bg-zinc-800 rounded" />
+        <div className="h-9 w-24 bg-[#0f1319] rounded" />
+        <div className="h-9 w-24 bg-[#0f1319] rounded" />
       </div>
     </div>
   );
@@ -434,11 +434,11 @@ export default function TradePlannerTable() {
 
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-3 text-xs text-zinc-300">
-              <div className="px-3 py-2 rounded bg-zinc-800">
+              <div className="px-3 py-2 rounded bg-[#0f1319]">
                 <div className="text-[11px]">Plans</div>
                 <div className="font-medium">{(plans ?? []).length}</div>
               </div>
-              <div className="px-3 py-2 rounded bg-zinc-800">
+              <div className="px-3 py-2 rounded bg-[#0f1319]">
                 <div className="text-[11px]">Tier</div>
                 <div className="font-medium capitalize">{userPlan}</div>
               </div>
@@ -664,9 +664,9 @@ export default function TradePlannerTable() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="rounded px-2 py-1 bg-zinc-900/40 text-sm font-semibold">{plan.symbol}</div>
+                        <div className="rounded px-2 py-1 bg-[#0f1319]/40 text-sm font-semibold">{plan.symbol}</div>
                         <div className="text-sm text-zinc-300">{plan.setupType}</div>
-                        <div className="text-xs ml-2 px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">{plan.tier ?? "starter"}</div>
+                        <div className="text-xs ml-2 px-2 py-0.5 rounded bg-[#0f1319] text-zinc-300">{plan.tier ?? "starter"}</div>
                       </div>
 
                       <div className="text-right">
@@ -741,11 +741,11 @@ export default function TradePlannerTable() {
 
                     {/* computed stats */}
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-                      <div className="px-2 py-1 rounded bg-zinc-900/40">Risk/unit: <span className="font-medium">${est.riskPerUnit.toFixed(2)}</span></div>
-                      <div className="px-2 py-1 rounded bg-zinc-900/40">Reward/unit: <span className="font-medium">${est.rewardPerUnit.toFixed(2)}</span></div>
-                      <div className="px-2 py-1 rounded bg-zinc-900/40">Est. Risk: <span className="font-medium">${est.estRisk.toFixed(2)}</span></div>
-                      <div className="px-2 py-1 rounded bg-zinc-900/40">Est. Reward: <span className="font-medium">${est.estReward.toFixed(2)}</span></div>
-                      <div className="px-2 py-1 rounded bg-zinc-900/40">RR: <span className="font-medium">{Number.isFinite(est.estRR) ? est.estRR.toFixed(2) : "—"}</span></div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319]/40">Risk/unit: <span className="font-medium">${est.riskPerUnit.toFixed(2)}</span></div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319]/40">Reward/unit: <span className="font-medium">${est.rewardPerUnit.toFixed(2)}</span></div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319]/40">Est. Risk: <span className="font-medium">${est.estRisk.toFixed(2)}</span></div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319]/40">Est. Reward: <span className="font-medium">${est.estReward.toFixed(2)}</span></div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319]/40">RR: <span className="font-medium">{Number.isFinite(est.estRR) ? est.estRR.toFixed(2) : "—"}</span></div>
                     </div>
 
                     {/* notes */}
@@ -796,12 +796,12 @@ export default function TradePlannerTable() {
                     <div className="mt-2 flex flex-col gap-2 items-end">
                       <button className="flex items-center gap-2 text-xs text-zinc-300" onClick={() => setAlertsTarget(plan.id)} data-track="planner_alerts_open" data-track-meta={`{"planId":"${String(plan.id)}"}`}>
                         <Zap className="w-4 h-4 text-yellow-400" /> Auto alerts
-                        <span className="ml-1 px-2 py-0.5 rounded text-xs bg-zinc-800">coming</span>
+                        <span className="ml-1 px-2 py-0.5 rounded text-xs bg-[#0f1319]">coming</span>
                       </button>
 
                       <div className="text-[11px] text-zinc-400 flex items-center gap-2">
                         <Star className="w-4 h-4 text-yellow-300" /> Performance insights
-                        <span className="ml-1 px-2 py-0.5 rounded text-xs bg-zinc-800">Pro+</span>
+                        <span className="ml-1 px-2 py-0.5 rounded text-xs bg-[#0f1319]">Pro+</span>
                       </div>
                     </div>
                   </div>
@@ -817,8 +817,8 @@ export default function TradePlannerTable() {
                     </div>
 
                     <div className="flex items-center gap-2 text-xs">
-                      <div className="px-2 py-1 rounded bg-zinc-800 text-zinc-300">Templates</div>
-                      <div className="px-2 py-1 rounded bg-zinc-800 text-zinc-300">Signals</div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319] text-zinc-300">Templates</div>
+                      <div className="px-2 py-1 rounded bg-[#0f1319] text-zinc-300">Signals</div>
                     </div>
                   </div>
 
@@ -875,7 +875,7 @@ export default function TradePlannerTable() {
               )}
 
               <div className="flex items-center gap-3">
-                <div className="rounded-full p-2 bg-zinc-900/40"><Icon className="w-5 h-5 text-yellow-300" /></div>
+                <div className="rounded-full p-2 bg-[#0f1319]/40"><Icon className="w-5 h-5 text-yellow-300" /></div>
                 <div>
                   <div className="text-sm font-medium">{tier.title}</div>
                   <div className="text-xs text-zinc-400">{tier.desc}</div>

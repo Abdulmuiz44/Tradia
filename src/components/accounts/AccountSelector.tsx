@@ -29,7 +29,7 @@ export default function AccountSelector({
         <div className={`relative ${className}`}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition w-full justify-between"
+                className="flex items-center gap-2 px-3 py-2 bg-[#0f1319] border border-gray-700 rounded-lg hover:bg-gray-750 transition w-full justify-between"
             >
                 <div className="flex-1 text-left min-w-0">
                     <div className="text-sm font-medium truncate">{selectedAccount.name}</div>
@@ -44,7 +44,7 @@ export default function AccountSelector({
             </button>
 
             {isOpen && (
-                <div className="absolute top-full mt-2 left-0 right-0 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
+                <div className="absolute top-full mt-2 left-0 right-0 bg-[#0f1319] border border-gray-700 rounded-lg shadow-lg z-50">
                     <div className="max-h-64 overflow-y-auto">
                         {accounts.length === 0 ? (
                             <div className="p-4 text-center text-gray-400 text-sm">
@@ -56,7 +56,7 @@ export default function AccountSelector({
                                     key={account.id}
                                     className={`border-b border-gray-800 last:border-b-0 transition ${selectedAccount.id === account.id
                                         ? "bg-blue-500/10"
-                                        : "hover:bg-gray-800/50"
+                                        : "hover:bg-[#0f1319]/50"
                                         }`}
                                 >
                                     <div className="flex items-center justify-between px-4 py-3 group">
@@ -119,7 +119,7 @@ export default function AccountSelector({
                                     setIsOpen(false);
                                     router.push("/dashboard/accounts");
                                 }}
-                                className="w-full px-4 py-3 flex items-center gap-2 text-blue-400 hover:bg-gray-800 transition text-sm"
+                                className="w-full px-4 py-3 flex items-center gap-2 text-blue-400 hover:bg-[#0f1319] transition text-sm"
                             >
                                 <Plus size={16} />
                                 New Account
@@ -133,7 +133,7 @@ export default function AccountSelector({
             {deleteConfirm && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
                     <div className="absolute inset-0" onClick={() => setDeleteConfirm(null)} aria-hidden />
-                    <div className="relative bg-gray-900 rounded-lg p-6 max-w-sm w-full z-10">
+                    <div className="relative bg-[#0f1319] rounded-lg p-6 max-w-sm w-full z-10">
                         <h3 className="text-lg font-semibold text-white mb-2">Delete Account</h3>
                         <p className="text-sm text-gray-400 mb-6">
                             Are you sure you want to delete this trading account? This action cannot be undone.

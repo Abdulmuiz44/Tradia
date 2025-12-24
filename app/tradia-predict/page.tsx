@@ -162,7 +162,7 @@ function TradiaPredictContent() {
                   Dashboard
                 </a>
                 <a href="/chat" className="block px-3 py-2 text-gray-300 hover:bg-gray-700 rounded">
-                Tradia AI
+                  Tradia AI
                 </a>
                 <a href="/tradia-predict" className="block px-3 py-2 bg-blue-600 text-white rounded">
                   Tradia Predict
@@ -179,7 +179,7 @@ function TradiaPredictContent() {
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button
-                className="lg:hidden p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="lg:hidden p-2 rounded-lg bg-[#0f1319] hover:bg-gray-700 transition-colors"
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open Menu"
               >
@@ -195,7 +195,7 @@ function TradiaPredictContent() {
                   panelClassName="w-[95%] max-w-sm"
                   positionClassName="left-4 top-16"
                   trigger={
-                    <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors" aria-label="Open account menu">
+                    <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#0f1319] transition-colors" aria-label="Open account menu">
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
                         <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">{userInitial}</AvatarFallback>
@@ -250,7 +250,7 @@ function TradiaPredictContent() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="p-2 rounded-lg bg-[#0f1319] hover:bg-gray-700 transition-colors"
                 title="Refresh data"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -262,7 +262,7 @@ function TradiaPredictContent() {
                   title="Account"
                   panelClassName="w-[95%] max-w-sm"
                   trigger={
-                    <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors" aria-label="Open account menu">
+                    <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#0f1319] transition-colors" aria-label="Open account menu">
                       <Avatar className="w-8 h-8">
                         <AvatarImage
                           src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || session?.user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=fff&size=32`}
@@ -307,11 +307,10 @@ function TradiaPredictContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
                       ? 'border-blue-500 text-blue-400'
                       : 'border-transparent text-gray-400 hover:text-gray-300'
-                  }`}
+                    }`}
                 >
                   <span className="text-lg">{getTabIcon(tab.icon)}</span>
                   <span className="hidden sm:inline">{tab.label}</span>

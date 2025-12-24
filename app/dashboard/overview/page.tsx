@@ -407,7 +407,7 @@ function OverviewContent() {
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-[#0D1117]">
                         <div className="flex items-center gap-3">
-                            <button className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800" onClick={() => setMobileMenuOpen(true)}>
+                            <button className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319]" onClick={() => setMobileMenuOpen(true)}>
                                 <Menu size={20} />
                             </button>
                             <div>
@@ -419,13 +419,13 @@ function OverviewContent() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button onClick={() => { }} className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 hidden sm:inline-flex">
+                            <button onClick={() => { }} className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] hidden sm:inline-flex">
                                 <Sun className="w-4 h-4" />
                             </button>
 
                             <AnimatedDropdown
                                 title="Filter Trades"
-                                trigger={<button className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800">
+                                trigger={<button className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319]">
                                     <Filter size={18} />
                                 </button>}
                             >
@@ -442,11 +442,11 @@ function OverviewContent() {
                                 </div>
                             </AnimatedDropdown>
 
-                            <button onClick={handleSyncNow} disabled={isLoading} className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700">
+                            <button onClick={handleSyncNow} disabled={isLoading} className="p-2 rounded-xl bg-[#0f1319] hover:bg-[#0f1319]/80">
                                 <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
                             </button>
 
-                            <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-gray-800 text-gray-300 text-sm">
+                            <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-[#0f1319] text-gray-300 text-sm">
                                 {filterLabel}
                             </div>
                         </div>

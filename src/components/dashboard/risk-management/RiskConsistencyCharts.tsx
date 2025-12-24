@@ -114,8 +114,8 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.dataKey === 'riskPercent' ? 'Risk' : entry.dataKey === 'equity' ? 'Equity' : 'Drawdown'}: ${entry.dataKey === 'riskPercent' ? `${entry.value.toFixed(2)}%` :
-                  entry.dataKey === 'equity' ? `$${entry.value.toLocaleString()}` :
-                    `$${Math.abs(entry.value).toLocaleString()}`
+                entry.dataKey === 'equity' ? `$${entry.value.toLocaleString()}` :
+                  `$${Math.abs(entry.value).toLocaleString()}`
                 }`}
             </p>
           ))}
@@ -304,7 +304,7 @@ const RiskConsistencyCharts: React.FC<RiskConsistencyChartsProps> = ({ trades })
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg">
+                        <div className="bg-[#0f1319] border border-gray-700 rounded-lg p-3 shadow-lg">
                           <p className="text-white font-medium">{`Risk Range: ${label}`}</p>
                           <p className="text-blue-400 text-sm">
                             {`Trades: ${payload[0].value}`}

@@ -624,7 +624,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                             <h3 className="text-lg font-semibold">{def.title}</h3>
                             <p className="text-sm text-zinc-300 mt-2">{def.body}</p>
                         </div>
-                        <button onClick={onClose} className="p-1 rounded bg-zinc-800">
+                        <button onClick={onClose} className="p-1 rounded bg-[#0f1319]">
                             <X size={16} />
                         </button>
                     </div>
@@ -690,7 +690,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                 {/* explanation button top-right for desktop and floating in card for mobile */}
                 <button
                     onClick={() => setExplainKey(opts.keyId)}
-                    className="absolute top-2 right-2 p-1 rounded bg-zinc-800"
+                    className="absolute top-2 right-2 p-1 rounded bg-[#0f1319]"
                     title="Explain"
                 >
                     <Info size={14} />
@@ -738,7 +738,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         const maxAbs = Math.max(...absVals, 1);
 
         const cellClass = (val: number) => {
-            if (val === 0) return "bg-zinc-800/40 border border-zinc-700";
+            if (val === 0) return "bg-[#0f1319]/40 border border-zinc-700";
             // positive => green shades; negative => red shades
             const intensity = Math.min(1, Math.abs(val) / maxAbs);
             const level = Math.ceil(intensity * 4); // 1..4
@@ -770,7 +770,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
 
         // legend scale
         const legend = [
-            { label: "Less", cls: "bg-zinc-800/40 border border-zinc-700" },
+            { label: "Less", cls: "bg-[#0f1319]/40 border border-zinc-700" },
             { label: "Low", cls: "bg-[rgba(110,231,183,0.30)]" },
             { label: "Medium", cls: "bg-[rgba(52,211,153,0.45)]" },
             { label: "High", cls: "bg-[rgba(16,185,129,0.6)]" },
@@ -930,7 +930,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                         <div>
                             <div className="flex items-center gap-2">
                                 <div className="text-xs text-zinc-400">Tradia Score</div>
-                                <button onClick={() => setExplainKey("tradiaScore")} className="p-1 rounded bg-zinc-800">
+                                <button onClick={() => setExplainKey("tradiaScore")} className="p-1 rounded bg-[#0f1319]">
                                     <Info size={14} />
                                 </button>
                             </div>
@@ -1137,7 +1137,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                             <div className="flex items-center gap-3">
                                 <div className="text-xs text-zinc-400">PNL</div>
                                 <div className={`font-semibold ${metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass}`}>${metrics.totalPnl.toFixed(2)}</div>
-                                <button onClick={() => setExplainKey("pnl")} className="p-1 rounded bg-zinc-800">
+                                <button onClick={() => setExplainKey("pnl")} className="p-1 rounded bg-[#0f1319]">
                                     <Info size={14} />
                                 </button>
                             </div>

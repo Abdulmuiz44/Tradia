@@ -27,7 +27,7 @@ export default function TradeJournalModal({ trade, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-lg">
+      <div className="bg-white dark:bg-[#0f1319] p-6 rounded-xl w-full max-w-lg">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
           Journal: {trade.symbol}
         </h2>
@@ -47,7 +47,7 @@ export default function TradeJournalModal({ trade, onClose }: Props) {
               value={emotion}
               onChange={(e) => setEmotion(e.target.value)}
             >
-              {["Fear","Greed","Confidence","Revenge","Calm"].map((emo) => (
+              {["Fear", "Greed", "Confidence", "Revenge", "Calm"].map((emo) => (
                 <option key={emo} value={emo}>{emo}</option>
               ))}
             </select>

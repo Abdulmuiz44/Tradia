@@ -285,7 +285,7 @@ export default function DocsPage() {
             >
               <button
                 onClick={() => toggleSection(doc.id)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#0f1319] transition-colors"
               >
                 <div className="text-left">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -348,7 +348,7 @@ export default function DocsPage() {
             </a>
             <a
               href="/contact"
-              className="inline-block px-6 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="inline-block px-6 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-[#0f1319] transition-colors"
             >
               Contact Support
             </a>

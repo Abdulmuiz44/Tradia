@@ -172,7 +172,7 @@ export default function ResourcesPage() {
                   <button
                     key={itemIndex}
                     onClick={() => item.link !== "#" && router.push(item.link)}
-                    className="w-full text-left p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+                    className="w-full text-left p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#0f1319] transition-colors group"
                   >
                     <h3 className="font-semibold text-[#0f1319] dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       {item.title}

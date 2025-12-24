@@ -64,7 +64,7 @@ function UserAnalyticsContent() {
                   positionClassName="left-4 top-16"
                   trigger={
                     <button
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#0f1319] transition-colors"
                       aria-label="Open account menu"
                     >
                       <Avatar className="w-8 h-8">
@@ -127,7 +127,7 @@ function UserAnalyticsContent() {
                 panelClassName="w-[95%] max-w-sm"
                 trigger={
                   <button
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#0f1319] transition-colors"
                     aria-label="Open account menu"
                   >
                     <Avatar className="w-8 h-8">

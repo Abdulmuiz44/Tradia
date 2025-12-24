@@ -166,7 +166,7 @@ export default function UpgradePage() {
 
                 {/* Billing Toggle */}
                 <div className="mb-12 flex justify-center">
-                    <div className="inline-flex rounded-full bg-gray-200 dark:bg-gray-800 p-1">
+                    <div className="inline-flex rounded-full bg-gray-200 dark:bg-[#0f1319] p-1">
                         <button
                             onClick={() => setBillingCycle("monthly")}
                             className={`px-6 py-2 rounded-full font-semibold transition-all ${billingCycle === "monthly"
@@ -199,7 +199,7 @@ export default function UpgradePage() {
                                 transition={{ delay: index * 0.1 }}
                                 className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden ${plan.badge === "Most Popular"
                                     ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-2xl scale-105"
-                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-indigo-300 dark:hover:border-indigo-600"
+                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f1319]/50 hover:border-indigo-300 dark:hover:border-indigo-600"
                                     }`}
                             >
                                 {/* Badge */}

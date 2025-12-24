@@ -61,10 +61,10 @@ function PaymentMethodCard({ method, isSelected, onClick }: PaymentMethodCardPro
       onClick={onClick}
       disabled={method.comingSoon}
       className={`p-4 rounded-lg border-2 transition-all duration-200 text-left flex flex-col items-center relative ${method.comingSoon
-          ? "border-gray-700 bg-[#0f1319]/50 opacity-60 cursor-not-allowed"
-          : isSelected
-            ? "border-blue-500 bg-blue-500/10 shadow-lg"
-            : "border-gray-600 hover:border-gray-500 bg-gray-800/50 hover:bg-gray-700/50 cursor-pointer"
+        ? "border-gray-700 bg-[#0f1319]/50 opacity-60 cursor-not-allowed"
+        : isSelected
+          ? "border-blue-500 bg-blue-500/10 shadow-lg"
+          : "border-gray-600 hover:border-gray-500 bg-[#0f1319]/50 hover:bg-gray-700/50 cursor-pointer"
         }`}
     >
       <div className="flex flex-col items-center space-y-2 w-full">

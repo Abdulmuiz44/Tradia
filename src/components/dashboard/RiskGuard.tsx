@@ -36,7 +36,7 @@ export default function RiskGuard(): React.ReactElement | null {
         const raw = localStorage.getItem("riskControls");
         if (raw) return { ...loadDefaultsForPlan("starter"), ...(JSON.parse(raw) as RiskControls) };
       }
-    } catch {}
+    } catch { }
     return loadDefaultsForPlan(plan);
   });
 
@@ -47,11 +47,11 @@ export default function RiskGuard(): React.ReactElement | null {
         const raw = localStorage.getItem("riskControls");
         if (!raw) setControls(loadDefaultsForPlan(plan));
       }
-    } catch {}
+    } catch { }
   }, [plan]);
 
   useEffect(() => {
-    try { if (typeof window !== "undefined") localStorage.setItem("riskControls", JSON.stringify(controls)); } catch {}
+    try { if (typeof window !== "undefined") localStorage.setItem("riskControls", JSON.stringify(controls)); } catch { }
   }, [controls]);
 
   const today = useMemo(() => new Date(), []);
@@ -113,7 +113,7 @@ export default function RiskGuard(): React.ReactElement | null {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDismissed(true)}
-            className="px-3 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-700"
+            className="px-3 py-1.5 rounded bg-[#0f1319] text-zinc-200 border border-zinc-700 hover:bg-zinc-700"
             title="Snooze"
           >
             Snooze
@@ -126,8 +126,8 @@ export default function RiskGuard(): React.ReactElement | null {
             Adjust
           </a>
           <button
-            onClick={() => alert('Break started. Timer: 10 minutes. Use this time to reset.')} 
-            className="px-3 py-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-700 inline-flex items-center gap-1"
+            onClick={() => alert('Break started. Timer: 10 minutes. Use this time to reset.')}
+            className="px-3 py-1.5 rounded bg-[#0f1319] text-zinc-200 border border-zinc-700 hover:bg-zinc-700 inline-flex items-center gap-1"
           >
             <Coffee className="h-4 w-4" />
             Take Break

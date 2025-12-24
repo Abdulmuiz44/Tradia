@@ -92,16 +92,16 @@ export default function AccountManager() {
 
       {/* Accounts list */}
       {accounts.length === 0 ? (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-12 text-center">
+        <div className="bg-[#0f1319] border border-gray-700 rounded-lg p-12 text-center">
           <Activity size={48} className="mx-auto text-gray-500 mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Trading Accounts Yet</h2>
           <p className="text-gray-400 mb-6">Create your first trading account to get started</p>
           <button
-           onClick={handleAddAccountClick}
-           className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+            onClick={handleAddAccountClick}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
           >
-           <Plus size={20} />
-           Create Account
+            <Plus size={20} />
+            Create Account
           </button>
         </div>
       ) : (
@@ -109,11 +109,10 @@ export default function AccountManager() {
           {accounts.map((account) => (
             <div
               key={account.id}
-              className={`border rounded-lg p-6 transition-all ${
-                selectedAccount?.id === account.id
+              className={`border rounded-lg p-6 transition-all ${selectedAccount?.id === account.id
                   ? "border-blue-500 bg-blue-500/10"
-                  : "border-gray-700 bg-gray-800 hover:bg-gray-750"
-              }`}
+                  : "border-gray-700 bg-[#0f1319] hover:bg-gray-750"
+                }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -202,7 +201,7 @@ export default function AccountManager() {
         size="sm"
       >
         {accountToDelete && (
-          <div className="mt-4 p-3 bg-gray-800 rounded">
+          <div className="mt-4 p-3 bg-[#0f1319] rounded">
             <p className="font-semibold">{accountToDelete.name}</p>
             <p className="text-sm text-gray-400">
               ${accountToDelete.account_size.toFixed(2)} {accountToDelete.currency}

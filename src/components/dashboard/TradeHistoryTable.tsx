@@ -542,7 +542,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                 <div className="flex items-center gap-3 flex-1">
                     <div className="flex items-center gap-2">
                         <button
-                            className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+                            className="p-2 bg-[#0f1319] rounded-full hover:bg-gray-700"
                             onClick={() => setFilterOpen(!filterOpen)}
                             title="Filters"
                             aria-pressed={filterOpen}
@@ -581,15 +581,15 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                     <div className="flex gap-3 ml-2">
                         <div className="flex items-center gap-2 text-sm text-zinc-300">
                             <div className="hidden md:flex items-center gap-3">
-                                <div className="px-3 py-2 rounded bg-zinc-800">
+                                <div className="px-3 py-2 rounded bg-[#0f1319]">
                                     <div className="text-xs">Trades</div>
                                     <div className="font-medium">{stats.total}</div>
                                 </div>
-                                <div className="px-3 py-2 rounded bg-zinc-800">
+                                <div className="px-3 py-2 rounded bg-[#0f1319]">
                                     <div className="text-xs">Win Rate</div>
                                     <div className="font-medium">{stats.winRate}%</div>
                                 </div>
-                                <div className="px-3 py-2 rounded bg-zinc-800">
+                                <div className="px-3 py-2 rounded bg-[#0f1319]">
                                     <div className="text-xs">Total PnL</div>
                                     <div
                                         className={`font-medium ${stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"
@@ -598,7 +598,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                                         ${stats.totalPnl.toFixed(2)}
                                     </div>
                                 </div>
-                                <div className="px-3 py-2 rounded bg-zinc-800">
+                                <div className="px-3 py-2 rounded bg-[#0f1319]">
                                     <div className="text-xs">Avg RR</div>
                                     <div className="font-medium">
                                         {Number.isFinite(stats.avgRR) ? stats.avgRR.toFixed(2) : "—"}
@@ -608,9 +608,9 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
 
                             {/* compact summary for mobile */}
                             <div className="md:hidden flex items-center gap-2 text-xs text-zinc-300">
-                                <div className="px-2 py-1 rounded bg-zinc-800">T:{stats.total}</div>
-                                <div className="px-2 py-1 rounded bg-zinc-800">W:{stats.winRate}%</div>
-                                <div className="px-2 py-1 rounded bg-zinc-800">{stats.totalPnl >= 0 ? "+" : ""}${stats.totalPnl.toFixed(0)}</div>
+                                <div className="px-2 py-1 rounded bg-[#0f1319]">T:{stats.total}</div>
+                                <div className="px-2 py-1 rounded bg-[#0f1319]">W:{stats.winRate}%</div>
+                                <div className="px-2 py-1 rounded bg-[#0f1319]">{stats.totalPnl >= 0 ? "+" : ""}${stats.totalPnl.toFixed(0)}</div>
                             </div>
                         </div>
                     </div>
@@ -634,7 +634,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                     </button>
 
                     <button
-                        className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+                        className="p-2 bg-[#0f1319] rounded-full hover:bg-gray-700"
                         onClick={() => setExportOpen(true)}
                         title="Export"
                     >
@@ -643,7 +643,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
 
                     {/* Navigate to import page */}
                     <button
-                        className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+                        className="p-2 bg-[#0f1319] rounded-full hover:bg-gray-700"
                         onClick={() => router.push("/dashboard/trades/import")}
                         title="Import CSV"
                         aria-haspopup="dialog"
@@ -652,7 +652,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                     </button>
 
                     <button
-                        className="p-2 bg-gray-800 rounded-full hover:bg-gray-700"
+                        className="p-2 bg-[#0f1319] rounded-full hover:bg-gray-700"
                         onClick={migrateLocalTrades}
                         title="Migrate to Cloud"
                     >
@@ -678,7 +678,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <input
                             key={f}
                             type="text"
-                            className="p-2 rounded bg-gray-800 text-white w-full"
+                            className="p-2 rounded bg-[#0f1319] text-white w-full"
                             placeholder={f}
                             value={(filters as Record<string, string>)[f]}
                             onChange={(e) =>
@@ -690,7 +690,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <input
                             key={f}
                             type="date"
-                            className="p-2 rounded bg-gray-800 text-white w-full"
+                            className="p-2 rounded bg-[#0f1319] text-white w-full"
                             value={(filters as Record<string, string>)[f]}
                             onChange={(e) =>
                                 setFilters((p) => ({ ...p, [f]: e.target.value }))
@@ -701,7 +701,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <input
                             key={f}
                             type="number"
-                            className="p-2 rounded bg-gray-800 text-white w-full"
+                            className="p-2 rounded bg-[#0f1319] text-white w-full"
                             placeholder={f}
                             value={(filters as Record<string, string>)[f]}
                             onChange={(e) =>
@@ -721,7 +721,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                                     maxPNL: "",
                                 })
                             }
-                            className="px-3 py-2 bg-zinc-800 rounded hover:bg-zinc-700 text-sm"
+                            className="px-3 py-2 bg-[#0f1319] rounded hover:bg-zinc-700 text-sm"
                         >
                             Reset Filters
                         </button>
@@ -743,7 +743,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                 </div>
 
                 {/* Table for sm+ */}
-                <div className="hidden sm:block overflow-x-auto bg-gray-800 rounded-xl shadow-lg max-h-96 w-full">
+                <div className="hidden sm:block overflow-x-auto bg-[#0f1319] rounded-xl shadow-lg max-h-96 w-full">
                     {
                         <table className="min-w-full text-sm text-left table-fixed">
                             <thead className="bg-gray-700 text-gray-200 sticky top-0">
@@ -1025,7 +1025,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                 size="sm"
             >
                 {tradeToDelete && (
-                    <div className="mt-4 p-3 bg-gray-800 rounded">
+                    <div className="mt-4 p-3 bg-[#0f1319] rounded">
                         <div className="text-sm">
                             <div><strong>Symbol:</strong> {tradeToDelete.symbol}</div>
                             <div><strong>Direction:</strong> {tradeToDelete.direction}</div>

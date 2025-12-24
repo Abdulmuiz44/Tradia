@@ -389,7 +389,7 @@ export default function PricingPlans(): React.ReactElement {
                       ? "bg-transparent border border-gray-600 text-gray-200 hover:border-blue-500"
                       : p.highlight
                         ? "bg-blue-600 hover:bg-blue-700 text-white"
-                        : "bg-gray-800 hover:bg-gray-700 text-white"
+                        : "bg-[#0f1319] hover:bg-gray-700 text-white"
                     }`}
                 >
                   {isSelected

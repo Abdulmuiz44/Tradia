@@ -83,7 +83,7 @@ function TradeHistoryContent() {
                   positionClassName="left-4 top-16"
                   trigger={
                     <button
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#0f1319] transition-colors"
                       aria-label="Open account menu"
                     >
                       <Avatar className="w-8 h-8">
@@ -156,7 +156,7 @@ function TradeHistoryContent() {
                   panelClassName="w-[95%] max-w-sm"
                   trigger={
                     <button
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#0f1319] transition-colors"
                       aria-label="Open account menu"
                     >
                       <Avatar className="w-8 h-8">
@@ -211,21 +211,21 @@ function TradeHistoryContent() {
           <div className="flex-1 overflow-auto p-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
                 <p className="text-sm text-gray-400">Total Trades</p>
                 <p className="text-3xl font-bold text-white">{metrics.totalTrades}</p>
               </div>
-              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
                 <p className="text-sm text-gray-400">Win Rate</p>
                 <p className="text-3xl font-bold text-white">{metrics.winRate}%</p>
               </div>
-              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
                 <p className="text-sm text-gray-400">Total P&L</p>
                 <p className={`text-3xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   ${metrics.totalPnL.toFixed(2)}
                 </p>
               </div>
-              <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
                 <p className="text-sm text-gray-400">Avg RR</p>
                 <p className="text-3xl font-bold text-white">{metrics.avgRR.toFixed(2)}R</p>
               </div>

@@ -302,7 +302,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Symbol</label>
             <input
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={form.symbol ?? ""}
               onChange={(e) => handleChange("symbol", e.target.value)}
               placeholder="e.g. EURUSD"
@@ -313,7 +313,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Direction</label>
             <select
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.direction ?? "Buy")}
               onChange={(e) => handleChange("direction", e.target.value)}
             >
@@ -326,7 +326,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Order Type</label>
             <select
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.orderType ?? orderTypes[0])}
               onChange={(e) => handleChange("orderType", e.target.value)}
             >
@@ -342,7 +342,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Session</label>
             <select
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.session ?? sessions[0])}
               onChange={(e) => handleChange("session", e.target.value)}
             >
@@ -359,7 +359,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <label className="block text-sm font-medium text-gray-300 mb-1">Open Time</label>
             <input
               type="datetime-local"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.openTime ?? "").slice(0, 16)}
               onChange={(e) => handleChange("openTime", e.target.value)}
             />
@@ -370,7 +370,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <label className="block text-sm font-medium text-gray-300 mb-1">Close Time</label>
             <input
               type="datetime-local"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.closeTime ?? "").slice(0, 16)}
               onChange={(e) => handleChange("closeTime", e.target.value)}
             />
@@ -382,7 +382,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="text"
               inputMode="decimal"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.lotSize ?? '')}
               onChange={(e) => handleChange("lotSize", e.target.value)}
               placeholder="e.g., 0.01"
@@ -395,7 +395,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="text"
               inputMode="decimal"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.entryPrice ?? 0)}
               onChange={(e) => handleChange("entryPrice", e.target.value)}
               placeholder="e.g., 1.12345"
@@ -408,7 +408,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="text"
               inputMode="decimal"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.stopLossPrice ?? 0)}
               onChange={(e) => handleChange("stopLossPrice", e.target.value)}
               placeholder="e.g., 1.12000"
@@ -421,7 +421,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="text"
               inputMode="decimal"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.takeProfitPrice ?? 0)}
               onChange={(e) => handleChange("takeProfitPrice", e.target.value)}
               placeholder="e.g., 1.12800"
@@ -434,7 +434,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="text"
               inputMode="decimal"
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.pnl ?? '')}
               onChange={(e) => handleChange("pnl", e.target.value)}
               placeholder="e.g., 150.50"
@@ -446,7 +446,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <label className="block text-sm font-medium text-gray-300 mb-1">Outcome</label>
             <div className="flex gap-2 items-center">
               <select
-                className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+                className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
                 value={String(form.outcome ?? "Win")}
                 onChange={(e) => handleOutcomeChange(e.target.value as Trade["outcome"])}
               >
@@ -455,7 +455,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
                 <option>Breakeven</option>
               </select>
 
-              <div className="ml-2 inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-zinc-800 text-gray-200">
+              <div className="ml-2 inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-[#0f1319] text-gray-200">
                 {rrString || "RR"}
               </div>
             </div>
@@ -467,7 +467,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             {!showCustomStrategyInput ? (
               <div className="flex gap-2">
                 <select
-                  className="flex-1 p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+                  className="flex-1 p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
                   value={String(form.strategy ?? "")}
                   onChange={(e) => handleChange("strategy", e.target.value)}
                 >
@@ -487,7 +487,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             ) : (
               <div className="flex gap-2">
                 <input
-                  className="flex-1 p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+                  className="flex-1 p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
                   placeholder="Enter custom strategy..."
                   value={customStrategyInput}
                   onChange={(e) => setCustomStrategyInput(e.target.value)}
@@ -518,7 +518,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Emotion</label>
             <select
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={String(form.emotion ?? "Confident")}
               onChange={(e) => handleChange("emotion", e.target.value as Trade["emotion"])}
             >
@@ -536,7 +536,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <label className="block text-sm font-medium text-gray-300 mb-1">Journal Notes</label>
             <textarea
               rows={4}
-              className="w-full p-2 rounded border border-zinc-700 bg-zinc-900 text-white"
+              className="w-full p-2 rounded border border-zinc-700 bg-[#0f1319] text-white"
               value={form.journalNotes ?? ""}
               onChange={(e) => handleChange("journalNotes", e.target.value as Trade["journalNotes"])}
             />
@@ -548,7 +548,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="file"
               accept="image/*"
-              className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:bg-zinc-800 file:text-gray-200 hover:file:bg-zinc-700"
+              className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:bg-[#0f1319] file:text-gray-200 hover:file:bg-zinc-700"
               onChange={handleBeforeFile}
             />
             {beforeUrl && (
@@ -561,7 +561,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
                   unoptimized
                   className="h-16 w-24 rounded border border-zinc-800 object-cover"
                 />
-                <button type="button" onClick={() => setBeforeUrl("")} className="px-2 py-1 text-xs bg-zinc-800 rounded hover:bg-zinc-700">Remove</button>
+                <button type="button" onClick={() => setBeforeUrl("")} className="px-2 py-1 text-xs bg-[#0f1319] rounded hover:bg-zinc-700">Remove</button>
               </div>
             )}
           </div>
@@ -571,7 +571,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
             <input
               type="file"
               accept="image/*"
-              className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:bg-zinc-800 file:text-gray-200 hover:file:bg-zinc-700"
+              className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-3 file:rounded file:border-0 file:text-sm file:bg-[#0f1319] file:text-gray-200 hover:file:bg-zinc-700"
               onChange={handleAfterFile}
             />
             {afterUrl && (
@@ -584,7 +584,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
                   unoptimized
                   className="h-16 w-24 rounded border border-zinc-800 object-cover"
                 />
-                <button type="button" onClick={() => setAfterUrl("")} className="px-2 py-1 text-xs bg-zinc-800 rounded hover:bg-zinc-700">Remove</button>
+                <button type="button" onClick={() => setAfterUrl("")} className="px-2 py-1 text-xs bg-[#0f1319] rounded hover:bg-zinc-700">Remove</button>
               </div>
             )}
           </div>

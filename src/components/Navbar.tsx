@@ -114,8 +114,8 @@ export default function Navbar() {
                 <Link
                   href={href}
                   className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${isActive(href)
-                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
+                    ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                 >
                   {label}
@@ -135,7 +135,7 @@ export default function Navbar() {
             </button>
             {mounted && (
               <span
-                className="hidden lg:inline-flex items-center px-2 py-1 rounded-md text-xs bg-white/10 dark:bg-zinc-800 border border-white/10 text-gray-700 dark:text-gray-300"
+                className="hidden lg:inline-flex items-center px-2 py-1 rounded-md text-xs bg-white/10 dark:bg-[#0f1319] border border-white/10 text-gray-700 dark:text-gray-300"
                 title="Current theme"
               >
                 Theme: {(resolvedTheme || theme || 'system').toString().replace(/^./, c => c.toUpperCase())}
@@ -156,8 +156,8 @@ export default function Navbar() {
                     }
                   }}
                   className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${isCta
-                      ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
+                    ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                 >
                   {label}
@@ -180,7 +180,7 @@ export default function Navbar() {
             {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           {mounted && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 dark:bg-zinc-800 text-gray-700 dark:text-gray-300" title="Current theme">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 dark:bg-[#0f1319] text-gray-700 dark:text-gray-300" title="Current theme">
               {(resolvedTheme || theme || 'system').toString()}
             </span>
           )}
@@ -209,8 +209,8 @@ export default function Navbar() {
                 href={href}
                 onClick={() => setMenuOpen(false)}
                 className={`text-base px-2 py-2 rounded-md transition-colors ${isActive(href)
-                    ? "text-indigo-600 dark:text-indigo-300 bg-indigo-500/10"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
+                  ? "text-indigo-600 dark:text-indigo-300 bg-indigo-500/10"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
               >
                 {label}
@@ -230,8 +230,8 @@ export default function Navbar() {
                     }
                   }}
                   className={`text-base px-3 py-2 rounded-md ${label === "Get Started"
-                      ? "bg-indigo-600 text-white text-center"
-                      : "text-gray-700 dark:text-gray-300"
+                    ? "bg-indigo-600 text-white text-center"
+                    : "text-gray-700 dark:text-gray-300"
                     }`}
                 >
                   {label}
@@ -280,7 +280,7 @@ function CoachPill() {
       positionClassName="right-4 top-16"
       panelClassName="w-[95%] max-w-sm"
       trigger={(
-        <button className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-zinc-800 border border-white/10 shadow-sm" aria-label="Open account menu">
+        <button className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 dark:bg-[#0f1319] border border-white/10 shadow-sm" aria-label="Open account menu">
           <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs font-semibold text-white">
             {profileInitial}
           </div>

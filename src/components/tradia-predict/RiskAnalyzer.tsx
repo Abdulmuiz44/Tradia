@@ -183,14 +183,14 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
                       <div
                         key={level}
                         className={`w-3 h-3 rounded ${level <= item.riskLevel
-                            ? item.riskLevel >= 4
-                              ? 'bg-red-500'
-                              : item.riskLevel >= 3
-                                ? 'bg-orange-500'
-                                : item.riskLevel >= 2
-                                  ? 'bg-yellow-500'
-                                  : 'bg-green-500'
-                            : 'bg-gray-700'
+                          ? item.riskLevel >= 4
+                            ? 'bg-red-500'
+                            : item.riskLevel >= 3
+                              ? 'bg-orange-500'
+                              : item.riskLevel >= 2
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                          : 'bg-gray-700'
                           }`}
                       />
                     ))}
@@ -213,7 +213,7 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ trades }) => {
         <CardContent>
           <div className="space-y-4">
             {riskMetrics.recommendations.map((recommendation, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 bg-gray-800/50 rounded-lg">
+              <div key={index} className="flex items-start gap-3 p-4 bg-[#0f1319]/50 rounded-lg">
                 <div className="flex-shrink-0 mt-1">
                   {recommendation.includes('reduce') || recommendation.includes('limit') ? (
                     <AlertTriangle className="h-4 w-4 text-orange-400" />

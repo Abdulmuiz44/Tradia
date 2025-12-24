@@ -316,7 +316,7 @@ export default function BillingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Manage Subscription */}
           <div className="lg:col-span-3">
-            <div className="bg-gray-800 rounded-lg p-6 mb-4">
+            <div className="bg-[#0f1319] rounded-lg p-6 mb-4">
               <h2 className="text-xl font-semibold mb-4">Manage Subscription</h2>
               {subscription ? (
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
@@ -358,7 +358,7 @@ export default function BillingPage() {
 
           {/* Current Plan */}
           <div className="lg:col-span-2">
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-[#0f1319] rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Current Plan</h2>
                 <button
@@ -452,7 +452,7 @@ export default function BillingPage() {
 
           {/* Billing History */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-[#0f1319] rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-6">Billing History</h2>
 
               {billingHistory.length > 0 ? (
@@ -466,8 +466,8 @@ export default function BillingPage() {
                       <div className="text-right">
                         <div className="font-medium">${invoice.amount}</div>
                         <span className={`text-xs px-2 py-1 rounded ${invoice.status === 'paid' ? 'bg-green-900 text-green-300' :
-                            invoice.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
-                              'bg-red-900 text-red-300'
+                          invoice.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
+                            'bg-red-900 text-red-300'
                           }`}>
                           {invoice.status}
                         </span>
@@ -491,7 +491,7 @@ export default function BillingPage() {
             <div className="absolute inset-0 bg-black/50" onClick={() => setShowUpgradeModal(false)} />
 
             <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="bg-gray-800 rounded-xl shadow-2xl">
+              <div className="bg-[#0f1319] rounded-xl shadow-2xl">
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold">Choose Your Plan</h2>
@@ -508,8 +508,8 @@ export default function BillingPage() {
                       <div
                         key={plan.type}
                         className={`relative p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${plan.popular
-                            ? 'border-purple-500 bg-purple-900/20'
-                            : 'border-gray-600 hover:border-gray-500'
+                          ? 'border-purple-500 bg-purple-900/20'
+                          : 'border-gray-600 hover:border-gray-500'
                           }`}
                         onClick={() => setSelectedPlan(plan.type)}
                       >
@@ -545,8 +545,8 @@ export default function BillingPage() {
                           }}
                           disabled={upgrading}
                           className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${plan.popular
-                              ? 'bg-purple-600 hover:bg-purple-700'
-                              : 'bg-blue-600 hover:bg-blue-700'
+                            ? 'bg-purple-600 hover:bg-purple-700'
+                            : 'bg-blue-600 hover:bg-blue-700'
                             } disabled:bg-gray-600`}
                         >
                           {upgrading ? (

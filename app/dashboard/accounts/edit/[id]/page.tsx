@@ -174,7 +174,7 @@ function EditAccountContent() {
         description="Are you sure you want to delete this account? All associated trades will be kept but unassociated. This action cannot be undone."
         size="sm"
       >
-        <div className="mt-4 p-3 bg-gray-800 rounded">
+        <div className="mt-4 p-3 bg-[#0f1319] rounded">
           <p className="font-semibold">{account.name}</p>
           <p className="text-sm text-gray-400">
             ${account.account_size.toFixed(2)} {account.currency}

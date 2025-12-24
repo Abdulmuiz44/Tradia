@@ -582,7 +582,7 @@ function DashboardContent() {
                         <div className="flex items-center gap-3">
                             {/* Mobile menu button */}
                             <button
-                                className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 transition-colors"
+                                className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] dark:text-white dark:hover:bg-[#0f1319]/80 transition-colors"
                                 onClick={() => setMobileMenuOpen(true)}
                                 aria-label="Open Menu"
                             >
@@ -619,7 +619,7 @@ function DashboardContent() {
                                     } catch { }
                                 }}
                                 aria-label="Toggle theme"
-                                className="p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors hidden sm:inline-flex"
+                                className="p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] dark:text-gray-200 dark:hover:bg-[#0f1319]/80 transition-colors hidden sm:inline-flex"
                                 title="Toggle theme"
                             >
                                 <Sun className="w-4 h-4" />
@@ -694,7 +694,7 @@ function DashboardContent() {
                                     title="Filter Trades"
                                     panelClassName="w-[95%] max-w-md"
                                     trigger={(
-                                        <button className="p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors" title="Filter trades" aria-label="Filter trades">
+                                        <button className="p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] dark:text-gray-300 dark:hover:bg-[#0f1319]/80 transition-colors" title="Filter trades" aria-label="Filter trades">
                                             <Filter size={18} />
                                         </button>
                                     )}
@@ -809,7 +809,7 @@ function DashboardContent() {
                             {/* Refresh button - Only show for relevant tabs */}
                             {(activeTab === 'overview' || activeTab === 'history') && (
                                 <button
-                                    className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
+                                    className="p-2 rounded-xl bg-[#0f1319] hover:bg-[#0f1319]/80 transition-colors"
                                     onClick={handleSyncNow}
                                     title="Refresh data"
                                 >
@@ -834,7 +834,7 @@ function DashboardContent() {
 
                             {/* Current filter indicator */}
                             {(activeTab === 'overview' || activeTab === 'history' || activeTab === 'analytics' || activeTab === 'risk') && (
-                                <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-gray-800 text-gray-300 text-sm">
+                                <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-[#0f1319] text-gray-300 text-sm">
                                     {filterLabel}
                                 </div>
                             )}

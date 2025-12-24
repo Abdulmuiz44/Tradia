@@ -22,7 +22,7 @@ export default function AccountBadge({ className = "", compact = false }: Props)
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-gray-800/60 text-gray-200",
+        "inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-[#0f1319]/60 text-gray-200",
         compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
         className
       )}

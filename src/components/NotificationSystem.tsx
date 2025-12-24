@@ -138,7 +138,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <div className="fixed top-4 right-4 z-40">
           <button
             onClick={clearAll}
-            className="bg-gray-800 text-white px-3 py-1 rounded-full text-xs hover:bg-gray-700 transition-colors"
+            className="bg-[#0f1319] text-white px-3 py-1 rounded-full text-xs hover:bg-gray-700 transition-colors"
           >
             Clear All ({notifications.length})
           </button>

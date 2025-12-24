@@ -122,7 +122,7 @@ export default function ProfilePage() {
   const lastLogin = (user as { lastLogin?: string | null }).lastLogin ?? null;
 
   return (
-  <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
+    <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
       <header className="sticky top-0 z-30 h-[60px] border-b border-[#15202B] bg-[#000000]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
@@ -136,8 +136,8 @@ export default function ProfilePage() {
                 priority
               />
               <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight text-[#FFFFFF]">Dashboard</p>
-              <p className="text-xs text-[#71767B]">Manage your trading account</p>
+                <p className="text-sm font-semibold tracking-tight text-[#FFFFFF]">Dashboard</p>
+                <p className="text-xs text-[#71767B]">Manage your trading account</p>
               </div>
             </div>
           </div>
@@ -152,11 +152,11 @@ export default function ProfilePage() {
           </div>
         </div>
       </header>
-  <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-[#FFFFFF]">Profile</h1>
-        <p className="text-[#71767B]">Manage your account information</p>
+          <h1 className="text-3xl font-bold mb-2 text-[#FFFFFF]">Profile</h1>
+          <p className="text-[#71767B]">Manage your account information</p>
         </div>
 
         <div className="mb-6">
@@ -171,8 +171,8 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-bold">Account Information</h2>
                 {!isEditing && (
                   <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#1D9BF0] text-[#FFFFFF] rounded-lg hover:bg-[#17BF63]"
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1D9BF0] text-[#FFFFFF] rounded-lg hover:bg-[#17BF63]"
                   >
                     <Edit3 className="w-4 h-4" />
                     Edit Profile
@@ -242,9 +242,8 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
                     <CreditCard className="w-5 h-5 text-gray-400" />
                     <span className="capitalize">{user.plan} Plan</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      planBadgeStyles[user.plan] ?? 'bg-gray-600'
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs ${planBadgeStyles[user.plan] ?? 'bg-gray-600'
+                      }`}>
                       {user.plan.toUpperCase()}
                     </span>
                   </div>
@@ -306,7 +305,7 @@ export default function ProfilePage() {
           {/* Quick Actions */}
           <div className="space-y-6">
             {/* Plan Upgrade */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-[#0f1319] rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Plan Management</h3>
               <div className="space-y-3">
                 <button
@@ -325,7 +324,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Account Status */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-[#0f1319] rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Account Status</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">

@@ -94,7 +94,7 @@ function RiskManagementContent() {
                                     panelClassName="w-[95%] max-w-sm"
                                     positionClassName="left-4 top-16"
                                     trigger={
-                                        <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors" aria-label="Open account menu">
+                                        <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#0f1319] transition-colors" aria-label="Open account menu">
                                             <Avatar className="w-8 h-8">
                                                 <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
                                                 <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">{userInitial}</AvatarFallback>
@@ -159,7 +159,7 @@ function RiskManagementContent() {
                                     title="Account"
                                     panelClassName="w-[95%] max-w-sm"
                                     trigger={
-                                        <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors" aria-label="Open account menu">
+                                        <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#0f1319] transition-colors" aria-label="Open account menu">
                                             <Avatar className="w-8 h-8">
                                                 <AvatarImage
                                                     src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || session?.user?.email?.split('@')[0] || 'User')}&background=3b82f6&color=fff&size=32`}

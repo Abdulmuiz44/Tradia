@@ -120,7 +120,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
             <CardTitle className="text-white">Recommended Asset Allocation</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 mb-4 bg-gray-800 rounded-lg flex items-center justify-center">
+            <div className="h-64 mb-4 bg-[#0f1319] rounded-lg flex items-center justify-center">
               <div className="text-center text-gray-400">
                 <Target className="h-12 w-12 mx-auto mb-2" />
                 <p>Asset Allocation Chart</p>
@@ -154,7 +154,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
             <CardTitle className="text-white">Performance vs Risk</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center">
+            <div className="h-64 bg-[#0f1319] rounded-lg flex items-center justify-center">
               <div className="text-center text-gray-400">
                 <TrendingUp className="h-12 w-12 mx-auto mb-2" />
                 <p>Risk vs Return Analysis</p>
@@ -176,7 +176,7 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
         <CardContent>
           <div className="space-y-4">
             {optimization.suggestions.map((suggestion, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 bg-gray-800/50 rounded-lg">
+              <div key={index} className="flex items-start gap-3 p-4 bg-[#0f1319]/50 rounded-lg">
                 <div className="flex-shrink-0 mt-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2" />
                 </div>
@@ -199,10 +199,10 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               Rebalance Portfolio
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
               Export Report
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
               Set Alerts
             </Button>
           </div>

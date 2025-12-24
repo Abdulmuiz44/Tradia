@@ -56,7 +56,7 @@ const StrategyTagging: React.FC<StrategyTaggingProps> = ({ trades }) => {
   }));
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl p-6 shadow-sm">
+    <div className="bg-white bg-[#0f1319] border border-zinc-200 dark:border-zinc-700 rounded-2xl p-6 shadow-sm">
       <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-4">
         Strategy Tagging Overview
       </h3>

@@ -178,7 +178,7 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
                 <h4 className="text-sm font-medium text-gray-300 mb-3">Recommendations:</h4>
                 <div className="space-y-2">
                   {pattern.recommendations.map((rec, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg">
+                    <div key={index} className="flex items-start gap-3 p-3 bg-[#0f1319]/50 rounded-lg">
                       <div className="flex-shrink-0 mt-1">
                         <div className="w-2 h-2 bg-blue-400 rounded-full" />
                       </div>
@@ -193,10 +193,10 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                   Apply Pattern
                 </Button>
-                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
                   View Examples
                 </Button>
-                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
                   Export Data
                 </Button>
               </div>

@@ -107,9 +107,8 @@ export default function AccountForm({
           value={formData.name}
           onChange={handleChange}
           placeholder="e.g., Personal Account, Prop Firm Account"
-          className={`w-full px-3 py-2 rounded bg-gray-800 border ${
-            errors.name ? "border-red-500" : "border-gray-700"
-          } text-white placeholder-gray-500 focus:outline-none focus:border-blue-500`}
+          className={`w-full px-3 py-2 rounded bg-[#0f1319] border ${errors.name ? "border-red-500" : "border-gray-700"
+            } text-white placeholder-gray-500 focus:outline-none focus:border-blue-500`}
           disabled={submitting || isLoading}
         />
         {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
@@ -127,16 +126,15 @@ export default function AccountForm({
             placeholder="e.g., 10000"
             step="0.01"
             min="0"
-            className={`flex-1 px-3 py-2 rounded bg-gray-800 border ${
-              errors.account_size ? "border-red-500" : "border-gray-700"
-            } text-white placeholder-gray-500 focus:outline-none focus:border-blue-500`}
+            className={`flex-1 px-3 py-2 rounded bg-[#0f1319] border ${errors.account_size ? "border-red-500" : "border-gray-700"
+              } text-white placeholder-gray-500 focus:outline-none focus:border-blue-500`}
             disabled={submitting || isLoading}
           />
           <select
             name="currency"
             value={formData.currency}
             onChange={handleChange}
-            className="px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+            className="px-3 py-2 rounded bg-[#0f1319] border border-gray-700 text-white focus:outline-none focus:border-blue-500"
             disabled={submitting || isLoading}
           >
             <option value="USD">USD</option>
@@ -159,7 +157,7 @@ export default function AccountForm({
           name="platform"
           value={formData.platform}
           onChange={handleChange}
-          className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          className="w-full px-3 py-2 rounded bg-[#0f1319] border border-gray-700 text-white focus:outline-none focus:border-blue-500"
           disabled={submitting || isLoading}
         >
           <option value="MT5">MetaTrader 5 (MT5)</option>
@@ -178,7 +176,7 @@ export default function AccountForm({
           value={formData.broker || ""}
           onChange={handleChange}
           placeholder="e.g., XM, FxPro, Saxo Bank"
-          className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          className="w-full px-3 py-2 rounded bg-[#0f1319] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
           disabled={submitting || isLoading}
         />
       </div>
@@ -187,7 +185,7 @@ export default function AccountForm({
       <div>
         <label className="block text-sm font-medium mb-2">Account Mode</label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex items-center gap-2 p-3 rounded bg-gray-800 border border-gray-700 cursor-pointer hover:bg-gray-750">
+          <label className="flex items-center gap-2 p-3 rounded bg-[#0f1319] border border-gray-700 cursor-pointer hover:bg-gray-750">
             <input
               type="radio"
               name="mode"
@@ -199,7 +197,7 @@ export default function AccountForm({
             />
             <span className="text-sm">Manual Entry</span>
           </label>
-          <label className="flex items-center gap-2 p-3 rounded bg-gray-800 border border-gray-700 cursor-pointer hover:bg-gray-750">
+          <label className="flex items-center gap-2 p-3 rounded bg-[#0f1319] border border-gray-700 cursor-pointer hover:bg-gray-750">
             <input
               type="radio"
               name="mode"

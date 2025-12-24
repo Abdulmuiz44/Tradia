@@ -119,7 +119,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
       case 'medium': return 'bg-yellow-900/20 border-yellow-700/50';
       case 'high': return 'bg-orange-900/20 border-orange-700/50';
       case 'critical': return 'bg-red-900/20 border-red-700/50';
-      default: return 'bg-gray-900/20 border-gray-700/50';
+      default: return 'bg-[#0f1319]/20 border-gray-700/50';
     }
   };
 
@@ -221,7 +221,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
               <div className="flex-1 bg-gray-700 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all duration-1000 ${riskMetrics.maxDrawdown > 20 ? 'bg-red-500' :
-                      riskMetrics.maxDrawdown > 10 ? 'bg-orange-500' : 'bg-green-500'
+                    riskMetrics.maxDrawdown > 10 ? 'bg-orange-500' : 'bg-green-500'
                     }`}
                   style={{ width: `${Math.min(riskMetrics.maxDrawdown * 2, 100)}%` }}
                 />
@@ -246,7 +246,7 @@ const RiskExposureOverview: React.FC<RiskExposureOverviewProps> = ({ trades }) =
               <div className="flex-1 bg-gray-700 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all duration-1000 ${riskMetrics.riskOfRuin > 15 ? 'bg-red-500' :
-                      riskMetrics.riskOfRuin > 5 ? 'bg-orange-500' : 'bg-green-500'
+                    riskMetrics.riskOfRuin > 5 ? 'bg-orange-500' : 'bg-green-500'
                     }`}
                   style={{ width: `${Math.min(riskMetrics.riskOfRuin * 3, 100)}%` }}
                 />

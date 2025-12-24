@@ -6,11 +6,11 @@ import { useTrade } from "@/context/TradeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  RefreshCw, 
+import {
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  RefreshCw,
   Database,
   Cloud,
   HardDrive,
@@ -19,14 +19,14 @@ import {
 
 export default function MigrationDebugPanel() {
   const { data: session } = useSession();
-  const { 
-    trades, 
-    needsMigration, 
-    migrateLocalTrades, 
+  const {
+    trades,
+    needsMigration,
+    migrateLocalTrades,
     migrationLoading,
-    refreshTrades 
+    refreshTrades
   } = useTrade();
-  
+
   const [localTradesCount, setLocalTradesCount] = useState(0);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export default function MigrationDebugPanel() {
   const testMigration = async () => {
     setTestResult(null);
     setTestError(null);
-    
+
     try {
       const result = await migrateLocalTrades();
       setTestResult(`Migration successful! Migrated ${result.migratedCount} trades.`);
@@ -61,7 +61,7 @@ export default function MigrationDebugPanel() {
   const testApiEndpoint = async () => {
     setTestResult(null);
     setTestError(null);
-    
+
     try {
       const response = await fetch("/api/trades/import", {
         method: "POST",
@@ -80,7 +80,7 @@ export default function MigrationDebugPanel() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setTestResult(`API test successful: ${JSON.stringify(data, null, 2)}`);
       } else {
@@ -102,7 +102,7 @@ export default function MigrationDebugPanel() {
       <CardContent className="space-y-6">
         {/* Status Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+          <div className="p-4 rounded-lg bg-gray-100 dark:bg-[#0f1319]">
             <div className="flex items-center gap-2 mb-2">
               <HardDrive className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium">Local Storage</span>
@@ -111,7 +111,7 @@ export default function MigrationDebugPanel() {
             <p className="text-xs text-muted-foreground">trades in localStorage</p>
           </div>
 
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+          <div className="p-4 rounded-lg bg-gray-100 dark:bg-[#0f1319]">
             <div className="flex items-center gap-2 mb-2">
               <Cloud className="w-4 h-4 text-green-500" />
               <span className="text-sm font-medium">Cloud Database</span>
@@ -120,7 +120,7 @@ export default function MigrationDebugPanel() {
             <p className="text-xs text-muted-foreground">trades in Supabase</p>
           </div>
 
-          <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+          <div className="p-4 rounded-lg bg-gray-100 dark:bg-[#0f1319]">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-yellow-500" />
               <span className="text-sm font-medium">Migration Status</span>
@@ -132,7 +132,7 @@ export default function MigrationDebugPanel() {
         </div>
 
         {/* Session Info */}
-        <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+        <div className="p-4 rounded-lg bg-gray-100 dark:bg-[#0f1319]">
           <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
             <Info className="w-4 h-4" />
             Session Information

@@ -197,7 +197,7 @@ export default function UpgradePrompt({
                     disabled={upgrading}
                     className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${plan.popular
                       ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
-                      : 'bg-[#0f1319] text-white hover:bg-gray-800'
+                      : 'bg-[#0f1319] text-white hover:bg-[#0f1319]'
                       } disabled:bg-gray-600 disabled:cursor-not-allowed`}
                   >
                     {upgrading ? (

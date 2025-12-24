@@ -222,8 +222,8 @@ const MarketAlerts: React.FC = () => {
                 <div
                   key={alert.id}
                   className={`flex items-start gap-4 p-4 rounded-lg border ${alert.triggered
-                      ? 'bg-red-900/20 border-red-700/50'
-                      : 'bg-gray-800/50 border-gray-700'
+                    ? 'bg-red-900/20 border-red-700/50'
+                    : 'bg-[#0f1319]/50 border-gray-700'
                     }`}
                 >
                   <div className={`p-2 rounded-lg ${getAlertColor(alert.type)} bg-current/10`}>
@@ -277,13 +277,13 @@ const MarketAlerts: React.FC = () => {
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               Price Alert
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
               Volume Alert
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
               Volatility Alert
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
               Custom Alert
             </Button>
           </div>
