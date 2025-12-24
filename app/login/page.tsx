@@ -103,8 +103,8 @@ function LoginPage(): React.ReactElement {
           // ignore
         }
 
-        // success -> navigate
-        router.push("/dashboard");
+        // Success - navigate to overview dashboard (allow data to sync)
+        router.push("/dashboard/overview");
       } else {
         setError(result?.error || "Login failed.");
       }
@@ -248,7 +248,7 @@ function LoginPage(): React.ReactElement {
               </div>
 
               <button
-                onClick={async () => { try { await signIn("google", { callbackUrl: "/dashboard" }); } catch (e) { setError(e instanceof Error ? e.message : "Google sign-in failed"); } }}
+                onClick={async () => { try { await signIn("google", { callbackUrl: "/dashboard/overview" }); } catch (e) { setError(e instanceof Error ? e.message : "Google sign-in failed"); } }}
                 className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition text-gray-100"
                 aria-label="Continue with Google"
               >

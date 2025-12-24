@@ -258,7 +258,19 @@ function DashboardContent() {
         fetchUser();
     }, [session, supabase, adminChecked]);
 
-    // refresh trades
+    // Auto-refresh trades on first load (after login)
+    useEffect(() => {
+        if (status === 'authenticated' && !trades?.length) {
+            const timer = setTimeout(() => {
+                refreshTrades().catch(err => {
+                    console.error("Auto-sync failed:", err);
+                });
+            }, 500); // Small delay to ensure session is ready
+            return () => clearTimeout(timer);
+        }
+    }, [status, trades?.length, refreshTrades]);
+
+    // refresh trades manually
     const handleSyncNow = async () => {
         setIsLoading(true);
         try {

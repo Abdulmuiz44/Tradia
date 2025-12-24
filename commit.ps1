@@ -1,4 +1,10 @@
-Fix: Login redirect, auto-sync trades, upgrade page auth, and UI consistency
+# PowerShell script to commit all changes
+
+Set-Location "c:\Users\Hp\Documents\Github\Tradia"
+
+git add -A
+
+git commit -m "Fix: Login redirect, auto-sync trades, upgrade page auth, and UI consistency
 
 - Fix middleware: Enable proper NextAuth authentication (fixes redirect loops)
 - Fix login page: Redirect to /dashboard/overview instead of /dashboard
@@ -19,23 +25,8 @@ Result:
 - Upgrade page works without redirect loops
 - Consistent UI styling across all dashboard pages
 - Plan visibility improved with badge display
-- Authentication properly secured
 
-Files Modified:
-- middleware.ts
-- app/login/page.tsx
-- app/dashboard/page.tsx
-- app/dashboard/upgrade/page.tsx
-- app/dashboard/overview/page.tsx
+No breaking changes. Backward compatible. Production ready."
 
-Documentation:
-- LOGIN_AUTH_FIXES_APPLIED.md
-- CHANGES_SUMMARY_LOGIN_FIX.md
-- CODE_CHANGES_REFERENCE.md
-- QUICK_TEST_LOGIN_FIXES.md
-- IMPLEMENTATION_CHECKLIST.md
-- QUICK_REFERENCE.md
-- FIXES_COMPLETE.md
-- DEPLOYMENT_READY.txt
-
-No breaking changes. Backward compatible. Production ready.
+Write-Host "✅ Commit complete!"
+git log --oneline -1

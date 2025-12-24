@@ -13,7 +13,7 @@ import OverviewCards from "@/components/dashboard/OverviewCards";
 import AccountSelector from "@/components/accounts/AccountSelector";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, X, Menu, Sun, RefreshCw, Filter, Lock } from "lucide-react";
+import { User, Settings, X, Menu, Sun, RefreshCw, Filter, Lock, Crown } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
@@ -303,30 +303,65 @@ function OverviewContent() {
                         <div className="p-4 border-t border-[var(--surface-border)] dark:border-[#2a2f3a]">
                             <AnimatedDropdown
                                 title="Account"
-                                trigger={
-                                    <button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[var(--surface-hover)] transition-colors">
+                                panelClassName="w-[95%] max-w-sm"
+                                positionClassName="left-4 top-16"
+                                trigger={(
+                                    <button className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface-secondary)] dark:bg-transparent hover:bg-[var(--surface-hover)] dark:hover:bg-gray-700 transition-colors" aria-label="Open account menu">
                                         <Avatar className="w-8 h-8">
-                                            <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? ""} />
+                                            <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "Profile"} />
                                             <AvatarFallback className="bg-blue-600 text-white text-sm">{userInitial}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 text-left">
                                             <p className="text-[var(--text-primary)] dark:text-white text-sm font-medium truncate">
-                                                {session?.user?.name || 'User'}
+                                                {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
+                                            </p>
+                                            <p className="text-[var(--text-muted)] dark:text-gray-400 text-xs truncate">
+                                                {session?.user?.email || ''}
                                             </p>
                                         </div>
                                     </button>
-                                }
+                                )}
                             >
                                 <div className="p-2">
-                                    <button onClick={() => router.push("/dashboard/profile")} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700">
-                                        <User className="w-4 h-4" />
+                                    {/* User Plan Info */}
+                                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-600 mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`px-2 py-1 rounded-full text-xs font-light uppercase tracking-wide ${(session?.user as any)?.plan === 'elite' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                                                (session?.user as any)?.plan === 'plus' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                                    (session?.user as any)?.plan === 'pro' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                                }`}>
+                                                {(session?.user as any)?.plan || 'free'} plan
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => router.push("/dashboard/profile")}
+                                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
+                                    >
+                                        <User className="w-4 h-4 text-black dark:text-white" />
                                         <span>Profile</span>
                                     </button>
-                                    <button onClick={() => router.push("/dashboard/settings")} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700">
-                                        <Settings className="w-4 h-4" />
+                                    <button
+                                        onClick={() => router.push("/dashboard/settings")}
+                                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-black dark:text-white font-light"
+                                    >
+                                        <Settings className="w-4 h-4 text-black dark:text-white" />
                                         <span>Settings</span>
                                     </button>
-                                    <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-red-600">
+                                    {(session?.user as any)?.plan !== 'elite' && (
+                                        <button
+                                            onClick={() => router.push("/dashboard/upgrade")}
+                                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-left text-amber-600 dark:text-amber-400 font-light border-t border-gray-200 dark:border-gray-600 mt-1 pt-1"
+                                        >
+                                            <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                            <span>Upgrade Plan</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 text-left text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-light"
+                                    >
                                         <span>Sign Out</span>
                                     </button>
                                 </div>
