@@ -128,7 +128,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <Image
-                src="/Tradia-logo-ONLY.png"
+                src="/TRADIA-LOGO.png"
                 alt="Tradia logo"
                 width={36}
                 height={36}

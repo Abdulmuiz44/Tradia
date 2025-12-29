@@ -5,7 +5,7 @@ export const TypingIndicator: React.FC = React.memo(() => {
   return (
     <div className="flex items-start gap-3 justify-start" aria-live="polite" aria-label="AI is typing">
       <Avatar className="w-8 h-8">
-        <AvatarImage src="/Tradia-logo-ONLY.png" />
+        <AvatarImage src="/TRADIA-LOGO.png" />
         <AvatarFallback>TA</AvatarFallback>
       </Avatar>
       <div className="relative p-3 rounded-xl rounded-bl-none bg-gray-800 text-gray-100 max-w-[70%]">

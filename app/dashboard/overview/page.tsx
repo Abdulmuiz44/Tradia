@@ -284,14 +284,14 @@ function OverviewContent() {
     const TAB_DEFS = getTabDefinitions();
 
     return (
-        <main className="min-h-screen w-full bg-[var(--surface-primary)] dark:bg-[#0D1117] transition-colors duration-300 overflow-x-hidden">
+        <main className="min-h-screen w-full bg-white dark:bg-[#0f1319] transition-colors duration-300 overflow-x-hidden">
             <div className="flex min-h-screen max-w-full">
                 {/* Desktop Sidebar */}
                 <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[var(--surface-secondary)] dark:lg:bg-[#161B22] lg:border-r lg:border-[var(--surface-border)] dark:lg:border-[#2a2f3a]">
                     <div className="flex flex-col h-full sticky top-0">
                         {/* Logo/Brand */}
                         <div className="flex items-center gap-3 p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a]">
-                            <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
+                            <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
                             <div>
                                 <h1 className="text-slate-900 dark:text-white font-extrabold text-lg">Tradia</h1>
                                 <p className="text-slate-500 dark:text-gray-300 text-xs">Overview</p>
@@ -384,7 +384,7 @@ function OverviewContent() {
                     <div className="absolute left-0 top-0 h-full w-64 max-w-[80vw] bg-white dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a] transform transition-transform duration-300 overflow-y-auto">
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2a2f3a]">
                             <div className="flex items-center gap-3">
-                                <Image src="/Tradia-logo-ONLY.png" alt="Tradia logo" width={28} height={28} className="h-7 w-auto" priority />
+                                <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={28} height={28} className="h-7 w-auto" priority />
                                 <h1 className="text-black dark:text-white font-extrabold text-lg">Tradia</h1>
                             </div>
                             <button

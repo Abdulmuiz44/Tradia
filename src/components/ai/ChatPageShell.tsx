@@ -103,7 +103,7 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#1f2937]"
           >
             <Image
-              src="/Tradia-logo-ONLY.png"
+              src="/TRADIA-LOGO.png"
               alt="Tradia logo"
               width={24}
               height={24}
@@ -164,8 +164,8 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
                       type="button"
                       onClick={() => handleSelectConversation(conversation.id)}
                       className={`group flex w-full flex-col gap-1 rounded-xl px-3 py-3 text-left transition ${conversation.id === activeConversationId
-                          ? "bg-slate-900 text-white shadow"
-                          : "hover:bg-slate-100/70 dark:hover:bg-[#1b2436]"
+                        ? "bg-slate-900 text-white shadow"
+                        : "hover:bg-slate-100/70 dark:hover:bg-[#1b2436]"
                         }`}
                     >
                       <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
@@ -204,8 +204,8 @@ const ChatPageShell: React.FC<ChatPageShellProps> = ({
                       type="button"
                       onClick={() => handleSelectConversation(conversation.id)}
                       className={`group flex w-full flex-col gap-1 rounded-xl px-3 py-3 text-left transition ${conversation.id === activeConversationId
-                          ? "bg-slate-900 text-white shadow"
-                          : "hover:bg-slate-100/70 dark:hover:bg-[#1b2436]"
+                        ? "bg-slate-900 text-white shadow"
+                        : "hover:bg-slate-100/70 dark:hover:bg-[#1b2436]"
                         }`}
                     >
                       <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">

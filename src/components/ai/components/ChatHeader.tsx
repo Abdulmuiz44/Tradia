@@ -25,7 +25,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = React.memo(({
     <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900">
       <div className="flex items-center gap-3">
         <Avatar>
-          <AvatarImage src="/Tradia-logo-ONLY.png" />
+          <AvatarImage src="/TRADIA-LOGO.png" />
           <AvatarFallback>TA</AvatarFallback>
         </Avatar>
         <div>

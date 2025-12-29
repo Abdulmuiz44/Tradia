@@ -305,10 +305,10 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 
   return (
     <div
-    className={cn(
-      "relative flex h-screen w-full flex-col overflow-hidden bg-[#050b18] text-white",
-      className,
-    )}
+      className={cn(
+        "relative flex h-screen w-full flex-col overflow-hidden bg-[#050b18] text-white",
+        className,
+      )}
     >
       <header className="sticky top-0 z-30 h-[68px] border-b border-indigo-500/40 bg-[#050b18]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
@@ -327,7 +327,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 
             <div className="flex items-center gap-3">
               <Image
-                src="/Tradia-logo-ONLY.png"
+                src="/TRADIA-LOGO.png"
                 alt="Tradia logo"
                 width={36}
                 height={36}
@@ -343,10 +343,10 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 
           <div className="hidden items-center gap-3 md:flex">
             <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePrimaryAction}
-            className="h-10 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-6 text-xs font-semibold text-white transition hover:border-indigo-300 hover:bg-indigo-500/20"
+              variant="ghost"
+              size="sm"
+              onClick={handlePrimaryAction}
+              className="h-10 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-6 text-xs font-semibold text-white transition hover:border-indigo-300 hover:bg-indigo-500/20"
             >
               <PrimaryIcon className="mr-2 h-4 w-4" />
               {authButtonLabel}
@@ -356,8 +356,8 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
                 <Button
                   size="sm"
                   className="h-10 rounded-xl bg-[#1D9BF0] px-8 text-xs font-semibold text-[#FFFFFF] shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition hover:bg-[#15202B] hover:scale-105"
-              >
-                <Plus className="mr-2 h-4 w-4" />
+                >
+                  <Plus className="mr-2 h-4 w-4" />
                   {secondaryLabel}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -414,10 +414,10 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             onClick={closeMobileSidebar}
           />
           <div
-          className={cn(
-          "relative flex h-full w-72 max-w-full flex-col border-r border-indigo-500/40 bg-[#050b18] transition-transform duration-300 ease-out",
-          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
-          )}
+            className={cn(
+              "relative flex h-full w-72 max-w-full flex-col border-r border-indigo-500/40 bg-[#050b18] transition-transform duration-300 ease-out",
+              isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
+            )}
           >
             <div className="flex items-center justify-between border-b border-[#15202B] px-4 py-4">
               <p className="text-sm font-semibold text-white">Conversations</p>

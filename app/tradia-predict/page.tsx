@@ -105,7 +105,7 @@ function TradiaPredictContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-white dark:bg-[#0f1319] transition-colors duration-300 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -137,7 +137,7 @@ function TradiaPredictContent() {
   const activeTabData = tabs.find(tab => tab.id === activeTab);
 
   return (
-    <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
+    <div className="min-h-screen w-full bg-white dark:bg-[#0f1319] transition-colors duration-300">
       <div className="flex h-screen">
         {/* Mobile Sidebar Overlay */}
         <div className={`fixed inset-0 z-40 lg:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}>
@@ -146,7 +146,7 @@ function TradiaPredictContent() {
             <div className="flex items-center justify-between p-4 border-b border-[#2a2f3a]">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/Tradia-logo-ONLY.png"
+                  src="/TRADIA-LOGO.png"
                   alt="Tradia logo"
                   width={28}
                   height={28}
@@ -175,7 +175,7 @@ function TradiaPredictContent() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-[#2a2f3a] bg-white dark:bg-[#0f1319] transition-colors">
             <div className="flex items-center gap-3">
               {/* Mobile menu button */}
               <button
@@ -238,8 +238,8 @@ function TradiaPredictContent() {
 
               {/* Page title - adjusted for mobile */}
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-white">Tradia Predict</h1>
-                <p className="text-white text-xs sm:text-sm hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Tradia Predict</h1>
+                <p className="text-gray-600 dark:text-white text-xs sm:text-sm hidden sm:block">
                   {activeTabData?.description || 'Advanced AI-powered trading predictions'}
                 </p>
               </div>
@@ -308,8 +308,8 @@ function TradiaPredictContent() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-transparent text-gray-400 hover:text-gray-300'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                     }`}
                 >
                   <span className="text-lg">{getTabIcon(tab.icon)}</span>

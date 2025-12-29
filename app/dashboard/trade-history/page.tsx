@@ -55,7 +55,7 @@ function TradeHistoryContent() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300 flex items-center justify-center">
+      <div className="min-h-screen w-full bg-white dark:bg-[#0f1319] transition-colors duration-300 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -67,12 +67,12 @@ function TradeHistoryContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
+    <div className="min-h-screen w-full bg-white dark:bg-[#0f1319] transition-colors duration-300">
       <div className="flex h-screen">
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117]">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-[#2a2f3a] bg-white dark:bg-[#0f1319] transition-colors">
             <div className="flex items-center gap-3">
               <MobileBackButton className="mr-2" />
               {/* User Avatar - visible on desktop */}
@@ -132,8 +132,8 @@ function TradeHistoryContent() {
               </div>
 
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-white">Trade History</h1>
-                <p className="text-white text-xs sm:text-sm hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Trade History</h1>
+                <p className="text-gray-600 dark:text-white text-xs sm:text-sm hidden sm:block">
                   View and manage all your trades with full CRUD capabilities
                 </p>
               </div>
