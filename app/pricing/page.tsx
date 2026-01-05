@@ -204,7 +204,7 @@ export default function PricingPage(): React.ReactElement {
       />
       <Navbar />
 
-      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
+      <main className="min-h-screen bg-white text-black dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
@@ -219,7 +219,7 @@ export default function PricingPage(): React.ReactElement {
                   Simple pricing. Powerful results.
                 </motion.h1>
 
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-white max-w-2xl">
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-black dark:text-white max-w-2xl">
                   Start free with Starter plan. Upgrade to Pro, Plus, or Elite for advanced AI analysis, extended history, and real-time insights. No hidden fees — upgrade or downgrade anytime.
                 </motion.p>
 
@@ -249,7 +249,7 @@ export default function PricingPage(): React.ReactElement {
                     priority
                   />
                 </div>
-                <div className="mt-3 text-xs text-gray-400">Preview of the analytics dashboard — see it with your own trades after signup.</div>
+                <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">Preview of the analytics dashboard — see it with your own trades after signup.</div>
               </div>
             </div>
           </div>
@@ -263,16 +263,16 @@ export default function PricingPage(): React.ReactElement {
                 Your Coach points: <span className="font-bold">{coachPoints}</span>
               </div>
             )}
-            <div className="inline-flex rounded-full bg-white/5 p-1 shadow-sm">
+            <div className="inline-flex rounded-full bg-gray-100 dark:bg-white/5 p-1 shadow-sm">
               <button
                 onClick={() => setBilling("monthly")}
-                className={`px-4 py-2 rounded-full font-semibold ${billing === "monthly" ? "bg-indigo-500 text-white" : "text-gray-300"}`}
+                className={`px-4 py-2 rounded-full font-semibold ${billing === "monthly" ? "bg-indigo-500 text-white" : "text-black dark:text-gray-300"}`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBilling("yearly")}
-                className={`px-4 py-2 rounded-full font-semibold ${billing === "yearly" ? "bg-indigo-500 text-white" : "text-gray-300"}`}
+                className={`px-4 py-2 rounded-full font-semibold ${billing === "yearly" ? "bg-indigo-500 text-white" : "text-black dark:text-gray-300"}`}
               >
                 Yearly (save 20%)
               </button>
@@ -286,27 +286,27 @@ export default function PricingPage(): React.ReactElement {
                   <motion.div
                     key={p.id}
                     whileHover={{ y: -6 }}
-                    className={`p-6 rounded-xl border ${selected ? "border-indigo-500 shadow-2xl" : "border-white/10"} bg-transparent`}
+                    className={`p-6 rounded-xl border ${selected ? "border-indigo-500 shadow-2xl bg-white dark:bg-transparent" : "border-gray-200 dark:border-white/10 bg-white dark:bg-transparent"}`}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="text-xl font-bold">{p.name}</h3>
-                        <div className="text-sm text-gray-400 mt-1">{p.tag}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">{p.tag}</div>
                       </div>
 
                       <div className="text-2xl font-extrabold">
                         {price === 0 ? "Free" : `$${price}`}
-                        <div className="text-xs font-medium text-gray-400">{price === 0 ? "" : billing === "monthly" ? "/mo" : "/yr"}</div>
+                        <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{price === 0 ? "" : billing === "monthly" ? "/mo" : "/yr"}</div>
                       </div>
                     </div>
 
                     <ul className="mb-6 space-y-2 text-left">
                       {p.highlights.map((h, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <AiOutlineCheck className="mt-1 text-indigo-400 flex-shrink-0 text-lg" />
-                          <span className="font-semibold text-white">{h}</span>
-                        </li>
-                      ))}
+                          <li key={i} className="flex items-start gap-3">
+                            <AiOutlineCheck className="mt-1 text-indigo-600 dark:text-indigo-400 flex-shrink-0 text-lg" />
+                            <span className="font-semibold text-black dark:text-white">{h}</span>
+                          </li>
+                        ))}
                     </ul>
 
                     <div className="flex flex-col gap-3">
@@ -334,7 +334,7 @@ export default function PricingPage(): React.ReactElement {
               })}
             </div>
 
-            <div className="mt-6 text-sm text-gray-400">
+            <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
               Need a custom plan, bulk/team pricing or prop-firm support?{" "}
               <Link href="/contact" className="text-indigo-300 hover:underline">Contact us</Link>.
             </div>
@@ -346,12 +346,12 @@ export default function PricingPage(): React.ReactElement {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold">Why traders choose Tradia</h2>
-              <p className="mt-2 text-gray-400 max-w-2xl mx-auto">Everything you need to analyze, improve and scale — built around real trading workflows.</p>
+              <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Everything you need to analyze, improve and scale — built around real trading workflows.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {FEATURES.map((f, i) => (
-                <motion.div key={i} whileHover={{ y: -6 }} className="p-6 rounded-xl border border-white/10 bg-transparent shadow-sm">
+                <motion.div key={i} whileHover={{ y: -6 }} className="p-6 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-transparent shadow-sm">
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-lg bg-indigo-700/10 text-indigo-300">
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -359,8 +359,8 @@ export default function PricingPage(): React.ReactElement {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">{f.title}</h3>
-                      <p className="mt-2 text-sm text-gray-400">{f.desc}</p>
+                      <h3 className="font-semibold text-lg text-black dark:text-white">{f.title}</h3>
+                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -373,11 +373,11 @@ export default function PricingPage(): React.ReactElement {
         <section className="py-12 px-6">
           <div className="max-w-6xl mx-auto text-center">
             <h3 className="text-2xl font-bold mb-3">Loved by traders worldwide</h3>
-            <p className="text-gray-400 mb-8">Tradia helps traders find edge, limit mistakes and scale their edge.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">Tradia helps traders find edge, limit mistakes and scale their edge.</p>
 
             <div className="grid gap-6 md:grid-cols-3">
               {TESTIMONIALS.map((t, i) => (
-                <motion.div key={i} whileHover={{ y: -6 }} className="p-6 rounded-xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5">
+                <motion.div key={i} whileHover={{ y: -6 }} className="p-6 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5">
                   <div className="flex items-center gap-4 mb-3">
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center"
@@ -386,12 +386,12 @@ export default function PricingPage(): React.ReactElement {
                       <span className="text-white font-bold">{t.initials}</span>
                     </div>
                     <div className="text-left">
-                      <div className="font-semibold text-gray-100">{t.name}</div>
-                      <div className="text-sm text-gray-400">{t.role}</div>
+                      <div className="font-semibold text-black dark:text-gray-100">{t.name}</div>
+                       <div className="text-sm text-gray-600 dark:text-gray-400">{t.role}</div>
                     </div>
                   </div>
 
-                  <p className="text-gray-300">&ldquo;{t.text}&rdquo;</p>
+                  <p className="text-gray-700 dark:text-gray-300">&ldquo;{t.text}&rdquo;</p>
                 </motion.div>
               ))}
             </div>
@@ -410,23 +410,23 @@ export default function PricingPage(): React.ReactElement {
                   { q: "Which integrations are supported?", a: "CSV imports are supported for comprehensive trade analysis. Email us at support@tradiaai.app for API integration requests." },
                   { q: "Can I upgrade or downgrade anytime?", a: "Yes, you can upgrade, downgrade, or cancel anytime. Annual plans get a 20% discount and are billed upfront. Monthly plans are billed every 30 days." },
                 ].map((fq, i) => (
-                  <details key={i} className="p-4 rounded-xl border border-white/10">
-                    <summary className="font-medium text-white">{fq.q}</summary>
-                    <p className="mt-2 text-white">{fq.a}</p>
+                  <details key={i} className="p-4 rounded-xl border border-gray-200 dark:border-white/10">
+                     <summary className="font-medium text-black dark:text-white">{fq.q}</summary>
+                     <p className="mt-2 text-gray-700 dark:text-white">{fq.a}</p>
                   </details>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-xl p-8 border border-white/10 bg-gradient-to-br from-indigo-600/8 to-pink-500/6">
-              <h4 className="text-xl font-bold">Ready to level up your trading?</h4>
-              <p className="mt-2 text-gray-300">Create an account, upload trades and see AI-driven insights tuned to your history.</p>
+            <div className="rounded-xl p-8 border border-gray-200 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-indigo-600/8 dark:to-pink-500/6">
+              <h4 className="text-xl font-bold text-black dark:text-white">Ready to level up your trading?</h4>
+              <p className="mt-2 text-gray-700 dark:text-gray-300">Create an account, upload trades and see AI-driven insights tuned to your history.</p>
               <div className="mt-6 flex gap-3">
                 <Link href="/signup" className="bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold">Create free account</Link>
                 <Link href="#plans" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">Compare plans</Link>
               </div>
 
-              <div className="mt-6 text-xs text-gray-400">Need custom pricing or prop-firm features? <Link href="/contact" className="underline">Contact our team</Link>.</div>
+              <div className="mt-6 text-xs text-gray-600 dark:text-gray-400">Need custom pricing or prop-firm features? <Link href="/contact" className="underline">Contact our team</Link>.</div>
             </div>
           </div>
         </section>

@@ -179,7 +179,7 @@ export default function Home(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
+      <main className="min-h-screen bg-white text-black dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 -z-10 pointer-events-none">
@@ -206,11 +206,11 @@ export default function Home(): React.ReactElement {
                   Stop Guessing Trades — AI Uncovers Your Winning Edge in 30 Seconds
                 </motion.h1>
 
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-300 max-w-2xl">
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-700 dark:text-gray-300 max-w-2xl">
                   Traders like you boosted win rates 20% — upload a sample trade to see yours free.
                 </motion.p>
 
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-400 max-w-2xl">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
                   Join thousands of traders who use Tradia to analyze their trading performance, identify patterns, optimize strategies, and make data-driven decisions that lead to consistent profits in the financial markets.
                 </motion.div>
 
@@ -260,7 +260,7 @@ export default function Home(): React.ReactElement {
                   />
                 </motion.div>
 
-                <div className="mt-3 text-xs text-gray-400">Live dashboard preview (Upload trade history to see interactive charts).</div>
+                <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">Live dashboard preview (Upload trade history to see interactive charts).</div>
               </div>
             </div>
           </div>
