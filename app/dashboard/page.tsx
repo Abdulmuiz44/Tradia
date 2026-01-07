@@ -8,6 +8,7 @@ import { TradeProvider, useTrade } from "@/context/TradeContext";
 import { TradePlanProvider } from "@/context/TradePlanContext";
 import { UserProvider } from "@/context/UserContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { useAccount } from "@/context/AccountContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import TradeMigrationModal from "@/components/modals/TradeMigrationModal";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
@@ -51,6 +52,7 @@ import PerformanceTimeline from "@/components/charts/PerformanceTimeline";
 import TradeBehavioralChart from "@/components/charts/TradeBehavioralChart";
 import TradePatternChart from "@/components/charts/TradePatternChart";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 type DashboardTabDef = {
     value: string;
@@ -200,7 +202,8 @@ function DashboardContent() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminChecked, setAdminChecked] = useState(false);
 
-    const { trades, refreshTrades, needsMigration } = useTrade();
+    const { trades, accountFilteredTrades, refreshTrades, needsMigration } = useTrade();
+    const { selectedAccount } = useAccount();
 
     const [showMigrationPrompt, setShowMigrationPrompt] = useState(false);
     const [migrationDismissed, setMigrationDismissed] = useState(false);
@@ -315,9 +318,9 @@ function DashboardContent() {
     }, [needsMigration, migrationDismissed]);
 
 
-    // compute filteredTrades based on `filter` and `customRange`
+    // compute filteredTrades based on account selection, `filter` and `customRange`
     const filteredTrades = useMemo(() => {
-        const arr: any[] = Array.isArray(trades) ? trades : [];
+        const arr: any[] = Array.isArray(accountFilteredTrades) ? accountFilteredTrades : [];
         const now = Date.now();
         const plan = String((session?.user as any)?.plan || 'free').toLowerCase();
         const allowedDays = isAdmin
@@ -378,7 +381,7 @@ function DashboardContent() {
                 return false;
             }
         });
-    }, [trades, filter, customRange, isAdmin, session]);
+    }, [accountFilteredTrades, filter, customRange, isAdmin, session]);
 
     // Label for UI showing selected filter
     const filterLabel = useMemo(() => {
@@ -588,7 +591,7 @@ function DashboardContent() {
                             >
                                 <Menu size={20} />
                             </button>
-                            <div>
+                            <div className="flex-1">
                                 <h1 className="text-lg md:text-xl font-semibold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
                                 <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
                                     {activeTab === "chat" ? 'Your personal trading coach with voice support' :
@@ -605,6 +608,12 @@ function DashboardContent() {
                                         {isAdmin ? 'Admin Access' : 'Standard Access'}
                                     </span>
                                 </div>
+                                {/* Account Switcher - Show on Overview Tab */}
+                                {activeTab === 'overview' && (
+                                    <div className="mt-3 max-w-sm">
+                                        <AccountSwitcher />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

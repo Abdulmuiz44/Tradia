@@ -21,6 +21,7 @@ import {
   shouldLoadSampleData,
 } from "@/lib/sampleTrades";
 import type { Trade } from "@/types/trade";
+import { useAccount } from "@/context/AccountContext";
 
 const PLAN_KEYS: readonly PlanType[] = ["starter", "pro", "plus", "elite"] as const;
 
@@ -380,6 +381,7 @@ const transformTradeForFrontend = (trade: Record<string, unknown>): Trade => {
 
 export interface TradeContextValue {
   trades: Trade[];
+  accountFilteredTrades: Trade[];
   addTrade: (trade: Trade) => Promise<void>;
   updateTrade: (trade: Trade) => Promise<void>;
   deleteTrade: (tradeId: string) => Promise<void>;
@@ -405,7 +407,13 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
   const { notify } = useNotification();
   const { user } = useUser();
+  const { selectedAccount } = useAccount();
   const supabase = createClientComponentClient();
+
+  // Filter trades by selected account
+  const accountFilteredTrades = selectedAccount
+    ? trades.filter(t => !t.account_id || t.account_id === selectedAccount.id)
+    : trades;
 
   const fetchTrades = useCallback(async (): Promise<Trade[]> => {
     if (!user?.id) {
@@ -904,6 +912,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
   const contextValue: TradeContextValue = {
     trades,
+    accountFilteredTrades,
     addTrade,
     updateTrade,
     deleteTrade,
