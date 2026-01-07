@@ -86,50 +86,50 @@ export default function ResetPasswordPage(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#061226] text-gray-100 flex items-center justify-center py-12 px-4">
+      <main className="min-h-screen bg-white text-black dark:bg-[#061226] dark:text-gray-100 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm shadow-2xl">
+          <div className="rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm shadow-lg dark:shadow-2xl">
             <header className="mb-4">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-300">Set a new password</h1>
-              <p className="mt-2 text-sm text-gray-400">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-700 dark:text-indigo-300">Set a new password</h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 Enter a strong password (minimum 8 characters) to update your account.
               </p>
             </header>
 
             {error && (
-              <div role="alert" className="mb-4 p-3 rounded-md border border-red-700/20 bg-red-900/10 text-red-300 text-sm">
+              <div role="alert" className="mb-4 p-3 rounded-md border border-red-300 dark:border-red-700/20 bg-red-50 dark:bg-red-900/10 text-red-700 dark:text-red-300 text-sm">
                 {error}
               </div>
             )}
 
             {message && (
-              <div role="status" className="mb-4 p-3 rounded-md border border-green-700/20 bg-green-900/10 text-green-300 text-sm">
+              <div role="status" className="mb-4 p-3 rounded-md border border-green-300 dark:border-green-700/20 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-300 text-sm">
                 {message}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <label className="block">
-                <span className="text-sm text-gray-300">New password</span>
+                <span className="text-sm font-medium text-black dark:text-gray-300">New password</span>
                 <input
                   type="password"
                   placeholder="New password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   required
                   aria-label="New password"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm text-gray-300">Confirm new password</span>
+                <span className="text-sm font-medium text-black dark:text-gray-300">Confirm new password</span>
                 <input
                   type="password"
                   placeholder="Confirm new password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   required
                   aria-label="Confirm new password"
                 />
@@ -138,19 +138,19 @@ export default function ResetPasswordPage(): React.ReactElement {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Updating…" : "Set New Password"}
               </button>
             </form>
 
-            <div className="mt-6 text-sm text-gray-400">
+            <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
               Remembered your password?{" "}
-              <Link href="/login" className="text-indigo-300 hover:underline">
+              <Link href="/login" className="text-indigo-700 dark:text-indigo-300 hover:underline">
                 Sign in
               </Link>
               {" — Need a new link? "}
-              <Link href="/resend-verification" className="text-indigo-300 hover:underline">
+              <Link href="/resend-verification" className="text-indigo-700 dark:text-indigo-300 hover:underline">
                 Resend verification
               </Link>
               .

@@ -125,7 +125,7 @@ button,
 input,
 textarea {
   font-weight: 400;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 strong,
@@ -239,10 +239,49 @@ html:not(.dark) .hover\:bg-slate-100:hover {
   color: var(--text-primary) !important;
 }
 
+/* Light mode text clarity - ensure all text is black in light mode */
+html:not(.dark) {
+  color: #000000;
+}
+
+html:not(.dark) p,
+html:not(.dark) li,
+html:not(.dark) span,
+html:not(.dark) label,
+html:not(.dark) small,
+html:not(.dark) a,
+html:not(.dark) button,
+html:not(.dark) input,
+html:not(.dark) textarea {
+  color: #000000 !important;
+}
+
+/* Override gray and slate text colors in light mode */
+html:not(.dark) .text-gray-300,
+html:not(.dark) .text-gray-400,
+html:not(.dark) .text-gray-500,
+html:not(.dark) .text-gray-600,
+html:not(.dark) .text-gray-700,
+html:not(.dark) .text-gray-800,
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-slate-600,
+html:not(.dark) .text-slate-700,
+html:not(.dark) .text-slate-800,
+html:not(.dark) .text-slate-900 {
+  color: #000000 !important;
+}
+
+/* Light mode backgrounds for dashboard */
+html:not(.dark) .bg-gray-700,
 html:not(.dark) .bg-gray-800,
-html:not(.dark) .bg-slate-800 {
-  background-color: #0f1319 !important;
-  color: var(--text-inverse) !important;
+html:not(.dark) .bg-gray-900,
+html:not(.dark) .bg-slate-700,
+html:not(.dark) .bg-slate-800,
+html:not(.dark) .bg-slate-900 {
+  background-color: #f3f4f6 !important;
+  color: #000000 !important;
 }
 
 /* Dashboard side navigation */
@@ -254,7 +293,7 @@ html:not(.dark) .bg-slate-800 {
   border: 1px solid transparent;
   background: transparent;
   color: #000000;
-  font-weight: 300;
+  font-weight: 400;
   border-radius: var(--radius-base);
 }
 
@@ -264,7 +303,7 @@ html:not(.dark) .bg-slate-800 {
 }
 
 .dashboard-sidebar__item:hover {
-  background-color: #f8f9fa;
+  background-color: #f0f0f0;
   color: #000000;
   border-color: transparent;
 }
@@ -275,16 +314,18 @@ html:not(.dark) .bg-slate-800 {
 }
 
 .dashboard-sidebar__item.is-active {
-  background-color: #ffffff;
+  background-color: #e8e8ff;
   color: #000000;
-  border-color: #e9ecef;
-  box-shadow: var(--shadow-soft);
+  border-color: #d0d5ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-weight: 500;
 }
 
 .dark .dashboard-sidebar__item.is-active {
   background-color: var(--surface-secondary);
   color: var(--text-primary);
   border-color: var(--surface-border);
+  font-weight: 500;
 }
 
 .dashboard-sidebar__item .dashboard-sidebar__icon {
@@ -308,12 +349,12 @@ html:not(.dark) .bg-slate-800 {
 .dashboard-sidebar__indicator {
   width: 8px;
   height: 8px;
-  background-color: #000000;
+  background-color: #4f46e5;
   border-radius: var(--radius-full);
 }
 
 .dark .dashboard-sidebar__indicator {
-  background-color: var(--text-primary);
+  background-color: #818cf8;
 }
 
 /* Focus and selection */

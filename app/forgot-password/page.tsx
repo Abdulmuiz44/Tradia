@@ -54,7 +54,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100 transition-colors flex items-center justify-center py-12 px-4">
+      <main className="min-h-screen bg-white text-black dark:bg-[#0f1319] dark:text-gray-100 transition-colors flex items-center justify-center py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -63,39 +63,39 @@ export default function ForgotPasswordPage(): React.ReactElement {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             {/* Left — reassurance / marketing (hidden on small screens) */}
-            <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm">
+            <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm">
               <div>
-                <h1 className="text-2xl font-extrabold leading-tight">Forgot your password?</h1>
-                <p className="mt-3 text-gray-300">
-                  No worries — enter your email and we’ll send a secure password reset link.
+                <h1 className="text-2xl font-extrabold leading-tight text-black dark:text-white">Forgot your password?</h1>
+                <p className="mt-3 text-gray-700 dark:text-gray-300">
+                  No worries — enter your email and we'll send a secure password reset link.
                 </p>
 
                 <ul className="mt-6 space-y-3">
                   <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">✓</span>
+                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-700/10 flex items-center justify-center text-indigo-700 dark:text-indigo-300">✓</span>
                     <div>
-                      <div className="font-medium">Secure links</div>
-                      <div className="text-sm text-gray-400">Reset tokens expire quickly for safety.</div>
+                      <div className="font-medium text-black dark:text-white">Secure links</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Reset tokens expire quickly for safety.</div>
                     </div>
                   </li>
 
                   <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">🔒</span>
+                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-700/10 flex items-center justify-center text-indigo-700 dark:text-indigo-300">🔒</span>
                     <div>
-                      <div className="font-medium">Privacy first</div>
-                      <div className="text-sm text-gray-400">We never share your email with third parties.</div>
+                      <div className="font-medium text-black dark:text-white">Privacy first</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">We never share your email with third parties.</div>
                     </div>
                   </li>
                 </ul>
               </div>
 
-              <div className="mt-6 text-sm text-gray-400">
+              <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
                 Remembered your password?{" "}
-                <Link href="/login" className="text-indigo-300 hover:underline">
+                <Link href="/login" className="text-indigo-700 dark:text-indigo-300 hover:underline">
                   Sign in
                 </Link>
                 {" — "}or create a new account{" "}
-                <Link href="/signup" className="text-indigo-300 hover:underline">
+                <Link href="/signup" className="text-indigo-700 dark:text-indigo-300 hover:underline">
                   here
                 </Link>
                 .
@@ -103,14 +103,14 @@ export default function ForgotPasswordPage(): React.ReactElement {
             </aside>
 
             {/* Right — form */}
-            <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm shadow-2xl">
-              <h2 className="text-3xl font-bold text-indigo-300">Reset your password</h2>
-              <p className="mt-2 text-sm text-gray-400">Enter the email tied to your account and we&apos;ll send reset instructions.</p>
+            <section className="rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm shadow-lg dark:shadow-2xl">
+              <h2 className="text-3xl font-bold text-indigo-700 dark:text-indigo-300">Reset your password</h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Enter the email tied to your account and we&apos;ll send reset instructions.</p>
 
               {message && (
                 <div
                   role={isError ? "alert" : "status"}
-                  className={`mt-4 p-3 rounded-md text-sm ${isError ? "bg-red-900/10 border border-red-700 text-red-300" : "bg-green-900/10 border border-green-700 text-green-300"}`}
+                  className={`mt-4 p-3 rounded-md text-sm ${isError ? "bg-red-50 dark:bg-red-900/10 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300" : "bg-green-50 dark:bg-green-900/10 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"}`}
                 >
                   {message}
                 </div>
@@ -118,14 +118,14 @@ export default function ForgotPasswordPage(): React.ReactElement {
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
                 <label className="block">
-                  <span className="text-sm text-gray-300">Email</span>
+                  <span className="text-sm font-medium text-black dark:text-gray-300">Email</span>
                   <input
                     type="email"
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@domain.com"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                     aria-label="Email Address"
                   />
@@ -134,14 +134,14 @@ export default function ForgotPasswordPage(): React.ReactElement {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
                 </button>
               </form>
 
-              <div className="my-4 text-center text-sm text-gray-400">
-                Or <Link href="/signup" className="text-indigo-300 hover:underline">create an account</Link> if you don&apos;t have one.
+              <div className="my-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                Or <Link href="/signup" className="text-indigo-700 dark:text-indigo-300 hover:underline">create an account</Link> if you don&apos;t have one.
               </div>
             </section>
           </div>

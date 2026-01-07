@@ -153,7 +153,7 @@ function SignupPage(): React.ReactElement {
     <>
       <Navbar />
 
-      <div role="main" className="min-h-screen bg-[#061226] text-gray-100 flex items-center justify-center py-12 px-4">
+      <div role="main" className="min-h-screen bg-white dark:bg-[#061226] text-black dark:text-gray-100 flex items-center justify-center py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -162,43 +162,43 @@ function SignupPage(): React.ReactElement {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             {/* Aside */}
-            <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm">
+            <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm">
               <div>
-                <h1 className="text-2xl font-extrabold leading-tight">Welcome to Tradia</h1>
-                <p className="mt-3 text-gray-300">
+                <h1 className="text-2xl font-extrabold leading-tight text-black dark:text-white">Welcome to Tradia</h1>
+                <p className="mt-3 text-gray-700 dark:text-gray-300">
                   Create your account to upload trades, get AI reviews and start improving your edge.
                 </p>
 
                 <ul className="mt-6 space-y-3">
                   <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">✓</span>
+                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-700/10 flex items-center justify-center text-indigo-700 dark:text-indigo-300">✓</span>
                     <div>
-                      <div className="font-medium">Secure & private</div>
-                      <div className="text-sm text-gray-400">All data encrypted and for your eyes only.</div>
+                      <div className="font-medium text-black dark:text-white">Secure & private</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">All data encrypted and for your eyes only.</div>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-700/10 flex items-center justify-center text-indigo-300">⚡</span>
+                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-700/10 flex items-center justify-center text-indigo-700 dark:text-indigo-300">⚡</span>
                     <div>
-                      <div className="font-medium">Fast insights</div>
-                      <div className="text-sm text-gray-400">Upload CSV or add trades manually and get instant feedback.</div>
+                      <div className="font-medium text-black dark:text-white">Fast insights</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Upload CSV or add trades manually and get instant feedback.</div>
                     </div>
                   </li>
                 </ul>
               </div>
 
-              <div className="mt-6 text-sm text-gray-400">
+              <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
                 Already have an account?{" "}
-                <Link href="/login" className="text-indigo-300 hover:underline">Sign in</Link>
+                <Link href="/login" className="text-indigo-700 dark:text-indigo-300 hover:underline">Sign in</Link>
                 {" — "}or view plans{" "}
-                <Link href="/payment" className="text-indigo-300 hover:underline">here</Link>.
+                <Link href="/payment" className="text-indigo-700 dark:text-indigo-300 hover:underline">here</Link>.
               </div>
             </aside>
 
             {/* Form */}
-            <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 to-white/5 p-8 backdrop-blur-sm shadow-2xl">
-              <h2 className="text-3xl font-bold text-indigo-300">Create Your Tradia Account</h2>
-              <p className="mt-2 text-sm text-gray-400">Fill in the details to get started — verification required.</p>
+            <section className="rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm shadow-lg dark:shadow-2xl">
+              <h2 className="text-3xl font-bold text-indigo-700 dark:text-indigo-300">Create Your Tradia Account</h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Fill in the details to get started — verification required.</p>
 
               {error && (
                 <div role="alert" className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 p-3 rounded-md text-sm">
@@ -214,24 +214,24 @@ function SignupPage(): React.ReactElement {
 
               <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
                 <label className="block">
-                  <span className="text-sm text-gray-300">Full name</span>
+                  <span className="text-sm font-medium text-black dark:text-gray-300">Full name</span>
                   <input
                     name="name"
                     type="text"
                     placeholder="Your full name"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                     autoComplete="name"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm text-gray-300">Email</span>
+                  <span className="text-sm font-medium text-black dark:text-gray-300">Email</span>
                   <input
                     name="email"
                     type="email"
                     placeholder="name@domain.com"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                     autoComplete="email"
                   />
@@ -240,12 +240,12 @@ function SignupPage(): React.ReactElement {
                 {/* Country - only render after hydration */}
                 {hydrated && (
                   <label className="block">
-                    <span className="text-sm text-gray-300">Country</span>
+                    <span className="text-sm font-medium text-black dark:text-gray-300">Country</span>
                     <select
                       name="country"
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
-                      className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                       required
                       aria-label="Country"
                     >
@@ -258,46 +258,46 @@ function SignupPage(): React.ReactElement {
                 )}
 
                 <label className="block">
-                  <span className="text-sm text-gray-300">Password</span>
+                  <span className="text-sm font-medium text-black dark:text-gray-300">Password</span>
                   <input
                     name="password"
                     type="password"
                     placeholder="Create a password"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                     autoComplete="new-password"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm text-gray-300">Confirm password</span>
+                  <span className="text-sm font-medium text-black dark:text-gray-300">Confirm password</span>
                   <input
                     name="confirmPassword"
                     type="password"
                     placeholder="Confirm password"
-                    className="mt-2 w-full p-3 rounded-lg border border-white/10 bg-transparent text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                     autoComplete="new-password"
                   />
                 </label>
 
-                <label className="flex items-start gap-3 text-sm text-gray-300">
+                <label className="flex items-start gap-3 text-sm text-black dark:text-gray-300">
                   <input
                     id="agree"
                     name="agree"
                     type="checkbox"
                     checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-white/10 bg-transparent checked:bg-indigo-500 checked:border-indigo-500"
+                    className="mt-1 h-4 w-4 rounded border-gray-400 dark:border-white/10 bg-white dark:bg-transparent checked:bg-indigo-600 dark:checked:bg-indigo-500 checked:border-indigo-600 dark:checked:border-indigo-500"
                     aria-required="true"
                   />
                   <span>
-                    I agree to Tradia’s{" "}
-                    <Link href="/terms" className="text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
+                    I agree to Tradia's{" "}
+                    <Link href="/terms" className="text-indigo-700 dark:text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
                       Terms & Conditions
                     </Link>{" "}
                     and{" "}
-                    <Link href="/privacy" className="text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
+                    <Link href="/privacy" className="text-indigo-700 dark:text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
                       Privacy Policy
                     </Link>.
                   </span>
@@ -307,21 +307,21 @@ function SignupPage(): React.ReactElement {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Creating Account..." : "Sign Up"}
                 </button>
 
                 <div className="my-4 flex items-center">
-                  <div className="flex-1 h-px bg-white/10" />
-                  <div className="px-3 text-xs text-gray-400">OR</div>
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="flex-1 h-px bg-gray-300 dark:bg-white/10" />
+                  <div className="px-3 text-xs text-gray-600 dark:text-gray-400">OR</div>
+                  <div className="flex-1 h-px bg-gray-300 dark:bg-white/10" />
                 </div>
 
                 <button
                   type="button"
                   onClick={handleGoogle}
-                  className="w-full flex items-center justify-center gap-3 py-3 border border-white/10 rounded-lg hover:bg-white/5 transition text-gray-100"
+                  className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-white/10 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition text-black dark:text-gray-100"
                   aria-label="Continue with Google"
                 >
                   <FcGoogle size={20} />
@@ -329,11 +329,11 @@ function SignupPage(): React.ReactElement {
                 </button>
               </form>
 
-              <div className="text-center text-gray-400 mt-4">OR</div>
+              <div className="text-center text-gray-600 dark:text-gray-400 mt-4">OR</div>
 
-              <p className="mt-4 text-center text-sm text-gray-400">
+              <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                 Already have an account?{" "}
-                <Link href="/login" className="text-indigo-300 hover:underline">Login here</Link>
+                <Link href="/login" className="text-indigo-700 dark:text-indigo-300 hover:underline">Login here</Link>
               </p>
             </section>
           </div>
