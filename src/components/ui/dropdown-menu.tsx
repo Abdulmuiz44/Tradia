@@ -26,7 +26,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-zinc-700 focus:text-white",
+      "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-gray-100 dark:focus:bg-zinc-700 focus:text-gray-900 dark:focus:text-white text-gray-700 dark:text-gray-300",
       inset && "pl-8",
       className
     )}
@@ -45,7 +45,7 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "z-50 min-w-[8rem] overflow-hidden rounded-md border border-zinc-700 bg-[#0f1319] p-1 text-white shadow-md animate-in slide-in-from-left-1",
+      "z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-[#0f1319] p-1 text-gray-900 dark:text-white shadow-md animate-in slide-in-from-left-1",
       className
     )}
     {...props}
@@ -62,7 +62,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-md border border-zinc-700 bg-[#0f1319] p-1 text-white shadow-md animate-in fade-in-0 slide-in-from-top-2",
+        "z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-[#0f1319] p-1 text-gray-900 dark:text-white shadow-md animate-in fade-in-0 slide-in-from-top-2",
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-zinc-700 focus:text-white",
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-gray-100 dark:focus:bg-zinc-700 focus:text-gray-900 dark:focus:text-white text-gray-700 dark:text-gray-300",
       inset && "pl-8",
       className
     )}
@@ -96,7 +96,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-zinc-700 focus:text-white",
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-gray-100 dark:focus:bg-zinc-700 focus:text-gray-900 dark:focus:text-white text-gray-700 dark:text-gray-300",
       className
     )}
     checked={checked}

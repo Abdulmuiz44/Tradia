@@ -302,16 +302,16 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
         }}
         aria-hidden
       />
-      <div className="relative z-10 w-full max-w-3xl bg-[#0f1319] text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
+      <div className="relative z-10 w-full max-w-3xl bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold">
               {trade ? `Edit Trade — ${trade.symbol ?? ""}` : "Edit Trade"}
             </h3>
             {trade && (
-              <div className="text-xs text-zinc-400">
+              <div className="text-xs text-gray-500 dark:text-zinc-400">
                 Trade ID: {trade.id ?? "—"} • PnL:{" "}
-                <span className={typeof trade.pnl === "number" && trade.pnl >= 0 ? "text-green-400" : "text-red-400"}>
+                <span className={typeof trade.pnl === "number" && trade.pnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
                   {typeof trade.pnl === "number" ? `${trade.pnl}` : String(trade.pnl ?? "—")}
                 </span>
               </div>
@@ -323,7 +323,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               onClick={() => {
                 if (!saving) onClose();
               }}
-              className="text-sm text-zinc-300 hover:text-white px-2 py-1 rounded"
+              className="text-sm text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white px-2 py-1 rounded"
               aria-label="Close edit"
             >
               Close
@@ -339,18 +339,18 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
-              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-zinc-800 text-gray-900 dark:text-white"
               placeholder="e.g. EURUSD"
             />
           </div>
 
           {/* Direction (inserted as requested) */}
           <div>
-            <label className="block text-sm text-zinc-300 mb-1">Direction</label>
+            <label className="block text-sm text-gray-700 dark:text-zinc-300 mb-1">Direction</label>
             <select
               value={direction ?? "Buy"}
               onChange={(e) => setDirection(e.target.value as Trade["direction"])}
-              className="w-full p-2 rounded bg-[#0f1319] border border-zinc-800 text-white"
+              className="w-full p-2 rounded bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-zinc-800 text-gray-900 dark:text-white"
             >
               <option>Buy</option>
               <option>Sell</option>

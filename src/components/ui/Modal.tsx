@@ -49,7 +49,7 @@ export const Modal: React.FC<ModalProps> = ({
         <Dialog.Content
           className={classNames(
             "fixed left-1/2 top-1/2 z-50 w-full translate-x-[-50%] translate-y-[-50%]",
-            "rounded-lg border border-zinc-800 bg-[#0f1319] text-white shadow-2xl p-6",
+            "rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white shadow-2xl p-6",
             sizeClass[size]
           )}
         >
@@ -58,13 +58,13 @@ export const Modal: React.FC<ModalProps> = ({
               {title ?? "Dialog"}
             </Dialog.Title>
 
-            <button onClick={onClose} aria-label="Close dialog" className="text-sm text-zinc-300 hover:text-white px-2 py-1 rounded">
+            <button onClick={onClose} aria-label="Close dialog" className="text-sm text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white px-2 py-1 rounded">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {description && (
-            <Dialog.Description className="text-sm text-zinc-300 mb-4">
+            <Dialog.Description className="text-sm text-gray-600 dark:text-zinc-300 mb-4">
               {description}
             </Dialog.Description>
           )}

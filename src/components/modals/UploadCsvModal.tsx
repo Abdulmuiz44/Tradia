@@ -213,19 +213,19 @@ export default function UploadCsvModal({
         role="dialog"
         aria-modal="true"
         aria-label="Import trades from CSV"
-        className="relative z-10 w-full max-w-3xl bg-[#0f1319] text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]"
+        className="relative z-10 w-full max-w-3xl bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white rounded-lg shadow-2xl overflow-auto p-6 max-h-[90vh]"
       >
         <header className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-2xl font-semibold">Import Trades (CSV)</h3>
-            <p className="mt-1 text-sm text-zinc-400 max-w-2xl">
+            <p className="mt-1 text-sm text-gray-600 dark:text-zinc-400 max-w-2xl">
               Upload a CSV where the first row is the header (e.g. id,symbol,openTime,closeTime,pnl,entryPrice,exitPrice,lotSize,notes). The importer will attempt to map common column names.
             </p>
           </div>
 
           <button
             onClick={() => onClose()}
-            className="text-sm text-zinc-300 hover:text-white px-2 py-1 rounded"
+            className="text-sm text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white px-2 py-1 rounded"
             aria-label="Close import modal"
           >
             Close
@@ -234,8 +234,8 @@ export default function UploadCsvModal({
 
         <div className="space-y-4">
           <label
-            htmlFor="csv-file"
-            className="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-zinc-700 p-3 bg-[#0f1319] hover:bg-zinc-800"
+             htmlFor="csv-file"
+             className="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-gray-300 dark:border-zinc-700 p-3 bg-gray-100 dark:bg-[#0f1319] hover:bg-gray-200 dark:hover:bg-zinc-800"
             data-track="csv_browse"
             data-track-meta='{"location":"upload_csv_modal"}'
           >
