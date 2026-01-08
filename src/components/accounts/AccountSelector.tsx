@@ -65,7 +65,7 @@ export default function AccountSelector({
                             accounts.map((account) => (
                                 <div
                                     key={account.id}
-                                    className={`border-b border-gray-200 dark:border-gray-800 last:border-b-0 transition ${selectedAccount.id === account.id
+                                    className={`border-b border-gray-200 dark:border-gray-800 last:border-b-0 transition ${selectedAccount?.id === account.id
                                         ? "bg-indigo-50 dark:bg-blue-500/10"
                                         : "hover:bg-gray-100 dark:hover:bg-[#0f1319]/50"
                                         }`}
@@ -113,7 +113,7 @@ export default function AccountSelector({
                                                 )}
                                             </div>
                                         )}
-                                        {selectedAccount.id === account.id && (
+                                        {selectedAccount?.id === account.id && (
                                             <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 ml-2"></div>
                                         )}
                                     </div>
