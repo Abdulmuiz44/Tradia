@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAccount } from "@/context/AccountContext";
 import { ChevronDown, Plus, Edit2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -18,8 +19,40 @@ export default function AccountSelector({
 }: AccountSelectorProps) {
     const { accounts, selectedAccount, selectAccount, deleteAccount, loading } = useAccount();
     const router = useRouter();
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownPos({
+                top: rect.bottom + window.scrollY + 8,
+                left: rect.left + window.scrollX,
+                width: rect.width,
+            });
+        }
+    }, [isOpen]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => document.removeEventListener("mousedown", handleClickOutside);
+        }
+    }, [isOpen]);
 
     // Show skeleton while loading, but don't disappear
     if (!selectedAccount && !loading) {
@@ -29,6 +62,7 @@ export default function AccountSelector({
     return (
         <div className={`relative ${className}`}>
             <button
+                ref={buttonRef}
                 onClick={() => !loading && setIsOpen(!isOpen)}
                 disabled={loading}
                 className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition w-full justify-between text-black dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
@@ -54,8 +88,15 @@ export default function AccountSelector({
                 />
             </button>
 
-            {isOpen && !loading && (
-                <div className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50">
+            {mounted && isOpen && !loading && createPortal(
+                <div 
+                    className="fixed bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50"
+                    style={{
+                        top: `${dropdownPos.top}px`,
+                        left: `${dropdownPos.left}px`,
+                        width: `${dropdownPos.width}px`,
+                    }}
+                >
                     <div className="max-h-64 overflow-y-auto">
                         {accounts.length === 0 ? (
                             <div className="p-4 text-center text-gray-600 dark:text-gray-400 text-sm">
@@ -137,7 +178,8 @@ export default function AccountSelector({
                             </button>
                         </>
                     )}
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Delete confirmation modal */}
