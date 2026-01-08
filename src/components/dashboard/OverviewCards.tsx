@@ -238,7 +238,7 @@ const getGreeting = (name = "Trader") => {
 };
 
 export default function OverviewCards({ trades: propTrades, fromDate, toDate, session, accountId }: OverviewCardsProps) {
-    const { trades: contextTradesFromHook, importTrades } = useTrade();
+    const { trades: contextTradesFromHook, accountFilteredTrades, importTrades } = useTrade();
 
     const contextTrades = useMemo(() =>
         Array.isArray(contextTradesFromHook) ? (contextTradesFromHook as TradeType[]) : []
@@ -327,9 +327,18 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         })();
     }, [session?.user?.id, session?.user?.name]);
 
-    const allTrades = useMemo<TradeType[]>(() =>
-        Array.isArray(propTrades) ? propTrades : contextTrades
-        , [propTrades, contextTrades]);
+    const allTrades = useMemo<TradeType[]>(() => {
+        // Use propTrades if provided (from dashboard parent with account filtering)
+        // Otherwise fall back to accountFilteredTrades (already filtered by account)
+        // Finally fall back to contextTrades if nothing else available
+        if (Array.isArray(propTrades) && propTrades.length > 0) {
+            return propTrades;
+        }
+        if (Array.isArray(accountFilteredTrades) && accountFilteredTrades.length > 0) {
+            return accountFilteredTrades;
+        }
+        return contextTrades;
+    }, [propTrades, accountFilteredTrades, contextTrades]);
 
     // Account balance calculation removed - TradingAccount context removed
     const accountBalance = null;

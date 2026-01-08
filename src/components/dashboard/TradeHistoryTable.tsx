@@ -171,6 +171,7 @@ interface TradeHistoryTableProps {
 export default function TradeHistoryTable({ trades: overrideTrades }: TradeHistoryTableProps = {}) {
     const {
         trades: contextTrades,
+        accountFilteredTrades,
         updateTrade,
         addTrade,
         importTrades,
@@ -178,7 +179,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         deleteTrade,
         clearTrades,
     } = useTrade();
-    const trades = overrideTrades ?? contextTrades;
+    const trades = overrideTrades ?? accountFilteredTrades;
     const { plan } = useUser();
     const { notify } = useNotification();
     const router = useRouter();
