@@ -462,8 +462,8 @@ function OverviewContent() {
 
                     {/* Content Area */}
                     <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                        {/* Account Selector */}
-                        <div className="mb-6 max-w-sm">
+                        {/* Account Selector - Sticky */}
+                        <div className="sticky top-0 mb-6 max-w-sm z-30 bg-white dark:bg-[#0f1319] pb-4">
                             <AccountSelector showCreateButton={true} showActions={true} />
                         </div>
                         <OverviewCards

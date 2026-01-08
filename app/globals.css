@@ -4,85 +4,85 @@
 
 /* Global theme tokens inspired by ChatGPT light mode */
 :root {
-  --font-sans: 'Geist', sans-serif;
-  --font-mono: "IBM Plex Mono", "Menlo", monospace;
+    --font-sans: 'Geist', sans-serif;
+    --font-mono: "IBM Plex Mono", "Menlo", monospace;
 
-  --surface-primary: #f7f7f8;
-  --surface-secondary: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-hover: #ececf1;
-  --surface-inset: #f0f0f5;
-  --surface-border: rgba(5, 5, 9, 0.08);
-  --surface-border-strong: rgba(5, 5, 9, 0.16);
+    --surface-primary: #f7f7f8;
+    --surface-secondary: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-hover: #ececf1;
+    --surface-inset: #f0f0f5;
+    --surface-border: rgba(5, 5, 9, 0.08);
+    --surface-border-strong: rgba(5, 5, 9, 0.16);
 
-  --text-primary: #0f1319;
-  --text-secondary: #3d3d4e;
-  --text-muted: #6e6e80;
-  --text-inverse: #f7f7f8;
+    --text-primary: #0f1319;
+    --text-secondary: #3d3d4e;
+    --text-muted: #6e6e80;
+    --text-inverse: #f7f7f8;
 
-  --shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.08);
-  --shadow-hover: 0 20px 60px rgba(15, 23, 42, 0.12);
+    --shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.08);
+    --shadow-hover: 0 20px 60px rgba(15, 23, 42, 0.12);
 
-  --radius-sm: 10px;
-  --radius-base: 14px;
-  --radius-lg: 18px;
-  --radius-full: 999px;
+    --radius-sm: 10px;
+    --radius-base: 14px;
+    --radius-lg: 18px;
+    --radius-full: 999px;
 
-  --brand-50: #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-300: #a5b4fc;
-  --brand-400: #818cf8;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
-  --brand-800: #3730a3;
-  --brand-900: #312e81;
-  --brand-accent: #06b6d4;
-  --brand-bg-dark: #0f1319;
-  --brand-text-dark: #0f1319;
-  --brand-text-light: #ffffff;
+    --brand-50: #eef2ff;
+    --brand-100: #e0e7ff;
+    --brand-200: #c7d2fe;
+    --brand-300: #a5b4fc;
+    --brand-400: #818cf8;
+    --brand-500: #6366f1;
+    --brand-600: #4f46e5;
+    --brand-700: #4338ca;
+    --brand-800: #3730a3;
+    --brand-900: #312e81;
+    --brand-accent: #06b6d4;
+    --brand-bg-dark: #0f1319;
+    --brand-text-dark: #0f1319;
+    --brand-text-light: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-  }
+    :root {
+        color-scheme: dark;
+    }
 }
 
 .brand-gradient {
-  background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
+    background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
 }
 
 .brand-text-gradient {
-  background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+    background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 html,
 body {
-  padding: 0;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.6;
-  background-color: var(--surface-primary);
-  color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body,
 #__next,
 html {
-  min-height: 100%;
+    min-height: 100%;
 }
 
 .dark body {
-  background-color: #0f1319;
-  color: #e5e7eb;
+    background-color: #0f1319;
+    color: #e5e7eb;
 }
 
 main,
@@ -91,8 +91,8 @@ footer,
 section,
 aside,
 header {
-  background: transparent;
-  color: inherit;
+    background: transparent;
+    color: inherit;
 }
 
 h1,
@@ -101,9 +101,9 @@ h3,
 h4,
 h5,
 h6 {
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--text-primary);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
 }
 
 .dark h1,
@@ -112,7 +112,7 @@ h6 {
 .dark h4,
 .dark h5,
 .dark h6 {
-  color: #ffffff !important;
+    color: #ffffff !important;
 }
 
 p,
@@ -124,63 +124,63 @@ a,
 button,
 input,
 textarea {
-  font-weight: 400;
-  color: var(--text-primary);
+    font-weight: 400;
+    color: var(--text-primary);
 }
 
 strong,
 b {
-  font-weight: 600;
-  color: var(--text-primary);
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+    color: inherit;
+    text-decoration: none;
 }
 
 a:hover {
-  color: var(--text-primary);
+    color: var(--text-primary);
 }
 
 button,
 [role="button"] {
-  font-family: var(--font-sans);
-  font-weight: 500;
+    font-family: var(--font-sans);
+    font-weight: 500;
 }
 
 input,
 textarea,
 select {
-  border-radius: var(--radius-base);
-  background-color: var(--surface-secondary);
-  border: 1px solid var(--surface-border);
-  color: var(--text-primary);
-  padding: 0.65rem 0.75rem;
+    border-radius: var(--radius-base);
+    background-color: var(--surface-secondary);
+    border: 1px solid var(--surface-border);
+    color: var(--text-primary);
+    padding: 0.65rem 0.75rem;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--text-muted);
+    color: var(--text-muted);
 }
 
 .card,
 .surface,
 .panel {
-  background-color: var(--surface-secondary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--surface-border);
-  box-shadow: var(--shadow-soft);
+    background-color: var(--surface-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--shadow-soft);
 }
 
 .surface-elevated {
-  background-color: var(--surface-elevated);
-  box-shadow: var(--shadow-hover);
+    background-color: var(--surface-elevated);
+    box-shadow: var(--shadow-hover);
 }
 
 html:not(.dark) body {
-  background-color: var(--surface-primary);
-  color: var(--text-primary);
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
 }
 
 html:not(.dark) .bg-white,
@@ -189,34 +189,34 @@ html:not(.dark) .bg-slate-100,
 html:not(.dark) .bg-gray-50,
 html:not(.dark) .bg-muted,
 html:not(.dark) .bg-muted\/50 {
-  background-color: var(--surface-secondary) !important;
+    background-color: var(--surface-secondary) !important;
 }
 
 html:not(.dark) .bg-gray-100 {
-  background-color: var(--surface-inset) !important;
+    background-color: var(--surface-inset) !important;
 }
 
 html:not(.dark) .text-gray-500,
 html:not(.dark) .text-slate-500,
 html:not(.dark) .text-muted-foreground {
-  color: var(--text-secondary) !important;
+    color: var(--text-secondary) !important;
 }
 
 html:not(.dark) .text-gray-600,
 html:not(.dark) .text-slate-600 {
-  color: var(--text-primary) !important;
+    color: var(--text-primary) !important;
 }
 
 html:not(.dark) .text-gray-400,
 html:not(.dark) .text-slate-400 {
-  color: var(--text-muted) !important;
+    color: var(--text-muted) !important;
 }
 
 html:not(.dark) .border-gray-200,
 html:not(.dark) .border-gray-300,
 html:not(.dark) .border-slate-200,
 html:not(.dark) .border-slate-300 {
-  border-color: var(--surface-border) !important;
+    border-color: var(--surface-border) !important;
 }
 
 html:not(.dark) .rounded,
@@ -224,24 +224,24 @@ html:not(.dark) .rounded-md,
 html:not(.dark) .rounded-lg,
 html:not(.dark) .rounded-xl,
 html:not(.dark) .rounded-2xl {
-  border-radius: var(--radius-base) !important;
+    border-radius: var(--radius-base) !important;
 }
 
 html:not(.dark) .shadow,
 html:not(.dark) .shadow-md,
 html:not(.dark) .shadow-lg {
-  box-shadow: var(--shadow-soft) !important;
+    box-shadow: var(--shadow-soft) !important;
 }
 
 html:not(.dark) .hover\:bg-gray-100:hover,
 html:not(.dark) .hover\:bg-slate-100:hover {
-  background-color: var(--surface-hover) !important;
-  color: var(--text-primary) !important;
+    background-color: var(--surface-hover) !important;
+    color: var(--text-primary) !important;
 }
 
 /* Light mode text clarity - ensure all text is black in light mode */
 html:not(.dark) {
-  color: #000000;
+    color: #000000;
 }
 
 html:not(.dark) p,
@@ -253,7 +253,7 @@ html:not(.dark) a,
 html:not(.dark) button,
 html:not(.dark) input,
 html:not(.dark) textarea {
-  color: #000000 !important;
+    color: #000000 !important;
 }
 
 /* Override gray and slate text colors in light mode */
@@ -270,7 +270,7 @@ html:not(.dark) .text-slate-600,
 html:not(.dark) .text-slate-700,
 html:not(.dark) .text-slate-800,
 html:not(.dark) .text-slate-900 {
-  color: #000000 !important;
+    color: #000000 !important;
 }
 
 /* Light mode backgrounds for dashboard */
@@ -280,144 +280,179 @@ html:not(.dark) .bg-gray-900,
 html:not(.dark) .bg-slate-700,
 html:not(.dark) .bg-slate-800,
 html:not(.dark) .bg-slate-900 {
-  background-color: #f3f4f6 !important;
-  color: #000000 !important;
+    background-color: #f3f4f6 !important;
+    color: #000000 !important;
 }
 
 /* Dashboard side navigation */
 .dashboard-sidebar {
-  gap: 0.4rem;
+    gap: 0.4rem;
 }
 
 .dashboard-sidebar__item {
-  border: 1px solid transparent;
-  background: transparent;
-  color: #000000;
-  font-weight: 400;
-  border-radius: var(--radius-base);
+    border: 1px solid transparent;
+    background: transparent;
+    color: #000000;
+    font-weight: 400;
+    border-radius: var(--radius-base);
 }
 
 .dark .dashboard-sidebar__item {
-  color: var(--text-muted);
-  font-weight: 500;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .dashboard-sidebar__item:hover {
-  background-color: #f0f0f0;
-  color: #000000;
-  border-color: transparent;
+    background-color: #f0f0f0;
+    color: #000000;
+    border-color: transparent;
 }
 
 .dark .dashboard-sidebar__item:hover {
-  background-color: var(--surface-hover);
-  color: var(--text-primary);
+    background-color: var(--surface-hover);
+    color: var(--text-primary);
 }
 
 .dashboard-sidebar__item.is-active {
-  background-color: #e8e8ff;
-  color: #000000;
-  border-color: #d0d5ff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  font-weight: 500;
+    background-color: #e8e8ff;
+    color: #000000;
+    border-color: #d0d5ff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    font-weight: 500;
 }
 
 .dark .dashboard-sidebar__item.is-active {
-  background-color: var(--surface-secondary);
-  color: var(--text-primary);
-  border-color: var(--surface-border);
-  font-weight: 500;
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
+    border-color: var(--surface-border);
+    font-weight: 500;
 }
 
 .dashboard-sidebar__item .dashboard-sidebar__icon {
-  color: #000000;
+    color: #000000;
 }
 
 .dark .dashboard-sidebar__item .dashboard-sidebar__icon {
-  color: var(--text-muted);
+    color: var(--text-muted);
 }
 
 .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
 .dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-  color: #000000;
+    color: #000000;
 }
 
 .dark .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
 .dark .dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-  color: var(--text-primary);
+    color: var(--text-primary);
 }
 
 .dashboard-sidebar__indicator {
-  width: 8px;
-  height: 8px;
-  background-color: #4f46e5;
-  border-radius: var(--radius-full);
+    width: 8px;
+    height: 8px;
+    background-color: #4f46e5;
+    border-radius: var(--radius-full);
 }
 
 .dark .dashboard-sidebar__indicator {
-  background-color: #818cf8;
+    background-color: #818cf8;
 }
 
 /* Focus and selection */
 *:focus-visible {
-  outline: 2px solid #10a37f;
-  outline-offset: 2px;
+    outline: 2px solid #10a37f;
+    outline-offset: 2px;
 }
 
 ::selection {
-  background: rgba(16, 163, 127, 0.16);
-  color: var(--text-primary);
+    background: rgba(16, 163, 127, 0.16);
+    color: var(--text-primary);
 }
 
 * {
-  transition-property: color, background-color, border-color, fill, stroke;
-  transition-duration: 200ms;
-  transition-timing-function: ease-in-out;
+    transition-property: color, background-color, border-color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(24, 24, 27, 0.2);
-  border-radius: 999px;
+    background-color: rgba(24, 24, 27, 0.2);
+    border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(24, 24, 27, 0.35);
+    background-color: rgba(24, 24, 27, 0.35);
 }
 
 /* Utility classes */
 .text-green {
-  color: #10a37f;
+    color: #10a37f;
 }
 
 .text-red {
-  color: #ef4444;
+    color: #ef4444;
 }
 
 .card {
-  padding: 1rem;
+    padding: 1rem;
 }
 
 .table-header {
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .table-cell {
-  padding: 0.75rem;
+    padding: 0.75rem;
 }
 
 button[title="Debug admin status"] {
-  display: none !important;
+    display: none !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Light mode input styling */
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="email"],
+html:not(.dark) input[type="password"],
+html:not(.dark) input[type="search"],
+html:not(.dark) textarea,
+html:not(.dark) select {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #d1d5db !important;
+}
+
+html:not(.dark) input[type="text"]:focus,
+html:not(.dark) input[type="email"]:focus,
+html:not(.dark) input[type="password"]:focus,
+html:not(.dark) input[type="search"]:focus,
+html:not(.dark) textarea:focus,
+html:not(.dark) select:focus {
+    border-color: #4f46e5 !important;
+    background-color: #ffffff !important;
+}
+
+/* Light mode cards and containers */
+html:not(.dark) .card,
+html:not(.dark) .surface,
+html:not(.dark) .panel {
+    background-color: #ffffff !important;
+    color: #000000 !important;
 }
