@@ -21,21 +21,32 @@ export default function AccountSelector({
     const [isOpen, setIsOpen] = React.useState(false);
     const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
 
-    if (loading || !selectedAccount) {
+    // Show skeleton while loading, but don't disappear
+    if (!selectedAccount && !loading) {
         return null;
     }
 
     return (
         <div className={`relative ${className}`}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition w-full justify-between text-black dark:text-white"
+                onClick={() => !loading && setIsOpen(!isOpen)}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition w-full justify-between text-black dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <div className="flex-1 text-left min-w-0">
-                    <div className="text-sm font-medium truncate">{selectedAccount.name}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                        ${selectedAccount.account_size.toFixed(2)} {selectedAccount.currency}
-                    </div>
+                    {loading ? (
+                        <>
+                            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-1 animate-pulse"></div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="text-sm font-medium truncate">{selectedAccount?.name}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                                ${selectedAccount?.account_size.toFixed(2)} {selectedAccount?.currency}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <ChevronDown
                     size={18}
@@ -43,7 +54,7 @@ export default function AccountSelector({
                 />
             </button>
 
-            {isOpen && (
+            {isOpen && !loading && (
                 <div className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50">
                     <div className="max-h-64 overflow-y-auto">
                         {accounts.length === 0 ? (
