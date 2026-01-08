@@ -187,7 +187,7 @@ const rrFromTrade = (t: TradeType): number => {
 function ProgressBar({ value, color = "bg-green-500" }: { value: number; color?: string }) {
     const pct = Math.max(0, Math.min(100, Math.round(value)));
     return (
-        <div className="w-full bg-slate-900/60 rounded h-2 overflow-hidden">
+        <div className="w-full bg-gray-200 dark:bg-slate-900/60 rounded h-2 overflow-hidden">
             <div className={`${color} h-2 transition-all duration-300`} style={{ width: `${pct}%` }} />
         </div>
     );
@@ -205,11 +205,11 @@ function ColoredValue({ value, forceClass }: { value: React.ReactNode; forceClas
         ? forceClass
         : num !== null
             ? num > 0
-                ? "text-green-400"
+                ? "text-green-600 dark:text-green-400"
                 : num < 0
-                    ? "text-red-400"
-                    : "text-white"
-            : "text-white";
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-gray-700 dark:text-white"
+            : "text-gray-700 dark:text-white";
     return <span className={cls}>{value}</span>;
 }
 
@@ -602,10 +602,10 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
     const containerClass = "space-y-5 px-4 sm:px-0 max-w-7xl mx-auto";
 
     // card base with border + subtle left accent space reserved
-    const cardBase = "bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm transition-shadow duration-200 hover:shadow-lg border border-zinc-700 relative overflow-hidden";
-    const positiveClass = "text-green-400";
-    const negativeClass = "text-red-400";
-    const neutralClass = "text-white";
+    const cardBase = "bg-white dark:bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm dark:shadow-sm transition-shadow duration-200 hover:shadow-md dark:hover:shadow-lg border border-gray-200 dark:border-zinc-700 relative overflow-hidden";
+    const positiveClass = "text-green-600 dark:text-green-400";
+    const negativeClass = "text-red-600 dark:text-red-400";
+    const neutralClass = "text-gray-700 dark:text-white";
 
     // show only first name and prefix with "Trader "
     const displayName = (userName ?? "Trader").trim() || "Trader";
@@ -618,13 +618,13 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div className="fixed inset-0 bg-black/30" onClick={onClose} />
-                <div className="relative z-10 bg-slate-900 p-4 rounded-md w-full max-w-md shadow-lg">
+                <div className="relative z-10 bg-white dark:bg-slate-900 p-4 rounded-md w-full max-w-md shadow-lg border border-gray-200 dark:border-zinc-700">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h3 className="text-lg font-semibold">{def.title}</h3>
-                            <p className="text-sm text-zinc-300 mt-2">{def.body}</p>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{def.title}</h3>
+                            <p className="text-sm text-gray-700 dark:text-zinc-300 mt-2">{def.body}</p>
                         </div>
-                        <button onClick={onClose} className="p-1 rounded bg-[#0f1319]">
+                        <button onClick={onClose} className="p-1 rounded bg-gray-100 dark:bg-[#0f1319] text-gray-600 dark:text-gray-300">
                             <X size={16} />
                         </button>
                     </div>
@@ -680,17 +680,17 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
 
                 {/* center text always centered for better mobile UX */}
                 <div className="flex-1 text-center">
-                    <div className="text-xs text-zinc-400 truncate">{opts.title}</div>
+                    <div className="text-xs text-gray-600 dark:text-zinc-400 truncate">{opts.title}</div>
                     <div className="text-lg font-semibold mt-1 truncate">
                         <ColoredValue value={opts.value} forceClass={opts.valueClass} />
                     </div>
-                    <div className="text-xs text-zinc-400 mt-1 truncate">{typeof opts.small === "string" ? opts.small : opts.small}</div>
+                    <div className="text-xs text-gray-600 dark:text-zinc-400 mt-1 truncate">{typeof opts.small === "string" ? opts.small : opts.small}</div>
                 </div>
 
                 {/* explanation button top-right for desktop and floating in card for mobile */}
                 <button
                     onClick={() => setExplainKey(opts.keyId)}
-                    className="absolute top-2 right-2 p-1 rounded bg-[#0f1319]"
+                    className="absolute top-2 right-2 p-1 rounded bg-gray-100 dark:bg-[#0f1319] text-gray-600 dark:text-gray-300"
                     title="Explain"
                 >
                     <Info size={14} />
@@ -947,14 +947,14 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
 
             {/* Sample Data Banner - Show when no trades exist */}
             {allTrades.length === 0 && (
-                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-600/20 dark:to-purple-600/20 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 mb-6 shadow-sm">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="text-2xl">📊</div>
                                 <div>
-                                    <h3 className="text-lg font-semibold text-white">Welcome to Tradia!</h3>
-                                    <p className="text-sm text-gray-300">Ready to start analyzing your trading performance?</p>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Welcome to Tradia!</h3>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">Ready to start analyzing your trading performance?</p>
                                 </div>
                             </div>
                             <div className="flex flex-wrap gap-3 mt-4">
@@ -978,12 +978,12 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                                             window.dispatchEvent(new CustomEvent('showImportModal'));
                                         }
                                     }}
-                                    className="px-4 py-2 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-colors"
+                                    className="px-4 py-2 border border-blue-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-gray-500 text-blue-700 dark:text-gray-300 dark:hover:text-white rounded-lg text-sm font-medium transition-colors"
                                 >
                                     Import Your Trades
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-400 mt-3">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
                                 Sample data includes realistic EUR/USD, BTC/USDT, and ETH/USDT trades to explore Tradia&apos;s features.
                             </p>
                         </div>
@@ -1105,19 +1105,19 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                     <div className={`${cardBase}`}>
                         <div className="flex items-center justify-between mb-2">
                             <div>
-                                <div className="text-sm font-semibold">Performance</div>
-                                <div className="text-xs text-zinc-400">{metrics.filtered.length} trades</div>
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">Performance</div>
+                                <div className="text-xs text-gray-600 dark:text-zinc-400">{metrics.filtered.length} trades</div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setPnlMode("cumulative")}
-                                    className={`px-2 py-1 rounded ${pnlMode === "cumulative" ? "bg-slate-700 text-white" : "text-zinc-300"}`}
+                                    className={`px-2 py-1 rounded ${pnlMode === "cumulative" ? "bg-blue-600 text-white dark:bg-slate-700 dark:text-white" : "text-gray-600 dark:text-zinc-300"}`}
                                 >
                                     Cumulative
                                 </button>
                                 <button
                                     onClick={() => setPnlMode("perTrade")}
-                                    className={`px-2 py-1 rounded ${pnlMode === "perTrade" ? "bg-slate-700 text-white" : "text-zinc-300"}`}
+                                    className={`px-2 py-1 rounded ${pnlMode === "perTrade" ? "bg-blue-600 text-white dark:bg-slate-700 dark:text-white" : "text-gray-600 dark:text-zinc-300"}`}
                                 >
                                     Per-trade
                                 </button>
@@ -1131,13 +1131,13 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                     <div className={`${cardBase}`}>
                         <div className="flex items-center justify-between mb-2">
                             <div>
-                                <div className="text-sm font-semibold">Equity Curve</div>
-                                <div className="text-xs text-zinc-400">{metrics.filtered.length} trades · {metrics.winRate.toFixed(1)}% win rate</div>
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">Equity Curve</div>
+                                <div className="text-xs text-gray-600 dark:text-zinc-400">{metrics.filtered.length} trades · {metrics.winRate.toFixed(1)}% win rate</div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="text-xs text-zinc-400">PNL</div>
+                                <div className="text-xs text-gray-600 dark:text-zinc-400">PNL</div>
                                 <div className={`font-semibold ${metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass}`}>${metrics.totalPnl.toFixed(2)}</div>
-                                <button onClick={() => setExplainKey("pnl")} className="p-1 rounded bg-[#0f1319]">
+                                <button onClick={() => setExplainKey("pnl")} className="p-1 rounded bg-gray-100 dark:bg-[#0f1319] text-gray-600 dark:text-gray-300">
                                     <Info size={14} />
                                 </button>
                             </div>
