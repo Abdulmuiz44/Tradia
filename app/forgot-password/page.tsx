@@ -67,7 +67,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
               <div>
                 <h1 className="text-2xl font-extrabold leading-tight text-black dark:text-white">Forgot your password?</h1>
                 <p className="mt-3 text-gray-700 dark:text-gray-300">
-                  No worries — enter your email and we'll send a secure password reset link.
+                  No worries &mdash; enter your email and we&apos;ll send a secure password reset link.
                 </p>
 
                 <ul className="mt-6 space-y-3">

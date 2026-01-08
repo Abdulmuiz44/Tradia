@@ -292,7 +292,7 @@ function SignupPage(): React.ReactElement {
                     aria-required="true"
                   />
                   <span>
-                    I agree to Tradia's{" "}
+                    I agree to Tradia&apos;s{" "}
                     <Link href="/terms" className="text-indigo-700 dark:text-indigo-300 hover:underline" target="_blank" rel="noopener noreferrer">
                       Terms & Conditions
                     </Link>{" "}
