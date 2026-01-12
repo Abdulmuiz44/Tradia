@@ -2,64 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global theme tokens inspired by ChatGPT light mode */
+/* =====================================================
+   STRICT MONOCHROME THEME - BLACK & WHITE ONLY
+   Optimized for both light and dark modes
+   ===================================================== */
+
 :root {
-    --font-sans: 'Geist', sans-serif;
+    /* Font system */
+    --font-sans: 'Geist', 'Inter', system-ui, sans-serif;
     --font-mono: "IBM Plex Mono", "Menlo", monospace;
 
-    --surface-primary: #f7f7f8;
-    --surface-secondary: #ffffff;
+    /* MONOCHROME LIGHT MODE - White backgrounds, Black text */
+    --surface-primary: #ffffff;
+    --surface-secondary: #f9fafb;
     --surface-elevated: #ffffff;
-    --surface-hover: #ececf1;
-    --surface-inset: #f0f0f5;
-    --surface-border: rgba(5, 5, 9, 0.08);
-    --surface-border-strong: rgba(5, 5, 9, 0.16);
+    --surface-hover: #f3f4f6;
+    --surface-inset: #f3f4f6;
+    --surface-border: #e5e7eb;
+    --surface-border-strong: #d1d5db;
 
-    --text-primary: #0f1319;
-    --text-secondary: #3d3d4e;
-    --text-muted: #6e6e80;
-    --text-inverse: #f7f7f8;
+    --text-primary: #000000;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --text-inverse: #ffffff;
 
-    --shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.08);
-    --shadow-hover: 0 20px 60px rgba(15, 23, 42, 0.12);
+    /* Shadows - grayscale only */
+    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
 
-    --radius-sm: 10px;
-    --radius-base: 14px;
-    --radius-lg: 18px;
+    /* Border radius */
+    --radius-sm: 6px;
+    --radius-base: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
     --radius-full: 999px;
 
-    --brand-50: #eef2ff;
-    --brand-100: #e0e7ff;
-    --brand-200: #c7d2fe;
-    --brand-300: #a5b4fc;
-    --brand-400: #818cf8;
-    --brand-500: #6366f1;
-    --brand-600: #4f46e5;
-    --brand-700: #4338ca;
-    --brand-800: #3730a3;
-    --brand-900: #312e81;
-    --brand-accent: #06b6d4;
-    --brand-bg-dark: #0f1319;
-    --brand-text-dark: #0f1319;
-    --brand-text-light: #ffffff;
+    /* MONOCHROME ONLY - No brand colors */
+    --accent: #000000;
+    --accent-foreground: #ffffff;
+}
+
+/* Dark mode overrides */
+.dark,
+[data-theme="dark"] {
+    --surface-primary: #000000;
+    --surface-secondary: #111111;
+    --surface-elevated: #1a1a1a;
+    --surface-hover: #262626;
+    --surface-inset: #0a0a0a;
+    --surface-border: #333333;
+    --surface-border-strong: #444444;
+
+    --text-primary: #ffffff;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --text-inverse: #000000;
+
+    --accent: #ffffff;
+    --accent-foreground: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light) {
         color-scheme: dark;
     }
 }
 
-.brand-gradient {
-    background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
-}
-
-.brand-text-gradient {
-    background-image: linear-gradient(90deg, var(--brand-500), var(--brand-accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-}
+/* =====================================================
+   BASE STYLES
+   ===================================================== */
 
 html,
 body {
@@ -80,9 +92,11 @@ html {
     min-height: 100%;
 }
 
-.dark body {
-    background-color: #0f1319;
-    color: #e5e7eb;
+/* Dark mode body */
+.dark body,
+html.dark body {
+    background-color: #000000;
+    color: #ffffff;
 }
 
 main,
@@ -94,6 +108,10 @@ header {
     background: transparent;
     color: inherit;
 }
+
+/* =====================================================
+   TYPOGRAPHY - BLACK/WHITE ONLY
+   ===================================================== */
 
 h1,
 h2,
@@ -111,7 +129,13 @@ h6 {
 .dark h3,
 .dark h4,
 .dark h5,
-.dark h6 {
+.dark h6,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
     color: #ffffff !important;
 }
 
@@ -141,6 +165,7 @@ a {
 
 a:hover {
     color: var(--text-primary);
+    text-decoration: underline;
 }
 
 button,
@@ -148,6 +173,10 @@ button,
     font-family: var(--font-sans);
     font-weight: 500;
 }
+
+/* =====================================================
+   FORM ELEMENTS - MONOCHROME
+   ===================================================== */
 
 input,
 textarea,
@@ -164,6 +193,18 @@ textarea::placeholder {
     color: var(--text-muted);
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 1px var(--text-primary);
+}
+
+/* =====================================================
+   CARDS & SURFACES - GRAYSCALE ONLY
+   ===================================================== */
+
 .card,
 .surface,
 .panel {
@@ -171,6 +212,7 @@ textarea::placeholder {
     border-radius: var(--radius-lg);
     border: 1px solid var(--surface-border);
     box-shadow: var(--shadow-soft);
+    color: var(--text-primary);
 }
 
 .surface-elevated {
@@ -178,68 +220,314 @@ textarea::placeholder {
     box-shadow: var(--shadow-hover);
 }
 
-html:not(.dark) body {
-    background-color: var(--surface-primary);
-    color: var(--text-primary);
+/* =====================================================
+   FORCE MONOCHROME - OVERRIDE ALL COLORS
+   ===================================================== */
+
+/* Remove all colored backgrounds - Light mode */
+html:not(.dark) .bg-blue-50,
+html:not(.dark) .bg-blue-100,
+html:not(.dark) .bg-blue-200,
+html:not(.dark) .bg-green-50,
+html:not(.dark) .bg-green-100,
+html:not(.dark) .bg-green-200,
+html:not(.dark) .bg-red-50,
+html:not(.dark) .bg-red-100,
+html:not(.dark) .bg-red-200,
+html:not(.dark) .bg-yellow-50,
+html:not(.dark) .bg-yellow-100,
+html:not(.dark) .bg-yellow-200,
+html:not(.dark) .bg-indigo-50,
+html:not(.dark) .bg-indigo-100,
+html:not(.dark) .bg-indigo-200,
+html:not(.dark) .bg-purple-50,
+html:not(.dark) .bg-purple-100,
+html:not(.dark) .bg-purple-200,
+html:not(.dark) .bg-emerald-50,
+html:not(.dark) .bg-emerald-100,
+html:not(.dark) .bg-emerald-200,
+html:not(.dark) .bg-orange-50,
+html:not(.dark) .bg-orange-100,
+html:not(.dark) .bg-orange-200,
+html:not(.dark) .bg-amber-50,
+html:not(.dark) .bg-amber-100,
+html:not(.dark) .bg-amber-200,
+html:not(.dark) .bg-cyan-50,
+html:not(.dark) .bg-cyan-100,
+html:not(.dark) .bg-cyan-200,
+html:not(.dark) .bg-teal-50,
+html:not(.dark) .bg-teal-100,
+html:not(.dark) .bg-teal-200 {
+    background-color: #f3f4f6 !important;
 }
 
-html:not(.dark) .bg-white,
-html:not(.dark) .bg-slate-50,
-html:not(.dark) .bg-slate-100,
-html:not(.dark) .bg-gray-50,
-html:not(.dark) .bg-muted,
-html:not(.dark) .bg-muted\/50 {
-    background-color: var(--surface-secondary) !important;
+/* Force all colored backgrounds to grayscale - medium shades */
+html:not(.dark) .bg-blue-300,
+html:not(.dark) .bg-blue-400,
+html:not(.dark) .bg-blue-500,
+html:not(.dark) .bg-green-300,
+html:not(.dark) .bg-green-400,
+html:not(.dark) .bg-green-500,
+html:not(.dark) .bg-red-300,
+html:not(.dark) .bg-red-400,
+html:not(.dark) .bg-red-500,
+html:not(.dark) .bg-yellow-300,
+html:not(.dark) .bg-yellow-400,
+html:not(.dark) .bg-yellow-500,
+html:not(.dark) .bg-indigo-300,
+html:not(.dark) .bg-indigo-400,
+html:not(.dark) .bg-indigo-500,
+html:not(.dark) .bg-purple-300,
+html:not(.dark) .bg-purple-400,
+html:not(.dark) .bg-purple-500,
+html:not(.dark) .bg-emerald-300,
+html:not(.dark) .bg-emerald-400,
+html:not(.dark) .bg-emerald-500,
+html:not(.dark) .bg-orange-300,
+html:not(.dark) .bg-orange-400,
+html:not(.dark) .bg-orange-500,
+html:not(.dark) .bg-amber-300,
+html:not(.dark) .bg-amber-400,
+html:not(.dark) .bg-amber-500,
+html:not(.dark) .bg-cyan-300,
+html:not(.dark) .bg-cyan-400,
+html:not(.dark) .bg-cyan-500,
+html:not(.dark) .bg-teal-300,
+html:not(.dark) .bg-teal-400,
+html:not(.dark) .bg-teal-500 {
+    background-color: #000000 !important;
+    color: #ffffff !important;
 }
 
-html:not(.dark) .bg-gray-100 {
-    background-color: var(--surface-inset) !important;
+/* Force darker shades to pure black */
+html:not(.dark) .bg-blue-600,
+html:not(.dark) .bg-blue-700,
+html:not(.dark) .bg-blue-800,
+html:not(.dark) .bg-blue-900,
+html:not(.dark) .bg-green-600,
+html:not(.dark) .bg-green-700,
+html:not(.dark) .bg-green-800,
+html:not(.dark) .bg-green-900,
+html:not(.dark) .bg-red-600,
+html:not(.dark) .bg-red-700,
+html:not(.dark) .bg-red-800,
+html:not(.dark) .bg-red-900,
+html:not(.dark) .bg-yellow-600,
+html:not(.dark) .bg-yellow-700,
+html:not(.dark) .bg-yellow-800,
+html:not(.dark) .bg-yellow-900,
+html:not(.dark) .bg-indigo-600,
+html:not(.dark) .bg-indigo-700,
+html:not(.dark) .bg-indigo-800,
+html:not(.dark) .bg-indigo-900,
+html:not(.dark) .bg-purple-600,
+html:not(.dark) .bg-purple-700,
+html:not(.dark) .bg-purple-800,
+html:not(.dark) .bg-purple-900,
+html:not(.dark) .bg-emerald-600,
+html:not(.dark) .bg-emerald-700,
+html:not(.dark) .bg-emerald-800,
+html:not(.dark) .bg-emerald-900,
+html:not(.dark) .bg-orange-600,
+html:not(.dark) .bg-orange-700,
+html:not(.dark) .bg-orange-800,
+html:not(.dark) .bg-orange-900,
+html:not(.dark) .bg-amber-600,
+html:not(.dark) .bg-amber-700,
+html:not(.dark) .bg-amber-800,
+html:not(.dark) .bg-amber-900,
+html:not(.dark) .bg-cyan-600,
+html:not(.dark) .bg-cyan-700,
+html:not(.dark) .bg-cyan-800,
+html:not(.dark) .bg-cyan-900,
+html:not(.dark) .bg-teal-600,
+html:not(.dark) .bg-teal-700,
+html:not(.dark) .bg-teal-800,
+html:not(.dark) .bg-teal-900 {
+    background-color: #000000 !important;
+    color: #ffffff !important;
 }
 
-html:not(.dark) .text-gray-500,
-html:not(.dark) .text-slate-500,
-html:not(.dark) .text-muted-foreground {
-    color: var(--text-secondary) !important;
+/* DARK MODE - colored backgrounds to grayscale */
+.dark .bg-blue-50,
+.dark .bg-blue-100,
+.dark .bg-blue-200,
+.dark .bg-green-50,
+.dark .bg-green-100,
+.dark .bg-green-200,
+.dark .bg-red-50,
+.dark .bg-red-100,
+.dark .bg-red-200,
+.dark .bg-yellow-50,
+.dark .bg-yellow-100,
+.dark .bg-yellow-200,
+.dark .bg-indigo-50,
+.dark .bg-indigo-100,
+.dark .bg-indigo-200,
+.dark .bg-purple-50,
+.dark .bg-purple-100,
+.dark .bg-purple-200,
+.dark .bg-emerald-50,
+.dark .bg-emerald-100,
+.dark .bg-emerald-200 {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
 }
 
-html:not(.dark) .text-gray-600,
-html:not(.dark) .text-slate-600 {
-    color: var(--text-primary) !important;
+.dark .bg-blue-300,
+.dark .bg-blue-400,
+.dark .bg-blue-500,
+.dark .bg-blue-600,
+.dark .bg-blue-700,
+.dark .bg-blue-800,
+.dark .bg-blue-900,
+.dark .bg-green-300,
+.dark .bg-green-400,
+.dark .bg-green-500,
+.dark .bg-green-600,
+.dark .bg-green-700,
+.dark .bg-green-800,
+.dark .bg-green-900,
+.dark .bg-red-300,
+.dark .bg-red-400,
+.dark .bg-red-500,
+.dark .bg-red-600,
+.dark .bg-red-700,
+.dark .bg-red-800,
+.dark .bg-red-900,
+.dark .bg-yellow-300,
+.dark .bg-yellow-400,
+.dark .bg-yellow-500,
+.dark .bg-yellow-600,
+.dark .bg-yellow-700,
+.dark .bg-yellow-800,
+.dark .bg-yellow-900,
+.dark .bg-indigo-300,
+.dark .bg-indigo-400,
+.dark .bg-indigo-500,
+.dark .bg-indigo-600,
+.dark .bg-indigo-700,
+.dark .bg-indigo-800,
+.dark .bg-indigo-900,
+.dark .bg-purple-300,
+.dark .bg-purple-400,
+.dark .bg-purple-500,
+.dark .bg-purple-600,
+.dark .bg-purple-700,
+.dark .bg-purple-800,
+.dark .bg-purple-900,
+.dark .bg-emerald-300,
+.dark .bg-emerald-400,
+.dark .bg-emerald-500,
+.dark .bg-emerald-600,
+.dark .bg-emerald-700,
+.dark .bg-emerald-800,
+.dark .bg-emerald-900 {
+    background-color: #ffffff !important;
+    color: #000000 !important;
 }
 
-html:not(.dark) .text-gray-400,
-html:not(.dark) .text-slate-400 {
-    color: var(--text-muted) !important;
+/* =====================================================
+   TEXT COLORS - FORCE BLACK/WHITE
+   ===================================================== */
+
+/* Light mode - all colored text to black */
+html:not(.dark) .text-blue-400,
+html:not(.dark) .text-blue-500,
+html:not(.dark) .text-blue-600,
+html:not(.dark) .text-blue-700,
+html:not(.dark) .text-green-400,
+html:not(.dark) .text-green-500,
+html:not(.dark) .text-green-600,
+html:not(.dark) .text-green-700,
+html:not(.dark) .text-red-400,
+html:not(.dark) .text-red-500,
+html:not(.dark) .text-red-600,
+html:not(.dark) .text-red-700,
+html:not(.dark) .text-yellow-400,
+html:not(.dark) .text-yellow-500,
+html:not(.dark) .text-yellow-600,
+html:not(.dark) .text-yellow-700,
+html:not(.dark) .text-indigo-400,
+html:not(.dark) .text-indigo-500,
+html:not(.dark) .text-indigo-600,
+html:not(.dark) .text-indigo-700,
+html:not(.dark) .text-purple-400,
+html:not(.dark) .text-purple-500,
+html:not(.dark) .text-purple-600,
+html:not(.dark) .text-purple-700,
+html:not(.dark) .text-emerald-400,
+html:not(.dark) .text-emerald-500,
+html:not(.dark) .text-emerald-600,
+html:not(.dark) .text-emerald-700,
+html:not(.dark) .text-orange-400,
+html:not(.dark) .text-orange-500,
+html:not(.dark) .text-orange-600,
+html:not(.dark) .text-orange-700,
+html:not(.dark) .text-amber-400,
+html:not(.dark) .text-amber-500,
+html:not(.dark) .text-amber-600,
+html:not(.dark) .text-amber-700,
+html:not(.dark) .text-cyan-400,
+html:not(.dark) .text-cyan-500,
+html:not(.dark) .text-cyan-600,
+html:not(.dark) .text-cyan-700,
+html:not(.dark) .text-teal-400,
+html:not(.dark) .text-teal-500,
+html:not(.dark) .text-teal-600,
+html:not(.dark) .text-teal-700 {
+    color: #000000 !important;
 }
 
-html:not(.dark) .border-gray-200,
-html:not(.dark) .border-gray-300,
-html:not(.dark) .border-slate-200,
-html:not(.dark) .border-slate-300 {
-    border-color: var(--surface-border) !important;
+/* Dark mode - all colored text to white */
+.dark .text-blue-400,
+.dark .text-blue-500,
+.dark .text-blue-600,
+.dark .text-blue-700,
+.dark .text-green-400,
+.dark .text-green-500,
+.dark .text-green-600,
+.dark .text-green-700,
+.dark .text-red-400,
+.dark .text-red-500,
+.dark .text-red-600,
+.dark .text-red-700,
+.dark .text-yellow-400,
+.dark .text-yellow-500,
+.dark .text-yellow-600,
+.dark .text-yellow-700,
+.dark .text-indigo-400,
+.dark .text-indigo-500,
+.dark .text-indigo-600,
+.dark .text-indigo-700,
+.dark .text-purple-400,
+.dark .text-purple-500,
+.dark .text-purple-600,
+.dark .text-purple-700,
+.dark .text-emerald-400,
+.dark .text-emerald-500,
+.dark .text-emerald-600,
+.dark .text-emerald-700,
+.dark .text-orange-400,
+.dark .text-orange-500,
+.dark .text-orange-600,
+.dark .text-orange-700,
+.dark .text-amber-400,
+.dark .text-amber-500,
+.dark .text-amber-600,
+.dark .text-amber-700,
+.dark .text-cyan-400,
+.dark .text-cyan-500,
+.dark .text-cyan-600,
+.dark .text-cyan-700,
+.dark .text-teal-400,
+.dark .text-teal-500,
+.dark .text-teal-600,
+.dark .text-teal-700 {
+    color: #ffffff !important;
 }
 
-html:not(.dark) .rounded,
-html:not(.dark) .rounded-md,
-html:not(.dark) .rounded-lg,
-html:not(.dark) .rounded-xl,
-html:not(.dark) .rounded-2xl {
-    border-radius: var(--radius-base) !important;
-}
-
-html:not(.dark) .shadow,
-html:not(.dark) .shadow-md,
-html:not(.dark) .shadow-lg {
-    box-shadow: var(--shadow-soft) !important;
-}
-
-html:not(.dark) .hover\:bg-gray-100:hover,
-html:not(.dark) .hover\:bg-slate-100:hover {
-    background-color: var(--surface-hover) !important;
-    color: var(--text-primary) !important;
-}
-
-/* Light mode text clarity - ensure all text is black in light mode */
+/* Light mode text defaults */
 html:not(.dark) {
     color: #000000;
 }
@@ -256,7 +544,7 @@ html:not(.dark) textarea {
     color: #000000 !important;
 }
 
-/* Override gray and slate text colors in light mode */
+/* Override gray text in light mode */
 html:not(.dark) .text-gray-300,
 html:not(.dark) .text-gray-400,
 html:not(.dark) .text-gray-500,
@@ -269,22 +557,175 @@ html:not(.dark) .text-slate-500,
 html:not(.dark) .text-slate-600,
 html:not(.dark) .text-slate-700,
 html:not(.dark) .text-slate-800,
-html:not(.dark) .text-slate-900 {
+html:not(.dark) .text-slate-900,
+html:not(.dark) .text-zinc-300,
+html:not(.dark) .text-zinc-400,
+html:not(.dark) .text-zinc-500,
+html:not(.dark) .text-zinc-600,
+html:not(.dark) .text-zinc-700 {
     color: #000000 !important;
 }
 
-/* Light mode backgrounds for dashboard */
-html:not(.dark) .bg-gray-700,
-html:not(.dark) .bg-gray-800,
-html:not(.dark) .bg-gray-900,
-html:not(.dark) .bg-slate-700,
-html:not(.dark) .bg-slate-800,
-html:not(.dark) .bg-slate-900 {
-    background-color: #f3f4f6 !important;
+/* =====================================================
+   BORDER COLORS - GRAYSCALE ONLY
+   ===================================================== */
+
+html:not(.dark) .border-blue-200,
+html:not(.dark) .border-blue-300,
+html:not(.dark) .border-blue-400,
+html:not(.dark) .border-blue-500,
+html:not(.dark) .border-green-200,
+html:not(.dark) .border-green-300,
+html:not(.dark) .border-green-400,
+html:not(.dark) .border-green-500,
+html:not(.dark) .border-red-200,
+html:not(.dark) .border-red-300,
+html:not(.dark) .border-red-400,
+html:not(.dark) .border-red-500,
+html:not(.dark) .border-yellow-200,
+html:not(.dark) .border-yellow-300,
+html:not(.dark) .border-yellow-400,
+html:not(.dark) .border-yellow-500,
+html:not(.dark) .border-indigo-200,
+html:not(.dark) .border-indigo-300,
+html:not(.dark) .border-indigo-400,
+html:not(.dark) .border-indigo-500,
+html:not(.dark) .border-purple-200,
+html:not(.dark) .border-purple-300,
+html:not(.dark) .border-purple-400,
+html:not(.dark) .border-purple-500 {
+    border-color: #e5e7eb !important;
+}
+
+.dark .border-blue-200,
+.dark .border-blue-300,
+.dark .border-blue-400,
+.dark .border-blue-500,
+.dark .border-green-200,
+.dark .border-green-300,
+.dark .border-green-400,
+.dark .border-green-500,
+.dark .border-red-200,
+.dark .border-red-300,
+.dark .border-red-400,
+.dark .border-red-500,
+.dark .border-yellow-200,
+.dark .border-yellow-300,
+.dark .border-yellow-400,
+.dark .border-yellow-500,
+.dark .border-indigo-200,
+.dark .border-indigo-300,
+.dark .border-indigo-400,
+.dark .border-indigo-500,
+.dark .border-purple-200,
+.dark .border-purple-300,
+.dark .border-purple-400,
+.dark .border-purple-500 {
+    border-color: #333333 !important;
+}
+
+/* =====================================================
+   GRADIENTS - GRAYSCALE ONLY
+   ===================================================== */
+
+.brand-gradient,
+.bg-gradient-to-r,
+.bg-gradient-to-l,
+.bg-gradient-to-t,
+.bg-gradient-to-b {
+    background-image: none !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+.dark .brand-gradient,
+.dark .bg-gradient-to-r,
+.dark .bg-gradient-to-l,
+.dark .bg-gradient-to-t,
+.dark .bg-gradient-to-b {
+    background-color: #ffffff !important;
     color: #000000 !important;
 }
 
-/* Dashboard side navigation */
+.brand-text-gradient {
+    background-image: none !important;
+    color: var(--text-primary) !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+}
+
+/* =====================================================
+   SPECIFIC HEX COLOR OVERRIDES
+   ===================================================== */
+
+/* Force specific colored hex values to monochrome */
+[style*="background-color: #1D9BF0"],
+[style*="background-color:#1D9BF0"],
+[style*="background: #1D9BF0"],
+[class*="bg-\\[\\#1D9BF0\\]"] {
+    background-color: #000000 !important;
+}
+
+.dark [style*="background-color: #1D9BF0"],
+.dark [style*="background-color:#1D9BF0"],
+.dark [style*="background: #1D9BF0"],
+.dark [class*="bg-\\[\\#1D9BF0\\]"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* =====================================================
+   BUTTONS - MONOCHROME STYLING
+   ===================================================== */
+
+/* Primary buttons - black on light, white on dark */
+html:not(.dark) button[class*="bg-blue"],
+html:not(.dark) button[class*="bg-indigo"],
+html:not(.dark) button[class*="bg-green"],
+html:not(.dark) button[class*="bg-emerald"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+html:not(.dark) button[class*="bg-blue"]:hover,
+html:not(.dark) button[class*="bg-indigo"]:hover,
+html:not(.dark) button[class*="bg-green"]:hover,
+html:not(.dark) button[class*="bg-emerald"]:hover {
+    background-color: #333333 !important;
+}
+
+.dark button[class*="bg-blue"],
+.dark button[class*="bg-indigo"],
+.dark button[class*="bg-green"],
+.dark button[class*="bg-emerald"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+}
+
+.dark button[class*="bg-blue"]:hover,
+.dark button[class*="bg-indigo"]:hover,
+.dark button[class*="bg-green"]:hover,
+.dark button[class*="bg-emerald"]:hover {
+    background-color: #e5e7eb !important;
+}
+
+/* Destructive/danger buttons stay grayscale */
+html:not(.dark) button[class*="bg-red"] {
+    background-color: #374151 !important;
+    color: #ffffff !important;
+}
+
+.dark button[class*="bg-red"] {
+    background-color: #9ca3af !important;
+    color: #000000 !important;
+}
+
+/* =====================================================
+   DASHBOARD SIDEBAR - MONOCHROME
+   ===================================================== */
+
 .dashboard-sidebar {
     gap: 0.4rem;
 }
@@ -298,83 +739,84 @@ html:not(.dark) .bg-slate-900 {
 }
 
 .dark .dashboard-sidebar__item {
-    color: var(--text-muted);
+    color: #9ca3af;
     font-weight: 500;
 }
 
 .dashboard-sidebar__item:hover {
-    background-color: #f0f0f0;
+    background-color: #f3f4f6;
     color: #000000;
     border-color: transparent;
 }
 
 .dark .dashboard-sidebar__item:hover {
-    background-color: var(--surface-hover);
-    color: var(--text-primary);
+    background-color: #1a1a1a;
+    color: #ffffff;
 }
 
 .dashboard-sidebar__item.is-active {
-    background-color: #e8e8ff;
-    color: #000000;
-    border-color: #d0d5ff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background-color: #000000;
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: var(--shadow-soft);
     font-weight: 500;
 }
 
 .dark .dashboard-sidebar__item.is-active {
-    background-color: var(--surface-secondary);
-    color: var(--text-primary);
-    border-color: var(--surface-border);
+    background-color: #ffffff;
+    color: #000000;
+    border-color: transparent;
     font-weight: 500;
 }
 
 .dashboard-sidebar__item .dashboard-sidebar__icon {
-    color: #000000;
-}
-
-.dark .dashboard-sidebar__item .dashboard-sidebar__icon {
-    color: var(--text-muted);
-}
-
-.dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
-.dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-    color: #000000;
-}
-
-.dark .dashboard-sidebar__item.is-active .dashboard-sidebar__icon,
-.dark .dashboard-sidebar__item:hover .dashboard-sidebar__icon {
-    color: var(--text-primary);
+    color: inherit;
 }
 
 .dashboard-sidebar__indicator {
     width: 8px;
     height: 8px;
-    background-color: #4f46e5;
+    background-color: #000000;
     border-radius: var(--radius-full);
 }
 
 .dark .dashboard-sidebar__indicator {
-    background-color: #818cf8;
+    background-color: #ffffff;
 }
 
-/* Focus and selection */
+/* =====================================================
+   FOCUS & SELECTION - MONOCHROME
+   ===================================================== */
+
 *:focus-visible {
-    outline: 2px solid #10a37f;
+    outline: 2px solid var(--text-primary);
     outline-offset: 2px;
 }
 
 ::selection {
-    background: rgba(16, 163, 127, 0.16);
+    background: rgba(0, 0, 0, 0.2);
     color: var(--text-primary);
 }
 
+.dark ::selection {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* =====================================================
+   TRANSITIONS
+   ===================================================== */
+
 * {
-    transition-property: color, background-color, border-color, fill, stroke;
-    transition-duration: 200ms;
+    transition-property: color, background-color, border-color, fill, stroke, opacity;
+    transition-duration: 150ms;
     transition-timing-function: ease-in-out;
 }
 
-/* Scrollbar styling */
+/* =====================================================
+   SCROLLBAR - MONOCHROME
+   ===================================================== */
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -385,46 +827,80 @@ html:not(.dark) .bg-slate-900 {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: rgba(24, 24, 27, 0.2);
+    background-color: rgba(0, 0, 0, 0.2);
     border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(24, 24, 27, 0.35);
+    background-color: rgba(0, 0, 0, 0.4);
 }
 
-/* Utility classes */
-.text-green {
-    color: #10a37f;
+.dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
-.text-red {
-    color: #ef4444;
+.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
 }
 
+/* =====================================================
+   UTILITY CLASSES - MONOCHROME ONLY
+   ===================================================== */
+
+/* Override any remaining colored utility classes */
+.text-green,
+.text-success {
+    color: var(--text-primary) !important;
+}
+
+.text-red,
+.text-error,
+.text-danger {
+    color: var(--text-primary) !important;
+}
+
+.text-warning,
+.text-amber {
+    color: var(--text-primary) !important;
+}
+
+.text-info,
+.text-blue {
+    color: var(--text-primary) !important;
+}
+
+/* Card styling */
 .card {
     padding: 1rem;
 }
 
+/* Table header */
 .table-header {
     text-transform: uppercase;
     letter-spacing: 0.12em;
     font-size: 0.75rem;
     color: var(--text-muted);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--surface-border);
 }
 
 .table-cell {
     padding: 0.75rem;
 }
 
+/* Hide debug button */
 button[title="Debug admin status"] {
     display: none !important;
 }
 
+/* Input placeholder styling */
 html:not(.dark) input::placeholder,
 html:not(.dark) textarea::placeholder {
     color: #9ca3af !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #6b7280 !important;
 }
 
 /* Light mode input styling */
@@ -432,21 +908,39 @@ html:not(.dark) input[type="text"],
 html:not(.dark) input[type="email"],
 html:not(.dark) input[type="password"],
 html:not(.dark) input[type="search"],
+html:not(.dark) input[type="number"],
 html:not(.dark) textarea,
 html:not(.dark) select {
     background-color: #ffffff !important;
     color: #000000 !important;
-    border-color: #d1d5db !important;
+    border-color: #e5e7eb !important;
 }
 
-html:not(.dark) input[type="text"]:focus,
-html:not(.dark) input[type="email"]:focus,
-html:not(.dark) input[type="password"]:focus,
-html:not(.dark) input[type="search"]:focus,
+html:not(.dark) input:focus,
 html:not(.dark) textarea:focus,
 html:not(.dark) select:focus {
-    border-color: #4f46e5 !important;
-    background-color: #ffffff !important;
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 1px #000000 !important;
+}
+
+/* Dark mode input styling */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="search"],
+.dark input[type="number"],
+.dark textarea,
+.dark select {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 1px #ffffff !important;
 }
 
 /* Light mode cards and containers */
@@ -455,4 +949,78 @@ html:not(.dark) .surface,
 html:not(.dark) .panel {
     background-color: #ffffff !important;
     color: #000000 !important;
+}
+
+.dark .card,
+.dark .surface,
+.dark .panel {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+/* =====================================================
+   RING COLORS - MONOCHROME
+   ===================================================== */
+
+.ring-blue-500,
+.ring-indigo-500,
+.ring-purple-500,
+.ring-green-500,
+.ring-emerald-500,
+.ring-red-500,
+.ring-yellow-500,
+.ring-orange-500 {
+    --tw-ring-color: var(--text-primary) !important;
+}
+
+/* =====================================================
+   BADGE STYLES - MONOCHROME
+   ===================================================== */
+
+html:not(.dark) [class*="badge"],
+html:not(.dark) .badge {
+    background-color: #f3f4f6 !important;
+    color: #000000 !important;
+    border-color: #e5e7eb !important;
+}
+
+.dark [class*="badge"],
+.dark .badge {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border-color: #444444 !important;
+}
+
+/* =====================================================
+   SPECIFIC PAGE OVERRIDES
+   ===================================================== */
+
+/* Force specific hex color backgrounds */
+[class*="bg-\\[\\#0f1319\\]"],
+[class*="bg-\\[\\#0D1117\\]"],
+[class*="bg-\\[\\#161B22\\]"],
+[class*="bg-\\[\\#15202B\\]"] {
+    background-color: #000000 !important;
+}
+
+html:not(.dark) [class*="bg-\\[\\#0f1319\\]"],
+html:not(.dark) [class*="bg-\\[\\#0D1117\\]"],
+html:not(.dark) [class*="bg-\\[\\#161B22\\]"],
+html:not(.dark) [class*="bg-\\[\\#15202B\\]"] {
+    background-color: #ffffff !important;
+}
+
+/* Ensure all dark mode backgrounds */
+.dark main,
+.dark section,
+.dark article,
+.dark div[class*="min-h-screen"] {
+    background-color: #000000;
+}
+
+html:not(.dark) main,
+html:not(.dark) section,
+html:not(.dark) article,
+html:not(.dark) div[class*="min-h-screen"] {
+    background-color: #ffffff;
 }

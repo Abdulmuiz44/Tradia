@@ -218,23 +218,23 @@ function TradeHistoryContent() {
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
-                                <p className="text-sm text-gray-400">Total Trades</p>
-                                <p className="text-3xl font-bold text-white">{metrics.totalTrades}</p>
+                            <div className="p-4 bg-white dark:bg-[#0f1319] rounded-lg border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Total Trades</p>
+                                <p className="text-3xl font-bold text-black dark:text-white">{metrics.totalTrades}</p>
                             </div>
-                            <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
-                                <p className="text-sm text-gray-400">Win Rate</p>
-                                <p className="text-3xl font-bold text-white">{metrics.winRate}%</p>
+                            <div className="p-4 bg-white dark:bg-[#0f1319] rounded-lg border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Win Rate</p>
+                                <p className="text-3xl font-bold text-black dark:text-white">{metrics.winRate}%</p>
                             </div>
-                            <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
-                                <p className="text-sm text-gray-400">Total P&L</p>
-                                <p className={`text-3xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            <div className="p-4 bg-white dark:bg-[#0f1319] rounded-lg border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Total P&L</p>
+                                <p className={`text-3xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                     ${metrics.totalPnL.toFixed(2)}
                                 </p>
                             </div>
-                            <div className="p-4 bg-[#0f1319] rounded-lg border border-gray-700">
-                                <p className="text-sm text-gray-400">Avg RR</p>
-                                <p className="text-3xl font-bold text-white">{metrics.avgRR.toFixed(2)}R</p>
+                            <div className="p-4 bg-white dark:bg-[#0f1319] rounded-lg border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Avg RR</p>
+                                <p className="text-3xl font-bold text-black dark:text-white">{metrics.avgRR.toFixed(2)}R</p>
                             </div>
                         </div>
 
