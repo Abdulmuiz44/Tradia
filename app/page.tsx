@@ -179,9 +179,9 @@ export default function Home(): React.ReactElement {
         <>
             <Navbar />
 
-            <main className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-gray-100 transition-colors">
+            <main className="min-h-screen bg-white text-black dark:bg-black dark:text-white transition-colors">
                 {/* HERO */}
-                <section className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-[#0f1319] dark:via-[#0f1319] dark:to-[#0f1319]">
+                <section className="relative overflow-hidden bg-white dark:bg-black">
                     <div className="absolute inset-0 -z-10 pointer-events-none">
                         <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1400 600" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -215,18 +215,18 @@ export default function Home(): React.ReactElement {
                                 </motion.div>
 
                                 <div className="mt-8 flex flex-wrap gap-3 items-center">
-                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
+                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 px-6 py-3 rounded-full shadow-lg font-semibold">
                                         Get Your Free AI Review <AiOutlineArrowRight />
                                     </motion.button>
 
                                     <Link
                                         href="/pricing"
-                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20"
+                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
                                     >
                                         View plans
                                     </Link>
 
-                                    <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 text-xs font-semibold">
+                                    <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-xs font-semibold">
                                         New: AI Mental Coach
                                     </span>
 
@@ -268,21 +268,21 @@ export default function Home(): React.ReactElement {
                 </section>
 
                 {/* FEATURES */}
-                <section className="py-12 px-6">
+                <section className="py-12 px-6 bg-white dark:bg-black">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-white">Advanced Trading Analytics Platform</h2>
-                            <p className="mt-2 text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze performance, improve strategies and scale profits — built around real trading workflows and powered by artificial intelligence.</p>
+                            <h2 className="text-3xl font-bold text-black dark:text-white">Advanced Trading Analytics Platform</h2>
+                            <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze performance, improve strategies and scale profits — built around real trading workflows and powered by artificial intelligence.</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {FEATURES_ORIG.map((f, i) => (
-                                <motion.div key={i} whileHover={{ y: -6 }} className="p-6 rounded-xl border border-white/10 bg-transparent shadow-sm">
+                                <motion.div key={i} whileHover={{ y: -6 }} className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 shadow-sm">
                                     <div className="flex items-start gap-4">
-                                        <div className="p-3 rounded-lg bg-indigo-700/10 text-indigo-300">{f.icon}</div>
+                                        <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-800 text-black dark:text-white">{f.icon}</div>
                                         <div>
-                                            <h3 className="font-semibold text-lg">{f.title}</h3>
-                                            <p className="mt-2 text-sm text-gray-400">{f.description}</p>
+                                            <h3 className="font-semibold text-lg text-black dark:text-white">{f.title}</h3>
+                                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{f.description}</p>
                                             {/* Add feature examples */}
                                             {i === 0 && <p className="mt-2 text-xs text-gray-500">Example: Track your EUR/USD win rate from 45% to 62% after optimizing entries.</p>}
                                             {i === 1 && <p className="mt-2 text-xs text-gray-500">Example: End-to-end encryption ensures your trade data stays private.</p>}
@@ -295,7 +295,7 @@ export default function Home(): React.ReactElement {
                         </div>
 
                         <div className="mt-8 text-center">
-                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow">
+                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-semibold shadow">
                                 Start Trading Analysis Free <AiOutlineArrowRight />
                             </button>
                         </div>
@@ -303,16 +303,16 @@ export default function Home(): React.ReactElement {
                 </section>
 
                 {/* VIDEO DEMO */}
-                <section className="py-16 px-6 bg-gradient-to-r from-gray-900/50 to-black/50">
+                <section className="py-16 px-6 bg-gray-100 dark:bg-gray-900">
                     <div className="max-w-6xl mx-auto text-center">
-                        <h2 className="text-3xl font-bold mb-4 text-white">See Tradia in Action</h2>
-                        <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+                        <h2 className="text-3xl font-bold mb-4 text-black dark:text-white">See Tradia in Action</h2>
+                        <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
                             Watch how traders use Tradia to analyze their performance, get AI insights, and improve their strategies.
                             From uploading trades to seeing actionable recommendations.
                         </p>
 
                         <div className="relative w-full max-w-4xl mx-auto">
-                            <div className="aspect-video rounded-xl overflow-hidden shadow-2xl bg-black">
+                            <div className="aspect-video rounded-xl overflow-hidden shadow-2xl bg-gray-200 dark:bg-black border border-gray-300 dark:border-gray-700">
                                 <video
                                     className="w-full h-full"
                                     src="/TRADIA_FILTER_LOGIC.mkv"
@@ -322,19 +322,19 @@ export default function Home(): React.ReactElement {
                                     poster="/TradiaDashboard.png"
                                 >
                                     Your browser does not support the video tag. You can
-                                    <a href="/TRADIA_FILTER_LOGIC.mkv">download the video here</a>.
+                                    <a href="/TRADIA_FILTER_LOGIC.mkv" className="text-black dark:text-white underline">download the video here</a>.
                                 </video>
                             </div>
                         </div>
 
-                        <div className="mt-6 text-sm text-gray-400">
+                        <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
                             Demo video showing dashboard features, trade analysis, and AI recommendations.
                         </div>
                     </div>
                 </section>
 
                 {/* WHY CHOOSE TRADIA */}
-                <section className="py-16 px-6 bg-gradient-to-r from-indigo-900/20 to-purple-900/20">
+                <section className="py-16 px-6 bg-white dark:bg-black">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Why Professional Traders Choose Tradia</h2>
@@ -346,11 +346,11 @@ export default function Home(): React.ReactElement {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <div className="text-center">
-                                <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AiOutlineBarChart className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AiOutlineBarChart className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Data-Driven Trading Decisions</h3>
-                                <p className="text-gray-700 dark:text-gray-400">
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Data-Driven Trading Decisions</h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     Make informed trading decisions based on comprehensive performance analytics. Track your win rate,
                                     risk-reward ratios, and identify patterns that lead to profitable trades. Our platform helps you
                                     understand what works in your trading strategy.
@@ -358,11 +358,11 @@ export default function Home(): React.ReactElement {
                             </div>
 
                             <div className="text-center">
-                                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AiOutlineThunderbolt className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AiOutlineThunderbolt className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">AI-Powered Trade Analysis</h3>
-                                <p className="text-gray-700 dark:text-gray-400">
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">AI-Powered Trade Analysis</h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     Leverage artificial intelligence to analyze your trading performance. Get automated insights,
                                     trade reviews, and recommendations for improving your entry and exit strategies. Our AI
                                     identifies mistakes and suggests optimizations for better trading results.
@@ -370,11 +370,11 @@ export default function Home(): React.ReactElement {
                             </div>
 
                             <div className="text-center">
-                                <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AiOutlineGlobal className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AiOutlineGlobal className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Comprehensive Trading Analytics</h3>
-                                <p className="text-gray-700 dark:text-gray-400">
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Comprehensive Trading Analytics</h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     Get detailed insights into your trading performance with advanced analytics and AI-powered recommendations.
                                     Whether you trade forex, stocks, commodities, or cryptocurrencies, Tradia provides
                                     comprehensive analysis to help you improve your trading strategies.
@@ -382,11 +382,11 @@ export default function Home(): React.ReactElement {
                             </div>
 
                             <div className="text-center">
-                                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AiOutlineLock className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AiOutlineLock className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Secure & Private Trading Data</h3>
-                                <p className="text-gray-700 dark:text-gray-400">
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Secure & Private Trading Data</h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     Your trading data is encrypted and stored securely. We prioritize your privacy and never share
                                     your personal trading information. Focus on improving your trading performance without worrying
                                     about data security or privacy concerns.
@@ -394,11 +394,11 @@ export default function Home(): React.ReactElement {
                             </div>
 
                             <div className="text-center">
-                                <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AiOutlineCheck className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AiOutlineCheck className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Real-Time Performance Tracking</h3>
-                                <p className="text-gray-700 dark:text-gray-400">
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Real-Time Performance Tracking</h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     Monitor your trading performance in real-time with comprehensive metrics and visualizations.
                                     Track your progress, identify trends, and make adjustments to your trading strategy based on
                                     current market conditions and historical performance data.
@@ -406,11 +406,11 @@ export default function Home(): React.ReactElement {
                             </div>
 
                             <div className="text-center">
-                                <div className="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AiOutlineGlobal className="w-8 h-8 text-white" />
+                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AiOutlineGlobal className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">Mobile Trading Analytics</h3>
-                                <p className="text-gray-700 dark:text-gray-400">
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Mobile Trading Analytics</h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     Access your trading analytics anywhere with our mobile-responsive platform. Review your
                                     performance, analyze trades, and get AI insights on your smartphone or tablet. Stay connected
                                     to your trading data no matter where you are in the world.
@@ -419,11 +419,11 @@ export default function Home(): React.ReactElement {
                         </div>
 
                         <div className="text-center mt-12">
-                            <p className="text-gray-700 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+                            <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
                                 Ready to take your trading to the next level? Join successful traders worldwide who use Tradia
                                 to analyze, improve, and scale their trading performance.
                             </p>
-                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg text-lg transition-all">
+                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-8 py-4 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-semibold shadow-lg text-lg transition-all">
                                 Start Your Trading Journey <AiOutlineArrowRight />
                             </button>
                         </div>
@@ -431,7 +431,7 @@ export default function Home(): React.ReactElement {
                 </section>
 
                 {/* BENEFITS + INSIGHT */}
-                <section className="py-14 px-6 bg-gradient-to-b from-gray-50 to-white dark:from-[#0f1319] dark:to-[#0f1319]">
+                <section className="py-14 px-6 bg-gray-50 dark:bg-black">
                     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         <div>
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Benefits</h3>
@@ -463,21 +463,21 @@ export default function Home(): React.ReactElement {
                 </section>
 
                 {/* Pricing */}
-                <section className="py-16 px-6 bg-gradient-to-b from-white to-gray-50 dark:from-[#0f1319] dark:to-[#0f1319]">
+                <section className="py-16 px-6 bg-white dark:bg-black">
                     <div className="max-w-6xl mx-auto text-center">
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Simple, Transparent Pricing</h2>
                         <p className="mt-2 text-gray-700 dark:text-gray-300">Start free with Starter plan — upgrade to unlock advanced AI features, extended history, and real-time insights.</p>
 
-                        <div className="mt-6 inline-flex rounded-full bg-gray-100 dark:bg-white/5 p-1 shadow-sm">
+                        <div className="mt-6 inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 shadow-sm border border-gray-200 dark:border-gray-700">
                             <button
                                 onClick={() => setBilling("monthly")}
-                                className={`px-4 py-2 rounded-full font-semibold ${billing === "monthly" ? "bg-indigo-500 text-white" : "text-gray-600 dark:text-gray-300"}`}
+                                className={`px-4 py-2 rounded-full font-semibold ${billing === "monthly" ? "bg-black dark:bg-white text-white dark:text-black" : "text-gray-600 dark:text-gray-300"}`}
                             >
                                 Monthly
                             </button>
                             <button
                                 onClick={() => setBilling("yearly")}
-                                className={`px-4 py-2 rounded-full font-semibold ${billing === "yearly" ? "bg-indigo-500 text-white" : "text-gray-600 dark:text-gray-300"}`}
+                                className={`px-4 py-2 rounded-full font-semibold ${billing === "yearly" ? "bg-black dark:bg-white text-white dark:text-black" : "text-gray-600 dark:text-gray-300"}`}
                             >
                                 Yearly (save 20%)
                             </button>
@@ -491,7 +491,7 @@ export default function Home(): React.ReactElement {
                                     <motion.div
                                         key={p.id}
                                         whileHover={{ y: -6 }}
-                                        className={`p-6 rounded-xl border ${selected ? "border-indigo-500 shadow-2xl bg-white dark:bg-gray-900" : "border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-gray-900/50"} transition-colors`}
+                                        className={`p-6 rounded-xl border ${selected ? "border-black dark:border-white shadow-xl bg-white dark:bg-gray-900" : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"} transition-colors`}
                                     >
                                         <div className="flex items-center justify-between mb-4">
                                             <div>
@@ -508,7 +508,7 @@ export default function Home(): React.ReactElement {
                                         <ul className="mb-6 space-y-2 text-left">
                                             {p.highlights.map((h, i) => (
                                                 <li key={i} className="flex items-start gap-2">
-                                                    <AiOutlineCheck className="mt-1 text-indigo-500" />
+                                                    <AiOutlineCheck className="mt-1 text-black dark:text-white" />
                                                     <span className="text-gray-700 dark:text-gray-200 font-medium">{h}</span>
                                                 </li>
                                             ))}
@@ -520,12 +520,12 @@ export default function Home(): React.ReactElement {
                                                     setSelectedPlan(p.id);
                                                     navSignup();
                                                 }}
-                                                className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-indigo-600 text-white hover:bg-indigo-700"} transition-colors`}
+                                                className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200" : "bg-gray-800 dark:bg-gray-100 text-white dark:text-black hover:bg-gray-700 dark:hover:bg-gray-200"} transition-colors`}
                                             >
                                                 {p.cta}
                                             </button>
 
-                                            <Link href="/pricing" className="text-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+                                            <Link href="/pricing" className="text-center text-sm text-gray-600 dark:text-gray-400 hover:underline">
                                                 Compare plans
                                             </Link>
                                         </div>
@@ -541,7 +541,7 @@ export default function Home(): React.ReactElement {
                 </section>
 
                 {/* Testimonials */}
-                <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white dark:from-[#0f1319] dark:to-[#0f1319]">
+                <section className="py-16 px-6 bg-gray-50 dark:bg-black">
                     <div className="max-w-6xl mx-auto text-center">
                         <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Loved by traders worldwide</h3>
                         <p className="text-gray-600 dark:text-gray-400 mb-8">Traders use Tradia to find edge, reduce mistakes and scale.</p>
@@ -608,7 +608,7 @@ export default function Home(): React.ReactElement {
                 </section>
 
                 {/* FAQ + CTA */}
-                <section className="py-16 px-6 bg-gradient-to-b from-white to-gray-50 dark:from-[#0f1319] dark:to-[#0f1319]">
+                <section className="py-16 px-6 bg-white dark:bg-black">
                     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div>
                             <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Frequently asked questions</h3>
@@ -627,15 +627,15 @@ export default function Home(): React.ReactElement {
                             </div>
                         </div>
 
-                        <div className="rounded-xl p-8 border border-indigo-200 dark:border-white/10 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-600/10 dark:to-pink-500/6 shadow-md dark:shadow-none">
-                            <h4 className="text-xl font-bold text-gray-900 dark:text-white">Ready to stop guessing and start improving?</h4>
-                            <p className="mt-2 text-gray-700 dark:text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
+                        <div className="rounded-xl p-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-md dark:shadow-none">
+                            <h4 className="text-xl font-bold text-black dark:text-white">Ready to stop guessing and start improving?</h4>
+                            <p className="mt-2 text-gray-600 dark:text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
                             <div className="mt-6 flex gap-3">
-                                <button onClick={navSignup} className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-full font-semibold transition-colors">Create free account</button>
-                                <Link href="/pricing" className="px-4 py-2 rounded-full border border-indigo-600 dark:border-indigo-500 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">See plans</Link>
+                                <button onClick={navSignup} className="bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-4 py-2 rounded-full font-semibold transition-colors">Create free account</button>
+                                <Link href="/pricing" className="px-4 py-2 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">See plans</Link>
                             </div>
 
-                            <div className="mt-6 text-xs text-gray-600 dark:text-gray-400">Need help? <Link href="/contact" className="text-indigo-600 dark:text-indigo-300 underline">Contact us</Link>.</div>
+                            <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">Need help? <Link href="/contact" className="text-black dark:text-white underline">Contact us</Link>.</div>
                         </div>
                     </div>
                 </section>
