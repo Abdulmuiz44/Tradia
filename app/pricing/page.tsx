@@ -224,11 +224,11 @@ export default function PricingPage(): React.ReactElement {
                 </motion.p>
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
-                  <Link href="/signup" className="inline-flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
+                  <Link href="/signup" className="inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 px-6 py-3 rounded-full shadow-lg font-semibold">
                     Create free account <AiOutlineArrowRight />
                   </Link>
 
-                  <a className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-indigo-500 text-indigo-300 hover:bg-indigo-900/20" href="#plans">
+                  <a className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800" href="#plans">
                     See plans
                   </a>
                 </div>
@@ -259,20 +259,20 @@ export default function PricingPage(): React.ReactElement {
         <section id="plans" className="py-10 px-6">
           <div className="max-w-6xl mx-auto text-center">
             {coachPoints !== null && (
-              <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 text-sm">
+              <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-sm">
                 Your Coach points: <span className="font-bold">{coachPoints}</span>
               </div>
             )}
-            <div className="inline-flex rounded-full bg-gray-100 dark:bg-white/5 p-1 shadow-sm">
+            <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 shadow-sm border border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setBilling("monthly")}
-                className={`px-4 py-2 rounded-full font-semibold ${billing === "monthly" ? "bg-indigo-500 text-white" : "text-black dark:text-gray-300"}`}
+                className={`px-4 py-2 rounded-full font-semibold ${billing === "monthly" ? "bg-black dark:bg-white text-white dark:text-black" : "text-black dark:text-gray-300"}`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBilling("yearly")}
-                className={`px-4 py-2 rounded-full font-semibold ${billing === "yearly" ? "bg-indigo-500 text-white" : "text-black dark:text-gray-300"}`}
+                className={`px-4 py-2 rounded-full font-semibold ${billing === "yearly" ? "bg-black dark:bg-white text-white dark:text-black" : "text-black dark:text-gray-300"}`}
               >
                 Yearly (save 20%)
               </button>
@@ -286,7 +286,7 @@ export default function PricingPage(): React.ReactElement {
                   <motion.div
                     key={p.id}
                     whileHover={{ y: -6 }}
-                    className={`p-6 rounded-xl border ${selected ? "border-indigo-500 shadow-2xl bg-white dark:bg-transparent" : "border-gray-200 dark:border-white/10 bg-white dark:bg-transparent"}`}
+                    className={`p-6 rounded-xl border ${selected ? "border-black dark:border-white shadow-xl bg-white dark:bg-gray-900" : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"} transition-colors`}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -302,11 +302,11 @@ export default function PricingPage(): React.ReactElement {
 
                     <ul className="mb-6 space-y-2 text-left">
                       {p.highlights.map((h, i) => (
-                          <li key={i} className="flex items-start gap-3">
-                            <AiOutlineCheck className="mt-1 text-indigo-600 dark:text-indigo-400 flex-shrink-0 text-lg" />
-                            <span className="font-semibold text-black dark:text-white">{h}</span>
-                          </li>
-                        ))}
+                        <li key={i} className="flex items-start gap-3">
+                          <AiOutlineCheck className="mt-1 text-black dark:text-white flex-shrink-0 text-lg" />
+                          <span className="font-semibold text-black dark:text-white">{h}</span>
+                        </li>
+                      ))}
                     </ul>
 
                     <div className="flex flex-col gap-3">
@@ -320,12 +320,12 @@ export default function PricingPage(): React.ReactElement {
                           const checkoutUrl = getCheckoutUrl(p.id as "pro" | "plus" | "elite", billing as "monthly" | "yearly");
                           window.location.href = checkoutUrl;
                         }}
-                        className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-indigo-500 text-white" : "bg-indigo-600 text-white"}`}
+                        className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200" : "bg-gray-800 dark:bg-gray-100 text-white dark:text-black hover:bg-gray-700 dark:hover:bg-gray-200"} transition-colors`}
                       >
                         {p.cta}
                       </button>
 
-                      <Link href="/pricing" className="text-center text-sm text-gray-400 hover:underline">
+                      <Link href="/pricing" className="text-center text-sm text-gray-500 dark:text-gray-400 hover:underline">
                         Compare plans
                       </Link>
                     </div>
@@ -336,7 +336,7 @@ export default function PricingPage(): React.ReactElement {
 
             <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
               Need a custom plan, bulk/team pricing or prop-firm support?{" "}
-              <Link href="/contact" className="text-indigo-300 hover:underline">Contact us</Link>.
+              <Link href="/contact" className="text-black dark:text-white underline">Contact us</Link>.
             </div>
           </div>
         </section>
@@ -360,7 +360,7 @@ export default function PricingPage(): React.ReactElement {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg text-black dark:text-white">{f.title}</h3>
-                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{f.desc}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -387,7 +387,7 @@ export default function PricingPage(): React.ReactElement {
                     </div>
                     <div className="text-left">
                       <div className="font-semibold text-black dark:text-gray-100">{t.name}</div>
-                       <div className="text-sm text-gray-600 dark:text-gray-400">{t.role}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{t.role}</div>
                     </div>
                   </div>
 
@@ -411,8 +411,8 @@ export default function PricingPage(): React.ReactElement {
                   { q: "Can I upgrade or downgrade anytime?", a: "Yes, you can upgrade, downgrade, or cancel anytime. Annual plans get a 20% discount and are billed upfront. Monthly plans are billed every 30 days." },
                 ].map((fq, i) => (
                   <details key={i} className="p-4 rounded-xl border border-gray-200 dark:border-white/10">
-                     <summary className="font-medium text-black dark:text-white">{fq.q}</summary>
-                     <p className="mt-2 text-gray-700 dark:text-white">{fq.a}</p>
+                    <summary className="font-medium text-black dark:text-white">{fq.q}</summary>
+                    <p className="mt-2 text-gray-700 dark:text-white">{fq.a}</p>
                   </details>
                 ))}
               </div>

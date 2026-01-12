@@ -485,7 +485,7 @@ export default function Home(): React.ReactElement {
 
                         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {PLANS.map((p) => {
-                                const price = billing === "monthly" ? p.monthly : Math.round(p.monthly * 12 * 0.8);
+                                const price = billing === "monthly" ? p.monthly : p.yearly;
                                 const selected = selectedPlan === p.id;
                                 return (
                                     <motion.div

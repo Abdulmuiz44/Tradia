@@ -202,7 +202,7 @@ select:focus {
 }
 
 /* =====================================================
-   CARDS & SURFACES - GRAYSCALE ONLY
+   CARDS & SURFACES - OPTIMIZED FOR LIGHT/DARK MODE
    ===================================================== */
 
 .card,
@@ -213,11 +213,75 @@ select:focus {
     border: 1px solid var(--surface-border);
     box-shadow: var(--shadow-soft);
     color: var(--text-primary);
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover,
+.surface:hover,
+.panel:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: var(--surface-border-strong);
 }
 
 .surface-elevated {
     background-color: var(--surface-elevated);
     box-shadow: var(--shadow-hover);
+}
+
+/* Light mode card enhancements */
+html:not(.dark) .card,
+html:not(.dark) .surface,
+html:not(.dark) .panel,
+html:not(.dark) [class*="rounded-xl"][class*="border"],
+html:not(.dark) [class*="rounded-lg"][class*="border"] {
+    background-color: #ffffff !important;
+    border-color: #e5e7eb !important;
+    color: #000000 !important;
+}
+
+html:not(.dark) .card:hover,
+html:not(.dark) .surface:hover,
+html:not(.dark) .panel:hover {
+    border-color: #d1d5db !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Dark mode card enhancements */
+.dark .card,
+.dark .surface,
+.dark .panel,
+.dark [class*="rounded-xl"][class*="border"],
+.dark [class*="rounded-lg"][class*="border"] {
+    background-color: #111111 !important;
+    border-color: #333333 !important;
+    color: #ffffff !important;
+}
+
+.dark .card:hover,
+.dark .surface:hover,
+.dark .panel:hover {
+    border-color: #444444 !important;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Container backgrounds */
+html:not(.dark) [class*="bg-gray-50"],
+html:not(.dark) [class*="bg-gray-100"] {
+    background-color: #f9fafb !important;
+}
+
+.dark [class*="bg-gray-900"],
+.dark [class*="bg-gray-800"] {
+    background-color: #111111 !important;
+}
+
+/* Pricing and feature cards */
+html:not(.dark) [class*="motion.div"][class*="rounded-xl"] {
+    background-color: #ffffff !important;
+}
+
+.dark [class*="motion.div"][class*="rounded-xl"] {
+    background-color: #111111 !important;
 }
 
 /* =====================================================
