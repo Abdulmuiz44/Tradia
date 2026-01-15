@@ -215,7 +215,7 @@ export default function Home(): React.ReactElement {
                                 </motion.div>
 
                                 <div className="mt-8 flex flex-wrap gap-3 items-center">
-                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 px-6 py-3 rounded-full shadow-lg font-semibold">
+                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 px-6 py-3 rounded-full shadow-lg font-bold text-lg">
                                         Get Your Free AI Review <AiOutlineArrowRight />
                                     </motion.button>
 
@@ -631,8 +631,8 @@ export default function Home(): React.ReactElement {
                             <h4 className="text-xl font-bold text-black dark:text-white">Ready to stop guessing and start improving?</h4>
                             <p className="mt-2 text-gray-600 dark:text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
                             <div className="mt-6 flex gap-3">
-                                <button onClick={navSignup} className="bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-4 py-2 rounded-full font-semibold transition-colors">Create free account</button>
-                                <Link href="/pricing" className="px-4 py-2 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">See plans</Link>
+                                <button onClick={navSignup} className="bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black px-6 py-3 rounded-full font-bold transition-colors">Create free account</button>
+                                <Link href="/pricing" className="px-6 py-3 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors">See plans</Link>
                             </div>
 
                             <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">Need help? <Link href="/contact" className="text-black dark:text-white underline">Contact us</Link>.</div>

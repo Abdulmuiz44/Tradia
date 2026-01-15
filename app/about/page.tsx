@@ -245,14 +245,14 @@ export default function AboutPage(): React.ReactElement {
 
         {/* CTA */}
         <section className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-indigo-600 text-white rounded-2xl p-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-100 dark:bg-[#0f1319] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-2xl p-6">
             <div>
               <h2 className="text-xl font-bold">Start your trading journal today</h2>
-              <p className="text-sm opacity-90">Track trades, analyze performance and get AI insights — free forever.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Track trades, analyze performance and get AI insights — free forever.</p>
             </div>
             <div className="flex gap-3">
-              <Link href="/signup" className="px-5 py-3 bg-white text-indigo-700 rounded-lg hover:bg-gray-100">Create Account</Link>
-              <Link href="/pricing" className="px-5 py-3 bg-indigo-500/40 border border-white/30 rounded-lg hover:bg-indigo-500/60">Explore Plans</Link>
+              <Link href="/signup" className="px-5 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 font-semibold transition-colors">Create Account</Link>
+              <Link href="/pricing" className="px-5 py-3 border border-black dark:border-white text-black dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors">Explore plans</Link>
             </div>
           </div>
         </section>

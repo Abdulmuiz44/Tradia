@@ -652,6 +652,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <FilePlus size={18} className="text-gray-700 dark:text-gray-300" />
                     </button>
 
+                    {/* 
                     <button
                         className="p-2 bg-white dark:bg-[#0f1319] rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                         onClick={migrateLocalTrades}
@@ -659,6 +660,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                     >
                         <UploadCloud size={18} className="text-gray-700 dark:text-gray-300" />
                     </button>
+*/}
 
                     <button
                         className="p-2 bg-red-900/50 rounded-full hover:bg-red-800/70"

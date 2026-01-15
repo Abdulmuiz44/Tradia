@@ -611,10 +611,10 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
     const containerClass = "space-y-5 px-4 sm:px-0 max-w-7xl mx-auto";
 
     // card base with border + subtle left accent space reserved
-    const cardBase = "bg-white dark:bg-white/4 backdrop-blur-sm rounded-md p-3 shadow-sm dark:shadow-sm transition-shadow duration-200 hover:shadow-md dark:hover:shadow-lg border border-gray-200 dark:border-zinc-700 relative overflow-hidden";
+    const cardBase = "bg-white dark:bg-[#0f1319] backdrop-blur-sm rounded-md p-3 shadow-sm dark:shadow-md transition-shadow duration-200 hover:shadow-md dark:hover:shadow-lg border border-gray-200 dark:border-zinc-700 relative overflow-hidden";
     const positiveClass = "text-green-600 dark:text-green-400";
     const negativeClass = "text-red-600 dark:text-red-400";
-    const neutralClass = "text-gray-700 dark:text-white";
+    const neutralClass = "text-black dark:text-white";
 
     // show only first name and prefix with "Trader "
     const displayName = (userName ?? "Trader").trim() || "Trader";

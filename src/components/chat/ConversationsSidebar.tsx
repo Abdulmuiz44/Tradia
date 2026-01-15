@@ -73,23 +73,16 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
                     </span>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="mt-6 flex flex-col gap-2">
                     <Button
                         type="button"
                         onClick={onCreateConversation}
                         disabled={!onCreateConversation}
-                        className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:border-white/5 disabled:bg-white/2 disabled:text-white/40"
+                        className="flex w-full items-center justify-start gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        <Plus className="h-4 w-4" />
-                        New Chat
+                        <Plus className="h-4 w-4 text-white/70" />
+                        <span>New Chat</span>
                     </Button>
-                    <Link
-                        href="/dashboard/trades/history"
-                        className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10"
-                    >
-                        <History className="h-4 w-4" />
-                        History
-                    </Link>
                 </div>
 
                 <label className="relative mt-6 flex items-center">
@@ -104,17 +97,17 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
             </div>
 
             <ScrollArea className="flex-1 px-6 py-6">
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {loading && (
-                        <div className="flex flex-col items-center justify-center rounded-lg border border-white/10 bg-white/5 px-4 py-8 text-sm text-white/60">
-                            <div className="mb-3 h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
-                            Loading conversations...
+                        <div className="flex flex-col items-center justify-center py-8 text-sm text-white/40">
+                            <div className="mb-3 h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
+                            <span>Loading...</span>
                         </div>
                     )}
 
                     {!loading && conversations.length === 0 && (
-                        <div className="rounded-lg border border-dashed border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-white/50">
-                            Start a new chat to begin your AI coaching journey.
+                        <div className="px-2 py-4 text-center text-sm text-white/40">
+                            No chats yet. Start one now!
                         </div>
                     )}
 

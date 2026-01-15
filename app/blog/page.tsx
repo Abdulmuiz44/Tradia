@@ -1,27 +1,48 @@
 import Link from "next/link";
-
-const posts = [
-  { slug: "top-5-smc-patterns-ai-analysis", title: "Top 5 SMC Patterns for Forex Traders (With AI Analysis)", excerpt: "Spot high-probability SMC setups and let AI quantify your edge.", date: "2025-09-15" },
-  { slug: "journal-trades-like-a-pro-template", title: "How to Journal Trades Like a Pro — Free Tradia Template", excerpt: "A simple framework to capture context, emotions, and lessons.", date: "2025-09-16" },
-  { slug: "boost-your-win-rate-tradia-user-stories", title: "Boost Your Win Rate: Real Tradia User Stories", excerpt: "Tangible improvements from traders who optimized their process.", date: "2025-09-17" },
-];
+import { posts } from "./content";
 
 export const metadata = {
-  title: "Tradia Blog — AI Trading Journal App",
-  description: "Quick-start guides, trading analytics tips, and real user stories.",
+  title: "Tradia Blog — AI Trading Journal & Analytics Insights",
+  description: "Expert articles on automated trading analysis, psychology, risk management, and how to use AI to become a profitable trader.",
+  keywords: ["trading blog", "ai trading", "forex education", "trading psychology", "risk management"],
 };
 
 export default function BlogIndex() {
+  const postList = Object.values(posts).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
-    <main className="min-h-screen py-12 px-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Tradia Blog</h1>
-      <p className="text-gray-500 mb-8">Learn patterns, journaling best practices, and how to leverage AI for trading.</p>
-      <div className="grid gap-6 md:grid-cols-2">
-        {posts.map((p) => (
-          <Link key={p.slug} href={`/blog/${p.slug}`} className="block p-5 rounded-xl border border-white/10 hover:border-indigo-500">
-            <div className="text-xs text-gray-400">{new Date(p.date).toLocaleDateString()}</div>
-            <h2 className="text-xl font-semibold mt-1">{p.title}</h2>
-            <p className="text-gray-400 mt-2">{p.excerpt}</p>
+    <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto">
+      <div className="text-center mb-16">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
+          Tradia Blog
+        </h1>
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+          Deep dives into trading patterns, psychology, and the future of AI-driven analytics.
+          Master the markets with data, not guesswork.
+        </p>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {postList.map((p) => (
+          <Link
+            key={p.slug}
+            href={`/blog/${p.slug}`}
+            className="group flex flex-col h-full p-6 rounded-2xl border border-white/10 bg-[#0f1319] hover:border-indigo-500/50 hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)] transition-all duration-300"
+          >
+            <div className="text-xs font-medium text-indigo-400 mb-3">{new Date(p.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            <h2 className="text-xl font-bold mb-3 text-gray-100 group-hover:text-indigo-300 transition-colors">
+              {p.title}
+            </h2>
+            <p className="text-sm text-gray-400 leading-relaxed mb-4 flex-grow">
+              {p.excerpt}
+            </p>
+            <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/5">
+              {p.keywords.slice(0, 2).map(k => (
+                <span key={k} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-500">
+                  {k}
+                </span>
+              ))}
+            </div>
           </Link>
         ))}
       </div>

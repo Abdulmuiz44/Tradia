@@ -87,7 +87,8 @@ export default function DashboardSidebar({
           "dashboard-sidebar__item",
           "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
           isMobile ? "w-full justify-start text-xs" : "w-full justify-start text-sm",
-          isActive ? "is-active" : "",
+          "hover:bg-gray-100 hover:text-black dark:hover:bg-gray-200 dark:hover:text-black", // Force black text on hover
+          isActive ? "is-active bg-black text-white dark:bg-white dark:text-black" : "text-gray-600 dark:text-gray-400",
         ]
           .filter(Boolean)
           .join(" ");

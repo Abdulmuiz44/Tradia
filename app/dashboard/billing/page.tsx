@@ -210,10 +210,10 @@ export default function BillingPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-600 bg-green-100';
-      case 'canceled': return 'text-red-600 bg-red-100';
-      case 'past_due': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'active': return 'text-black bg-white dark:text-white dark:bg-white/10 border border-black/10 dark:border-white/20';
+      case 'canceled': return 'text-gray-500 bg-gray-100 dark:text-gray-400 dark:bg-white/5 border border-gray-200 dark:border-white/10';
+      case 'past_due': return 'text-black bg-gray-200 dark:text-white dark:bg-white/20'; // Keeping it urgent but monochrome
+      default: return 'text-gray-500 bg-gray-100 dark:text-gray-400 dark:bg-white/5';
     }
   };
 
@@ -294,22 +294,22 @@ export default function BillingPage() {
 
         {/* Success/Cancel Messages */}
         {success && (
-          <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded-lg">
+          <div className="mb-6 p-4 bg-white/5 border border-white/20 rounded-lg">
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <span className="text-green-400 font-medium">Payment successful!</span>
+              <CheckCircle className="w-5 h-5 text-white" />
+              <span className="text-white font-medium">Payment successful!</span>
             </div>
-            <p className="text-green-300 mt-1">Your subscription has been activated.</p>
+            <p className="text-gray-400 mt-1">Your subscription has been activated.</p>
           </div>
         )}
 
         {canceled && (
-          <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-700 rounded-lg">
+          <div className="mb-6 p-4 bg-white/5 border border-white/20 rounded-lg">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-yellow-400" />
-              <span className="text-yellow-400 font-medium">Payment cancelled</span>
+              <AlertCircle className="w-5 h-5 text-white" />
+              <span className="text-white font-medium">Payment cancelled</span>
             </div>
-            <p className="text-yellow-300 mt-1">No charges were made to your account.</p>
+            <p className="text-gray-400 mt-1">No charges were made to your account.</p>
           </div>
         )}
 
@@ -344,7 +344,7 @@ export default function BillingPage() {
                   <div className="sm:col-span-2 pt-2">
                     <button
                       onClick={handleCancelSubscription}
-                      className="px-3 py-2 bg-transparent border border-red-600 text-red-400 rounded hover:bg-red-600/10"
+                      className="px-3 py-2 bg-transparent border border-white/20 text-gray-400 rounded hover:bg-white/5 transition-colors"
                     >
                       Cancel Subscription
                     </button>
@@ -363,7 +363,7 @@ export default function BillingPage() {
                 <h2 className="text-xl font-semibold">Current Plan</h2>
                 <button
                   onClick={() => setShowUpgradeModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   {currentPlan === 'starter' ? 'Upgrade Plan' : 'Change Plan'}
                 </button>
@@ -508,14 +508,14 @@ export default function BillingPage() {
                       <div
                         key={plan.type}
                         className={`relative p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${plan.popular
-                          ? 'border-purple-500 bg-purple-900/20'
-                          : 'border-gray-600 hover:border-gray-500'
+                          ? 'border-white bg-white/5'
+                          : 'border-white/10 hover:border-white/30'
                           }`}
                         onClick={() => setSelectedPlan(plan.type)}
                       >
                         {plan.popular && (
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                            <span className="bg-white text-black px-4 py-1 rounded-full text-sm font-medium">
                               Most Popular
                             </span>
                           </div>
@@ -545,9 +545,9 @@ export default function BillingPage() {
                           }}
                           disabled={upgrading}
                           className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${plan.popular
-                            ? 'bg-purple-600 hover:bg-purple-700'
-                            : 'bg-blue-600 hover:bg-blue-700'
-                            } disabled:bg-gray-600`}
+                            ? 'bg-white text-black hover:bg-gray-200'
+                            : 'bg-white/10 text-white hover:bg-white/20'
+                            } disabled:opacity-50`}
                         >
                           {upgrading ? (
                             <>

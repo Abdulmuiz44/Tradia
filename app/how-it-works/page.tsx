@@ -13,7 +13,7 @@ export default function HowItWorksPage() {
       number: 1,
       title: "Upload Your Trades",
       description: "Export your trade data from any broker (MT4, MT5, cTrader, etc.) as CSV and upload it to Tradia in seconds.",
-      icon: <Upload className="w-8 h-8 text-blue-500" />,
+      icon: <Upload className="w-8 h-8 text-black dark:text-white" />,
       details: [
         "Supports all major brokers",
         "Instant CSV upload",
@@ -24,7 +24,7 @@ export default function HowItWorksPage() {
       number: 2,
       title: "AI Analyzes Your Performance",
       description: "Our advanced AI engine analyzes your trades and generates detailed performance metrics, risk analysis, and insights.",
-      icon: <Brain className="w-8 h-8 text-purple-500" />,
+      icon: <Brain className="w-8 h-8 text-black dark:text-white" />,
       details: [
         "Win rate calculation",
         "Profit factor analysis",
@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
       number: 3,
       title: "Get Personalized Coaching",
       description: "Chat with your AI coach who reviews your trades, explains mistakes, and gives you actionable improvement suggestions.",
-      icon: <TrendingUp className="w-8 h-8 text-green-500" />,
+      icon: <TrendingUp className="w-8 h-8 text-black dark:text-white" />,
       details: [
         "Daily performance summaries",
         "Strategy feedback",
@@ -48,7 +48,7 @@ export default function HowItWorksPage() {
       number: 4,
       title: "Track & Improve",
       description: "Monitor your progress over time with detailed analytics, journaling tools, and performance reports.",
-      icon: <CheckCircle className="w-8 h-8 text-orange-500" />,
+      icon: <CheckCircle className="w-8 h-8 text-black dark:text-white" />,
       details: [
         "Real-time dashboards",
         "Performance trends",
@@ -88,7 +88,7 @@ export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0D1117]">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-[#0f1319] py-16 px-4 sm:px-6 lg:px-8">
+      <div className="relative bg-white dark:bg-[#0D1117] py-16 px-4 sm:px-6 lg:px-8 border-b border-gray-100 dark:border-white/5">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center">
             How Tradia Works
@@ -107,7 +107,7 @@ export default function HowItWorksPage() {
               <div className={index % 2 === 0 ? "md:order-1" : "md:order-2"}>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-16 w-16 rounded-xl bg-blue-100 dark:bg-blue-900">
+                    <div className="flex items-center justify-center h-16 w-16 rounded-xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                       {step.icon}
                     </div>
                   </div>
@@ -121,7 +121,7 @@ export default function HowItWorksPage() {
                     <ul className="space-y-2">
                       {step.details.map((detail, i) => (
                         <li key={i} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <CheckCircle className="w-4 h-4 text-black dark:text-white" />
                           {detail}
                         </li>
                       ))}
@@ -129,7 +129,7 @@ export default function HowItWorksPage() {
                   </div>
                 </div>
               </div>
-              <div className={`bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl h-64 flex items-center justify-center text-white text-center ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}>
+              <div className={`bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl h-64 flex items-center justify-center text-black dark:text-white text-center ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}>
                 <div className="p-8">
                   <div className="text-6xl font-bold opacity-20 mb-4">{step.number}</div>
                   <p className="text-lg font-semibold">{step.title}</p>
@@ -165,18 +165,18 @@ export default function HowItWorksPage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-blue-600 dark:bg-blue-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-black dark:bg-white/5 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Start Improving Your Trading?
           </h2>
-          <p className="text-blue-100 mb-8 text-lg">
+          <p className="text-gray-400 mb-8 text-lg">
             Upload your first trades and get AI analysis in minutes. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              className="bg-white text-blue-600 hover:bg-blue-50"
+              className="bg-white text-black hover:bg-gray-200"
               onClick={() => router.push("/signup")}
             >
               Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
@@ -184,7 +184,7 @@ export default function HowItWorksPage() {
             <Button
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-blue-700"
+              className="border-white/20 text-white hover:bg-white/10"
               onClick={() => router.push("/pricing")}
             >
               View Plans

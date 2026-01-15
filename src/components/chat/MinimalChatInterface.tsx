@@ -147,6 +147,12 @@ export function MinimalChatInterface({
                 throw new Error(error || 'Failed to get response');
             }
 
+            const convoIdHeader = response.headers.get('X-Conversation-Id');
+            if (convoIdHeader && convoIdHeader !== effectiveConversationId) {
+                console.log('New conversation created:', convoIdHeader);
+                router.replace(`/dashboard/trades/chat/${convoIdHeader}`);
+            }
+
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No response body');
 
@@ -164,6 +170,8 @@ export function MinimalChatInterface({
                 role: 'assistant',
                 content: assistantContent,
             }]);
+
+            setShowHistoryMenu(false);
         } catch (err) {
             console.error('Chat error:', err);
             setMessages(prev => [...prev, {
@@ -385,39 +393,47 @@ export function MinimalChatInterface({
 
             {/* Input Area - Sticks to Bottom & Centered */}
             <div className="flex-shrink-0 border-t border-white/5 bg-[#0D0D0D] py-4 flex justify-center">
-                <form onSubmit={handleSubmit} className="flex items-end gap-3 w-full max-w-4xl px-4 sm:px-6 md:px-8">
-                    <textarea
-                        className="flex-1 min-h-[44px] max-h-[120px] bg-white/5 text-white border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white/20 resize-none placeholder:text-gray-500 focus:bg-white/10 transition-colors"
-                        value={input}
-                        onChange={handleInputChange}
-                        placeholder="Ask about your trading..."
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSubmit(e as any);
-                            }
-                        }}
-                    />
-
-                    {isLoading ? (
-                        <button
-                            type="button"
-                            onClick={() => stop()}
-                            className="flex-shrink-0 p-2.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors border border-red-500/30"
-                            title="Stop generating"
-                        >
-                            <StopCircle className="w-5 h-5" />
-                        </button>
-                    ) : (
-                        <button
-                            type="submit"
-                            disabled={!input.trim() || isLoading}
-                            className="flex-shrink-0 p-2.5 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Send message"
-                        >
-                            <Send className="w-5 h-5" />
-                        </button>
-                    )}
+                <form onSubmit={handleSubmit} className="relative flex items-center justify-center w-full max-w-2xl">
+                    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#1A1A1A]/80 shadow-[0_0_20px_rgba(0,0,0,0.3)] backdrop-blur-xl transition hover:border-white/20 focus-within:border-white/30">
+                        <textarea
+                            className="w-full min-h-[44px] max-h-[120px] bg-transparent text-white px-5 py-4 text-[15px] focus:outline-none resize-none placeholder:text-gray-500 custom-scrollbar"
+                            value={input}
+                            onChange={handleInputChange}
+                            placeholder="Ask detailed questions about your trading..."
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e as any);
+                                }
+                            }}
+                        />
+                        <div className="absolute right-2 bottom-2">
+                            {isLoading ? (
+                                <button
+                                    type="button"
+                                    onClick={() => stop()}
+                                    className="p-2 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all"
+                                    title="Stop generating"
+                                >
+                                    <StopCircle className="w-5 h-5" />
+                                </button>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    disabled={!input.trim() || isLoading}
+                                    className={cn(
+                                        "p-2 rounded-xl transition-all duration-200",
+                                        input.trim()
+                                            ? "bg-white text-black hover:scale-105 active:scale-95 shadow-lg shadow-white/10"
+                                            : "text-white/20 cursor-not-allowed"
+                                    )}
+                                    title="Send message"
+                                >
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
