@@ -133,7 +133,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
               onClick={handleClearChat}
               variant="outline"
               size="sm"
-              className="text-gray-600 dark:text-gray-400"
+              className="text-gray-600 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -162,7 +162,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
                   key={item.label}
                   onClick={() => analyzeWithAI(item.prompt)}
                   disabled={loading || trades.length === 0}
-                  className="p-3 text-sm text-left rounded-lg bg-blue-50 dark:bg-[#0f1319] hover:bg-blue-100 dark:hover:bg-[#0f1319]/80 border border-blue-200 dark:border-gray-700 text-blue-900 dark:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-3 text-sm text-left rounded-lg bg-gray-50 dark:bg-[#0f1319] hover:bg-gray-100 dark:hover:bg-[#0f1319]/80 border border-gray-200 dark:border-gray-700 text-black dark:text-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {item.label}
                 </button>
@@ -178,7 +178,7 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
               >
                 <div
                   className={`max-w-2xl rounded-lg p-4 ${msg.role === 'user'
-                    ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
+                    ? 'bg-black dark:bg-white text-white dark:text-black rounded-br-none'
                     : 'bg-gray-100 dark:bg-[#0f1319] text-[#0f1319] dark:text-white rounded-bl-none'
                     }`}
                 >
@@ -195,8 +195,8 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
                           li: ({ node, ...props }) => <li className="mb-1 text-sm" {...props} />,
                           strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
                           em: ({ node, ...props }) => <em className="italic" {...props} />,
-                          code: ({ node, ...props }) => <code className={`px-1 py-0.5 rounded text-xs ${msg.role === 'assistant' ? 'bg-gray-200 dark:bg-[#0f1319]' : 'bg-blue-400'}`} {...props} />,
-                          blockquote: ({ node, ...props }) => <blockquote className={`border-l-4 pl-3 italic text-sm my-2 ${msg.role === 'assistant' ? 'border-gray-400' : 'border-blue-300'}`} {...props} />,
+                          code: ({ node, ...props }) => <code className={`px-1 py-0.5 rounded text-xs ${msg.role === 'assistant' ? 'bg-gray-200 dark:bg-[#0f1319]' : 'bg-neutral-700 text-white'}`} {...props} />,
+                          blockquote: ({ node, ...props }) => <blockquote className={`border-l-4 pl-3 italic text-sm my-2 ${msg.role === 'assistant' ? 'border-gray-400' : 'border-gray-500'}`} {...props} />,
                           table: ({ node, ...props }) => <div className="overflow-x-auto mb-2"><table className="w-full text-xs" {...props} /></div>,
                           thead: ({ node, ...props }) => <thead className="font-semibold" {...props} />,
                           th: ({ node, ...props }) => <th className="px-2 py-1 text-left" {...props} />,
@@ -240,13 +240,13 @@ export default function TradiaAIAnalysis({ trades, userId }: TradiaAIAnalysisPro
             }}
             placeholder={trades.length === 0 ? "No trades yet. Add trades to get started." : "Ask anything about your trades... (Ctrl+Enter to send)"}
             disabled={trades.length === 0 || loading}
-            className="flex-1 bg-gray-50 dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-[#0f1319] dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
+            className="flex-1 bg-gray-50 dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-[#0f1319] dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black/50 dark:focus:ring-white/50 disabled:opacity-50"
             rows={2}
           />
           <Button
             onClick={() => analyzeWithAI()}
             disabled={loading || !prompt.trim() || trades.length === 0}
-            className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white self-end"
+            className="bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 dark:text-black text-white self-end"
             size="sm"
           >
             {loading ? (

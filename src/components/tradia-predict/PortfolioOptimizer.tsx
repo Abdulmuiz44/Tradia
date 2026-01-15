@@ -196,13 +196,13 @@ const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({ trades }) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button>
               Rebalance Portfolio
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-neutral-900 dark:hover:bg-neutral-100 dark:hover:text-black">
               Export Report
             </Button>
-            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
+            <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-neutral-900 dark:hover:bg-neutral-100 dark:hover:text-black">
               Set Alerts
             </Button>
           </div>

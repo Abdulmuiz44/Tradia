@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Target, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
@@ -111,9 +112,9 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
             <p className="text-gray-400 mb-6">
               Add some trades to your portfolio to receive personalized AI predictions based on your trading patterns.
             </p>
-            <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+            <Button className="w-full">
               Add Your First Trade
-            </button>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -229,9 +230,9 @@ const TradePredictor: React.FC<TradePredictorProps> = ({ trades }) => {
                     +{prediction.expectedReturn}%
                   </span>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <Button className="w-full">
                   Execute Trade
-                </button>
+                </Button>
               </div>
             </div>
           ))}

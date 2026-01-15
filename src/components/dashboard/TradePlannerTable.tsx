@@ -232,7 +232,7 @@ export default function TradePlannerTable() {
 
   // transparent input style used throughout (no white backgrounds)
   const inputClass =
-    "bg-transparent border border-zinc-700 rounded px-3 py-2 text-sm text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-600";
+    "bg-transparent border border-zinc-700 rounded px-3 py-2 text-sm text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-white";
 
   // textarea (multi-line) styled to match inputs
   const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (

@@ -190,13 +190,13 @@ const PatternRecognition: React.FC<PatternRecognitionProps> = ({ trades }) => {
 
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-gray-700">
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                <Button size="sm">
                   Apply Pattern
                 </Button>
-                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
+                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-neutral-900 dark:hover:bg-neutral-100 dark:hover:text-black">
                   View Examples
                 </Button>
-                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-[#0f1319]">
+                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-neutral-900 dark:hover:bg-neutral-100 dark:hover:text-black">
                   Export Data
                 </Button>
               </div>

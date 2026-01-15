@@ -576,7 +576,7 @@ export default function TradeJournal(): React.ReactElement {
             <button
               type="button"
               onClick={toggleSelect}
-              className={`h-5 w-5 rounded-full border ${isSelected ? "border-emerald-400 bg-emerald-500/20" : "border-zinc-600"}`}
+              className={`h-5 w-5 rounded-full border ${isSelected ? "border-white bg-white/20" : "border-zinc-600"}`}
               aria-pressed={isSelected}
             />
             <div>
@@ -776,7 +776,7 @@ export default function TradeJournal(): React.ReactElement {
             </Button>
           )}
           {selectedCount > 0 && (
-            <Badge variant="outline" className="border-emerald-500/60 text-emerald-300">{selectedCount} selected</Badge>
+            <Badge variant="outline" className="border-white/60 text-white">{selectedCount} selected</Badge>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">

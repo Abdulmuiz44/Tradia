@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
 
 export default function ChatAssistant() {
   const [message, setMessage] = useState('');
@@ -27,9 +28,9 @@ export default function ChatAssistant() {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Ask Tradia AI anything..."
         />
-        <button onClick={sendMessage} className="bg-blue-600 text-white px-4 rounded hover:bg-blue-700 transition">
+        <Button onClick={sendMessage}>
           Send
-        </button>
+        </Button>
       </div>
     </div>
   );

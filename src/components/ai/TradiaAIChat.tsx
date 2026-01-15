@@ -53,8 +53,8 @@ const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
                 {/* Header */}
                 <div className="bg-[#0f1319] p-4 border-b border-gray-800 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
-                            <Bot className="w-6 h-6 text-blue-400" />
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                            <Bot className="w-6 h-6 text-gray-300" />
                         </div>
                         <div>
                             <h2 className="font-semibold text-white">Tradia AI Coach</h2>
@@ -62,7 +62,7 @@ const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
                         </div>
                     </div>
                     {isLoading && (
-                        <div className="flex items-center gap-2 text-xs text-blue-400 animate-pulse">
+                        <div className="flex items-center gap-2 text-xs text-gray-400 animate-pulse">
                             <Loader2 className="w-3 h-3 animate-spin" />
                             Generating...
                         </div>
@@ -81,7 +81,7 @@ const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
                         >
                             <div className={cn(
                                 "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1",
-                                m.role === 'user' ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30" : "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                                m.role === 'user' ? "bg-white text-black border border-gray-200" : "bg-zinc-800 text-gray-400 border border-zinc-700"
                             )}>
                                 {m.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                             </div>
@@ -89,7 +89,7 @@ const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
                             <div className={cn(
                                 "p-4 rounded-2xl text-sm leading-relaxed shadow-sm",
                                 m.role === 'user'
-                                    ? "bg-indigo-600 text-white rounded-tr-none"
+                                    ? "bg-white text-black rounded-tr-none"
                                     : "bg-[#1e293b] text-gray-200 border border-gray-700/50 rounded-tl-none"
                             )}>
                                 {m.role === 'user' ? (
@@ -118,7 +118,7 @@ const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
                     <form onSubmit={handleSubmit} className="relative flex items-end gap-2">
                         <textarea
                             ref={inputRef}
-                            className="flex-1 min-h-[50px] max-h-[200px] w-full bg-[#1e293b] text-white border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none custom-scrollbar placeholder:text-gray-500"
+                            className="flex-1 min-h-[50px] max-h-[200px] w-full bg-[#1e293b] text-white border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 resize-none custom-scrollbar placeholder:text-gray-500"
                             value={input}
                             onChange={handleInputChange}
                             placeholder="Ask about your strategy, risk management, or psychology..."
@@ -144,7 +144,7 @@ const TradiaAIChat = forwardRef<TradiaAIChatHandle, TradiaAIChatProps>(
                                 <button
                                     type="submit"
                                     disabled={!input.trim() || isLoading}
-                                    className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-95"
+                                    className="p-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-95"
                                 >
                                     <Send className="w-5 h-5" />
                                 </button>

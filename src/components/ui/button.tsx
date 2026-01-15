@@ -12,7 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Primary: Black bg in light mode, White bg in dark mode
-        default: "bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 focus:ring-black dark:focus:ring-white",
+        default: "bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 focus:ring-black dark:focus:ring-white",
         // Secondary: Gray background
         secondary: "bg-gray-200 text-black hover:bg-gray-300 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 focus:ring-gray-400",
         // Destructive: Dark gray to indicate danger

@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Crown, X, ArrowRight, Check, RefreshCw } from "lucide-react";
 import { PlanType, getUpgradeMessage, getPlanDisplayName } from "@/lib/planAccess";
 
@@ -126,12 +127,14 @@ export default function UpgradePrompt({
         <div className="bg-white rounded-xl shadow-2xl">
           {/* Header */}
           <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-t-xl">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="absolute top-4 right-4 text-white hover:bg-white/20 hover:text-white"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
 
             <div className="flex items-center gap-4 mb-4">
               <Crown className="w-8 h-8 text-yellow-300" />
@@ -192,26 +195,24 @@ export default function UpgradePrompt({
                     ))}
                   </ul>
 
-                  <button
+                  <Button
                     onClick={() => handleUpgrade(plan.type)}
                     disabled={upgrading}
-                    className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${plan.popular
-                      ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
-                      : 'bg-[#0f1319] text-white hover:bg-[#0f1319]'
-                      } disabled:bg-gray-600 disabled:cursor-not-allowed`}
+                    className="w-full"
+                    variant={plan.popular ? "default" : "outline"}
                   >
                     {upgrading ? (
                       <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <RefreshCw className="w-4 h-4 animate-spin mr-2" />
                         Processing...
                       </>
                     ) : (
                       <>
                         Upgrade to {plan.name}
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-4 h-4 ml-2" />
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -240,12 +241,13 @@ export default function UpgradePrompt({
               <p className="text-sm text-gray-600 mb-4">
                 All plans include a 30-day money-back guarantee. Cancel anytime.
               </p>
-              <button
+              <Button
+                variant="ghost"
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 font-medium"
+                className="text-gray-500 hover:text-gray-700"
               >
                 Maybe Later
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -303,20 +305,21 @@ export function CompactUpgradePrompt({
             {feature} is available on Pro, Plus, and Elite plans.
           </p>
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => handleUpgrade('pro')}
               disabled={upgrading}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
+              size="sm"
             >
               {upgrading && selectedPlan === 'pro' ? 'Processing...' : 'Upgrade to Pro'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => handleUpgrade('plus')}
               disabled={upgrading}
-              className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
+              variant="outline"
+              size="sm"
             >
               {upgrading && selectedPlan === 'plus' ? 'Processing...' : 'Upgrade to Plus'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
