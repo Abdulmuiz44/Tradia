@@ -170,7 +170,7 @@ function LoginPage(): React.ReactElement {
 
             {/* Right — form */}
             <section className="rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm shadow-lg dark:shadow-2xl">
-              <h2 className="text-3xl font-bold text-indigo-700 dark:text-indigo-300">Sign in to Tradia</h2>
+              <h2 className="text-3xl font-bold text-black dark:text-white">Sign in to Tradia</h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Enter your credentials to continue to your dashboard.</p>
 
               {error && (
@@ -188,7 +188,7 @@ function LoginPage(): React.ReactElement {
                     value={form.email}
                     onChange={handleChange}
                     placeholder="name@domain.com"
-                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
                     required
                     aria-label="Email Address"
                   />
@@ -207,7 +207,7 @@ function LoginPage(): React.ReactElement {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Your password"
-                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
                     required
                     aria-label="Password"
                   />
@@ -235,7 +235,7 @@ function LoginPage(): React.ReactElement {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-white hover:bg-gray-200 text-black rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed border border-gray-300"
                 >
                   {loading ? "Signing in..." : "Sign In"}
                 </button>
@@ -249,7 +249,7 @@ function LoginPage(): React.ReactElement {
 
               <button
                 onClick={async () => { try { await signIn("google", { callbackUrl: "/dashboard/overview" }); } catch (e) { setError(e instanceof Error ? e.message : "Google sign-in failed"); } }}
-                className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-white/10 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition text-black dark:text-gray-100"
+                className="w-full flex items-center justify-center gap-3 py-3 border-2 border-black dark:border-white rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition text-black dark:text-white font-semibold"
                 aria-label="Continue with Google"
               >
                 <FcGoogle size={20} />

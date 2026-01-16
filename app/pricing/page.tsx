@@ -224,11 +224,11 @@ export default function PricingPage(): React.ReactElement {
                 </motion.p>
 
                 <div className="mt-8 flex flex-wrap gap-3 items-center">
-                  <Link href="/signup" className="inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 px-6 py-3 rounded-full shadow-lg font-semibold">
+                  <Link href="/signup" className="inline-flex items-center gap-3 bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-full shadow-lg font-semibold border border-gray-300">
                     Create free account <AiOutlineArrowRight />
                   </Link>
 
-                  <a className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800" href="#plans">
+                  <a className="inline-flex items-center gap-2 px-5 py-3 rounded-full border-2 border-black dark:border-white text-black dark:text-white font-semibold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors" href="#plans">
                     See plans
                   </a>
                 </div>
@@ -320,7 +320,7 @@ export default function PricingPage(): React.ReactElement {
                           const checkoutUrl = getCheckoutUrl(p.id as "pro" | "plus" | "elite", billing as "monthly" | "yearly");
                           window.location.href = checkoutUrl;
                         }}
-                        className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200" : "bg-gray-800 dark:bg-gray-100 text-white dark:text-black hover:bg-gray-700 dark:hover:bg-gray-200"} transition-colors`}
+                        className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-white text-black hover:bg-gray-200 border border-gray-300" : "bg-gray-200 text-black hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"} transition-colors`}
                       >
                         {p.cta}
                       </button>
@@ -422,8 +422,8 @@ export default function PricingPage(): React.ReactElement {
               <h4 className="text-xl font-bold text-black dark:text-white">Ready to level up your trading?</h4>
               <p className="mt-2 text-gray-700 dark:text-gray-300">Create an account, upload trades and see AI-driven insights tuned to your history.</p>
               <div className="mt-6 flex gap-3">
-                <Link href="/signup" className="bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold">Create free account</Link>
-                <Link href="#plans" className="px-4 py-2 rounded-full border border-indigo-500 text-indigo-300">Compare plans</Link>
+                <Link href="/signup" className="bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 border border-gray-300">Create free account</Link>
+                <Link href="#plans" className="px-4 py-2 rounded-full border-2 border-black dark:border-white text-black dark:text-white font-semibold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Compare plans</Link>
               </div>
 
               <div className="mt-6 text-xs text-gray-600 dark:text-gray-400">Need custom pricing or prop-firm features? <Link href="/contact" className="underline">Contact our team</Link>.</div>

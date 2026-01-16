@@ -215,13 +215,13 @@ export default function Home(): React.ReactElement {
                                 </motion.div>
 
                                 <div className="mt-8 flex flex-wrap gap-3 items-center">
-                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 px-6 py-3 rounded-full shadow-lg font-bold text-lg">
+                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-white text-black hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 px-6 py-3 rounded-full shadow-lg font-bold text-lg border border-gray-300 dark:border-white">
                                         Get Your Free AI Review <AiOutlineArrowRight />
                                     </motion.button>
 
                                     <Link
                                         href="/pricing"
-                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900"
+                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-full border-2 border-black dark:border-white text-black dark:text-white font-semibold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
                                     >
                                         View plans
                                     </Link>
@@ -295,7 +295,7 @@ export default function Home(): React.ReactElement {
                         </div>
 
                         <div className="mt-8 text-center">
-                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-semibold shadow">
+                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-6 py-3 bg-white text-black hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 font-semibold shadow border border-gray-300 dark:border-white">
                                 Start Trading Analysis Free <AiOutlineArrowRight />
                             </button>
                         </div>
@@ -423,7 +423,7 @@ export default function Home(): React.ReactElement {
                                 Ready to take your trading to the next level? Join successful traders worldwide who use Tradia
                                 to analyze, improve, and scale their trading performance.
                             </p>
-                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-8 py-4 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-semibold shadow-lg text-lg transition-all">
+                            <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-8 py-4 bg-white text-black hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 font-semibold shadow-lg text-lg transition-all border border-gray-300 dark:border-white">
                                 Start Your Trading Journey <AiOutlineArrowRight />
                             </button>
                         </div>
@@ -520,7 +520,7 @@ export default function Home(): React.ReactElement {
                                                     setSelectedPlan(p.id);
                                                     navSignup();
                                                 }}
-                                                className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200" : "bg-gray-800 dark:bg-gray-100 text-white dark:text-black hover:bg-gray-700 dark:hover:bg-gray-200"} transition-colors`}
+                                                className={`w-full py-3 rounded-lg font-semibold ${selected ? "bg-white text-black hover:bg-gray-200 border border-gray-300" : "bg-gray-200 text-black hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"} transition-colors`}
                                             >
                                                 {p.cta}
                                             </button>
@@ -601,7 +601,7 @@ export default function Home(): React.ReactElement {
                             </div>
 
                             <div className="mt-4">
-                                <button onClick={navSignup} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded font-semibold transition-colors">Get started — see your patterns</button>
+                                <button onClick={navSignup} className="w-full bg-white hover:bg-gray-200 text-black px-4 py-2 rounded font-semibold transition-colors border border-gray-300">Get started — see your patterns</button>
                             </div>
                         </div>
                     </div>
@@ -631,8 +631,8 @@ export default function Home(): React.ReactElement {
                             <h4 className="text-xl font-bold text-black dark:text-white">Ready to stop guessing and start improving?</h4>
                             <p className="mt-2 text-gray-600 dark:text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
                             <div className="mt-6 flex gap-3">
-                                <button onClick={navSignup} className="bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black px-6 py-3 rounded-full font-bold transition-colors">Create free account</button>
-                                <Link href="/pricing" className="px-6 py-3 rounded-full border border-black dark:border-white text-black dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors">See plans</Link>
+                                <button onClick={navSignup} className="bg-white hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold transition-colors border border-gray-300">Create free account</button>
+                                <Link href="/pricing" className="px-6 py-3 rounded-full border-2 border-black dark:border-white text-black dark:text-white font-semibold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">See plans</Link>
                             </div>
 
                             <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">Need help? <Link href="/contact" className="text-black dark:text-white underline">Contact us</Link>.</div>

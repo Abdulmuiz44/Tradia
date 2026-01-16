@@ -114,10 +114,10 @@ export default function AboutPage(): React.ReactElement {
                   and scale consistent profitability across Forex, stocks, crypto and futures.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link href="/signup" className="px-5 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                  <Link href="/signup" className="px-5 py-3 bg-white text-black rounded-lg hover:bg-gray-200 font-semibold border border-gray-300">
                     Get Started Free
                   </Link>
-                  <Link href="/pricing" className="px-5 py-3 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20">
+                  <Link href="/pricing" className="px-5 py-3 bg-transparent border-2 border-white text-white rounded-lg hover:bg-white hover:text-black font-semibold transition-colors">
                     See Pricing
                   </Link>
                 </div>
@@ -251,8 +251,8 @@ export default function AboutPage(): React.ReactElement {
               <p className="text-sm text-gray-600 dark:text-gray-400">Track trades, analyze performance and get AI insights — free forever.</p>
             </div>
             <div className="flex gap-3">
-              <Link href="/signup" className="px-5 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 font-semibold transition-colors">Create Account</Link>
-              <Link href="/pricing" className="px-5 py-3 border border-black dark:border-white text-black dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900 transition-colors">Explore plans</Link>
+              <Link href="/signup" className="px-5 py-3 bg-white text-black rounded-lg hover:bg-gray-200 font-semibold border border-gray-300">Create Account</Link>
+              <Link href="/pricing" className="px-5 py-3 border-2 border-black dark:border-white text-black dark:text-white rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black font-semibold transition-colors">Explore plans</Link>
             </div>
           </div>
         </section>
