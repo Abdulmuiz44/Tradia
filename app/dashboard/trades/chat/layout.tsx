@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { ConversationsSidebar } from "@/components/chat/ConversationsSidebar";
+import { Loader2, Menu, X, PenSquare, History, Search } from "lucide-react";
 import type { Conversation } from "@/types/chat";
 
 interface ChatLayoutProps {
@@ -16,8 +15,9 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadConversations = useCallback(async () => {
     try {
@@ -26,8 +26,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       if (!res.ok) throw new Error("Failed to load conversations");
       const data = await res.json();
       const convList = Array.isArray(data) ? data : data.conversations || [];
-      
-      // Transform the conversation data to ensure proper format
+
       const formattedConversations = convList.map((conv: any) => ({
         id: conv.id,
         title: conv.title || "Untitled",
@@ -45,7 +44,6 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
     }
   }, []);
 
-  // Load conversations on mount
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
@@ -71,7 +69,6 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       if (!res.ok) throw new Error("Failed to create conversation");
       const { conversation } = await res.json();
 
-      // Add to conversations list
       const newConv: Conversation = {
         id: conversation.id,
         title: conversation.title,
@@ -83,8 +80,6 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
 
       setConversations((prev) => [newConv, ...prev]);
       setActiveConversationId(conversation.id);
-      
-      // Navigate to new conversation
       router.push(`/dashboard/trades/chat/${conversation.id}`);
     } catch (error) {
       console.error("Failed to create conversation:", error);
@@ -94,23 +89,20 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   const handleSelectConversation = useCallback(
     (id: string) => {
       setActiveConversationId(id);
-      setSidebarOpen(false);
       router.push(`/dashboard/trades/chat/${id}`);
     },
     [router]
   );
 
   const handleDeleteConversation = useCallback(
-    async (id: string) => {
-      if (!confirm("Delete this conversation? This action cannot be undone.")) return;
+    async (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!confirm("Delete this conversation?")) return;
 
       try {
-        const res = await fetch(`/api/conversations/${id}`, {
-          method: "DELETE",
-        });
+        const res = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete");
 
-        if (!res.ok) throw new Error("Failed to delete conversation");
-        
         setConversations((prev) => prev.filter((conv) => conv.id !== id));
         if (activeConversationId === id) {
           router.push("/dashboard/trades/chat");
@@ -122,59 +114,16 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
     [activeConversationId, router]
   );
 
-  const handleRenameConversation = useCallback(
-    async (id: string, newTitle: string) => {
-      try {
-        const res = await fetch(`/api/conversations/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: newTitle }),
-        });
-
-        if (!res.ok) throw new Error("Failed to update conversation");
-        const { conversation } = await res.json();
-
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === id ? { ...conv, title: conversation.title } : conv
-          )
-        );
-      } catch (error) {
-        console.error("Failed to rename conversation:", error);
-      }
-    },
-    []
+  const filteredConversations = conversations.filter(
+    (conv) => conv.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handlePinConversation = useCallback(
-    async (id: string) => {
-      try {
-        const conversation = conversations.find((c) => c.id === id);
-        const res = await fetch(`/api/conversations/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pinned: !conversation?.pinned }),
-        });
-
-        if (!res.ok) throw new Error("Failed to pin conversation");
-        const { conversation: updated } = await res.json();
-
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === id ? { ...conv, pinned: updated.pinned } : conv
-          )
-        );
-      } catch (error) {
-        console.error("Failed to pin conversation:", error);
-      }
-    },
-    [conversations]
-  );
+  const recentConversations = filteredConversations.slice(0, 20);
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center w-full h-screen bg-[#061226]">
-        <div className="text-center text-white">
+      <div className="flex items-center justify-center w-full h-screen bg-white dark:bg-[#0D1117]">
+        <div className="text-center text-gray-900 dark:text-white">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
           Loading...
         </div>
@@ -183,11 +132,110 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#0D0D0D] overflow-hidden">
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-         {/* Chat content */}
-         <div className="flex-1 overflow-hidden">{children}</div>
+    <div className="flex h-screen w-full bg-white dark:bg-[#0D1117] overflow-hidden">
+      {/* Sidebar */}
+      <aside className={`
+        ${sidebarOpen ? 'w-64' : 'w-0'} 
+        flex-shrink-0 bg-gray-50 dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a]
+        transition-all duration-300 overflow-hidden flex flex-col
+      `}>
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-[#2a2f3a]">
+          <button
+            onClick={handleCreateConversation}
+            className="w-full flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#21262d] border border-gray-200 dark:border-[#2a2f3a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a2f3a] transition text-gray-900 dark:text-white font-medium text-sm"
+          >
+            <PenSquare className="w-4 h-4" />
+            New chat
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="p-3 border-b border-gray-200 dark:border-[#2a2f3a]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#0D1117] border border-gray-200 dark:border-[#2a2f3a] rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Conversations List */}
+        <div className="flex-1 overflow-y-auto p-2">
+          <div className="mb-2 px-2 py-1.5">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+              <History className="w-3.5 h-3.5" />
+              Recents
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+            </div>
+          ) : recentConversations.length === 0 ? (
+            <div className="text-center py-8 text-sm text-gray-500">
+              No conversations yet
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {recentConversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => handleSelectConversation(conv.id)}
+                  className={`
+                    w-full px-3 py-2.5 rounded-lg text-left transition group flex items-center justify-between
+                    ${activeConversationId === conv.id
+                      ? 'bg-gray-200 dark:bg-[#2a2f3a] text-gray-900 dark:text-white'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#21262d]'
+                    }
+                  `}
+                >
+                  <span className="text-sm truncate flex-1">{conv.title}</span>
+                  <button
+                    onClick={(e) => handleDeleteConversation(conv.id, e)}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-300 dark:hover:bg-[#3a3f4a] transition"
+                    title="Delete"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* User Section */}
+        <div className="p-3 border-t border-gray-200 dark:border-[#2a2f3a]">
+          <div className="flex items-center gap-3 px-2 py-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+              {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden absolute top-4 left-4 z-10 p-2 rounded-lg bg-white dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white"
+        >
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
+        {/* Chat Content */}
+        <div className="flex-1 overflow-hidden">{children}</div>
       </div>
     </div>
   );

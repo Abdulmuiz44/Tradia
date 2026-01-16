@@ -2,11 +2,12 @@
 
 import { useChat } from 'ai/react';
 import { useRef, useEffect, useState } from 'react';
-import { Send, Loader2, StopCircle, Menu, Clock, Plus, MessageCircle } from 'lucide-react';
+import { Send, Loader2, StopCircle, Sparkles, TrendingUp, Target, Brain } from 'lucide-react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import type { Trade } from '@/types/trade';
+import { useSession } from 'next-auth/react';
 
 interface MinimalChatInterfaceProps {
     trades?: Trade[];
@@ -22,31 +23,22 @@ export function MinimalChatInterface({
     const router = useRouter();
     const params = useParams();
     const searchParams = useSearchParams();
+    const { data: session } = useSession();
 
-    // Support both route param [id] and query param ?id=
     const conversationIdFromRoute = (params?.id as string) || null;
     const conversationIdFromQuery = searchParams?.get('id') || null;
     const effectiveConversationId = conversationIdFromRoute || conversationIdFromQuery || conversationId;
 
     const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
-    const [showTradeSelector, setShowTradeSelector] = useState(false);
-    const [showHistoryMenu, setShowHistoryMenu] = useState(false);
-    const [conversations, setConversations] = useState<any[]>([]);
-    const [loadingHistory, setLoadingHistory] = useState(false);
-
     const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
     const [loadedConversationMessages, setLoadedConversationMessages] = useState<any[] | null>(null);
-    const [initialMessages, setInitialMessages] = useState<any[]>([
-        {
-            id: 'welcome',
-            role: 'assistant',
-            content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
-        },
-    ]);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const userName = session?.user?.name?.split(' ')[0] || session?.user?.email?.split('@')[0] || 'Trader';
 
     const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
         api: '/api/tradia/ai',
-        initialMessages: loadedConversationMessages || initialMessages,
+        initialMessages: loadedConversationMessages || [],
         body: {
             mode,
             conversationId: effectiveConversationId,
@@ -57,48 +49,29 @@ export function MinimalChatInterface({
     // Load existing conversation messages
     useEffect(() => {
         const loadConversationMessages = async () => {
-            // Only load if conversationId is provided
             if (!effectiveConversationId || effectiveConversationId === 'undefined') {
-                console.log('No conversation ID, starting fresh');
                 setLoadedConversationMessages(null);
                 setInitialMessagesLoaded(true);
                 return;
             }
 
             try {
-                console.log('Attempting to load conversation:', effectiveConversationId);
                 const res = await fetch(`/api/conversations/${effectiveConversationId}`);
-
-                if (res.status === 404) {
-                    console.log('Conversation not found (404), will create new one on first message');
-                    setLoadedConversationMessages(null);
-                    setInitialMessagesLoaded(true);
-                    return;
-                }
-
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    console.error(`Failed to fetch conversation: ${res.status}`, errorText);
+                if (res.status === 404 || !res.ok) {
                     setLoadedConversationMessages(null);
                     setInitialMessagesLoaded(true);
                     return;
                 }
 
                 const data = await res.json();
-                console.log('Successfully loaded conversation:', data.conversation?.id);
-
                 if (data.messages && data.messages.length > 0) {
                     const loadedMessages = data.messages.map((msg: any) => ({
                         id: msg.id,
                         role: msg.type === 'user' ? 'user' : 'assistant',
                         content: msg.content,
                     }));
-                    console.log(`Loaded ${loadedMessages.length} messages from conversation`);
-                    // Set loaded messages which will be passed to useChat initialMessages
                     setLoadedConversationMessages(loadedMessages);
                 } else {
-                    // No messages yet, show welcome message
-                    console.log('Conversation exists but has no messages yet');
                     setLoadedConversationMessages(null);
                 }
             } catch (err) {
@@ -109,11 +82,15 @@ export function MinimalChatInterface({
             }
         };
 
-        // Only load if we have a conversation ID and haven't loaded yet
         if (!initialMessagesLoaded && effectiveConversationId) {
             loadConversationMessages();
         }
     }, [effectiveConversationId, initialMessagesLoaded]);
+
+    // Auto scroll
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -149,7 +126,6 @@ export function MinimalChatInterface({
 
             const convoIdHeader = response.headers.get('X-Conversation-Id');
             if (convoIdHeader && convoIdHeader !== effectiveConversationId) {
-                console.log('New conversation created:', convoIdHeader);
                 router.replace(`/dashboard/trades/chat/${convoIdHeader}`);
             }
 
@@ -170,8 +146,6 @@ export function MinimalChatInterface({
                 role: 'assistant',
                 content: assistantContent,
             }]);
-
-            setShowHistoryMenu(false);
         } catch (err) {
             console.error('Chat error:', err);
             setMessages(prev => [...prev, {
@@ -182,260 +156,218 @@ export function MinimalChatInterface({
         }
     };
 
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Fetch conversation history
-    useEffect(() => {
-        const fetchConversations = async () => {
-            setLoadingHistory(true);
-            try {
-                const res = await fetch('/api/conversations');
-                if (!res.ok) {
-                    throw new Error(`Failed to fetch conversations: ${res.status}`);
-                }
-                const data = await res.json();
-
-                // Handle both array and object responses
-                const convList = Array.isArray(data) ? data : (data.conversations || []);
-
-                // Filter out "New Conversation" entries that have no messages (optional filter for cleaner UX)
-                // But keep them if they have messages - user might be actively using them
-                const filteredConvs = convList.slice(0, 10); // Last 10 conversations
-
-                setConversations(filteredConvs);
-                console.log(`Loaded ${filteredConvs.length} conversations for user`);
-            } catch (err) {
-                console.error('Failed to load conversations:', err);
-                setConversations([]);
-            } finally {
-                setLoadingHistory(false);
-            }
-        };
-
-        if (showHistoryMenu) {
-            fetchConversations();
-        }
-    }, [showHistoryMenu]);
-
-    const startNewConversation = () => {
-        setMessages([
-            {
-                id: 'welcome',
-                role: 'assistant',
-                content: 'Hello! I am your Tradia AI Coach powered by Mistral AI. I can help you analyze your trading psychology, risk management, strategy, and performance. What would you like to discuss today?',
-            },
-        ]);
-        setShowHistoryMenu(false);
+    const handleQuickPrompt = (prompt: string) => {
+        handleInputChange({ target: { value: prompt } } as any);
     };
 
+    const quickPrompts = [
+        { icon: TrendingUp, label: "Analyze my recent trades", prompt: "Can you analyze my recent trading performance and identify patterns?" },
+        { icon: Target, label: "Review my risk management", prompt: "Help me review and improve my risk management strategy" },
+        { icon: Brain, label: "Trading psychology tips", prompt: "Give me tips for improving my trading psychology and emotional discipline" },
+    ];
+
+    const isEmptyChat = messages.length === 0;
+
     return (
-        <div className="w-full h-screen bg-[#0D0D0D] dark:bg-[#0D0D0D] text-white flex flex-col">
-            {/* Header with Menu */}
-            <div className="flex-shrink-0 flex items-center justify-start px-3 sm:px-6 md:px-8 py-4 border-b border-white/5 bg-gray-900/50">
-                <div className="relative flex items-center gap-2">
-                    <button
-                        onClick={() => setShowHistoryMenu(!showHistoryMenu)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors hover:scale-105 active:scale-95"
-                        title="Conversation history and new chat"
-                        aria-label="Open conversation menu"
-                    >
-                        <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </button>
-
-                    <div className="flex items-center gap-2 text-sm sm:text-base font-semibold">
-                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-                        <span className="hidden sm:inline text-gray-300">Tradia AI Chat</span>
-                    </div>
-
-                    {/* History Menu Dropdown - Mobile & Desktop */}
-                    {showHistoryMenu && (
-                        <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-gray-900 border border-white/10 rounded-lg shadow-2xl z-50 max-h-96 overflow-hidden flex flex-col">
-                            <div className="p-3 border-b border-white/10 flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm font-semibold">
-                                    <Clock className="w-4 h-4" />
-                                    Conversations
-                                </div>
-                                <button
-                                    onClick={startNewConversation}
-                                    className="p-1 hover:bg-white/10 rounded transition-colors"
-                                    title="New conversation"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                </button>
+        <div className="w-full h-full bg-white dark:bg-[#0D1117] text-gray-900 dark:text-white flex flex-col">
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-y-auto">
+                {isEmptyChat ? (
+                    /* Welcome Screen */
+                    <div className="h-full flex flex-col items-center justify-center px-6 py-12">
+                        <div className="text-center max-w-2xl">
+                            {/* Greeting */}
+                            <div className="mb-8">
+                                <span className="text-4xl mb-4 block">👋</span>
+                                <h1 className="text-3xl md:text-4xl font-bold mb-3">
+                                    Hello there, <span className="text-blue-500">{userName}!</span>
+                                </h1>
+                                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                                    How can I help you with your trading today?
+                                </p>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto">
-                                {loadingHistory ? (
-                                    <div className="p-4 text-center text-sm text-gray-400">
-                                        <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
-                                        Loading...
-                                    </div>
-                                ) : conversations.length === 0 ? (
-                                    <div className="p-4 text-center text-sm text-gray-400">No conversations yet</div>
-                                ) : (
-                                    conversations.map((conv: any) => (
-                                        <button
-                                            key={conv.id}
-                                            onClick={() => {
-                                                router.push(`/dashboard/trades/chat/${conv.id}`);
-                                                setShowHistoryMenu(false);
-                                            }}
-                                            className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0 active:bg-white/20"
-                                        >
-                                            <div className="text-sm font-semibold text-white truncate">{conv.title || 'Untitled Conversation'}</div>
-                                            <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                {new Date(conv.updated_at).toLocaleDateString()} {new Date(conv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {/* Input Box */}
+                            <form onSubmit={handleSubmit} className="mb-8">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={handleInputChange}
+                                        placeholder="Hey Tradia, can you..."
+                                        className="w-full px-5 py-4 bg-gray-50 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!input.trim() || isLoading}
+                                        className={cn(
+                                            "absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg transition",
+                                            input.trim()
+                                                ? "bg-blue-500 text-white hover:bg-blue-600"
+                                                : "bg-gray-200 dark:bg-[#2a2f3a] text-gray-400 cursor-not-allowed"
+                                        )}
+                                    >
+                                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            </form>
+
+                            {/* Quick Prompts */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {quickPrompts.map((item, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleQuickPrompt(item.prompt)}
+                                        className="group p-5 bg-gray-50 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-[#1c2128] transition text-left"
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                                <item.icon className="w-4 h-4 text-blue-500" />
                                             </div>
-                                            {conv.mode && <div className="text-xs text-blue-300 mt-1 capitalize">{conv.mode} mode</div>}
-                                        </button>
-                                    ))
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                            {item.label}
+                                        </span>
+                                        <div className="mt-2 flex items-center gap-1 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition">
+                                            <Sparkles className="w-3 h-3" />
+                                            Try this prompt
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    /* Messages */
+                    <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 space-y-6">
+                        {messages.map((m: any) => (
+                            <div
+                                key={m.id}
+                                className={cn(
+                                    "flex gap-4",
+                                    m.role === 'user' ? "justify-end" : "justify-start"
+                                )}
+                            >
+                                {m.role === 'assistant' && (
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                                        AI
+                                    </div>
+                                )}
+
+                                <div className={cn(
+                                    "max-w-[75%] text-sm leading-relaxed px-4 py-3 rounded-2xl",
+                                    m.role === 'user'
+                                        ? "bg-blue-500 text-white"
+                                        : "bg-gray-100 dark:bg-[#161B22] text-gray-900 dark:text-white border border-gray-200 dark:border-[#2a2f3a]"
+                                )}>
+                                    {m.role === 'user' ? (
+                                        <div className="whitespace-pre-wrap">{m.content}</div>
+                                    ) : (
+                                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                                            <ReactMarkdown
+                                                components={{
+                                                    p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                                                    h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2">{children}</h1>,
+                                                    h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-2">{children}</h2>,
+                                                    h3: ({ children }) => <h3 className="font-semibold mt-2 mb-1">{children}</h3>,
+                                                    ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-3">{children}</ul>,
+                                                    ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-3">{children}</ol>,
+                                                    li: ({ children }) => <li>{children}</li>,
+                                                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                                                    code: ({ children }) => <code className="bg-gray-200 dark:bg-[#2a2f3a] px-1.5 py-0.5 rounded text-xs">{children}</code>,
+                                                }}
+                                            >
+                                                {m.content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {m.role === 'user' && (
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-[#2a2f3a] flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        {userName[0]?.toUpperCase()}
+                                    </div>
                                 )}
                             </div>
+                        ))}
 
-                            <button
-                                onClick={() => {
-                                    router.push('/dashboard/trades/chat/history');
-                                    setShowHistoryMenu(false);
-                                }}
-                                className="w-full p-3 text-sm font-medium text-center text-blue-400 hover:bg-white/10 hover:text-blue-300 border-t border-white/10 transition-colors active:bg-white/20"
-                            >
-                                View all conversations →
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Messages Area - Centered */}
-            <div className="flex-1 overflow-y-auto py-6 space-y-6 pb-40 flex flex-col items-center">
-                <div className="w-full max-w-4xl px-4 sm:px-6 md:px-8">
-                    {messages.map((m: any) => (
-                        <div
-                            key={m.id}
-                            className={cn(
-                                "flex gap-4 mb-6",
-                                m.role === 'user' ? "justify-end" : "justify-start"
-                            )}
-                        >
-                            {m.role === 'assistant' && (
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                        {isLoading && (
+                            <div className="flex gap-4">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
                                     AI
                                 </div>
-                            )}
-
-                            <div className={cn(
-                                "max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg",
-                                m.role === 'user'
-                                    ? "bg-white/10 text-white"
-                                    : "bg-gray-800/70 text-white"
-                            )}>
-                                {m.role === 'user' ? (
-                                    <div className="whitespace-pre-wrap text-white">{m.content}</div>
-                                ) : (
-                                    <div className="text-white space-y-4 [&_p]:mb-4 [&_li]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
-                                        <ReactMarkdown
-                                            components={{
-                                                p: ({ children }) => <p className="text-white leading-relaxed">{children}</p>,
-                                                h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-4 mb-3">{children}</h1>,
-                                                h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
-                                                h3: ({ children }) => <h3 className="font-semibold text-white mt-2 mb-2">{children}</h3>,
-                                                ul: ({ children }) => <ul className="list-disc list-inside text-white space-y-1">{children}</ul>,
-                                                ol: ({ children }) => <ol className="list-decimal list-inside text-white space-y-1">{children}</ol>,
-                                                li: ({ children }) => <li className="text-white">{children}</li>,
-                                                strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
-                                                em: ({ children }) => <em className="italic text-white">{children}</em>,
-                                                code: ({ children }) => <code className="bg-gray-700 text-white px-2 py-1 rounded text-xs">{children}</code>,
-                                            }}
-                                        >
-                                            {m.content}
-                                        </ReactMarkdown>
+                                <div className="bg-gray-100 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] px-4 py-3 rounded-2xl">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Thinking...
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="flex gap-4">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-xs font-bold text-red-500">
+                                    !
+                                </div>
+                                <div className="text-sm text-red-500 bg-red-50 dark:bg-red-500/10 px-4 py-3 rounded-2xl">
+                                    An error occurred. Please try again.
+                                </div>
+                            </div>
+                        )}
+
+                        <div ref={scrollRef} />
+                    </div>
+                )}
+            </div>
+
+            {/* Input Area (when in conversation) */}
+            {!isEmptyChat && (
+                <div className="flex-shrink-0 border-t border-gray-200 dark:border-[#2a2f3a] bg-white dark:bg-[#0D1117] p-4">
+                    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+                        <div className="relative flex items-center">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={handleInputChange}
+                                placeholder="Type your message..."
+                                className="w-full px-4 py-3 pr-12 bg-gray-50 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSubmit(e as any);
+                                    }
+                                }}
+                            />
+                            <div className="absolute right-2">
+                                {isLoading ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => stop()}
+                                        className="p-2 text-gray-400 hover:text-red-500 transition"
+                                        title="Stop"
+                                    >
+                                        <StopCircle className="w-5 h-5" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="submit"
+                                        disabled={!input.trim()}
+                                        className={cn(
+                                            "p-2 rounded-lg transition",
+                                            input.trim()
+                                                ? "bg-blue-500 text-white hover:bg-blue-600"
+                                                : "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <Send className="w-5 h-5" />
+                                    </button>
                                 )}
                             </div>
-
-                            {m.role === 'user' && (
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
-                                    U
-                                </div>
-                            )}
                         </div>
-                    ))}
-
-                    {isLoading && (
-                        <div className="flex gap-4 animate-in fade-in duration-300 mb-6">
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
-                                AI
-                            </div>
-                            <div className="max-w-2xl text-sm leading-relaxed font-semibold px-4 py-3 rounded-lg bg-gray-800/70 text-white">
-                                <div className="flex items-center gap-3">
-                                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                                    <span>Generating response...</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {error && (
-                        <div className="flex gap-4 mb-6">
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-xs font-bold text-red-400">
-                                !
-                            </div>
-                            <div className="text-sm text-red-400">
-                                An error occurred. Please try again.
-                            </div>
-                        </div>
-                    )}
-
-                    <div ref={scrollRef} />
+                    </form>
                 </div>
-            </div>
-
-            {/* Input Area - Sticks to Bottom & Centered */}
-            <div className="flex-shrink-0 border-t border-white/5 bg-[#0D0D0D] py-4 flex justify-center">
-                <form onSubmit={handleSubmit} className="relative flex items-center justify-center w-full max-w-2xl">
-                    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#1A1A1A]/80 shadow-[0_0_20px_rgba(0,0,0,0.3)] backdrop-blur-xl transition hover:border-white/20 focus-within:border-white/30">
-                        <textarea
-                            className="w-full min-h-[44px] max-h-[120px] bg-transparent text-white px-5 py-4 text-[15px] focus:outline-none resize-none placeholder:text-gray-500 custom-scrollbar"
-                            value={input}
-                            onChange={handleInputChange}
-                            placeholder="Ask detailed questions about your trading..."
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSubmit(e as any);
-                                }
-                            }}
-                        />
-                        <div className="absolute right-2 bottom-2">
-                            {isLoading ? (
-                                <button
-                                    type="button"
-                                    onClick={() => stop()}
-                                    className="p-2 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all"
-                                    title="Stop generating"
-                                >
-                                    <StopCircle className="w-5 h-5" />
-                                </button>
-                            ) : (
-                                <button
-                                    type="submit"
-                                    disabled={!input.trim() || isLoading}
-                                    className={cn(
-                                        "p-2 rounded-xl transition-all duration-200",
-                                        input.trim()
-                                            ? "bg-white text-black hover:scale-105 active:scale-95 shadow-lg shadow-white/10"
-                                            : "text-white/20 cursor-not-allowed"
-                                    )}
-                                    title="Send message"
-                                >
-                                    <Send className="w-5 h-5" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </form>
-            </div>
+            )}
         </div>
     );
 }
