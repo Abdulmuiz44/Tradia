@@ -123,9 +123,9 @@ export default function UpgradePage() {
 
     if (status === "loading" || loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-[#061226]">
+            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-[#0f1319]">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 animate-spin text-indigo-500" />
+                    <Loader2 className="w-12 h-12 animate-spin text-black dark:text-white" />
                     <p className="text-gray-600 dark:text-gray-400">Loading...</p>
                 </div>
             </div>
@@ -157,7 +157,7 @@ export default function UpgradePage() {
                     </h1>
                     <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl">
                         You&apos;re currently on the{" "}
-                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                        <span className="font-semibold text-black dark:text-white">
                             {getPlanDisplayName(currentPlan)}
                         </span>{" "}
                         plan. Unlock more advanced features and trading insights.
@@ -166,11 +166,11 @@ export default function UpgradePage() {
 
                 {/* Billing Toggle */}
                 <div className="mb-12 flex justify-center">
-                    <div className="inline-flex rounded-full bg-gray-200 dark:bg-[#0f1319] p-1">
+                    <div className="inline-flex rounded-full bg-gray-200 dark:bg-gray-800 p-1 border border-gray-300 dark:border-gray-700">
                         <button
                             onClick={() => setBillingCycle("monthly")}
                             className={`px-6 py-2 rounded-full font-semibold transition-all ${billingCycle === "monthly"
-                                ? "bg-indigo-600 text-white shadow-lg"
+                                ? "bg-white dark:bg-white text-black shadow-lg"
                                 : "text-gray-700 dark:text-gray-300"
                                 }`}
                         >
@@ -179,7 +179,7 @@ export default function UpgradePage() {
                         <button
                             onClick={() => setBillingCycle("yearly")}
                             className={`px-6 py-2 rounded-full font-semibold transition-all ${billingCycle === "yearly"
-                                ? "bg-indigo-600 text-white shadow-lg"
+                                ? "bg-white dark:bg-white text-black shadow-lg"
                                 : "text-gray-700 dark:text-gray-300"
                                 }`}
                         >
@@ -198,14 +198,14 @@ export default function UpgradePage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                                 className={`relative rounded-2xl border-2 transition-all duration-300 overflow-hidden ${plan.badge === "Most Popular"
-                                    ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 shadow-2xl scale-105"
-                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f1319]/50 hover:border-indigo-300 dark:hover:border-indigo-600"
+                                    ? "border-black dark:border-white bg-gray-50 dark:bg-gray-900 shadow-2xl scale-105"
+                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f1319]/50 hover:border-gray-400 dark:hover:border-gray-500"
                                     }`}
                             >
                                 {/* Badge */}
                                 {plan.badge && (
                                     <div className="absolute top-4 right-4">
-                                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-indigo-600 text-white">
+                                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-black dark:bg-white text-white dark:text-black">
                                             {plan.badge}
                                         </span>
                                     </div>
@@ -214,10 +214,10 @@ export default function UpgradePage() {
                                 <div className="p-8">
                                     {/* Icon & Name */}
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
+                                        <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-black dark:text-white">
                                             {plan.icon}
                                         </div>
-                                        <h3 className="text-2xl font-bold">{plan.name}</h3>
+                                        <h3 className="text-2xl font-bold text-black dark:text-white">{plan.name}</h3>
                                     </div>
 
                                     {/* Price */}
@@ -234,7 +234,7 @@ export default function UpgradePage() {
                                             </span>
                                         </div>
                                         {billingCycle === "yearly" && (
-                                            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                                 Save ${Math.round(plan.price * 12 * 0.2)}/year
                                             </p>
                                         )}
@@ -245,7 +245,7 @@ export default function UpgradePage() {
                                         {plan.features.map((feature) => (
                                             <li key={feature} className="flex items-start gap-3">
                                                 <svg
-                                                    className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+                                                    className="w-5 h-5 text-black dark:text-white flex-shrink-0 mt-0.5"
                                                     fill="currentColor"
                                                     viewBox="0 0 20 20"
                                                 >
@@ -255,7 +255,7 @@ export default function UpgradePage() {
                                                         clipRule="evenodd"
                                                     />
                                                 </svg>
-                                                <span className="font-semibold text-gray-900 dark:text-white">
+                                                <span className="font-medium text-gray-900 dark:text-white">
                                                     {feature}
                                                 </span>
                                             </li>
@@ -267,8 +267,8 @@ export default function UpgradePage() {
                                         onClick={() => handleUpgrade(plan.type)}
                                         disabled={upgrading}
                                         className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${plan.badge === "Most Popular"
-                                            ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
-                                            : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
+                                            ? "bg-white text-black hover:bg-gray-100 border-2 border-black shadow-lg"
+                                            : "bg-gray-100 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
                                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                                     >
                                         {upgrading ? (
@@ -288,8 +288,8 @@ export default function UpgradePage() {
                         ))
                     ) : (
                         <div className="col-span-full text-center py-12">
-                            <Crown className="w-16 h-16 mx-auto mb-4 text-indigo-600 dark:text-indigo-400" />
-                            <h3 className="text-2xl font-bold mb-2">You&apos;re All Set!</h3>
+                            <Crown className="w-16 h-16 mx-auto mb-4 text-black dark:text-white" />
+                            <h3 className="text-2xl font-bold mb-2 text-black dark:text-white">You&apos;re All Set!</h3>
                             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                                 You&apos;re already on our highest plan. Enjoy all the premium features!
                             </p>
@@ -323,7 +323,7 @@ export default function UpgradePage() {
                         ].map((item, index) => (
                             <details
                                 key={index}
-                                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors"
+                                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-white dark:bg-gray-900"
                             >
                                 <summary className="font-semibold cursor-pointer flex items-center justify-between">
                                     {item.q}
