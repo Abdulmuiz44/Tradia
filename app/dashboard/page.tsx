@@ -454,19 +454,21 @@ function DashboardContent() {
             <SurveyPrompt isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} />
             <div className="flex min-h-screen max-w-full">
                 {/* Desktop Sidebar */}
-                <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[var(--surface-secondary)] dark:lg:bg-[#161B22] lg:border-r lg:border-[var(--surface-border)] dark:lg:border-[#2a2f3a]">
+                <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[#0D1117] lg:border-r lg:border-[#2a2f3a]">
                     <div className="flex flex-col h-full sticky top-0">
                         {/* Logo/Brand */}
-                        <div className="flex items-center gap-3 p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-transparent">
-                            <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
+                        <div className="flex items-center gap-3 p-5 border-b border-[#2a2f3a]">
+                            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                                <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={20} height={20} className="h-5 w-auto" priority />
+                            </div>
                             <div>
-                                <h1 className="text-slate-900 dark:text-white font-extrabold text-lg tracking-tight">Tradia</h1>
-                                <p className="text-slate-500 dark:text-gray-300 text-xs">Trading Dashboard</p>
+                                <h1 className="text-white font-bold text-lg tracking-tight">Tradia</h1>
+                                <p className="text-gray-500 text-xs">Trading Dashboard</p>
                             </div>
                         </div>
 
                         {/* Navigation */}
-                        <div className="flex-1 p-4 overflow-y-auto bg-[var(--surface-secondary)] dark:bg-transparent">
+                        <div className="flex-1 p-3 overflow-y-auto">
                             <DashboardSidebar
                                 tabs={TAB_DEFS}
                                 activeTab={activeTab}
@@ -581,43 +583,37 @@ function DashboardContent() {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col min-h-0 min-w-0">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] text-[var(--text-primary)] dark:bg-[#0D1117] dark:text-white overflow-x-auto">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117] text-white">
+                        <div className="flex items-center gap-4">
                             {/* Mobile menu button */}
                             <button
-                                className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] dark:text-white dark:hover:bg-[#0f1319]/80 transition-colors"
+                                className="lg:hidden p-2 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white hover:bg-[#1c2128] transition-colors"
                                 onClick={() => setMobileMenuOpen(true)}
                                 aria-label="Open Menu"
                             >
                                 <Menu size={20} />
                             </button>
-                            <div className="flex-1">
-                                <h1 className="text-lg md:text-xl font-semibold text-[var(--text-primary)] dark:text-white">{currentTabLabel}</h1>
-                                <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
-                                    {activeTab === "chat" ? 'Your personal trading coach with voice support' :
-                                        activeTab === "overview" ? 'Comprehensive trading overview and key metrics' :
-                                            activeTab === "analytics" ? 'Detailed performance analytics and insights' :
-                                                activeTab === "tradia-predict" ? 'AI-powered market predictions using OpenAI GPT-4 to forecast next market direction' :
-                                                    activeTab === "user-analytics" ? 'Admin-only user analytics and backend metrics' :
-                                                        `Manage your ${currentTabLabel.toLowerCase()}`}
-                                </p>
-                                {/* Admin Status Indicator */}
-                                <div className="flex items-center gap-2 mt-1">
-                                    <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-green-500' : 'bg-slate-400 dark:bg-gray-500'}`}></div>
-                                    <span className="text-xs text-[var(--text-secondary)] dark:text-white">
-                                        {isAdmin ? 'Admin Access' : 'Standard Access'}
-                                    </span>
-                                </div>
-                                {/* Account Switcher - Show on Overview Tab */}
-                                {activeTab === 'overview' && (
-                                    <div className="mt-3 max-w-sm">
-                                        <AccountSwitcher />
-                                    </div>
-                                )}
+
+                            {/* Account Switcher - Always visible on left */}
+                            <div className="hidden sm:block">
+                                <AccountSwitcher />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 overflow-x-auto">
+                        <div className="flex-1 mx-4 hidden md:block">
+                            <h1 className="text-lg md:text-xl font-semibold text-white">{currentTabLabel}</h1>
+                            <p className="text-gray-400 text-xs sm:text-sm">
+                                {activeTab === "chat" ? 'Your personal trading coach with voice support' :
+                                    activeTab === "overview" ? 'Comprehensive trading overview and key metrics' :
+                                        activeTab === "analytics" ? 'Detailed performance analytics and insights' :
+                                            activeTab === "tradia-predict" ? 'AI-powered market predictions using OpenAI GPT-4' :
+                                                activeTab === "user-analytics" ? 'Admin-only user analytics and backend metrics' :
+                                                    `Manage your ${currentTabLabel.toLowerCase()}`}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+
                             {/* Theme toggle */}
                             <button
                                 onClick={() => {

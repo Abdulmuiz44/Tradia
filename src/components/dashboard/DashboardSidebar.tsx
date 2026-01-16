@@ -21,6 +21,7 @@ import {
   Users,
   Settings,
   Brain,
+  FileText,
 } from "lucide-react";
 
 interface TabDef {
@@ -56,6 +57,7 @@ const iconMap = {
   Users,
   Settings,
   Brain,
+  FileText,
 };
 
 export default function DashboardSidebar({
@@ -74,33 +76,36 @@ export default function DashboardSidebar({
     }
   };
 
-  const sidebarClasses = `${isMobile ? "flex flex-col gap-2" : "flex flex-col gap-1"} dashboard-sidebar`;
-
   return (
-    <nav className={sidebarClasses}>
+    <nav className={`flex flex-col ${isMobile ? "gap-1" : "gap-0.5"}`}>
       {tabs.map((tab) => {
         const IconComponent = iconMap[tab.icon as keyof typeof iconMap] || BarChart3;
         const isActive = activeTab === tab.value;
 
-        const buttonClasses = [
-          "group",
-          "dashboard-sidebar__item",
-          "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-          isMobile ? "w-full justify-start text-xs" : "w-full justify-start text-sm",
-          "hover:bg-gray-100 hover:text-black dark:hover:bg-gray-200 dark:hover:text-black", // Force black text on hover
-          isActive ? "is-active bg-black text-white dark:bg-white dark:text-black" : "text-gray-600 dark:text-gray-400",
-        ]
-          .filter(Boolean)
-          .join(" ");
+        const baseClasses = [
+          "group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+          isMobile ? "w-full text-sm" : "w-full text-sm",
+        ];
+
+        const stateClasses = isActive
+          ? "bg-white text-gray-900 shadow-sm"
+          : "text-gray-400 hover:text-white hover:bg-[#1c2128]";
+
+        const buttonClasses = [...baseClasses, stateClasses].join(" ");
 
         const buttonContent = (
           <>
-            <IconComponent className="w-5 h-5 transition-colors dashboard-sidebar__icon" />
-            <span className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${isActive
+                ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md"
+                : "bg-[#2a2f3a]/50 group-hover:bg-[#2a2f3a]"
+              }`}>
+              <IconComponent className="w-4 h-4" />
+            </div>
+            <span className={`font-medium flex-1 ${isActive ? "text-gray-900" : ""}`}>
               {tab.label}
             </span>
             {isActive && (
-              <div className="ml-auto dashboard-sidebar__indicator animate-pulse" />
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
             )}
           </>
         );
