@@ -4,22 +4,15 @@
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { signIn } from "next-auth/react";
-// Client-only Navbar/Footer to prevent SSR hydration issues
+import { Shield, Zap, TrendingUp, Lock } from "lucide-react";
+
 const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
 const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
-
-/**
- * app/login/page.tsx
- *
- * - Keeps original form logic and behavior exactly (remember-me, localStorage, submit flow).
- * - Redesigned to match landing page look & feel (dark glass panels, consistent spacing).
- * - Fixed robustness issues around localStorage access and fetch error handling.
- * - Do NOT add any leading/trailing non-code text when pasting this file into your project.
- */
 
 function LoginPage(): React.ReactElement {
   const router = useRouter();
@@ -28,8 +21,9 @@ function LoginPage(): React.ReactElement {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Load remembered email from cookie (no localStorage)
+  // Load remembered email from cookie
   useEffect(() => {
     try {
       if (typeof document !== "undefined") {
@@ -41,7 +35,7 @@ function LoginPage(): React.ReactElement {
         }
       }
     } catch {
-      // ignore cookie access errors
+      // ignore
     }
   }, []);
 
@@ -56,10 +50,8 @@ function LoginPage(): React.ReactElement {
     try {
       if (typeof document !== "undefined") {
         if (newVal && form.email) {
-          // Set cookie for 30 days
           document.cookie = `tradia_remember_email=${encodeURIComponent(form.email)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
         } else {
-          // Clear cookie
           document.cookie = "tradia_remember_email=; path=/; max-age=0";
         }
       }
@@ -74,7 +66,7 @@ function LoginPage(): React.ReactElement {
         document.cookie = `tradia_remember_email=${encodeURIComponent(form.email)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
       }
     } catch {
-      // ignore cookie errors
+      // ignore
     }
   }, [form.email, remember]);
 
@@ -96,7 +88,6 @@ function LoginPage(): React.ReactElement {
       });
 
       if (result?.ok) {
-        // Remember email if chosen (via cookie)
         try {
           if (typeof document !== "undefined") {
             if (remember) {
@@ -108,8 +99,6 @@ function LoginPage(): React.ReactElement {
         } catch {
           // ignore
         }
-
-        // Success - navigate to overview dashboard (allow data to sync)
         router.push("/dashboard/overview");
       } else {
         setError(result?.error || "Login failed.");
@@ -122,153 +111,192 @@ function LoginPage(): React.ReactElement {
     }
   };
 
+  const features = [
+    { icon: Shield, title: "Bank-Level Security", desc: "256-bit encryption protects your data" },
+    { icon: Zap, title: "Instant AI Insights", desc: "Get trade analysis in seconds" },
+    { icon: TrendingUp, title: "Performance Tracking", desc: "Monitor your edge over time" },
+  ];
+
   return (
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-white text-black dark:bg-[#0f1319] dark:text-gray-100 transition-colors flex items-center justify-center py-12 px-4">
+      <main className="min-h-screen bg-[#0a0d12] flex items-center justify-center py-16 px-4">
         <motion.div
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="w-full max-w-3xl"
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="w-full max-w-5xl"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            {/* Left — marketing / reassurance (matches landing visual style) */}
-            <aside className="hidden md:flex flex-col justify-between rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm">
-              <div>
-                <h1 className="text-2xl font-extrabold leading-tight text-black dark:text-white">Welcome back to Tradia</h1>
-                <p className="mt-3 text-gray-700 dark:text-gray-300">
-                  Sign in to access your dashboard, upload trade history, and get instant AI trade reviews.
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-2xl border border-[#2a2f3a] shadow-2xl">
+
+            {/* Left Panel - Branding */}
+            <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-[#0D1117] via-[#161B22] to-[#0D1117] relative overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-0 left-0 w-full h-full" style={{
+                  backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+                                   radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.3) 0%, transparent 50%)`
+                }} />
+              </div>
+
+              <div className="relative z-10">
+                {/* Logo */}
+                <div className="flex items-center gap-3 mb-12">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <Image src="/TRADIA-LOGO.png" alt="Tradia" width={24} height={24} className="w-6 h-6" />
+                  </div>
+                  <span className="text-xl font-bold text-white">Tradia</span>
+                </div>
+
+                {/* Welcome Text */}
+                <h1 className="text-3xl font-bold text-white mb-3">
+                  Welcome back
+                </h1>
+                <p className="text-gray-400 text-lg mb-10">
+                  Sign in to continue your trading journey with AI-powered insights.
                 </p>
 
-                <ul className="mt-6 space-y-3">
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-700/10 flex items-center justify-center text-indigo-700 dark:text-indigo-300">✓</span>
-                    <div>
-                      <div className="font-medium text-black dark:text-white">Secure & private</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">All data encrypted and for your eyes only.</div>
+                {/* Features */}
+                <div className="space-y-6">
+                  {features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-[#2a2f3a] flex items-center justify-center flex-shrink-0">
+                        <feature.icon className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{feature.title}</div>
+                        <div className="text-sm text-gray-500">{feature.desc}</div>
+                      </div>
                     </div>
-                  </li>
-
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-700/10 flex items-center justify-center text-indigo-700 dark:text-indigo-300">⚡</span>
-                    <div>
-                      <div className="font-medium text-black dark:text-white">Fast insights</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Upload CSV or add trades manually and get instant feedback.</div>
-                    </div>
-                  </li>
-                </ul>
+                  ))}
+                </div>
               </div>
 
-              <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
-                New here?{" "}
-                <Link href="/signup" className="text-indigo-700 dark:text-indigo-300 hover:underline">
-                  Create an account
-                </Link>
-                {" — "}or view plans{" "}
-                <Link href="/pricing" className="text-indigo-700 dark:text-indigo-300 hover:underline">
-                  here
-                </Link>
-                .
+              {/* Bottom CTA */}
+              <div className="relative z-10 pt-10 border-t border-[#2a2f3a] mt-10">
+                <p className="text-gray-500 text-sm">
+                  New to Tradia?{" "}
+                  <Link href="/signup" className="text-blue-400 hover:text-blue-300 transition font-medium">
+                    Create an account
+                  </Link>
+                </p>
               </div>
-            </aside>
+            </div>
 
-            {/* Right — form */}
-            <section className="rounded-2xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gradient-to-br dark:from-black/20 dark:to-white/5 p-8 dark:backdrop-blur-sm shadow-lg dark:shadow-2xl">
-              <h2 className="text-3xl font-bold text-black dark:text-white">Sign in to Tradia</h2>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Enter your credentials to continue to your dashboard.</p>
+            {/* Right Panel - Form */}
+            <div className="p-10 bg-[#0D1117]">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-white mb-2">Sign in to your account</h2>
+                <p className="text-gray-500">Enter your credentials to access your dashboard</p>
+              </div>
 
               {error && (
-                <div className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 p-3 rounded-md text-sm">
+                <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs">!</span>
+                  </div>
                   {error}
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
-                <label className="block">
-                  <span className="text-sm font-medium text-black dark:text-gray-300">Email</span>
+              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Email address</label>
                   <input
                     type="email"
                     name="email"
                     value={form.email}
                     onChange={handleChange}
-                    placeholder="name@domain.com"
-                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                    placeholder="name@company.com"
+                    className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                     required
-                    aria-label="Email Address"
                   />
-                </label>
+                </div>
 
-                <label className="block">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-black dark:text-gray-300">Password</span>
-                    <Link href="/forgot-password" className="text-sm text-indigo-700 dark:text-indigo-300 hover:underline">
-                      Forgot?
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-400">Password</label>
+                    <Link href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300 transition">
+                      Forgot password?
                     </Link>
                   </div>
-                  <input
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    placeholder="Your password"
-                    className="mt-2 w-full p-3 rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-transparent text-black dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-                    required
-                    aria-label="Password"
-                  />
-                </label>
-
-                <div className="flex items-center justify-between text-sm">
-                  <label className="inline-flex items-center gap-2">
+                  <div className="relative">
                     <input
-                      type="checkbox"
-                      checked={remember}
-                      onChange={toggleRemember}
-                      className="h-4 w-4 rounded bg-white dark:bg-transparent border-gray-400 dark:border-white/10 checked:bg-indigo-600 dark:checked:bg-indigo-500 checked:border-indigo-600 dark:checked:border-indigo-500"
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-12"
+                      required
                     />
-                    <span className="text-sm text-black dark:text-gray-300">Remember me</span>
-                  </label>
-
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
-                    Need help?{" "}
-                    <Link href="/signup" className="text-indigo-700 dark:text-indigo-300 hover:underline">
-                      Contact support
-                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-400 transition"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
                   </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    checked={remember}
+                    onChange={toggleRemember}
+                    className="w-4 h-4 rounded bg-[#161B22] border-[#2a2f3a] text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                  <label htmlFor="remember" className="text-sm text-gray-400">
+                    Remember me for 30 days
+                  </label>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-white hover:bg-gray-200 text-black rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed border border-gray-300"
+                  className="w-full py-3.5 bg-white hover:bg-gray-100 text-black rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
                 </button>
               </form>
 
-              <div className="my-4 flex items-center">
-                <div className="flex-1 h-px bg-gray-300 dark:bg-white/6" />
-                <div className="px-3 text-xs text-gray-600 dark:text-gray-400">OR</div>
-                <div className="flex-1 h-px bg-gray-300 dark:bg-white/6" />
+              <div className="my-6 flex items-center gap-4">
+                <div className="flex-1 h-px bg-[#2a2f3a]" />
+                <span className="text-xs text-gray-600 uppercase tracking-wider">or continue with</span>
+                <div className="flex-1 h-px bg-[#2a2f3a]" />
               </div>
 
               <button
-                onClick={async () => { try { await signIn("google", { callbackUrl: "/dashboard/overview" }); } catch (e) { setError(e instanceof Error ? e.message : "Google sign-in failed"); } }}
-                className="w-full flex items-center justify-center gap-3 py-3 border-2 border-black dark:border-white rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition text-black dark:text-white font-semibold"
-                aria-label="Continue with Google"
+                onClick={async () => {
+                  try {
+                    await signIn("google", { callbackUrl: "/dashboard/overview" });
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Google sign-in failed");
+                  }
+                }}
+                className="w-full py-3.5 border border-[#2a2f3a] rounded-lg hover:bg-[#161B22] transition flex items-center justify-center gap-3 text-white font-medium"
               >
                 <FcGoogle size={20} />
-                <span>Continue with Google</span>
+                <span>Google</span>
               </button>
 
-              <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-8 text-center text-sm text-gray-500 lg:hidden">
                 Don&apos;t have an account?{" "}
-                <Link href="/signup" className="text-indigo-700 dark:text-indigo-300 hover:underline">
-                  Create one
+                <Link href="/signup" className="text-blue-400 hover:text-blue-300 transition font-medium">
+                  Sign up
                 </Link>
               </p>
-            </section>
+            </div>
           </div>
         </motion.div>
       </main>
@@ -278,5 +306,4 @@ function LoginPage(): React.ReactElement {
   );
 }
 
-// Export as client-only to eliminate SSR/CSR DOM mismatches on this page
 export default dynamic(() => Promise.resolve(LoginPage), { ssr: false });
