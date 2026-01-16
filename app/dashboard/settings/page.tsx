@@ -51,25 +51,31 @@ export default function SettingsPage() {
   });
 
   const [saving, setSaving] = useState(false);
-  const [riskControls, setRiskControls] = useState<{ maxDailyLossUSD: number; maxTradesPerDay: number; breakAfterConsecutiveLosses: number; enforceBlocks: boolean }>(() => {
-    try {
-      const raw = localStorage.getItem('riskControls');
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return { maxDailyLossUSD: 25, maxTradesPerDay: 4, breakAfterConsecutiveLosses: 3, enforceBlocks: false };
+  const [riskControls, setRiskControls] = useState<{ maxDailyLossUSD: number; maxTradesPerDay: number; breakAfterConsecutiveLosses: number; enforceBlocks: boolean }>({
+    maxDailyLossUSD: 25,
+    maxTradesPerDay: 4,
+    breakAfterConsecutiveLosses: 3,
+    enforceBlocks: false
   });
 
   useEffect(() => {
     loadSettings();
   }, []);
 
-  const loadSettings = () => {
+  const loadSettings = async () => {
     try {
-      const savedSettings = localStorage.getItem('userSettings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        if (parsed && typeof parsed === 'object') {
-          setSettings(prev => ({ ...prev, ...parsed }));
+      // Load from API (no localStorage)
+      const res = await fetch('/api/user/settings');
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.settings) {
+          const parsed = data.settings;
+          if (parsed && typeof parsed === 'object') {
+            setSettings(prev => ({ ...prev, ...parsed }));
+            if (parsed.riskControls) {
+              setRiskControls(prev => ({ ...prev, ...parsed.riskControls }));
+            }
+          }
         }
       }
     } catch (error) {
@@ -80,9 +86,13 @@ export default function SettingsPage() {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      // Save to localStorage
-      localStorage.setItem('userSettings', JSON.stringify(settings));
-      localStorage.setItem('riskControls', JSON.stringify(riskControls));
+      // Save to API (no localStorage)
+      const payload = { ...settings, riskControls };
+      await fetch('/api/user/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: payload })
+      });
 
       // Apply theme immediately
       applyTheme(settings.theme);
@@ -117,9 +127,6 @@ export default function SettingsPage() {
           : (value as any)
       } as UserSettings;
 
-      // Persist immediately so other components reflect changes
-      try { localStorage.setItem('userSettings', JSON.stringify(next)); } catch {}
-
       // Apply theme instantly when changed
       if (section === 'theme' && key === 'theme') {
         applyTheme(value as string);
@@ -143,7 +150,7 @@ export default function SettingsPage() {
   }
 
   return (
-  <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
+    <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -177,11 +184,10 @@ export default function SettingsPage() {
                       <button
                         key={theme.value}
                         onClick={() => updateSetting('theme', 'theme', theme.value)}
-                        className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                          settings.theme === theme.value
+                        className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${settings.theme === theme.value
                             ? 'border-blue-500 bg-blue-600'
                             : 'border-gray-600 hover:border-gray-500'
-                        }`}
+                          }`}
                       >
                         <Icon className="w-5 h-5" />
                         <span>{theme.label}</span>
@@ -231,10 +237,10 @@ export default function SettingsPage() {
 
           {/* Notification Settings */}
           <div className="bg-[#15202B] rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Bell className="w-6 h-6" />
-          Notifications
-          </h2>
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Bell className="w-6 h-6" />
+              Notifications
+            </h2>
 
             <div className="space-y-4">
               {[
@@ -264,10 +270,10 @@ export default function SettingsPage() {
 
           {/* Privacy Settings */}
           <div className="bg-[#15202B] rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Shield className="w-6 h-6" />
-          Privacy & Analytics
-          </h2>
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Shield className="w-6 h-6" />
+              Privacy & Analytics
+            </h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
@@ -290,9 +296,9 @@ export default function SettingsPage() {
 
           {/* Risk Controls */}
           <div className="bg-[#15202B] rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Shield className="w-6 h-6" />
-          Risk Controls
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Shield className="w-6 h-6" />
+              Risk Controls
             </h2>
 
             <FeatureLock requiredPlan={plan === 'starter' ? 'plus' : undefined}>
@@ -302,7 +308,7 @@ export default function SettingsPage() {
                   <input
                     type="number"
                     value={riskControls.maxDailyLossUSD}
-                    onChange={(e)=> setRiskControls(prev => ({...prev, maxDailyLossUSD: Number(e.target.value)}))}
+                    onChange={(e) => setRiskControls(prev => ({ ...prev, maxDailyLossUSD: Number(e.target.value) }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -311,7 +317,7 @@ export default function SettingsPage() {
                   <input
                     type="number"
                     value={riskControls.maxTradesPerDay}
-                    onChange={(e)=> setRiskControls(prev => ({...prev, maxTradesPerDay: Number(e.target.value)}))}
+                    onChange={(e) => setRiskControls(prev => ({ ...prev, maxTradesPerDay: Number(e.target.value) }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -320,7 +326,7 @@ export default function SettingsPage() {
                   <input
                     type="number"
                     value={riskControls.breakAfterConsecutiveLosses}
-                    onChange={(e)=> setRiskControls(prev => ({...prev, breakAfterConsecutiveLosses: Number(e.target.value)}))}
+                    onChange={(e) => setRiskControls(prev => ({ ...prev, breakAfterConsecutiveLosses: Number(e.target.value) }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -329,7 +335,7 @@ export default function SettingsPage() {
                     id="enforceBlocks"
                     type="checkbox"
                     checked={riskControls.enforceBlocks}
-                    onChange={(e)=> setRiskControls(prev => ({...prev, enforceBlocks: e.target.checked}))}
+                    onChange={(e) => setRiskControls(prev => ({ ...prev, enforceBlocks: e.target.checked }))}
                     className="h-4 w-4"
                   />
                   <label htmlFor="enforceBlocks" className="text-sm text-gray-300">Strong warnings (Pro/Elite)</label>

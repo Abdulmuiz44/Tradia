@@ -25,10 +25,11 @@ export default function ExitIntent() {
 
   useEffect(() => {
     try {
-      const stored = Number(localStorage.getItem("tradia_session_streak")) || 0;
+      // Use sessionStorage for session-only streak (no localStorage)
+      const stored = Number(sessionStorage.getItem("tradia_session_streak")) || 0;
       const next = Math.max(1, stored + 1);
       setStreak(next);
-      localStorage.setItem("tradia_session_streak", String(next));
+      sessionStorage.setItem("tradia_session_streak", String(next));
     } catch { }
   }, []);
 

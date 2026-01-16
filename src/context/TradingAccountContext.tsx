@@ -37,11 +37,11 @@ export function TradingAccountProvider({ children }: { children: React.ReactNode
         current_balance: m.current_balance ?? null, mode: 'manual'
       }));
       setAccounts(list);
-      // ensure selection
-      const persisted = typeof window !== 'undefined' ? localStorage.getItem('selected-trading-account') : null;
+      // Use sessionStorage for session-scoped account selection (no localStorage)
+      const persisted = typeof window !== 'undefined' ? sessionStorage.getItem('selected-trading-account') : null;
       const initial = (persisted && list.find(a => a.id === persisted)) ? persisted : (list[0]?.id ?? null);
       setSelectedId(initial);
-      if (typeof window !== 'undefined') localStorage.setItem('selected-trading-account', initial ?? '');
+      if (typeof window !== 'undefined') sessionStorage.setItem('selected-trading-account', initial ?? '');
     } catch {
       setAccounts([]);
     }
@@ -49,7 +49,7 @@ export function TradingAccountProvider({ children }: { children: React.ReactNode
 
   const select = (id: string | null) => {
     setSelectedId(id);
-    try { if (typeof window !== 'undefined') localStorage.setItem('selected-trading-account', id ?? ''); } catch {}
+    try { if (typeof window !== 'undefined') sessionStorage.setItem('selected-trading-account', id ?? ''); } catch { }
   };
 
   const createManual: Ctx['createManual'] = async (input) => {

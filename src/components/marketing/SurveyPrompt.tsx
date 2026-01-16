@@ -47,7 +47,8 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
 
   useEffect(() => {
     if (!isOpen) return;
-    try { localStorage.setItem("survey_last_open", String(Date.now())); } catch {}
+    // Use sessionStorage for session-only tracking (no localStorage)
+    try { sessionStorage.setItem("survey_last_open", String(Date.now())); } catch { }
   }, [isOpen]);
 
 
@@ -61,26 +62,26 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-  const sessionDuration = Math.floor((Date.now() - sessionStart) / 1000); // seconds
+    e.preventDefault();
+    try {
+      const sessionDuration = Math.floor((Date.now() - sessionStart) / 1000); // seconds
 
-  // Use Supabase client to insert into user_feedback table
-  const supabase = (await import("@supabase/auth-helpers-nextjs")).createClientComponentClient();
-  const user = await supabase.auth.getUser();
-  const uid = user?.data?.user?.id ?? null;
-  const userEmail = user?.data?.user?.email ?? null;
+      // Use Supabase client to insert into user_feedback table
+      const supabase = (await import("@supabase/auth-helpers-nextjs")).createClientComponentClient();
+      const user = await supabase.auth.getUser();
+      const uid = user?.data?.user?.id ?? null;
+      const userEmail = user?.data?.user?.email ?? null;
 
-  const feedbackData = {
-  user_id: uid,
-  user_email: userEmail,
-  feedback_text: comment || `Focus: ${focus}, Rating: ${rating}/10`,
-  page: window.location.pathname,
-    created_at: new Date().toISOString(),
-      additional_data: {
-      focus,
-        rating,
-        sessionDuration,
+      const feedbackData = {
+        user_id: uid,
+        user_email: userEmail,
+        feedback_text: comment || `Focus: ${focus}, Rating: ${rating}/10`,
+        page: window.location.pathname,
+        created_at: new Date().toISOString(),
+        additional_data: {
+          focus,
+          rating,
+          sessionDuration,
           userAgent: navigator.userAgent,
           pageUrl: window.location.href
         }
@@ -108,10 +109,10 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-indigo-300/80">Growth pulse</p>
               <h3 className="mt-2 text-2xl font-bold text-white">
-              Help us improve Tradia for you
+                Help us improve Tradia for you
               </h3>
               <p className="mt-1 text-sm text-indigo-100/80">
-              30 seconds. Real impact. Your feedback shapes our platform.
+                30 seconds. Real impact. Your feedback shapes our platform.
               </p>
             </div>
             <button onClick={resetAndClose} className="text-sm text-indigo-200/70 hover:text-white">Skip for now</button>
@@ -166,11 +167,10 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
                         setRating(score);
                         setStep(2);
                       }}
-                      className={`relative h-12 w-12 rounded-full border-2 text-sm font-bold transition-all duration-200 hover:scale-110 ${
-                        rating === score
+                      className={`relative h-12 w-12 rounded-full border-2 text-sm font-bold transition-all duration-200 hover:scale-110 ${rating === score
                           ? 'border-white bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/50'
                           : 'border-indigo-500/40 bg-indigo-500/10 text-indigo-100/80 hover:border-indigo-400 hover:bg-indigo-500/20 hover:shadow-md'
-                      }`}
+                        }`}
                     >
                       {score}
                       {rating === score && (
@@ -216,10 +216,10 @@ export default function SurveyPrompt({ isOpen, onClose }: { isOpen: boolean, onC
                 </div>
 
                 <button
-                type="submit"
-                className="w-full rounded-lg bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:opacity-90 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-200 transform hover:scale-[1.02]"
+                  type="submit"
+                  className="w-full rounded-lg bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:opacity-90 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-200 transform hover:scale-[1.02]"
                 >
-                🚀 Submit Feedback
+                  🚀 Submit Feedback
                 </button>
               </div>
 

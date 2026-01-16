@@ -20,7 +20,7 @@ export const TradePlanContext = createContext<TradePlanContextType | undefined>(
 export const TradePlanProvider = ({ children }: { children: ReactNode }) => {
   const [plans, setPlans] = useState<TradePlan[]>([]);
 
-  // Load from cloud on mount, fallback to local cache
+  // Load from cloud on mount (no localStorage fallback - data always from API)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -29,23 +29,15 @@ export const TradePlanProvider = ({ children }: { children: ReactNode }) => {
         if (res.ok) {
           const data = await res.json();
           if (!cancelled && Array.isArray(data?.plans)) setPlans(data.plans);
-        } else {
-          // fallback to local cache
-          const stored = typeof window !== 'undefined' ? localStorage.getItem('tradePlans') : null;
-          if (!cancelled && stored) setPlans(JSON.parse(stored));
         }
       } catch {
-        const stored = typeof window !== 'undefined' ? localStorage.getItem('tradePlans') : null;
-        if (!cancelled && stored) setPlans(JSON.parse(stored));
+        // No fallback - API is the source of truth
       }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  // Cache to localStorage as a best-effort client cache
-  useEffect(() => {
-    try { if (typeof window !== 'undefined') localStorage.setItem('tradePlans', JSON.stringify(plans)); } catch {}
-  }, [plans]);
+  // No localStorage caching - API is the source of truth
 
   const addPlan = async (plan: Omit<TradePlan, "id" | "createdAt">) => {
     try {
@@ -86,12 +78,12 @@ export const TradePlanProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, ...updatedPlan }),
       });
-    } catch {}
+    } catch { }
   };
 
   const deletePlan = async (id: string) => {
     setPlans((prev) => prev.filter((plan) => plan.id !== id));
-    try { await fetch(`/api/trade-plans?id=${encodeURIComponent(id)}`, { method: 'DELETE' }); } catch {}
+    try { await fetch(`/api/trade-plans?id=${encodeURIComponent(id)}`, { method: 'DELETE' }); } catch { }
   };
 
   const markExecuted = async (id: string) => {

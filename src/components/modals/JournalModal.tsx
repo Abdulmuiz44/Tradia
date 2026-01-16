@@ -89,9 +89,9 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
 
-  // Load custom strategies from localStorage
+  // Load custom strategies from sessionStorage (no localStorage)
   useEffect(() => {
-    const saved = localStorage.getItem('customStrategies');
+    const saved = sessionStorage.getItem('customStrategies');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -110,7 +110,7 @@ export default function JournalModal({ isOpen, trade, onClose, onSave }: Journal
     if (!PREDEFINED_STRATEGIES.includes(trimmed) && !customStrategies.includes(trimmed)) {
       const updated = [...customStrategies, trimmed];
       setCustomStrategies(updated);
-      localStorage.setItem('customStrategies', JSON.stringify(updated));
+      sessionStorage.setItem('customStrategies', JSON.stringify(updated));
     }
     setStrategy(trimmed);
     setCustomStrategyInput('');

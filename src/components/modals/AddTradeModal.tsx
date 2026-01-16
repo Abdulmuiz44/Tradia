@@ -69,8 +69,9 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
       setAfterUrl("");
       setError(null);
       setSaving(false);
+      // Use sessionStorage for session-scoped custom strategies (no localStorage)
       try {
-        const saved = localStorage.getItem('customStrategies');
+        const saved = sessionStorage.getItem('customStrategies');
         if (saved) setCustomStrategies(JSON.parse(saved));
       } catch { }
     } else {
@@ -192,7 +193,7 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
     if (!PREDEFINED_STRATEGIES.includes(s) && !customStrategies.includes(s)) {
       const next = [...customStrategies, s];
       setCustomStrategies(next);
-      try { localStorage.setItem('customStrategies', JSON.stringify(next)); } catch { }
+      try { sessionStorage.setItem('customStrategies', JSON.stringify(next)); } catch { }
     }
     setForm((p) => ({ ...(p ?? {}), strategy: s }));
     setCustomStrategyInput("");
@@ -341,8 +342,8 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
           {/* Session */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Session</label>
-             <select
-               className="w-full p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
+            <select
+              className="w-full p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
               value={String(form.session ?? sessions[0])}
               onChange={(e) => handleChange("session", e.target.value)}
             >
@@ -458,13 +459,13 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
               <div className="ml-2 inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-gray-200 dark:bg-[#0f1319] text-gray-900 dark:text-gray-200">
                 {rrString || "RR"}
               </div>
-              </div>
-              </div>
+            </div>
+          </div>
 
-              {/* Strategy */}
-              <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Strategy</label>
-              {!showCustomStrategyInput ? (
+          {/* Strategy */}
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Strategy</label>
+            {!showCustomStrategyInput ? (
               <div className="flex gap-2">
                 <select
                   className="flex-1 p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
@@ -477,17 +478,17 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
                   ))}
                 </select>
                 <button
-                    type="button"
-                    onClick={() => setShowCustomStrategyInput(true)}
-                    className="px-3 py-2 bg-gray-300 dark:bg-zinc-700 text-gray-900 dark:text-zinc-300 rounded hover:bg-gray-400 dark:hover:bg-zinc-600 text-sm"
-                  >
-                    +
-                  </button>
-                </div>
-                ) : (
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
+                  type="button"
+                  onClick={() => setShowCustomStrategyInput(true)}
+                  className="px-3 py-2 bg-gray-300 dark:bg-zinc-700 text-gray-900 dark:text-zinc-300 rounded hover:bg-gray-400 dark:hover:bg-zinc-600 text-sm"
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
                   placeholder="Enter custom strategy..."
                   value={customStrategyInput}
                   onChange={(e) => setCustomStrategyInput(e.target.value)}
@@ -510,15 +511,15 @@ export default function AddTradeModal({ isOpen, onClose, onSave }: AddTradeModal
                 >
                   Cancel
                 </button>
-                </div>
-                )}
-                </div>
+              </div>
+            )}
+          </div>
 
-                {/* Emotion */}
-                <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Emotion</label>
-                <select
-                className="w-full p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
+          {/* Emotion */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Emotion</label>
+            <select
+              className="w-full p-2 rounded border border-gray-300 dark:border-zinc-700 bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white"
               value={String(form.emotion ?? "Confident")}
               onChange={(e) => handleChange("emotion", e.target.value as Trade["emotion"])}
             >

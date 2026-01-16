@@ -39,18 +39,19 @@ function useNotificationState(announcements: AppNotification[]) {
 
   React.useEffect(() => {
     try {
-      const r = localStorage.getItem(STORAGE_KEY_READ);
+      // Use sessionStorage for session-scoped notification state (no localStorage)
+      const r = sessionStorage.getItem(STORAGE_KEY_READ);
       if (r) setReadIds(JSON.parse(r));
-      const d = localStorage.getItem(STORAGE_KEY_DELETED);
+      const d = sessionStorage.getItem(STORAGE_KEY_DELETED);
       if (d) setDeletedIds(JSON.parse(d));
-      const i = localStorage.getItem(STORAGE_KEY_ITEMS);
+      const i = sessionStorage.getItem(STORAGE_KEY_ITEMS);
       if (i) {
         // Existing stored items: parse and use
         const parsed: AppNotification[] = JSON.parse(i);
         setItems(Array.isArray(parsed) ? parsed : []);
       } else {
         // First run: seed announcements into storage
-        localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(announcements));
+        sessionStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(announcements));
         setItems(announcements);
       }
     } catch { }
@@ -58,7 +59,7 @@ function useNotificationState(announcements: AppNotification[]) {
 
   const persist = (next: string[]) => {
     setReadIds(next);
-    try { localStorage.setItem(STORAGE_KEY_READ, JSON.stringify(next)); } catch { }
+    try { sessionStorage.setItem(STORAGE_KEY_READ, JSON.stringify(next)); } catch { }
   };
 
   const markAllRead = () => persist(Array.from(new Set([...readIds, ...announcements.map(a => a.id)])));
@@ -66,12 +67,12 @@ function useNotificationState(announcements: AppNotification[]) {
 
   const persistItems = (list: AppNotification[]) => {
     setItems(list);
-    try { localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(list)); } catch { }
+    try { sessionStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(list)); } catch { }
   };
 
   const persistDeleted = (list: string[]) => {
     setDeletedIds(list);
-    try { localStorage.setItem(STORAGE_KEY_DELETED, JSON.stringify(list)); } catch { }
+    try { sessionStorage.setItem(STORAGE_KEY_DELETED, JSON.stringify(list)); } catch { }
   };
 
   // Merge any new announcements not yet stored and not deleted

@@ -29,18 +29,19 @@ function LoginPage(): React.ReactElement {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load remembered email (defensive: guard localStorage access)
+  // Load remembered email from cookie (no localStorage)
   useEffect(() => {
     try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        const saved = localStorage.getItem("tradia_remember_email");
-        if (saved) {
+      if (typeof document !== "undefined") {
+        const match = document.cookie.match(/tradia_remember_email=([^;]+)/);
+        if (match) {
+          const saved = decodeURIComponent(match[1]);
           setForm((f) => ({ ...f, email: saved }));
           setRemember(true);
         }
       }
     } catch {
-      // ignore storage access errors (e.g. strict privacy mode)
+      // ignore cookie access errors
     }
   }, []);
 
@@ -53,11 +54,13 @@ function LoginPage(): React.ReactElement {
     const newVal = !remember;
     setRemember(newVal);
     try {
-      if (typeof window !== "undefined" && window.localStorage) {
+      if (typeof document !== "undefined") {
         if (newVal && form.email) {
-          localStorage.setItem("tradia_remember_email", form.email);
+          // Set cookie for 30 days
+          document.cookie = `tradia_remember_email=${encodeURIComponent(form.email)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
         } else {
-          localStorage.removeItem("tradia_remember_email");
+          // Clear cookie
+          document.cookie = "tradia_remember_email=; path=/; max-age=0";
         }
       }
     } catch {
@@ -67,11 +70,11 @@ function LoginPage(): React.ReactElement {
 
   useEffect(() => {
     try {
-      if (remember && form.email && typeof window !== "undefined" && window.localStorage) {
-        localStorage.setItem("tradia_remember_email", form.email);
+      if (remember && form.email && typeof document !== "undefined") {
+        document.cookie = `tradia_remember_email=${encodeURIComponent(form.email)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
       }
     } catch {
-      // ignore localStorage errors
+      // ignore cookie errors
     }
   }, [form.email, remember]);
 
@@ -93,11 +96,14 @@ function LoginPage(): React.ReactElement {
       });
 
       if (result?.ok) {
-        // Remember email if chosen
+        // Remember email if chosen (via cookie)
         try {
-          if (typeof window !== "undefined" && window.localStorage) {
-            if (remember) localStorage.setItem("tradia_remember_email", form.email);
-            else localStorage.removeItem("tradia_remember_email");
+          if (typeof document !== "undefined") {
+            if (remember) {
+              document.cookie = `tradia_remember_email=${encodeURIComponent(form.email)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+            } else {
+              document.cookie = "tradia_remember_email=; path=/; max-age=0";
+            }
           }
         } catch {
           // ignore
