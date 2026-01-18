@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import type { Trade } from '@/types/trade';
 import { useSession } from 'next-auth/react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface MinimalChatInterfaceProps {
     trades?: Trade[];
@@ -284,9 +285,12 @@ export function MinimalChatInterface({
                                 </div>
 
                                 {m.role === 'user' && (
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-[#2a2f3a] flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400">
-                                        {userName[0]?.toUpperCase()}
-                                    </div>
+                                    <Avatar className="w-8 h-8 flex-shrink-0">
+                                        <AvatarImage src={session?.user?.image || ""} />
+                                        <AvatarFallback className="bg-gray-200 dark:bg-[#2a2f3a] text-gray-600 dark:text-gray-400 text-xs">
+                                            {userName[0]?.toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 )}
                             </div>
                         ))}

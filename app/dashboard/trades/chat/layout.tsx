@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader2, Menu, X, PenSquare, History, Search } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Conversation } from "@/types/chat";
 
 interface ChatLayoutProps {
@@ -136,7 +137,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       {/* Sidebar */}
       <aside className={`
         ${sidebarOpen ? 'w-64' : 'w-0'} 
-        flex-shrink-0 bg-gray-50 dark:bg-[#161B22] border-r border-gray-200 dark:border-[#2a2f3a]
+        flex-shrink-0 bg-gray-50 dark:bg-[#0D1117] border-r border-gray-200 dark:border-[#2a2f3a]
         transition-all duration-300 overflow-hidden flex flex-col
       `}>
         {/* Sidebar Header */}
@@ -190,8 +191,8 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
                   className={`
                     w-full px-3 py-2.5 rounded-lg text-left transition group flex items-center justify-between
                     ${activeConversationId === conv.id
-                      ? 'bg-gray-200 dark:bg-[#2a2f3a] text-gray-900 dark:text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#21262d]'
+                      ? 'bg-blue-50 dark:bg-[#1f6feb]/20 text-blue-600 dark:text-blue-400 font-medium'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#161B22]'
                     }
                   `}
                 >
@@ -212,9 +213,12 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         {/* User Section */}
         <div className="p-3 border-t border-gray-200 dark:border-[#2a2f3a]">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-              {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
-            </div>
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={session?.user?.image || ""} />
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
                 {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
