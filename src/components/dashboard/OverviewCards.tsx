@@ -939,8 +939,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                         <div>
                             <div className="flex items-center gap-2">
                                 <div className="text-xs text-zinc-400">Tradia Score</div>
-                                <button onClick={() => setExplainKey("tradiaScore")} className="p-1 rounded bg-[#0f1319]">
-                                    <Info size={14} />
+                                <button onClick={() => setExplainKey("tradiaScore")} className="p-1 rounded bg-gray-100 dark:bg-[#0f1319] hover:bg-gray-200 dark:hover:bg-[#1c2128] transition-colors">
+                                    <Info size={14} className="text-gray-500 dark:text-gray-400" />
                                 </button>
                             </div>
                             <div className="mt-2 flex items-center gap-3">

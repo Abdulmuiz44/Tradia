@@ -12,6 +12,34 @@ export type FeatureAnnouncement = {
 // Add a new entry here whenever you ship a feature users should know about.
 export const FEATURES: FeatureAnnouncement[] = [
   {
+    id: 'multi-accounts',
+    title: 'Multiple Account Support',
+    body: 'Manage up to 10 trading accounts. Track separate balances, platforms, and performance metrics for each account.',
+    date: '2026-01-18T00:00:00.000Z',
+    minPlan: 'starter',
+  },
+  {
+    id: 'tradia-score',
+    title: 'Tradia Score',
+    body: 'New composite health metric combining win rate, profit factor, consistency, and risk management into a single score.',
+    date: '2026-01-18T00:00:00.000Z',
+    minPlan: 'starter',
+  },
+  {
+    id: 'light-mode-v1',
+    title: 'Light Mode Support',
+    body: 'Full light mode support across the dashboard for better visibility in bright environments. Toggle comfortably between themes.',
+    date: '2026-01-18T00:00:00.000Z',
+    minPlan: 'starter',
+  },
+  {
+    id: 'billing-dashboard',
+    title: 'New Billing Dashboard',
+    body: 'Transparent plan usage tracking, clear limits, and easy upgrades. See exactly what you are paying for.',
+    date: '2026-01-18T00:00:00.000Z',
+    minPlan: 'starter',
+  },
+  {
     id: 'ta-guard-tilt-prop-matcher',
     title: 'New Analytics: Guard, Tilt, Prop, Matcher',
     body:
