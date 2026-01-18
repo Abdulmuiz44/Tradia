@@ -3,8 +3,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "@/context/AccountContext";
-import { ChevronDown, Plus, Edit2, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Edit2, Trash2, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { PLAN_LIMITS, normalizePlanType, type PlanType } from "@/lib/planAccess";
 
 interface AccountSelectorProps {
     showCreateButton?: boolean;
@@ -18,12 +20,20 @@ export default function AccountSelector({
     showActions = true,
 }: AccountSelectorProps) {
     const { accounts, selectedAccount, selectAccount, deleteAccount, loading } = useAccount();
+    const { data: session } = useSession();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
     const buttonRef = useRef<HTMLButtonElement>(null);
+
+    // Get user's plan and account limits
+    const userPlan = normalizePlanType((session?.user as any)?.plan);
+    const planLimits = PLAN_LIMITS[userPlan];
+    const maxAccounts = planLimits.maxTradingAccounts;
+    const canCreateAccount = maxAccounts === -1 || accounts.length < maxAccounts;
 
     useEffect(() => {
         setMounted(true);
@@ -53,6 +63,15 @@ export default function AccountSelector({
             return () => document.removeEventListener("mousedown", handleClickOutside);
         }
     }, [isOpen]);
+
+    const handleNewAccountClick = () => {
+        setIsOpen(false);
+        if (canCreateAccount) {
+            router.push("/dashboard/accounts/add");
+        } else {
+            setShowUpgradeModal(true);
+        }
+    };
 
     // Show skeleton while loading, but don't disappear
     if (!selectedAccount && !loading) {
@@ -89,7 +108,7 @@ export default function AccountSelector({
             </button>
 
             {mounted && isOpen && !loading && createPortal(
-                <div 
+                <div
                     className="fixed bg-white dark:bg-[#0f1319] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50"
                     style={{
                         top: `${dropdownPos.top}px`,
@@ -163,18 +182,20 @@ export default function AccountSelector({
                         )}
                     </div>
 
-                    {showCreateButton && accounts.length < 10 && (
+                    {showCreateButton && (
                         <>
                             <div className="border-t border-gray-200 dark:border-gray-700"></div>
                             <button
-                                onClick={() => {
-                                    setIsOpen(false);
-                                    router.push("/dashboard/accounts");
-                                }}
+                                onClick={handleNewAccountClick}
                                 className="w-full px-4 py-3 flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-[#0f1319] transition text-sm"
                             >
                                 <Plus size={16} />
                                 New Account
+                                {!canCreateAccount && (
+                                    <span className="ml-auto text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">
+                                        Limit reached
+                                    </span>
+                                )}
                             </button>
                         </>
                     )}
@@ -211,6 +232,65 @@ export default function AccountSelector({
                                 className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 dark:hover:bg-red-500 text-white text-sm transition"
                             >
                                 Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Upgrade modal - when account limit is reached */}
+            {showUpgradeModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+                    <div className="absolute inset-0" onClick={() => setShowUpgradeModal(false)} aria-hidden />
+                    <div className="relative bg-white dark:bg-[#0f1319] rounded-lg p-6 max-w-md w-full z-10">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
+                                <Crown className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Account Limit Reached</h3>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                Your <span className="font-semibold capitalize">{userPlan}</span> plan allows up to <span className="font-semibold">{maxAccounts}</span> trading account{maxAccounts !== 1 ? 's' : ''}.
+                            </p>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 mb-6">
+                            <h4 className="font-medium text-gray-900 dark:text-white mb-2">Upgrade to unlock more:</h4>
+                            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                {userPlan === 'starter' && (
+                                    <>
+                                        <li>• <span className="font-medium">Pro Plan:</span> Up to 5 accounts</li>
+                                        <li>• <span className="font-medium">Plus Plan:</span> Up to 10 accounts</li>
+                                        <li>• <span className="font-medium">Elite Plan:</span> Unlimited accounts</li>
+                                    </>
+                                )}
+                                {userPlan === 'pro' && (
+                                    <>
+                                        <li>• <span className="font-medium">Plus Plan:</span> Up to 10 accounts</li>
+                                        <li>• <span className="font-medium">Elite Plan:</span> Unlimited accounts</li>
+                                    </>
+                                )}
+                                {userPlan === 'plus' && (
+                                    <li>• <span className="font-medium">Elite Plan:</span> Unlimited accounts</li>
+                                )}
+                            </ul>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowUpgradeModal(false)}
+                                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-white text-sm font-medium transition"
+                            >
+                                Maybe Later
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowUpgradeModal(false);
+                                    router.push("/dashboard/upgrade");
+                                }}
+                                className="flex-1 px-4 py-2.5 rounded-lg bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-black text-sm font-medium transition flex items-center justify-center gap-2"
+                            >
+                                <Crown size={16} />
+                                Upgrade Now
                             </button>
                         </div>
                     </div>
