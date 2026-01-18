@@ -786,6 +786,33 @@ html:not(.dark) button[class*="bg-red"] {
     color: #000000 !important;
 }
 
+/* CTA Buttons - Black/White pattern for high contrast */
+/* Light mode: Black background, white text */
+html:not(.dark) button[class*="bg-black"],
+html:not(.dark) a[class*="bg-black"],
+html:not(.dark) [class*="bg-black"][role="button"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+html:not(.dark) button[class*="bg-black"]:hover,
+html:not(.dark) a[class*="bg-black"]:hover {
+    background-color: #1f2937 !important;
+}
+
+/* Dark mode: White background, black text */
+.dark button[class*="bg-white"],
+.dark a[class*="bg-white"],
+.dark [class*="bg-white"][role="button"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.dark button[class*="bg-white"]:hover,
+.dark a[class*="bg-white"]:hover {
+    background-color: #f3f4f6 !important;
+}
+
 /* =====================================================
    DASHBOARD SIDEBAR - MONOCHROME
    ===================================================== */
