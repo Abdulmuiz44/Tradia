@@ -423,18 +423,29 @@ export default function BillingPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-400">Next billing:</span>
-                      <div className="font-medium">
-                        {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                    {subscription.currentPeriodEnd || subscription.current_period_end ? (
+                      <div>
+                        <span className="text-gray-400">Next billing:</span>
+                        <div className="font-medium">
+                          {new Date(subscription.currentPeriodEnd || subscription.current_period_end).toLocaleDateString()}
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Amount:</span>
-                      <div className="font-medium">
-                        ${subscription.price.amount}/{subscription.price.interval}
+                    ) : null}
+                    {subscription.price?.amount ? (
+                      <div>
+                        <span className="text-gray-400">Amount:</span>
+                        <div className="font-medium">
+                          ${subscription.price.amount}/{subscription.price.interval || 'month'}
+                        </div>
                       </div>
-                    </div>
+                    ) : subscription.amount ? (
+                      <div>
+                        <span className="text-gray-400">Amount:</span>
+                        <div className="font-medium">
+                          ${subscription.amount}/{subscription.billing_cycle || 'month'}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (

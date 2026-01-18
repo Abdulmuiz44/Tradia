@@ -9,53 +9,54 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createClient();
+    let user = null;
 
-    // Try to get user profile from database with essential columns first
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")  // Select all to avoid column not found errors
-      .eq("id", session.user.id as string)
-      .maybeSingle();
+    // First try to get user by ID if available
+    if (session.user.id) {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id as string)
+        .maybeSingle();
 
-    if (error) {
-      console.error("Database query error:", error.message, error);
-      // Return fallback only if there's a genuine error
-      return NextResponse.json({
-        id: session.user.id,
-        name: session.user.name || null,
-        email: session.user.email || '',
-        country: null,
-        plan: 'starter',
-        emailVerified: false,
-        createdAt: new Date().toISOString(),
-        image: session.user.image || null,
-        tradingStyle: null,
-        experienceLevel: null,
-        preferredPairs: null,
-        riskTolerance: null,
-        bio: null,
-        profileImageUrl: null,
-        timezone: null,
-        _source: 'session_fallback_error',
-        _error: error.message,
-      });
+      if (!error && data) {
+        user = data;
+      }
+    }
+
+    // If ID query didn't work, try by email (more reliable)
+    if (!user && session.user.email) {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", session.user.email.toLowerCase())
+        .maybeSingle();
+
+      if (!error && data) {
+        user = data;
+      } else if (error) {
+        console.error("Database query error by email:", error.message);
+      }
     }
 
     if (!user) {
-      console.warn("No user found in database for ID:", session.user.id);
-      return NextResponse.json({
+      console.warn("No user found for session:", {
         id: session.user.id,
+        email: session.user.email
+      });
+      return NextResponse.json({
+        id: session.user.id || '',
         name: session.user.name || null,
         email: session.user.email || '',
         country: null,
         plan: 'starter',
         emailVerified: false,
-        createdAt: new Date().toISOString(),
+        createdAt: null,
         image: session.user.image || null,
         tradingStyle: null,
         experienceLevel: null,
@@ -70,7 +71,6 @@ export async function GET() {
 
     // We have real user data from database
     // email_verified can be: null, false, true, or a timestamp string
-    // It's verified if it's truthy (true or has a timestamp value)
     const isEmailVerified = Boolean(user.email_verified);
 
     // Handle both possible column names for experience
@@ -102,5 +102,6 @@ export async function GET() {
     }, { status: 500 });
   }
 }
+
 
 
