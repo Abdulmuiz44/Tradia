@@ -11,12 +11,12 @@ export default function BlogIndex() {
   const postList = Object.values(posts).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto">
+    <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto bg-white dark:bg-transparent">
       <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-gray-500">
           Tradia Blog
         </h1>
-        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           Deep dives into trading patterns, psychology, and the future of AI-driven analytics.
           Master the markets with data, not guesswork.
         </p>
@@ -27,18 +27,18 @@ export default function BlogIndex() {
           <Link
             key={p.slug}
             href={`/blog/${p.slug}`}
-            className="group flex flex-col h-full p-6 rounded-2xl border border-white/10 bg-[#0f1319] hover:border-indigo-500/50 hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)] transition-all duration-300"
+            className="group flex flex-col h-full p-6 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f1319] hover:border-gray-400 dark:hover:border-indigo-500/50 hover:shadow-lg dark:hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)] transition-all duration-300"
           >
-            <div className="text-xs font-medium text-indigo-400 mb-3">{new Date(p.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-            <h2 className="text-xl font-bold mb-3 text-gray-100 group-hover:text-indigo-300 transition-colors">
+            <div className="text-xs font-medium text-blue-600 dark:text-indigo-400 mb-3">{new Date(p.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-indigo-300 transition-colors">
               {p.title}
             </h2>
-            <p className="text-sm text-gray-400 leading-relaxed mb-4 flex-grow">
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4 flex-grow">
               {p.excerpt}
             </p>
-            <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/5">
+            <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-gray-100 dark:border-white/5">
               {p.keywords.slice(0, 2).map(k => (
-                <span key={k} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-500">
+                <span key={k} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-500">
                   {k}
                 </span>
               ))}

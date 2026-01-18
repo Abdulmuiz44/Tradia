@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { trackUserJourney } from "@/lib/analytics";
 import { FcGoogle } from "react-icons/fc";
-import { Shield, Zap, TrendingUp, ChevronDown } from "lucide-react";
+import { Shield, Zap, TrendingUp, ChevronDown, Eye, EyeOff } from "lucide-react";
 
 const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
 const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
@@ -147,17 +147,17 @@ function SignupPage(): React.ReactElement {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#0a0d12] flex items-center justify-center py-16 px-4">
+      <main className="min-h-screen bg-white dark:bg-[#0a0d12] flex items-center justify-center py-16 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full max-w-5xl"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-2xl border border-[#2a2f3a] shadow-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-2xl border border-gray-200 dark:border-[#2a2f3a] shadow-xl dark:shadow-2xl">
 
             {/* Left Panel - Branding */}
-            <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-[#0D1117] via-[#161B22] to-[#0D1117] relative overflow-hidden">
+            <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-[#0D1117] dark:via-[#161B22] dark:to-[#0D1117] relative overflow-hidden">
               <div className="absolute inset-0 opacity-5">
                 <div className="absolute top-0 left-0 w-full h-full" style={{
                   backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
@@ -170,35 +170,35 @@ function SignupPage(): React.ReactElement {
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
                     <Image src="/TRADIA-LOGO.png" alt="Tradia" width={24} height={24} className="w-6 h-6" />
                   </div>
-                  <span className="text-xl font-bold text-white">Tradia</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">Tradia</span>
                 </div>
 
-                <h1 className="text-3xl font-bold text-white mb-3">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
                   Start your journey
                 </h1>
-                <p className="text-gray-400 text-lg mb-10">
+                <p className="text-gray-600 dark:text-gray-400 text-lg mb-10">
                   Create your account to get AI-powered trading insights and improve your edge.
                 </p>
 
                 <div className="space-y-6">
                   {features.map((feature, idx) => (
                     <div key={idx} className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-[#2a2f3a] flex items-center justify-center flex-shrink-0">
-                        <feature.icon className="w-5 h-5 text-blue-400" />
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-gray-200 dark:border-[#2a2f3a] flex items-center justify-center flex-shrink-0">
+                        <feature.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <div className="font-medium text-white">{feature.title}</div>
-                        <div className="text-sm text-gray-500">{feature.desc}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{feature.title}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-500">{feature.desc}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="relative z-10 pt-10 border-t border-[#2a2f3a] mt-10">
-                <p className="text-gray-500 text-sm">
+              <div className="relative z-10 pt-10 border-t border-gray-200 dark:border-[#2a2f3a] mt-10">
+                <p className="text-gray-600 dark:text-gray-500 text-sm">
                   Already have an account?{" "}
-                  <Link href="/login" className="text-blue-400 hover:text-blue-300 transition font-medium">
+                  <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition font-medium">
                     Sign in
                   </Link>
                 </p>
@@ -206,10 +206,10 @@ function SignupPage(): React.ReactElement {
             </div>
 
             {/* Right Panel - Form */}
-            <div className="p-10 bg-[#0D1117]">
+            <div className="p-10 bg-white dark:bg-[#0D1117]">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Create your account</h2>
-                <p className="text-gray-500">Fill in your details to get started</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Create your account</h2>
+                <p className="text-gray-600 dark:text-gray-500">Fill in your details to get started</p>
               </div>
 
               {error && (
@@ -226,24 +226,24 @@ function SignupPage(): React.ReactElement {
 
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Full name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Full name</label>
                   <input
                     name="name"
                     type="text"
                     placeholder="John Doe"
-                    className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                     required
                     autoComplete="name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Email address</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Email address</label>
                   <input
                     name="email"
                     type="email"
                     placeholder="name@company.com"
-                    className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                     required
                     autoComplete="email"
                   />
@@ -251,13 +251,13 @@ function SignupPage(): React.ReactElement {
 
                 {hydrated && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Country</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Country</label>
                     <div className="relative">
                       <select
                         name="country"
                         value={country}
                         onChange={(e) => setCountry(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition appearance-none cursor-pointer"
+                        className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition appearance-none cursor-pointer"
                         required
                       >
                         <option value="">Select your country</option>
@@ -271,33 +271,34 @@ function SignupPage(): React.ReactElement {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Password</label>
                   <div className="relative">
                     <input
                       name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
-                      className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-16"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition pr-16"
                       required
                       autoComplete="new-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-400 text-sm transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
-                      {showPassword ? "Hide" : "Show"}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Confirm password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Confirm password</label>
                   <input
                     name="confirmPassword"
                     type="password"
                     placeholder="Confirm your password"
-                    className="w-full px-4 py-3 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                     required
                     autoComplete="new-password"
                   />
@@ -310,24 +311,24 @@ function SignupPage(): React.ReactElement {
                     type="checkbox"
                     checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
-                    className="mt-1 w-4 h-4 rounded bg-[#161B22] border-[#2a2f3a] text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                    className="mt-1 w-4 h-4 rounded bg-gray-50 dark:bg-[#161B22] border-gray-300 dark:border-[#2a2f3a] text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
                   />
-                  <label htmlFor="agree" className="text-sm text-gray-400">
+                  <label htmlFor="agree" className="text-sm text-gray-600 dark:text-gray-400">
                     I agree to Tradia&apos;s{" "}
-                    <Link href="/terms" className="text-blue-400 hover:text-blue-300" target="_blank">Terms</Link>
+                    <Link href="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300" target="_blank">Terms</Link>
                     {" "}and{" "}
-                    <Link href="/privacy" className="text-blue-400 hover:text-blue-300" target="_blank">Privacy Policy</Link>
+                    <Link href="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300" target="_blank">Privacy Policy</Link>
                   </label>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-white hover:bg-gray-100 text-black rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                  className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-black rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
                 >
                   {loading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-white/30 dark:border-black/30 border-t-white dark:border-t-black rounded-full animate-spin" />
                       Creating account...
                     </>
                   ) : (
@@ -336,24 +337,24 @@ function SignupPage(): React.ReactElement {
                 </button>
 
                 <div className="my-4 flex items-center gap-4">
-                  <div className="flex-1 h-px bg-[#2a2f3a]" />
-                  <span className="text-xs text-gray-600 uppercase tracking-wider">or</span>
-                  <div className="flex-1 h-px bg-[#2a2f3a]" />
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-[#2a2f3a]" />
+                  <span className="text-xs text-gray-500 dark:text-gray-600 uppercase tracking-wider">or</span>
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-[#2a2f3a]" />
                 </div>
 
                 <button
                   type="button"
                   onClick={handleGoogle}
-                  className="w-full py-3.5 border border-[#2a2f3a] rounded-lg hover:bg-[#161B22] transition flex items-center justify-center gap-3 text-white font-medium"
+                  className="w-full py-3.5 border border-gray-300 dark:border-[#2a2f3a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#161B22] transition flex items-center justify-center gap-3 text-gray-900 dark:text-white font-medium"
                 >
                   <FcGoogle size={20} />
                   <span>Continue with Google</span>
                 </button>
               </form>
 
-              <p className="mt-6 text-center text-sm text-gray-500 lg:hidden">
+              <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-500 lg:hidden">
                 Already have an account?{" "}
-                <Link href="/login" className="text-blue-400 hover:text-blue-300 transition font-medium">
+                <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition font-medium">
                   Sign in
                 </Link>
               </p>
