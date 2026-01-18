@@ -175,9 +175,9 @@ const rrFromTrade = (t: TradeType): number => {
         }
     }
 
-    if (outcome === "Loss") return -1;
-    if (outcome === "Breakeven") return 0;
-    if (outcome === "Win") {
+    if (outcome.toLowerCase() === "loss") return -1;
+    if (outcome.toLowerCase() === "breakeven") return 0;
+    if (outcome.toLowerCase() === "win") {
         return parsed !== null && Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
     }
     return parsed !== null && Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -356,9 +356,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         const filtered = allTrades.filter(inRange);
 
         const total = filtered.length;
-        const wins = filtered.filter((t) => toStringSafe(getField(t, "outcome")) === "Win").length;
-        const losses = filtered.filter((t) => toStringSafe(getField(t, "outcome")) === "Loss").length;
-        const breakevens = filtered.filter((t) => toStringSafe(getField(t, "outcome")) === "Breakeven").length;
+        const wins = filtered.filter((t) => toStringSafe(getField(t, "outcome")).toLowerCase() === "win").length;
+        const losses = filtered.filter((t) => toStringSafe(getField(t, "outcome")).toLowerCase() === "loss").length;
+        const breakevens = filtered.filter((t) => toStringSafe(getField(t, "outcome")).toLowerCase() === "breakeven").length;
         const winRate = total ? (wins / total) * 100 : 0;
 
         const pnlOf = (t: TradeType) => toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
@@ -403,10 +403,10 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         // streaks
         const streaks: number[] = [];
         let curr = 0;
-        let last: "Win" | "Loss" | null = null;
+        let last: "win" | "loss" | null = null;
         for (const t of chrono) {
             const oc = toStringSafe(getField(t, "outcome"));
-            if (oc !== "Win" && oc !== "Loss") {
+            if (oc.toLowerCase() !== "win" && oc.toLowerCase() !== "loss") {
                 if (curr > 0) streaks.push(curr);
                 curr = 0;
                 last = null;
@@ -416,7 +416,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
             else {
                 if (curr > 0) streaks.push(curr);
                 curr = 1;
-                last = oc as "Win" | "Loss";
+                last = oc.toLowerCase() as "win" | "loss";
             }
         }
         if (curr > 0) streaks.push(curr);
@@ -557,7 +557,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                             let last2: "Win" | "Loss" | null = null;
                             for (const t of chrono) {
                                 const oc = toStringSafe(getField(t, "outcome"));
-                                if (oc !== "Win" && oc !== "Loss") {
+                                if (oc.toLowerCase() !== "win" && oc.toLowerCase() !== "loss") {
                                     arr.push(0);
                                     last2 = null;
                                     c = 0;

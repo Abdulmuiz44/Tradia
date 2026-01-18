@@ -411,11 +411,11 @@ function OverviewContent() {
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-[#0D1117]">
                         <div className="flex items-center gap-3">
-                            <button className="lg:hidden p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319]" onClick={() => setMobileMenuOpen(true)}>
+                            <button className="lg:hidden p-2 rounded-xl bg-gray-100 dark:bg-[var(--surface-hover)] hover:bg-gray-200 dark:hover:bg-[var(--surface-secondary)] text-gray-700 dark:text-white" onClick={() => setMobileMenuOpen(true)}>
                                 <Menu size={20} />
                             </button>
                             <div>
-                                <h1 className="text-lg md:text-xl font-semibold dark:text-white">Overview</h1>
+                                <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Overview</h1>
                                 <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
                                     Comprehensive trading overview and key metrics
                                 </p>
@@ -425,7 +425,7 @@ function OverviewContent() {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                                className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319] hidden sm:inline-flex"
+                                className="p-2 rounded-xl bg-gray-100 dark:bg-[var(--surface-hover)] hover:bg-gray-200 dark:hover:bg-[var(--surface-secondary)] text-gray-700 dark:text-white hidden sm:inline-flex"
                                 title="Toggle theme"
                             >
                                 {mounted && theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -433,7 +433,7 @@ function OverviewContent() {
 
                             <AnimatedDropdown
                                 title="Filter Trades"
-                                trigger={<button className="p-2 rounded-xl bg-[var(--surface-hover)] hover:bg-[var(--surface-secondary)] dark:bg-[#0f1319]">
+                                trigger={<button className="p-2 rounded-xl bg-gray-100 dark:bg-[var(--surface-hover)] hover:bg-gray-200 dark:hover:bg-[var(--surface-secondary)] text-gray-700 dark:text-white">
                                     <Filter size={18} />
                                 </button>}
                             >
@@ -450,11 +450,11 @@ function OverviewContent() {
                                 </div>
                             </AnimatedDropdown>
 
-                            <button onClick={handleSyncNow} disabled={isLoading} className="p-2 rounded-xl bg-[#0f1319] hover:bg-[#0f1319]/80">
+                            <button onClick={handleSyncNow} disabled={isLoading} className="p-2 rounded-xl bg-gray-900 dark:bg-[#0f1319] hover:bg-gray-800 dark:hover:bg-[#0f1319]/80 text-white">
                                 <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
                             </button>
 
-                            <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-[#0f1319] text-gray-300 text-sm">
+                            <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-gray-100 dark:bg-[#0f1319] text-gray-700 dark:text-gray-300 text-sm">
                                 {filterLabel}
                             </div>
                         </div>
