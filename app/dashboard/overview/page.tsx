@@ -461,9 +461,15 @@ function OverviewContent() {
                                         <div
                                             key={f.value}
                                             onClick={() => setFilter(f.value)}
-                                            className="cursor-pointer px-2 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-zinc-700"
+                                            className={`cursor-pointer px-3 py-2 rounded-lg mb-1 transition-colors flex items-center justify-between ${filter === f.value
+                                                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                                                    : "hover:bg-gray-50 dark:hover:bg-[#1c2128] text-gray-700 dark:text-gray-300"
+                                                }`}
                                         >
                                             <span>{f.label}</span>
+                                            {filter === f.value && (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
