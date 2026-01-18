@@ -10,7 +10,8 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { AccountProvider, useAccount } from "@/context/AccountContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import OverviewCards from "@/components/dashboard/OverviewCards";
-import AccountSelector from "@/components/accounts/AccountSelector";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, X, Menu, Sun, Moon, RefreshCw, Filter, Lock, Crown } from "lucide-react";
@@ -287,14 +288,16 @@ function OverviewContent() {
         <main className="min-h-screen w-full bg-white dark:bg-[#0f1319] transition-colors duration-300 overflow-x-hidden">
             <div className="flex min-h-screen max-w-full">
                 {/* Desktop Sidebar */}
-                <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[var(--surface-secondary)] dark:lg:bg-[#161B22] lg:border-r lg:border-[var(--surface-border)] dark:lg:border-[#2a2f3a]">
+                <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 bg-gray-50 dark:bg-[#0D1117] border-r border-gray-200 dark:border-[#2a2f3a]">
                     <div className="flex flex-col h-full sticky top-0">
                         {/* Logo/Brand */}
-                        <div className="flex items-center gap-3 p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a]">
-                            <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={24} height={24} className="h-6 w-auto" priority />
+                        <div className="flex items-center gap-3 p-5 border-b border-gray-200 dark:border-[#2a2f3a]">
+                            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                                <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={20} height={20} className="h-5 w-auto" priority />
+                            </div>
                             <div>
-                                <h1 className="text-slate-900 dark:text-white font-extrabold text-lg">Tradia</h1>
-                                <p className="text-slate-500 dark:text-gray-300 text-xs">Overview</p>
+                                <h1 className="text-gray-900 dark:text-white font-bold text-lg tracking-tight">Tradia</h1>
+                                <p className="text-gray-500 dark:text-gray-500 text-xs">Trading Dashboard</p>
                             </div>
                         </div>
 
@@ -409,33 +412,49 @@ function OverviewContent() {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col min-h-0 min-w-0">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--surface-border)] dark:border-[#2a2f3a] bg-[var(--surface-secondary)] dark:bg-[#0D1117]">
-                        <div className="flex items-center gap-3">
-                            <button className="lg:hidden p-2 rounded-xl bg-gray-100 dark:bg-[var(--surface-hover)] hover:bg-gray-200 dark:hover:bg-[var(--surface-secondary)] text-gray-700 dark:text-white" onClick={() => setMobileMenuOpen(true)}>
+                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-[#2a2f3a] bg-white dark:bg-[#0D1117]">
+                        <div className="flex items-center gap-4">
+                            {/* Mobile menu button */}
+                            <button
+                                className="lg:hidden p-2 rounded-lg bg-gray-100 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1c2128] transition-colors"
+                                onClick={() => setMobileMenuOpen(true)}
+                                aria-label="Open Menu"
+                            >
                                 <Menu size={20} />
                             </button>
-                            <div>
-                                <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Overview</h1>
-                                <p className="text-[var(--text-secondary)] dark:text-gray-300 text-xs sm:text-sm hidden sm:block">
-                                    Comprehensive trading overview and key metrics
-                                </p>
+
+                            {/* Account Switcher - Always visible on left */}
+                            <div className="hidden sm:block">
+                                <AccountSwitcher />
                             </div>
                         </div>
 
+                        <div className="flex-1 mx-4 hidden md:block">
+                            <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Overview</h1>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+                                Comprehensive trading overview and key metrics
+                            </p>
+                        </div>
+
                         <div className="flex items-center gap-2">
+                            {/* Theme toggle */}
                             <button
                                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                                className="p-2 rounded-xl bg-gray-100 dark:bg-[var(--surface-hover)] hover:bg-gray-200 dark:hover:bg-[var(--surface-secondary)] text-gray-700 dark:text-white hidden sm:inline-flex"
+                                className="p-2 rounded-xl bg-gray-100 dark:bg-[#0f1319] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#0f1319]/80 transition-colors hidden sm:inline-flex"
                                 title="Toggle theme"
                             >
                                 {mounted && theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                             </button>
 
+                            {/* Filter */}
                             <AnimatedDropdown
                                 title="Filter Trades"
-                                trigger={<button className="p-2 rounded-xl bg-gray-100 dark:bg-[var(--surface-hover)] hover:bg-gray-200 dark:hover:bg-[var(--surface-secondary)] text-gray-700 dark:text-white">
-                                    <Filter size={18} />
-                                </button>}
+                                panelClassName="w-[95%] max-w-md"
+                                trigger={(
+                                    <button className="p-2 rounded-xl bg-gray-100 dark:bg-[#0f1319] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#0f1319]/80 transition-colors" title="Filter trades" aria-label="Filter trades">
+                                        <Filter size={18} />
+                                    </button>
+                                )}
                             >
                                 <div className="p-3">
                                     {FILTERS.filter(f => f.value !== 'custom').map((f) => (
@@ -450,10 +469,19 @@ function OverviewContent() {
                                 </div>
                             </AnimatedDropdown>
 
-                            <button onClick={handleSyncNow} disabled={isLoading} className="p-2 rounded-xl bg-gray-900 dark:bg-[#0f1319] hover:bg-gray-800 dark:hover:bg-[#0f1319]/80 text-white">
-                                <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+                            {/* Refresh button */}
+                            <button
+                                className="p-2 rounded-xl bg-gray-100 dark:bg-[#0f1319] hover:bg-gray-200 dark:hover:bg-[#0f1319]/80 transition-colors"
+                                onClick={handleSyncNow}
+                                title="Refresh data"
+                            >
+                                <RefreshCw size={18} className={`text-gray-700 dark:text-gray-300 ${isLoading ? "animate-spin" : ""}`} />
                             </button>
 
+                            {/* Notifications */}
+                            <NotificationBell />
+
+                            {/* Current filter indicator */}
                             <div className="hidden sm:flex items-center px-3 py-1 rounded-xl bg-gray-100 dark:bg-[#0f1319] text-gray-700 dark:text-gray-300 text-sm">
                                 {filterLabel}
                             </div>
@@ -461,11 +489,7 @@ function OverviewContent() {
                     </div>
 
                     {/* Content Area */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                        {/* Account Selector - Sticky */}
-                        <div className="sticky top-0 mb-6 max-w-sm z-30 bg-white dark:bg-[#0f1319] pb-4">
-                            <AccountSelector showCreateButton={true} showActions={true} />
-                        </div>
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6 min-w-0 max-w-full">
                         <OverviewCards
                             trades={filteredTrades}
                             session={session}
