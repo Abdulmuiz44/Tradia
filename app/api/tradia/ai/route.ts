@@ -1,5 +1,6 @@
 // src/app/api/tradia/ai/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { streamText } from "ai";
@@ -169,7 +170,7 @@ export async function POST(req: NextRequest) {
         const modelId = DEFAULT_MODEL; // Enforce Mistral
 
         if (!currentConversationId) {
-            const newConvId = `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            const newConvId = crypto.randomUUID();
 
             // Generate a meaningful conversation title from the first user message
             const firstUserMessage = messages.find((m: any) => m.role === 'user')?.content || '';

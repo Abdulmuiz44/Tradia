@@ -1,5 +1,6 @@
 // src/app/api/conversations/route.ts
 import { NextResponse, NextRequest } from "next/server";
+import crypto from "crypto";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     const { title = "New Conversation", model = "gpt-4o-mini" } = body;
 
     const supabase = createAdminClient();
-    const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const conversationId = crypto.randomUUID();
 
     const { data, error } = await supabase
       .from("conversations")
