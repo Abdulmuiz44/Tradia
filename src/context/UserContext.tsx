@@ -13,6 +13,14 @@ interface UserData {
   country?: string;
   emailVerified: boolean;
   createdAt: string;
+  image?: string | null;
+  tradingStyle?: string | null;
+  experienceLevel?: string | null;
+  preferredPairs?: string | null;
+  riskTolerance?: string | null;
+  bio?: string | null;
+  profileImageUrl?: string | null;
+  timezone?: string | null;
 }
 
 interface UserContextType {
@@ -58,7 +66,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
       // Get user data from server-side API (NextAuth session is already validated)
       const response = await fetch('/api/user/profile');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -72,9 +80,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           name: userData.name || session.user.name || null,
           email: userData.email || session.user.email || '',
           plan: normalizedPlan,
-          country: userData.country,
+          country: userData.country || null,
           emailVerified: userData.emailVerified || userData.email_verified || false,
           createdAt: userData.createdAt || userData.created_at || '',
+          image: userData.image || userData.profileImageUrl || session.user.image || null,
+          tradingStyle: userData.tradingStyle || null,
+          experienceLevel: userData.experienceLevel || null,
+          preferredPairs: userData.preferredPairs || null,
+          riskTolerance: userData.riskTolerance || null,
+          bio: userData.bio || null,
+          profileImageUrl: userData.profileImageUrl || userData.image || null,
+          timezone: userData.timezone || null,
         };
 
         // Admin hard-elevation: ensure admin is always Elite in state
@@ -88,13 +104,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Fallback to session data if API fails
         setUser({
-           id: session.user.id || '',
-           name: session.user.name || null,
-           email: session.user.email || '',
-           plan: 'starter',
-           emailVerified: false,
-           createdAt: '',
-         });
+          id: session.user.id || '',
+          name: session.user.name || null,
+          email: session.user.email || '',
+          plan: 'starter',
+          emailVerified: false,
+          createdAt: '',
+        });
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);

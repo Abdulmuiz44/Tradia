@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     }
 
     const formData = await req.formData();
-    const file = formData.get('avatar') as File;
+    const file = formData.get('file') as File || formData.get('avatar') as File;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -62,6 +62,7 @@ export async function POST(req: Request) {
       .from("users")
       .update({
         image: publicUrl,
+        profile_image_url: publicUrl,
         updated_at: new Date().toISOString()
       })
       .eq("id", session.user.id);
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      url: publicUrl,
       avatarUrl: publicUrl,
       message: "Avatar uploaded successfully"
     });
