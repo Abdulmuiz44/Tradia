@@ -328,10 +328,9 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
     }, [session?.user?.id, session?.user?.name]);
 
     const allTrades = useMemo<TradeType[]>(() => {
-        // Use propTrades if provided (from dashboard parent with account filtering)
-        // Otherwise fall back to accountFilteredTrades (already filtered by account)
-        // Finally fall back to contextTrades if nothing else available
-        if (Array.isArray(propTrades) && propTrades.length > 0) {
+        // Use propTrades if provided (explicitly check for array, even if empty)
+        // This ensures that if a filter returns 0 trades, we show 0 trades instead of falling back
+        if (Array.isArray(propTrades)) {
             return propTrades;
         }
         if (Array.isArray(accountFilteredTrades) && accountFilteredTrades.length > 0) {
