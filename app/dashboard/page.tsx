@@ -454,16 +454,16 @@ function DashboardContent() {
             <SurveyPrompt isOpen={isSurveyOpen} onClose={() => setIsSurveyOpen(false)} />
             <div className="flex min-h-screen max-w-full">
                 {/* Desktop Sidebar */}
-                <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:bg-[#0D1117] lg:border-r lg:border-[#2a2f3a]">
+                <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 bg-gray-50 dark:bg-[#0D1117] border-r border-gray-200 dark:border-[#2a2f3a]">
                     <div className="flex flex-col h-full sticky top-0">
                         {/* Logo/Brand */}
-                        <div className="flex items-center gap-3 p-5 border-b border-[#2a2f3a]">
+                        <div className="flex items-center gap-3 p-5 border-b border-gray-200 dark:border-[#2a2f3a]">
                             <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
                                 <Image src="/TRADIA-LOGO.png" alt="Tradia logo" width={20} height={20} className="h-5 w-auto" priority />
                             </div>
                             <div>
-                                <h1 className="text-white font-bold text-lg tracking-tight">Tradia</h1>
-                                <p className="text-gray-500 text-xs">Trading Dashboard</p>
+                                <h1 className="text-gray-900 dark:text-white font-bold text-lg tracking-tight">Tradia</h1>
+                                <p className="text-gray-500 dark:text-gray-500 text-xs">Trading Dashboard</p>
                             </div>
                         </div>
 
@@ -583,11 +583,11 @@ function DashboardContent() {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col min-h-0 min-w-0">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#2a2f3a] bg-[#0D1117] text-white">
+                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-[#2a2f3a] bg-white dark:bg-[#0D1117]">
                         <div className="flex items-center gap-4">
                             {/* Mobile menu button */}
                             <button
-                                className="lg:hidden p-2 rounded-lg bg-[#161B22] border border-[#2a2f3a] text-white hover:bg-[#1c2128] transition-colors"
+                                className="lg:hidden p-2 rounded-lg bg-gray-100 dark:bg-[#161B22] border border-gray-300 dark:border-[#2a2f3a] text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1c2128] transition-colors"
                                 onClick={() => setMobileMenuOpen(true)}
                                 aria-label="Open Menu"
                             >
@@ -601,8 +601,8 @@ function DashboardContent() {
                         </div>
 
                         <div className="flex-1 mx-4 hidden md:block">
-                            <h1 className="text-lg md:text-xl font-semibold text-white">{currentTabLabel}</h1>
-                            <p className="text-gray-400 text-xs sm:text-sm">
+                            <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">{currentTabLabel}</h1>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                                 {activeTab === "chat" ? 'Your personal trading coach with voice support' :
                                     activeTab === "overview" ? 'Comprehensive trading overview and key metrics' :
                                         activeTab === "analytics" ? 'Detailed performance analytics and insights' :
