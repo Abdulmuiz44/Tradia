@@ -134,7 +134,7 @@ export default function ForgotPasswordPage(): React.ReactElement {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-black hover:bg-gray-900 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-black rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
                 </button>

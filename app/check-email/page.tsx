@@ -47,7 +47,7 @@ export default function CheckEmailPage(): React.ReactElement {
 
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center col-span-1 sm:col-span-1 w-full px-4 py-2 rounded-lg bg-blue-600 dark:bg-indigo-500 hover:bg-blue-700 dark:hover:bg-indigo-600 text-white text-sm font-medium"
+                  className="inline-flex items-center justify-center col-span-1 sm:col-span-1 w-full px-4 py-2 rounded-lg bg-black dark:bg-white hover:bg-gray-900 dark:hover:bg-gray-100 text-white dark:text-black text-sm font-medium"
                 >
                   Create another account
                 </Link>

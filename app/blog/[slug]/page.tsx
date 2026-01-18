@@ -45,7 +45,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
       <div className="mt-20 pt-10 border-t border-gray-200 dark:border-white/10 text-center">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Ready to upgrade your trading?</h3>
         <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">Join thousands of traders using Tradia&apos;s AI to analyze patterns and master their psychology.</p>
-        <a href="/signup" className="inline-flex items-center justify-center px-8 py-3 text-base font-bold text-white dark:text-black bg-gray-900 dark:bg-white rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
+        <a href="/signup" className="inline-flex items-center justify-center px-8 py-3 text-base font-bold text-white dark:text-black bg-black dark:bg-white rounded-full hover:bg-gray-900 dark:hover:bg-gray-200 transition-colors">
           Start Free Analysis
         </a>
       </div>
