@@ -7,40 +7,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   CreditCard,
   Calendar,
-  Download,
   RefreshCw,
   AlertCircle,
   CheckCircle,
   X,
   Crown,
-  TrendingUp,
-  Shield,
-  Zap
+  Zap,
+  Clock
 } from "lucide-react";
-import { getPlanDisplayName, getPlanColor, PlanType } from "@/lib/planAccess";
-
-interface Subscription {
-  id: string;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete';
-  currentPeriodStart: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-  price: {
-    amount: number;
-    currency: string;
-    interval: 'month' | 'year';
-  };
-}
-
-interface BillingHistory {
-  id: string;
-  date: string;
-  amount: number;
-  currency: string;
-  status: 'paid' | 'pending' | 'failed';
-  description: string;
-  invoiceUrl?: string;
-}
+import { getPlanDisplayName, PlanType, PLAN_LIMITS } from "@/lib/planAccess";
 
 export default function BillingPage() {
   const { data: session } = useSession();
@@ -49,11 +24,10 @@ export default function BillingPage() {
 
   const [currentPlan, setCurrentPlan] = useState<PlanType>('starter');
   const [subscription, setSubscription] = useState<any | null>(null);
-  const [billingHistory, setBillingHistory] = useState<BillingHistory[]>([]);
+  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>('pro');
 
   // Check for success/cancel parameters
   const success = searchParams?.get('success');
@@ -61,59 +35,41 @@ export default function BillingPage() {
   const txRef = searchParams?.get('tx_ref') || searchParams?.get('txRef') || null;
 
   const loadBillingData = useCallback(async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user) return;
 
     try {
       setLoading(true);
 
-      // Load current plan via API
-      const planResponse = await fetch('/api/user/plan');
-      if (planResponse.ok) {
-        const planData = await planResponse.json();
-        setCurrentPlan(planData.plan);
-      } else {
-        setCurrentPlan('starter'); // Default to starter if error
+      // Load user profile with plan data
+      const profileResponse = await fetch('/api/user/profile');
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setCurrentPlan(profileData.plan || 'starter');
+        setUserCreatedAt(profileData.createdAt || null);
       }
 
-      // Load subscription data
-      const subscriptionResponse = await fetch('/api/payments/subscriptions');
-      if (subscriptionResponse.ok) {
-        const data = await subscriptionResponse.json();
-        if (data.subscriptions && data.subscriptions.length > 0) {
-          setSubscription(data.subscriptions[0]);
-        } else {
-          setSubscription(null);
+      // Load subscription data if any
+      try {
+        const subscriptionResponse = await fetch('/api/payments/subscriptions');
+        if (subscriptionResponse.ok) {
+          const data = await subscriptionResponse.json();
+          if (data.subscriptions && data.subscriptions.length > 0) {
+            setSubscription(data.subscriptions[0]);
+          } else {
+            setSubscription(null);
+          }
         }
+      } catch {
+        // No subscriptions is fine
+        setSubscription(null);
       }
-
-      // Load billing history (mock data for now)
-      setBillingHistory([
-        {
-          id: 'inv_001',
-          date: '2024-01-15',
-          amount: 29,
-          currency: 'USD',
-          status: 'paid',
-          description: 'Pro Plan - Monthly',
-          invoiceUrl: '#'
-        },
-        {
-          id: 'inv_002',
-          date: '2023-12-15',
-          amount: 29,
-          currency: 'USD',
-          status: 'paid',
-          description: 'Pro Plan - Monthly',
-          invoiceUrl: '#'
-        }
-      ]);
 
     } catch (error) {
       console.error('Failed to load billing data:', error);
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.id]);
+  }, [session?.user]);
 
   useEffect(() => {
     if (session?.user) {
@@ -121,14 +77,12 @@ export default function BillingPage() {
     }
   }, [session?.user, loadBillingData]);
 
-  // If redirected from payment provider with success, verify explicitly to avoid waiting for webhook
+  // If redirected from payment provider with success
   useEffect(() => {
     if (!success) return;
 
     const runVerification = async () => {
       try {
-        // With LemonSqueezy, webhook-based activation is primary
-        // But still try to verify in case webhook is slow
         if (txRef) {
           await fetch('/api/payments/verify', {
             method: 'POST',
@@ -136,11 +90,10 @@ export default function BillingPage() {
             body: JSON.stringify({ txRef })
           });
         }
-        // Give webhook time to process (LemonSqueezy typically instant)
         await new Promise(resolve => setTimeout(resolve, 1000));
         await loadBillingData();
       } catch {
-        // swallow errors; UI already reflects previous subscription state
+        // swallow errors
       }
     };
 
@@ -164,7 +117,6 @@ export default function BillingPage() {
 
       if (response.ok) {
         const data = await response.json();
-        // Redirect to Polar checkout
         window.location.href = data.checkoutUrl;
       } else {
         alert('Failed to create checkout session');
@@ -196,11 +148,7 @@ export default function BillingPage() {
       });
 
       if (response.ok) {
-        // in-app notice handled in dashboard header via NotificationProvider (optional)
-        console.log('Subscription cancelled successfully');
         loadBillingData();
-      } else {
-        console.warn('Failed to cancel subscription');
       }
     } catch (error) {
       console.error('Cancel subscription error:', error);
@@ -208,26 +156,36 @@ export default function BillingPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-black bg-white dark:text-white dark:bg-white/10 border border-black/10 dark:border-white/20';
-      case 'canceled': return 'text-gray-500 bg-gray-100 dark:text-gray-400 dark:bg-white/5 border border-gray-200 dark:border-white/10';
-      case 'past_due': return 'text-black bg-gray-200 dark:text-white dark:bg-white/20'; // Keeping it urgent but monochrome
-      default: return 'text-gray-500 bg-gray-100 dark:text-gray-400 dark:bg-white/5';
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getPlanPrice = (plan: PlanType) => {
+    switch (plan) {
+      case 'pro': return '$9/month';
+      case 'plus': return '$19/month';
+      case 'elite': return '$39/month';
+      default: return 'Free';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active': return <CheckCircle className="w-4 h-4" />;
-      case 'canceled': return <X className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
+  const getPlanBadgeStyle = (plan: PlanType) => {
+    switch (plan) {
+      case 'pro': return 'bg-blue-100 dark:bg-blue-600 text-blue-800 dark:text-blue-100';
+      case 'plus': return 'bg-purple-100 dark:bg-purple-600 text-purple-800 dark:text-purple-100';
+      case 'elite': return 'bg-emerald-100 dark:bg-emerald-600 text-emerald-800 dark:text-emerald-100';
+      default: return 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200';
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-[#0f1319]">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -238,17 +196,19 @@ export default function BillingPage() {
     return null;
   }
 
+  const planLimits = PLAN_LIMITS[currentPlan];
+
   const plans = [
     {
       type: 'pro' as PlanType,
       name: 'Pro',
       price: 9,
       features: [
-        'Advanced analytics',
+        '5 Trading Accounts',
         '50 AI chats per day',
-        '90 days trade storage',
-        'Advanced analytics & insights',
-        'Priority email support'
+        '6 months trade storage',
+        'Advanced analytics',
+        'Email support'
       ],
       popular: false
     },
@@ -257,12 +217,11 @@ export default function BillingPage() {
       name: 'Plus',
       price: 19,
       features: [
-        'Unlimited AI chats',
+        '10 Trading Accounts',
         '200 AI chats per day',
         '1 year trade storage',
-        'Advanced analytics & insights',
-        'Priority support',
-        'Custom integrations'
+        'Advanced analytics',
+        'Priority support'
       ],
       popular: true
     },
@@ -271,187 +230,142 @@ export default function BillingPage() {
       name: 'Elite',
       price: 39,
       features: [
-        'Unlimited MT5 accounts',
+        'Unlimited Trading Accounts',
         'Unlimited AI chats',
         'Unlimited trade storage',
         'All premium features',
-        'Dedicated support',
-        'Custom integrations',
-        'API access'
+        'Dedicated support'
       ],
       popular: false
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0f1319] dark:text-white transition-colors">
+    <div className="min-h-screen bg-white dark:bg-[#0f1319] text-gray-900 dark:text-white">
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Billing & Subscription</h1>
-          <p className="text-gray-400">Manage your subscription and billing information</p>
+          <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Billing & Subscription</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage your subscription and billing information</p>
         </div>
 
         {/* Success/Cancel Messages */}
         {success && (
-          <div className="mb-6 p-4 bg-white/5 border border-white/20 rounded-lg">
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-white" />
-              <span className="text-white font-medium">Payment successful!</span>
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <span className="text-green-800 dark:text-green-300 font-medium">Payment successful!</span>
             </div>
-            <p className="text-gray-400 mt-1">Your subscription has been activated.</p>
+            <p className="text-green-700 dark:text-green-400 mt-1 text-sm">Your subscription has been activated.</p>
           </div>
         )}
 
         {canceled && (
-          <div className="mb-6 p-4 bg-white/5 border border-white/20 rounded-lg">
+          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-white" />
-              <span className="text-white font-medium">Payment cancelled</span>
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <span className="text-amber-800 dark:text-amber-300 font-medium">Payment cancelled</span>
             </div>
-            <p className="text-gray-400 mt-1">No charges were made to your account.</p>
+            <p className="text-amber-700 dark:text-amber-400 mt-1 text-sm">No charges were made to your account.</p>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Manage Subscription */}
-          <div className="lg:col-span-3">
-            <div className="bg-[#0f1319] rounded-lg p-6 mb-4">
-              <h2 className="text-xl font-semibold mb-4">Manage Subscription</h2>
-              {subscription ? (
-                <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-400">Plan</div>
-                    <div className="font-medium capitalize">{String(subscription.plan_type || currentPlan)}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-400">Status</div>
-                    <div className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${getStatusColor(subscription.status || 'active')}`}>
-                      {getStatusIcon(subscription.status || 'active')}
-                      <span className="ml-1 capitalize">{subscription.status || 'active'}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-400">Billing</div>
-                    <div className="font-medium capitalize">{subscription.billing_cycle || 'monthly'}</div>
-                  </div>
-                  {subscription.current_period_end && (
-                    <div>
-                      <div className="text-gray-400">Renews</div>
-                      <div className="font-medium">{new Date(subscription.current_period_end).toLocaleDateString()}</div>
-                    </div>
-                  )}
-                  <div className="sm:col-span-2 pt-2">
-                    <button
-                      onClick={handleCancelSubscription}
-                      className="px-3 py-2 bg-transparent border border-white/20 text-gray-400 rounded hover:bg-white/5 transition-colors"
-                    >
-                      Cancel Subscription
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-gray-400">No active subscription found.</div>
-              )}
-            </div>
-          </div>
-
           {/* Current Plan */}
           <div className="lg:col-span-2">
-            <div className="bg-[#0f1319] rounded-lg p-6">
+            <div className="bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-[#2a2f3a] p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Current Plan</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Current Plan</h2>
                 <button
                   onClick={() => setShowUpgradeModal(true)}
-                  className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition font-medium"
                 >
                   {currentPlan === 'starter' ? 'Upgrade Plan' : 'Change Plan'}
                 </button>
               </div>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className={`p-3 rounded-lg ${getPlanColor(currentPlan)}`}>
-                  <Crown className="w-6 h-6" />
+                <div className="p-3 rounded-lg bg-gray-100 dark:bg-[#0f1319]">
+                  <Crown className="w-6 h-6 text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold capitalize">{getPlanDisplayName(currentPlan)} Plan</h3>
-                  <p className="text-gray-400">
-                    {currentPlan === 'starter' ? 'Basic features included' :
-                      currentPlan === 'pro' ? '$9/month' :
-                        currentPlan === 'plus' ? '$19/month' : '$39/month'}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold capitalize text-gray-900 dark:text-white">
+                      {getPlanDisplayName(currentPlan)} Plan
+                    </h3>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPlanBadgeStyle(currentPlan)}`}>
+                      {currentPlan.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400">{getPlanPrice(currentPlan)}</p>
                 </div>
               </div>
 
-              {/* Plan Features */}
+              {/* Plan Features from actual limits */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">
-                    {currentPlan === 'starter' ? '2' : currentPlan === 'pro' ? '5' : currentPlan === 'plus' ? '10' : 'Unlimited'} MT5 Accounts
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {planLimits.maxTradingAccounts === -1 ? 'Unlimited' : planLimits.maxTradingAccounts} Trading Accounts
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">
-                    {currentPlan === 'starter' ? '10' : currentPlan === 'pro' ? '50' : currentPlan === 'plus' ? '200' : 'Unlimited'} AI Chats/Day
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {planLimits.aiChatsPerDay === -1 ? 'Unlimited' : planLimits.aiChatsPerDay} AI Chats/Day
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">
-                    {currentPlan === 'starter' ? '45 days' : currentPlan === 'pro' ? '182 days' : currentPlan === 'plus' ? '365 days' : 'Unlimited'} Storage
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {planLimits.tradeStorageDays === -1 ? 'Unlimited' : `${planLimits.tradeStorageDays} days`} Trade Storage
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">
-                    {currentPlan === 'starter' ? 'Basic' : 'Advanced'} Analytics
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {planLimits.advancedAnalytics ? 'Advanced' : 'Basic'} Analytics
                   </span>
                 </div>
               </div>
 
-              {/* Subscription Details */}
+              {/* Active Subscription Details */}
               {subscription && (
-                <div className="border-t border-gray-700 pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium">Subscription Details</h4>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(subscription.status)}`}>
-                      {getStatusIcon(subscription.status)}
-                      <span className="ml-1 capitalize">{subscription.status}</span>
-                    </span>
-                  </div>
-
+                <div className="border-t border-gray-200 dark:border-[#2a2f3a] pt-6">
+                  <h4 className="font-medium mb-4 text-gray-900 dark:text-white">Subscription Details</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    {subscription.currentPeriodEnd || subscription.current_period_end ? (
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Status</span>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${subscription.status === 'active'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
+                          }`}>
+                          {subscription.status === 'active' && <CheckCircle className="w-3 h-3" />}
+                          <span className="capitalize">{subscription.status || 'active'}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Billing Cycle</span>
+                      <div className="font-medium text-gray-900 dark:text-white mt-1 capitalize">
+                        {subscription.billing_cycle || 'Monthly'}
+                      </div>
+                    </div>
+                    {(subscription.current_period_end || subscription.currentPeriodEnd) && (
                       <div>
-                        <span className="text-gray-400">Next billing:</span>
-                        <div className="font-medium">
-                          {new Date(subscription.currentPeriodEnd || subscription.current_period_end).toLocaleDateString()}
+                        <span className="text-gray-500 dark:text-gray-400">Next Billing Date</span>
+                        <div className="font-medium text-gray-900 dark:text-white mt-1">
+                          {formatDate(subscription.current_period_end || subscription.currentPeriodEnd)}
                         </div>
                       </div>
-                    ) : null}
-                    {subscription.price?.amount ? (
-                      <div>
-                        <span className="text-gray-400">Amount:</span>
-                        <div className="font-medium">
-                          ${subscription.price.amount}/{subscription.price.interval || 'month'}
-                        </div>
-                      </div>
-                    ) : subscription.amount ? (
-                      <div>
-                        <span className="text-gray-400">Amount:</span>
-                        <div className="font-medium">
-                          ${subscription.amount}/{subscription.billing_cycle || 'month'}
-                        </div>
-                      </div>
-                    ) : null}
+                    )}
                   </div>
 
                   {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
                     <button
                       onClick={handleCancelSubscription}
-                      className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      className="mt-4 px-4 py-2 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition text-sm"
                     >
                       Cancel Subscription
                     </button>
@@ -461,37 +375,52 @@ export default function BillingPage() {
             </div>
           </div>
 
-          {/* Billing History */}
-          <div className="lg:col-span-1">
-            <div className="bg-[#0f1319] rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-6">Billing History</h2>
+          {/* Account Info */}
+          <div className="space-y-6">
+            {/* Account Details */}
+            <div className="bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-[#2a2f3a] p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-blue-500" />
+                Account Info
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Account Email</span>
+                  <div className="font-medium text-gray-900 dark:text-white">{session.user.email}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Member Since</span>
+                  <div className="font-medium text-gray-900 dark:text-white">{formatDate(userCreatedAt)}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Current Plan</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPlanBadgeStyle(currentPlan)}`}>
+                      {currentPlan.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              {billingHistory.length > 0 ? (
-                <div className="space-y-4">
-                  {billingHistory.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                      <div>
-                        <div className="font-medium text-sm">{invoice.description}</div>
-                        <div className="text-xs text-gray-400">{invoice.date}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">${invoice.amount}</div>
-                        <span className={`text-xs px-2 py-1 rounded ${invoice.status === 'paid' ? 'bg-green-900 text-green-300' :
-                          invoice.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
-                            'bg-red-900 text-red-300'
-                          }`}>
-                          {invoice.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CreditCard className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">No billing history yet</p>
-                </div>
-              )}
+            {/* Quick Actions */}
+            <div className="bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-[#2a2f3a] p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="w-full px-4 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition font-medium flex items-center justify-center gap-2"
+                >
+                  <Crown className="w-4 h-4" />
+                  Upgrade Plan
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard/profile')}
+                  className="w-full px-4 py-2.5 bg-gray-100 dark:bg-[#0f1319] text-gray-800 dark:text-white border border-gray-300 dark:border-[#2a2f3a] rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+                >
+                  Manage Profile
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -502,15 +431,15 @@ export default function BillingPage() {
             <div className="absolute inset-0 bg-black/50" onClick={() => setShowUpgradeModal(false)} />
 
             <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="bg-[#0f1319] rounded-xl shadow-2xl">
+              <div className="bg-white dark:bg-[#161B22] rounded-xl shadow-2xl border border-gray-200 dark:border-[#2a2f3a]">
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold">Choose Your Plan</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Choose Your Plan</h2>
                     <button
                       onClick={() => setShowUpgradeModal(false)}
-                      className="p-2 hover:bg-gray-700 rounded-lg"
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     </button>
                   </div>
 
@@ -518,31 +447,30 @@ export default function BillingPage() {
                     {plans.map((plan) => (
                       <div
                         key={plan.type}
-                        className={`relative p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${plan.popular
-                          ? 'border-white bg-white/5'
-                          : 'border-white/10 hover:border-white/30'
+                        className={`relative p-6 rounded-xl border-2 transition-all duration-300 ${plan.popular
+                          ? 'border-black dark:border-white bg-gray-50 dark:bg-[#0f1319]'
+                          : 'border-gray-200 dark:border-[#2a2f3a] hover:border-gray-400 dark:hover:border-gray-600'
                           }`}
-                        onClick={() => setSelectedPlan(plan.type)}
                       >
                         {plan.popular && (
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <span className="bg-white text-black px-4 py-1 rounded-full text-sm font-medium">
+                            <span className="bg-black dark:bg-white text-white dark:text-black px-4 py-1 rounded-full text-sm font-medium">
                               Most Popular
                             </span>
                           </div>
                         )}
 
                         <div className="text-center mb-4">
-                          <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                          <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{plan.name}</h3>
                           <div className="flex items-center justify-center gap-1 mb-2">
-                            <span className="text-3xl font-bold">${plan.price}</span>
-                            <span className="text-gray-400">/month</span>
+                            <span className="text-3xl font-bold text-gray-900 dark:text-white">${plan.price}</span>
+                            <span className="text-gray-500 dark:text-gray-400">/month</span>
                           </div>
                         </div>
 
                         <ul className="space-y-2 mb-6">
                           {plan.features.map((feature, index) => (
-                            <li key={index} className="flex items-center gap-2 text-sm">
+                            <li key={index} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                               <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                               {feature}
                             </li>
@@ -550,21 +478,22 @@ export default function BillingPage() {
                         </ul>
 
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUpgrade(plan.type);
-                          }}
-                          disabled={upgrading}
-                          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${plan.popular
-                            ? 'bg-white text-black hover:bg-gray-200'
-                            : 'bg-white/10 text-white hover:bg-white/20'
+                          onClick={() => handleUpgrade(plan.type)}
+                          disabled={upgrading || currentPlan === plan.type}
+                          className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors ${currentPlan === plan.type
+                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : plan.popular
+                              ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'
+                              : 'bg-gray-100 dark:bg-[#0f1319] text-gray-900 dark:text-white border border-gray-300 dark:border-[#2a2f3a] hover:bg-gray-200 dark:hover:bg-gray-800'
                             } disabled:opacity-50`}
                         >
                           {upgrading ? (
-                            <>
-                              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                            <span className="flex items-center justify-center gap-2">
+                              <RefreshCw className="w-4 h-4 animate-spin" />
                               Processing...
-                            </>
+                            </span>
+                          ) : currentPlan === plan.type ? (
+                            'Current Plan'
                           ) : (
                             `Upgrade to ${plan.name}`
                           )}
