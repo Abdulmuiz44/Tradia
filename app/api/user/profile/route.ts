@@ -14,86 +14,93 @@ export async function GET() {
     }
 
     const supabase = createClient();
-    let user = null;
 
-    // Try to get user profile from database
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select(`
-          id, 
-          email, 
-          name,
-          country,
-          plan, 
-          email_verified, 
-          created_at,
-          image,
-          trading_style,
-          experience_level,
-          preferred_pairs,
-          risk_tolerance,
-          bio,
-          profile_image_url,
-          timezone
-        `)
-        .eq("id", session.user.id as string)
-        .maybeSingle();
+    // Try to get user profile from database with essential columns first
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")  // Select all to avoid column not found errors
+      .eq("id", session.user.id as string)
+      .maybeSingle();
 
-      if (error) {
-        console.warn("Database query error:", error.message);
-      } else if (data) {
-        user = data;
-      }
-    } catch (dbError) {
-      console.warn("Database query failed:", dbError);
-    }
-
-    // If we got data from database, use it; otherwise use session data
-    if (user) {
+    if (error) {
+      console.error("Database query error:", error.message, error);
+      // Return fallback only if there's a genuine error
       return NextResponse.json({
-        id: user.id,
-        name: user.name || session.user.name || null,
-        email: user.email || session.user.email || '',
-        country: user.country || null,
-        plan: user.plan || 'starter',
-        emailVerified: user.email_verified ? true : false,
-        createdAt: user.created_at,
-        image: user.image || user.profile_image_url || session.user.image || null,
-        tradingStyle: user.trading_style || null,
-        experienceLevel: user.experience_level || null,
-        preferredPairs: user.preferred_pairs || null,
-        riskTolerance: user.risk_tolerance || null,
-        bio: user.bio || null,
-        profileImageUrl: user.profile_image_url || user.image || null,
-        timezone: user.timezone || null,
+        id: session.user.id,
+        name: session.user.name || null,
+        email: session.user.email || '',
+        country: null,
+        plan: 'starter',
+        emailVerified: false,
+        createdAt: new Date().toISOString(),
+        image: session.user.image || null,
+        tradingStyle: null,
+        experienceLevel: null,
+        preferredPairs: null,
+        riskTolerance: null,
+        bio: null,
+        profileImageUrl: null,
+        timezone: null,
+        _source: 'session_fallback_error',
+        _error: error.message,
       });
     }
 
-    // Fallback to session data if database query fails or returns no data
+    if (!user) {
+      console.warn("No user found in database for ID:", session.user.id);
+      return NextResponse.json({
+        id: session.user.id,
+        name: session.user.name || null,
+        email: session.user.email || '',
+        country: null,
+        plan: 'starter',
+        emailVerified: false,
+        createdAt: new Date().toISOString(),
+        image: session.user.image || null,
+        tradingStyle: null,
+        experienceLevel: null,
+        preferredPairs: null,
+        riskTolerance: null,
+        bio: null,
+        profileImageUrl: null,
+        timezone: null,
+        _source: 'session_fallback_no_user',
+      });
+    }
+
+    // We have real user data from database
+    // email_verified can be: null, false, true, or a timestamp string
+    // It's verified if it's truthy (true or has a timestamp value)
+    const isEmailVerified = Boolean(user.email_verified);
+
+    // Handle both possible column names for experience
+    const experienceLevel = user.experience_level || user.trading_experience || null;
+
     return NextResponse.json({
-      id: session.user.id,
-      name: session.user.name || null,
-      email: session.user.email || '',
-      country: null,
-      plan: 'starter',
-      emailVerified: false,
-      createdAt: new Date().toISOString(),
-      image: session.user.image || null,
-      tradingStyle: null,
-      experienceLevel: null,
-      preferredPairs: null,
-      riskTolerance: null,
-      bio: null,
-      profileImageUrl: null,
-      timezone: null,
+      id: user.id,
+      name: user.name || null,
+      email: user.email || session.user.email || '',
+      country: user.country || null,
+      plan: user.plan || 'starter',
+      emailVerified: isEmailVerified,
+      createdAt: user.created_at || user.signup_at || null,
+      image: user.image || user.profile_image_url || null,
+      tradingStyle: user.trading_style || null,
+      experienceLevel: experienceLevel,
+      preferredPairs: user.preferred_pairs || null,
+      riskTolerance: user.risk_tolerance || null,
+      bio: user.bio || null,
+      profileImageUrl: user.profile_image_url || user.image || null,
+      timezone: user.timezone || null,
+      _source: 'database',
     });
   } catch (error) {
     console.error("Profile fetch error:", error);
-    // Return 500 only if absolutely necessary; try to provide session fallback
     return NextResponse.json({
       error: "Failed to fetch profile",
+      details: error instanceof Error ? error.message : String(error),
     }, { status: 500 });
   }
 }
+
 
