@@ -196,19 +196,22 @@ export async function POST(req: NextRequest) {
             // Verify conversation exists for this user
             const { data: existingConv, error: checkError } = await supabase
                 .from("conversations")
-                .select("id")
+                .select("id, title")
                 .eq("id", currentConversationId)
                 .eq("user_id", userId)
                 .single();
 
             if (checkError || !existingConv) {
-                // Conversation doesn't exist, create it
+                // Conversation doesn't exist, create it with generated title
+                const firstUserMessage = messages.find((m: any) => m.role === 'user')?.content || '';
+                const conversationTitle = generateConversationTitle(firstUserMessage, mode);
+
                 const { error: convError } = await supabase
                     .from("conversations")
                     .insert({
                         id: currentConversationId,
                         user_id: userId,
-                        title: "New Conversation",
+                        title: conversationTitle,
                         model: modelId,
                         temperature: options.temperature ?? 0.25,
                         mode,
@@ -217,6 +220,16 @@ export async function POST(req: NextRequest) {
                 if (convError) {
                     throw convError;
                 }
+            } else if (existingConv.title === "New Conversation" || existingConv.title === "Untitled") {
+                // Update the title to something meaningful on first real message
+                const firstUserMessage = messages.find((m: any) => m.role === 'user')?.content || '';
+                const conversationTitle = generateConversationTitle(firstUserMessage, mode);
+
+                await supabase
+                    .from("conversations")
+                    .update({ title: conversationTitle, updated_at: new Date().toISOString() })
+                    .eq("id", currentConversationId)
+                    .eq("user_id", userId);
             }
         }
 

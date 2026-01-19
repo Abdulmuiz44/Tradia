@@ -52,6 +52,7 @@ export function MinimalChatInterface({
         const loadConversationMessages = async () => {
             if (!effectiveConversationId || effectiveConversationId === 'undefined') {
                 setLoadedConversationMessages(null);
+                setMessages([]);
                 setInitialMessagesLoaded(true);
                 return;
             }
@@ -60,6 +61,7 @@ export function MinimalChatInterface({
                 const res = await fetch(`/api/conversations/${effectiveConversationId}`);
                 if (res.status === 404 || !res.ok) {
                     setLoadedConversationMessages(null);
+                    setMessages([]);
                     setInitialMessagesLoaded(true);
                     return;
                 }
@@ -72,21 +74,23 @@ export function MinimalChatInterface({
                         content: msg.content,
                     }));
                     setLoadedConversationMessages(loadedMessages);
+                    setMessages(loadedMessages); // Actually update the chat display!
                 } else {
                     setLoadedConversationMessages(null);
+                    setMessages([]);
                 }
             } catch (err) {
                 console.error('Error loading conversation:', err);
                 setLoadedConversationMessages(null);
+                setMessages([]);
             } finally {
                 setInitialMessagesLoaded(true);
             }
         };
 
-        if (!initialMessagesLoaded && effectiveConversationId) {
-            loadConversationMessages();
-        }
-    }, [effectiveConversationId, initialMessagesLoaded]);
+        // Always reload when conversation ID changes
+        loadConversationMessages();
+    }, [effectiveConversationId, setMessages]);
 
     // Auto scroll
     useEffect(() => {
