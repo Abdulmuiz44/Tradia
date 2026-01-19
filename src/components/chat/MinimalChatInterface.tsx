@@ -33,7 +33,8 @@ export function MinimalChatInterface({
 
     const conversationIdFromRoute = (params?.id as string) || null;
     const conversationIdFromQuery = searchParams?.get('id') || null;
-    const effectiveConversationId = conversationIdFromRoute || conversationIdFromQuery || conversationId;
+    // Prioritize prop over route params for more reliable loading
+    const effectiveConversationId = conversationId || conversationIdFromRoute || conversationIdFromQuery;
 
     // All state managed locally - NO useChat hook
     const [messages, setMessages] = useState<Message[]>([]);
