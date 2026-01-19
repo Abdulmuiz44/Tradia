@@ -58,8 +58,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
         console.log("Conversation found:", conversation.id);
 
-        // Get messages
-        const { data: messages, error: msgError } = await supabase
+        // Get messages from chat_messages table
+        const { data: chatMessages, error: msgError } = await supabase
             .from("chat_messages")
             .select("*")
             .eq("conversation_id", conversationId)
@@ -68,19 +68,31 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
         if (msgError) {
             console.error("Messages query error:", msgError);
-            // Return conversation with empty messages array instead of throwing
-            console.log("Returning conversation with no messages due to query error");
-            return NextResponse.json({
-                conversation,
-                messages: []
-            });
         }
 
-        console.log(`Loaded ${messages?.length || 0} messages for conversation`);
+        console.log(`Loaded ${chatMessages?.length || 0} messages from chat_messages table`);
+
+        // Check for legacy messages stored in conversations.messages JSONB column
+        let finalMessages = chatMessages || [];
+
+        if (finalMessages.length === 0 && conversation.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
+            console.log(`Found ${conversation.messages.length} legacy messages in conversation.messages column`);
+            // Map legacy messages to expected format
+            finalMessages = conversation.messages.map((msg: any, index: number) => ({
+                id: msg.id || `legacy_msg_${index}`,
+                conversation_id: conversationId,
+                user_id: userId,
+                type: msg.role === 'user' ? 'user' : (msg.role === 'assistant' ? 'assistant' : msg.type || 'user'),
+                content: msg.content || '',
+                created_at: msg.created_at || msg.timestamp || new Date().toISOString(),
+            }));
+        }
+
+        console.log(`Returning ${finalMessages.length} total messages`);
 
         return NextResponse.json({
             conversation,
-            messages: messages || []
+            messages: finalMessages
         });
     } catch (err: unknown) {
         console.error("Failed to fetch conversation:", err);
