@@ -57,20 +57,22 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         }
 
         console.log("Conversation found:", conversation.id);
+        console.log("Conversation user_id:", conversation.user_id, "Session user_id:", userId);
+        console.log("Conversation data keys:", Object.keys(conversation));
 
         // Get messages from chat_messages table
+        // Only filter by conversation_id - ownership is already verified via conversation query
         const { data: chatMessages, error: msgError } = await supabase
             .from("chat_messages")
             .select("*")
             .eq("conversation_id", conversationId)
-            .eq("user_id", userId)
             .order("created_at", { ascending: true });
 
         if (msgError) {
             console.error("Messages query error:", msgError);
         }
 
-        console.log(`Loaded ${chatMessages?.length || 0} messages from chat_messages table`);
+        console.log(`Loaded ${chatMessages?.length || 0} messages from chat_messages table for conversation ${conversationId}`);
 
         // Check for legacy messages stored in conversations.messages JSONB column
         let finalMessages = chatMessages || [];
