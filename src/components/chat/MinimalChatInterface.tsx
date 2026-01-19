@@ -47,32 +47,45 @@ export function MinimalChatInterface({
 
     const userName = session?.user?.name?.split(' ')[0] || session?.user?.email?.split('@')[0] || 'Trader';
 
+    // Debug: Log the conversation ID on every render
+    console.log('[Chat] Component rendered with effectiveConversationId:', effectiveConversationId);
+    console.log('[Chat] params:', params, 'conversationId prop:', conversationId);
+
     // Load conversation history on mount
     useEffect(() => {
+        console.log('[Chat] useEffect triggered for ID:', effectiveConversationId);
+
         const loadConversation = async () => {
+            console.log('[Chat] loadConversation called for:', effectiveConversationId);
             setIsLoadingHistory(true);
             setMessages([]);
             setError(null);
 
             if (!effectiveConversationId || effectiveConversationId === 'undefined') {
+                console.log('[Chat] No valid conversation ID, skipping load');
                 setIsLoadingHistory(false);
                 return;
             }
 
             try {
+                console.log('[Chat] Fetching from API:', `/api/conversations/${effectiveConversationId}`);
                 const res = await fetch(`/api/conversations/${effectiveConversationId}`);
+                console.log('[Chat] API response status:', res.status);
 
                 if (res.status === 404) {
-                    // New conversation, no history yet
+                    console.log('[Chat] Conversation not found (404)');
                     setIsLoadingHistory(false);
                     return;
                 }
 
                 if (!res.ok) {
+                    console.log('[Chat] API response not OK:', res.status);
                     throw new Error('Failed to load conversation');
                 }
 
                 const data = await res.json();
+                console.log('[Chat] API response data:', data);
+                console.log('[Chat] Messages count:', data.messages?.length || 0);
 
                 if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
                     const loadedMessages: Message[] = data.messages.map((msg: any) => ({
@@ -80,18 +93,23 @@ export function MinimalChatInterface({
                         role: msg.type === 'user' ? 'user' : 'assistant',
                         content: msg.content || '',
                     }));
+                    console.log('[Chat] Setting messages:', loadedMessages.length);
                     setMessages(loadedMessages);
+                } else {
+                    console.log('[Chat] No messages in response');
                 }
             } catch (err) {
-                console.error('Error loading conversation:', err);
+                console.error('[Chat] Error loading conversation:', err);
                 setError('Failed to load conversation history');
             } finally {
                 setIsLoadingHistory(false);
+                console.log('[Chat] Loading complete');
             }
         };
 
         loadConversation();
     }, [effectiveConversationId]);
+
 
     // Auto scroll
     useEffect(() => {
