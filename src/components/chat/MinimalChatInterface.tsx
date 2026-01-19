@@ -1,7 +1,6 @@
 'use client';
 
-import { useChat } from 'ai/react';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Send, Loader2, StopCircle, Sparkles, TrendingUp, Target, Brain } from 'lucide-react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -9,6 +8,12 @@ import ReactMarkdown from 'react-markdown';
 import type { Trade } from '@/types/trade';
 import { useSession } from 'next-auth/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+interface Message {
+    id: string;
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+}
 
 interface MinimalChatInterfaceProps {
     trades?: Trade[];
@@ -30,87 +35,102 @@ export function MinimalChatInterface({
     const conversationIdFromQuery = searchParams?.get('id') || null;
     const effectiveConversationId = conversationIdFromRoute || conversationIdFromQuery || conversationId;
 
+    // All state managed locally - NO useChat hook
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
-    const [initialMessagesLoaded, setInitialMessagesLoaded] = useState(false);
-    const [loadedConversationMessages, setLoadedConversationMessages] = useState<any[] | null>(null);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(true);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const userName = session?.user?.name?.split(' ')[0] || session?.user?.email?.split('@')[0] || 'Trader';
 
-    const { messages, input, handleInputChange, isLoading, stop, error, setMessages } = useChat({
-        api: '/api/tradia/ai',
-        initialMessages: loadedConversationMessages || [],
-        body: {
-            mode,
-            conversationId: effectiveConversationId,
-            attachedTradeIds: selectedTrades,
-        },
-    });
-
-    // Load existing conversation messages
+    // Load conversation history on mount
     useEffect(() => {
-        const loadConversationMessages = async () => {
+        const loadConversation = async () => {
+            setIsLoadingHistory(true);
+            setMessages([]);
+            setError(null);
+
             if (!effectiveConversationId || effectiveConversationId === 'undefined') {
-                setLoadedConversationMessages(null);
-                setMessages([]);
-                setInitialMessagesLoaded(true);
+                setIsLoadingHistory(false);
                 return;
             }
 
             try {
                 const res = await fetch(`/api/conversations/${effectiveConversationId}`);
-                if (res.status === 404 || !res.ok) {
-                    setLoadedConversationMessages(null);
-                    setMessages([]);
-                    setInitialMessagesLoaded(true);
+
+                if (res.status === 404) {
+                    // New conversation, no history yet
+                    setIsLoadingHistory(false);
                     return;
                 }
 
+                if (!res.ok) {
+                    throw new Error('Failed to load conversation');
+                }
+
                 const data = await res.json();
-                if (data.messages && data.messages.length > 0) {
-                    const loadedMessages = data.messages.map((msg: any) => ({
-                        id: msg.id,
+
+                if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                    const loadedMessages: Message[] = data.messages.map((msg: any) => ({
+                        id: msg.id || `msg_${Date.now()}_${Math.random()}`,
                         role: msg.type === 'user' ? 'user' : 'assistant',
-                        content: msg.content,
+                        content: msg.content || '',
                     }));
-                    setLoadedConversationMessages(loadedMessages);
-                    setMessages(loadedMessages); // Actually update the chat display!
-                } else {
-                    setLoadedConversationMessages(null);
-                    setMessages([]);
+                    setMessages(loadedMessages);
                 }
             } catch (err) {
                 console.error('Error loading conversation:', err);
-                setLoadedConversationMessages(null);
-                setMessages([]);
+                setError('Failed to load conversation history');
             } finally {
-                setInitialMessagesLoaded(true);
+                setIsLoadingHistory(false);
             }
         };
 
-        // Always reload when conversation ID changes
-        loadConversationMessages();
-    }, [effectiveConversationId, setMessages]);
+        loadConversation();
+    }, [effectiveConversationId]);
 
     // Auto scroll
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        if (scrollRef.current) {
+            scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, isLoading]);
+
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+    }, []);
+
+    const stopGeneration = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+        setIsLoading(false);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
 
-        const userContent = input;
-        handleInputChange({ target: { value: '' } } as any);
+        const userContent = input.trim();
+        setInput('');
+        setError(null);
 
-        const userMessage = {
+        const userMessage: Message = {
             id: `msg_${Date.now()}`,
-            role: 'user' as const,
+            role: 'user',
             content: userContent,
         };
 
+        // Add user message immediately
         setMessages(prev => [...prev, userMessage]);
+        setIsLoading(true);
+
+        abortControllerRef.current = new AbortController();
 
         try {
             const response = await fetch('/api/tradia/ai', {
@@ -122,47 +142,70 @@ export function MinimalChatInterface({
                     mode,
                     conversationId: effectiveConversationId,
                 }),
+                signal: abortControllerRef.current.signal,
             });
 
             if (!response.ok) {
-                const error = await response.text();
-                throw new Error(error || 'Failed to get response');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to get response');
             }
 
+            // Handle conversation ID redirect for new chats
             const convoIdHeader = response.headers.get('X-Conversation-Id');
             if (convoIdHeader && convoIdHeader !== effectiveConversationId) {
                 router.replace(`/dashboard/trades/chat/${convoIdHeader}`);
             }
 
+            // Stream the response
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No response body');
 
             let assistantContent = '';
             const decoder = new TextDecoder();
 
+            // Add placeholder assistant message
+            const assistantId = `msg_${Date.now()}_assistant`;
+            setMessages(prev => [...prev, {
+                id: assistantId,
+                role: 'assistant',
+                content: '',
+            }]);
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                assistantContent += decoder.decode(value, { stream: true });
+
+                const chunk = decoder.decode(value, { stream: true });
+                assistantContent += chunk;
+
+                // Update the assistant message in real-time
+                setMessages(prev => prev.map(msg =>
+                    msg.id === assistantId
+                        ? { ...msg, content: assistantContent }
+                        : msg
+                ));
             }
 
-            setMessages(prev => [...prev, {
-                id: `msg_${Date.now()}`,
-                role: 'assistant',
-                content: assistantContent,
-            }]);
-        } catch (err) {
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                // User stopped generation
+                return;
+            }
             console.error('Chat error:', err);
+            setError(err.message || 'An error occurred');
             setMessages(prev => [...prev, {
-                id: `msg_${Date.now()}`,
+                id: `msg_${Date.now()}_error`,
                 role: 'assistant',
-                content: `Error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+                content: `Error: ${err.message || 'Unknown error occurred'}`,
             }]);
+        } finally {
+            setIsLoading(false);
+            abortControllerRef.current = null;
         }
     };
 
     const handleQuickPrompt = (prompt: string) => {
-        handleInputChange({ target: { value: prompt } } as any);
+        setInput(prompt);
     };
 
     const quickPrompts = [
@@ -171,7 +214,19 @@ export function MinimalChatInterface({
         { icon: Brain, label: "Trading psychology tips", prompt: "Give me tips for improving my trading psychology and emotional discipline" },
     ];
 
-    const isEmptyChat = messages.length === 0;
+    const isEmptyChat = messages.length === 0 && !isLoadingHistory;
+
+    // Show loading state while fetching history
+    if (isLoadingHistory) {
+        return (
+            <div className="w-full h-full bg-white dark:bg-[#0D1117] flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-500" />
+                    <p className="text-gray-500 dark:text-gray-400">Loading conversation...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full h-full bg-white dark:bg-[#0D1117] text-gray-900 dark:text-white flex flex-col">
@@ -245,7 +300,7 @@ export function MinimalChatInterface({
                 ) : (
                     /* Messages */
                     <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 space-y-6">
-                        {messages.map((m: any) => (
+                        {messages.map((m) => (
                             <div
                                 key={m.id}
                                 className={cn(
@@ -269,21 +324,28 @@ export function MinimalChatInterface({
                                         <div className="whitespace-pre-wrap">{m.content}</div>
                                     ) : (
                                         <div className="prose prose-sm dark:prose-invert max-w-none">
-                                            <ReactMarkdown
-                                                components={{
-                                                    p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
-                                                    h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2">{children}</h1>,
-                                                    h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-2">{children}</h2>,
-                                                    h3: ({ children }) => <h3 className="font-semibold mt-2 mb-1">{children}</h3>,
-                                                    ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-3">{children}</ul>,
-                                                    ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-3">{children}</ol>,
-                                                    li: ({ children }) => <li>{children}</li>,
-                                                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                                                    code: ({ children }) => <code className="bg-gray-200 dark:bg-[#2a2f3a] px-1.5 py-0.5 rounded text-xs">{children}</code>,
-                                                }}
-                                            >
-                                                {m.content}
-                                            </ReactMarkdown>
+                                            {m.content ? (
+                                                <ReactMarkdown
+                                                    components={{
+                                                        p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                                                        h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2">{children}</h1>,
+                                                        h2: ({ children }) => <h2 className="text-base font-bold mt-3 mb-2">{children}</h2>,
+                                                        h3: ({ children }) => <h3 className="font-semibold mt-2 mb-1">{children}</h3>,
+                                                        ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-3">{children}</ul>,
+                                                        ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-3">{children}</ol>,
+                                                        li: ({ children }) => <li>{children}</li>,
+                                                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                                                        code: ({ children }) => <code className="bg-gray-200 dark:bg-[#2a2f3a] px-1.5 py-0.5 rounded text-xs">{children}</code>,
+                                                    }}
+                                                >
+                                                    {m.content}
+                                                </ReactMarkdown>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <span>Thinking...</span>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -299,27 +361,13 @@ export function MinimalChatInterface({
                             </div>
                         ))}
 
-                        {isLoading && (
-                            <div className="flex gap-4">
-                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                                    AI
-                                </div>
-                                <div className="bg-gray-100 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] px-4 py-3 rounded-2xl">
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Thinking...
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {error && (
                             <div className="flex gap-4">
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-xs font-bold text-red-500">
                                     !
                                 </div>
                                 <div className="text-sm text-red-500 bg-red-50 dark:bg-red-500/10 px-4 py-3 rounded-2xl">
-                                    An error occurred. Please try again.
+                                    {error}
                                 </div>
                             </div>
                         )}
@@ -351,7 +399,7 @@ export function MinimalChatInterface({
                                 {isLoading ? (
                                     <button
                                         type="button"
-                                        onClick={() => stop()}
+                                        onClick={stopGeneration}
                                         className="p-2 text-gray-400 hover:text-red-500 transition"
                                         title="Stop"
                                     >
