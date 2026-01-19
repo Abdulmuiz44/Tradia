@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Loader2, Menu, X, PenSquare, History, Search, User, Settings, LogOut, CreditCard } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
@@ -15,11 +15,19 @@ interface ChatLayoutProps {
 export default function ChatLayout({ children }: ChatLayoutProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Sync activeConversationId with URL pathname
+  useEffect(() => {
+    const match = pathname?.match(/\/dashboard\/trades\/chat\/([^/]+)/);
+    const idFromPath = match ? match[1] : null;
+    setActiveConversationId(idFromPath);
+  }, [pathname]);
 
   const loadConversations = useCallback(async () => {
     try {
