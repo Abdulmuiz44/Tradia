@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader2, Menu, X, PenSquare, History, Search } from "lucide-react";
+import { Loader2, Menu, X, PenSquare, History, Search, User, Settings, LogOut, CreditCard } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import type { Conversation } from "@/types/chat";
 
 interface ChatLayoutProps {
@@ -191,8 +192,8 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
                   className={`
                     w-full px-3 py-2.5 rounded-lg text-left transition group flex items-center justify-between
                     ${activeConversationId === conv.id
-                      ? 'bg-blue-50 dark:bg-[#1f6feb]/20 text-blue-600 dark:text-blue-400 font-medium'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#161B22]'
+                      ? 'bg-gray-200 dark:bg-[#30363d] text-gray-900 dark:text-white font-medium'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#21262d]'
                     }
                   `}
                 >
@@ -211,20 +212,72 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         </div>
 
         {/* User Section */}
-        <div className="p-3 border-t border-gray-200 dark:border-[#2a2f3a]">
-          <div className="flex items-center gap-3 px-2 py-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={session?.user?.image || ""} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
+        <div className="p-4 border-t border-gray-200 dark:border-[#2a2f3a]">
+          <AnimatedDropdown
+            title="Account"
+            panelClassName="w-60"
+            positionClassName="left-4 bottom-16"
+            trigger={(
+              <button className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#21262d] transition-colors text-left group">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={session?.user?.image || ""} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                    {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {session?.user?.email || ''}
+                  </p>
+                </div>
+              </button>
+            )}
+          >
+            <div className="p-2">
+              <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-2">
+                <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide ${(session?.user as any)?.plan === 'elite' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
+                  (session?.user as any)?.plan === 'plus' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                    (session?.user as any)?.plan === 'pro' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                  }`}>
+                  {(session?.user as any)?.plan || 'free'} plan
+                </div>
               </div>
+
+              <button
+                onClick={() => router.push("/dashboard/profile")}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#30363d] text-sm text-gray-700 dark:text-gray-200 transition-colors"
+              >
+                <User className="w-4 h-4" />
+                Profile
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/billing")}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#30363d] text-sm text-gray-700 dark:text-gray-200 transition-colors"
+              >
+                <CreditCard className="w-4 h-4" />
+                Billing
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/settings")}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#30363d] text-sm text-gray-700 dark:text-gray-200 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </button>
+              <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-sm text-red-600 dark:text-red-400 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign out
+              </button>
             </div>
-          </div>
+          </AnimatedDropdown>
         </div>
       </aside>
 
