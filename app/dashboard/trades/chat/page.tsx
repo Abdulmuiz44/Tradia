@@ -61,6 +61,7 @@ function TradesChatContent() {
 
     return (
         <MinimalChatInterface
+            key={conversationIdFromUrl || 'new'}
             trades={normalizedTrades}
             mode="analysis"
             conversationId={conversationIdFromUrl || undefined}

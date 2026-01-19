@@ -61,6 +61,7 @@ function TradesChatContent() {
 
     return (
         <MinimalChatInterface
+            key={conversationIdFromUrl || 'new'} // Force remount when conversation changes
             trades={normalizedTrades}
             mode="analysis"
             conversationId={conversationIdFromUrl || undefined}
