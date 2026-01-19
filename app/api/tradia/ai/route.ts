@@ -173,9 +173,10 @@ export async function POST(req: NextRequest) {
         if (!currentConversationId) {
             const newConvId = crypto.randomUUID();
 
-            // Generate a meaningful conversation title from the first user message
+            // Generate a meaningful conversation title and mode from the first user message
             const firstUserMessage = messages.find((m: any) => m.role === 'user')?.content || '';
-            const conversationTitle = generateConversationTitle(firstUserMessage, mode);
+            const detectedMode = detectModeFromMessage(firstUserMessage);
+            const conversationTitle = generateConversationTitle(firstUserMessage, detectedMode);
 
             const { error: convError } = await supabase
                 .from("conversations")
@@ -185,7 +186,7 @@ export async function POST(req: NextRequest) {
                     title: conversationTitle,
                     model: modelId,
                     temperature: options.temperature ?? 0.25,
-                    mode,
+                    mode: detectedMode,
                 });
 
             if (convError) {
@@ -202,9 +203,10 @@ export async function POST(req: NextRequest) {
                 .single();
 
             if (checkError || !existingConv) {
-                // Conversation doesn't exist, create it with generated title
+                // Conversation doesn't exist, create it with generated title and detected mode
                 const firstUserMessage = messages.find((m: any) => m.role === 'user')?.content || '';
-                const conversationTitle = generateConversationTitle(firstUserMessage, mode);
+                const detectedMode = detectModeFromMessage(firstUserMessage);
+                const conversationTitle = generateConversationTitle(firstUserMessage, detectedMode);
 
                 const { error: convError } = await supabase
                     .from("conversations")
@@ -214,20 +216,25 @@ export async function POST(req: NextRequest) {
                         title: conversationTitle,
                         model: modelId,
                         temperature: options.temperature ?? 0.25,
-                        mode,
+                        mode: detectedMode,
                     });
 
                 if (convError) {
                     throw convError;
                 }
             } else if (existingConv.title === "New Conversation" || existingConv.title === "Untitled") {
-                // Update the title to something meaningful on first real message
+                // Update the title and mode to something meaningful on first real message
                 const firstUserMessage = messages.find((m: any) => m.role === 'user')?.content || '';
-                const conversationTitle = generateConversationTitle(firstUserMessage, mode);
+                const detectedMode = detectModeFromMessage(firstUserMessage);
+                const conversationTitle = generateConversationTitle(firstUserMessage, detectedMode);
 
                 await supabase
                     .from("conversations")
-                    .update({ title: conversationTitle, updated_at: new Date().toISOString() })
+                    .update({
+                        title: conversationTitle,
+                        mode: detectedMode,
+                        updated_at: new Date().toISOString()
+                    })
                     .eq("id", currentConversationId)
                     .eq("user_id", userId);
             }
@@ -589,6 +596,38 @@ function generateConversationTitle(userMessage: string, mode: string): string {
     // Fallback: extract first few words from message
     const words = userMessage.split(/\s+/).slice(0, 4).join(' ');
     return words.length > 3 ? words : baseTitle;
+}
+
+function detectModeFromMessage(userMessage: string): string {
+    const lowerMessage = userMessage.toLowerCase();
+
+    // Coach mode keywords - accountability, habits, discipline
+    if (/\b(coach|habit|discipline|accountab|motivat|mindset|routine|consistency)\b/.test(lowerMessage)) {
+        return 'coach';
+    }
+
+    // Mentor mode keywords - strategy, guidance, learning
+    if (/\b(mentor|strateg|guidance|teach|learn|education|principle|long.?term)\b/.test(lowerMessage)) {
+        return 'mentor';
+    }
+
+    // Analysis mode keywords - analyze, review, performance
+    if (/\b(analy|review|performance|trade|pnl|win.?rate|drawdown|metric|chart|pattern)\b/.test(lowerMessage)) {
+        return 'analysis';
+    }
+
+    // Journal mode keywords - reflect, feel, emotion
+    if (/\b(journal|reflect|feel|emotion|thought|diary|record|document)\b/.test(lowerMessage)) {
+        return 'journal';
+    }
+
+    // Grok mode keywords - market, news, witty
+    if (/\b(grok|market|news|trend|sentiment|economic|witty)\b/.test(lowerMessage)) {
+        return 'grok';
+    }
+
+    // Default to assistant for general queries
+    return 'assistant';
 }
 
 const getSortableTime = (trade: Record<string, any>): number => {
