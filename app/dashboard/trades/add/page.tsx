@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import { useNotification } from "@/context/NotificationContext";
@@ -19,44 +18,26 @@ function AddTradeContent() {
   const { notify } = useNotification();
   const { selectedAccount } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
-  const supabase = createClientComponentClient();
 
-  // Handle screenshot upload to Supabase Storage
+  // Handle screenshot upload via API
   const handleUploadScreenshot = useCallback(async (file: File, type: 'before' | 'after'): Promise<string> => {
-    if (!session?.user?.id) {
-      throw new Error("You must be logged in to upload screenshots");
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const response = await fetch('/api/upload/screenshot', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to upload screenshot');
     }
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 9);
-    const fileName = `${session.user.id}/${timestamp}_${randomId}_${type}.${fileExt}`;
-
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from('trade-screenshots')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) {
-      console.error('Screenshot upload error:', error);
-      // Check if bucket doesn't exist
-      if (error.message.includes('Bucket not found') || error.message.includes('not found')) {
-        throw new Error("Screenshot storage is not configured. Please contact support.");
-      }
-      throw new Error(`Failed to upload screenshot: ${error.message}`);
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('trade-screenshots')
-      .getPublicUrl(data.path);
-
-    return urlData.publicUrl;
-  }, [session?.user?.id, supabase]);
+    const data = await response.json();
+    return data.url;
+  }, []);
 
   const handleAddTrade = async (tradeData: Partial<Trade>) => {
     // Validate that a trading account is selected

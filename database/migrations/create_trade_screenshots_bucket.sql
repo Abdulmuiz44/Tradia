@@ -2,9 +2,6 @@
 -- This bucket stores before/after trade screenshots uploaded by users
 
 -- Create the storage bucket for trade screenshots
--- Note: Run this in the Supabase Dashboard SQL Editor or via Supabase CLI
-
--- Create the bucket (if not exists check needs to be done via application code)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'trade-screenshots',
@@ -24,36 +21,30 @@ DROP POLICY IF EXISTS "Users can view their trade screenshots" ON storage.object
 DROP POLICY IF EXISTS "Users can update their trade screenshots" ON storage.objects;
 DROP POLICY IF EXISTS "Users can delete their trade screenshots" ON storage.objects;
 DROP POLICY IF EXISTS "Anyone can view trade screenshots" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public uploads to trade-screenshots" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public access to trade-screenshots" ON storage.objects;
 
--- Policy: Users can upload their own screenshots
--- Files are stored in format: {user_id}/{timestamp}_{random}_before.png
-CREATE POLICY "Users can upload their trade screenshots" ON storage.objects
+-- Policy: Allow uploads to trade-screenshots bucket
+-- Since we use NextAuth (not Supabase Auth), we use service role for uploads
+-- The bucket is public but uploads are done via authenticated API routes
+CREATE POLICY "Allow public uploads to trade-screenshots" ON storage.objects
   FOR INSERT 
-  WITH CHECK (
-    bucket_id = 'trade-screenshots' 
-    AND auth.uid()::text = (string_to_array(name, '/'))[1]
-  );
+  WITH CHECK (bucket_id = 'trade-screenshots');
 
--- Policy: Anyone can view trade screenshots (they need to be visible in the trade history)
--- The URLs are stored in the trades table which is protected by RLS
-CREATE POLICY "Anyone can view trade screenshots" ON storage.objects
+-- Policy: Allow public read access to screenshots
+CREATE POLICY "Allow public access to trade-screenshots" ON storage.objects
   FOR SELECT 
   USING (bucket_id = 'trade-screenshots');
 
--- Policy: Users can update their own screenshots
+-- Policy: Allow updates to trade-screenshots bucket
 CREATE POLICY "Users can update their trade screenshots" ON storage.objects
   FOR UPDATE 
-  USING (
-    bucket_id = 'trade-screenshots' 
-    AND auth.uid()::text = (string_to_array(name, '/'))[1]
-  );
+  USING (bucket_id = 'trade-screenshots');
 
--- Policy: Users can delete their own screenshots
+-- Policy: Allow deletes from trade-screenshots bucket
 CREATE POLICY "Users can delete their trade screenshots" ON storage.objects
   FOR DELETE 
-  USING (
-    bucket_id = 'trade-screenshots' 
-    AND auth.uid()::text = (string_to_array(name, '/'))[1]
-  );
+  USING (bucket_id = 'trade-screenshots');
 
--- Migration complete: trade-screenshots bucket created with RLS policies
+-- Migration complete: trade-screenshots bucket created with permissive policies
+-- Note: Authorization is handled at the application layer via NextAuth

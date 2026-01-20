@@ -55,40 +55,53 @@ export default function EditTradeForm({ trade, onSubmit, isLoading = false, onUp
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
 
+  // Helper to get value from either camelCase or lowercase field name
+  const getValue = <T,>(camel: T | undefined, lower: T | undefined, defaultVal: T): T => {
+    if (camel !== undefined && camel !== null && camel !== '') return camel;
+    if (lower !== undefined && lower !== null && lower !== '') return lower;
+    return defaultVal;
+  };
+
   // Initialize form with trade data
   useEffect(() => {
     if (trade) {
+      // Handle both camelCase and lowercase field names from API
+      const raw = trade as any;
+
       setFormData({
         ...trade,
-        // Ensure all fields are properly initialized
-        symbol: trade.symbol || "",
-        direction: trade.direction || "Buy",
-        orderType: trade.orderType || "Market Execution",
-        openTime: trade.openTime || "",
-        closeTime: trade.closeTime || "",
-        session: trade.session || "US",
-        lotSize: trade.lotSize || 0.01,
-        entryPrice: trade.entryPrice || 0,
-        exitPrice: trade.exitPrice || 0,
-        stopLossPrice: trade.stopLossPrice || 0,
-        takeProfitPrice: trade.takeProfitPrice || 0,
-        pnl: trade.pnl || 0,
-        outcome: trade.outcome || "Breakeven",
-        resultRR: trade.resultRR || 0,
-        emotion: trade.emotion || "neutral",
-        journalNotes: trade.journalNotes || trade.notes || "",
-        strategy: trade.strategy || "",
-        reasonForTrade: trade.reasonForTrade || "",
-        beforeScreenshotUrl: trade.beforeScreenshotUrl || "",
-        afterScreenshotUrl: trade.afterScreenshotUrl || "",
+        // Ensure all fields are properly initialized from either naming convention
+        symbol: getValue(trade.symbol, raw.symbol, ""),
+        direction: getValue(trade.direction, raw.direction, "Buy"),
+        orderType: getValue(trade.orderType, raw.ordertype, "Market Execution"),
+        openTime: getValue(trade.openTime, raw.opentime, ""),
+        closeTime: getValue(trade.closeTime, raw.closetime, ""),
+        session: getValue(trade.session, raw.session, "US"),
+        lotSize: getValue(trade.lotSize, raw.lotsize, 0.01),
+        entryPrice: getValue(trade.entryPrice, raw.entryprice, 0),
+        exitPrice: getValue(trade.exitPrice, raw.exitprice, 0),
+        stopLossPrice: getValue(trade.stopLossPrice, raw.stoplossprice, 0),
+        takeProfitPrice: getValue(trade.takeProfitPrice, raw.takeprofitprice, 0),
+        pnl: getValue(trade.pnl, raw.pnl, 0),
+        outcome: getValue(trade.outcome, raw.outcome, "Breakeven"),
+        resultRR: getValue(trade.resultRR, raw.resultrr, 0),
+        emotion: getValue(trade.emotion, raw.emotion, "neutral"),
+        journalNotes: getValue(trade.journalNotes, raw.journalnotes, "") || getValue(trade.notes, raw.notes, ""),
+        strategy: getValue(trade.strategy, raw.strategy, ""),
+        reasonForTrade: getValue(trade.reasonForTrade, raw.reasonfortrade, ""),
+        beforeScreenshotUrl: getValue(trade.beforeScreenshotUrl, raw.beforescreenshoturl, ""),
+        afterScreenshotUrl: getValue(trade.afterScreenshotUrl, raw.afterscreenshoturl, ""),
       });
 
       // Set existing screenshots as previews
-      if (trade.beforeScreenshotUrl) {
-        setBeforePreview(trade.beforeScreenshotUrl);
+      const beforeUrl = getValue(trade.beforeScreenshotUrl, raw.beforescreenshoturl, "");
+      const afterUrl = getValue(trade.afterScreenshotUrl, raw.afterscreenshoturl, "");
+
+      if (beforeUrl) {
+        setBeforePreview(beforeUrl);
       }
-      if (trade.afterScreenshotUrl) {
-        setAfterPreview(trade.afterScreenshotUrl);
+      if (afterUrl) {
+        setAfterPreview(afterUrl);
       }
     }
   }, [trade]);
@@ -383,9 +396,9 @@ export default function EditTradeForm({ trade, onSubmit, isLoading = false, onUp
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Risk/Reward:</span>
               <span className={`text-xl font-bold ${calculatedRR === 0 ? 'text-gray-400 dark:text-gray-500' :
-                  calculatedRR >= 2 ? 'text-green-600 dark:text-green-400' :
-                    calculatedRR >= 1 ? 'text-yellow-600 dark:text-yellow-400' :
-                      'text-red-600 dark:text-red-400'
+                calculatedRR >= 2 ? 'text-green-600 dark:text-green-400' :
+                  calculatedRR >= 1 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-red-600 dark:text-red-400'
                 }`}>
                 {calculatedRR === 0 ? '—' : `1:${calculatedRR}`}
               </span>
