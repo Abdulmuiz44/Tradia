@@ -117,9 +117,9 @@ export default function CalendarPage() {
                             // Determine border color based on PnL
                             let borderClass = "border border-transparent";
                             if (dayData && dayData.trades.length > 0) {
-                                if (dayData.pnl > 0) borderClass = "border-2 border-green-500 bg-green-50/50 dark:bg-green-900/20";
-                                else if (dayData.pnl < 0) borderClass = "border-2 border-red-500 bg-red-50/50 dark:bg-red-900/20";
-                                else borderClass = "border-2 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/20";
+                                if (dayData.pnl > 0) borderClass = "border-2 border-green-500 dark:border-green-400 bg-green-100 dark:bg-green-900/40 shadow-sm";
+                                else if (dayData.pnl < 0) borderClass = "border-2 border-red-500 dark:border-red-400 bg-red-100 dark:bg-red-900/40 shadow-sm";
+                                else borderClass = "border-2 border-yellow-500 dark:border-yellow-400 bg-yellow-100 dark:bg-yellow-900/40 shadow-sm";
                             }
 
                             return (
