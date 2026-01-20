@@ -114,22 +114,30 @@ export default function CalendarPage() {
                             const isToday = isSameDay(day, new Date());
                             const isSelected = selectedDay && isSameDay(day, selectedDay);
 
+                            // Determine border color based on PnL
+                            let borderClass = "border border-transparent";
+                            if (dayData && dayData.trades.length > 0) {
+                                if (dayData.pnl > 0) borderClass = "border-2 border-green-500 bg-green-50/50 dark:bg-green-900/20";
+                                else if (dayData.pnl < 0) borderClass = "border-2 border-red-500 bg-red-50/50 dark:bg-red-900/20";
+                                else borderClass = "border-2 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/20";
+                            }
+
                             return (
                                 <button
                                     key={key}
                                     onClick={() => setSelectedDay(day)}
-                                    className={`aspect-square p-1 rounded-lg text-sm transition-all ${isSelected
-                                            ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                                            : isToday
-                                                ? "bg-gray-100 dark:bg-gray-800"
-                                                : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    className={`aspect-square p-1 rounded-lg text-sm transition-all ${borderClass} ${isSelected
+                                        ? "ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-[#161B22]"
+                                        : isToday
+                                            ? "bg-gray-100 dark:bg-gray-800"
+                                            : "hover:bg-gray-50 dark:hover:bg-gray-800"
                                         }`}
                                 >
                                     <div className="h-full flex flex-col">
                                         <span
                                             className={`text-xs ${isToday
-                                                    ? "font-bold text-blue-600 dark:text-blue-400"
-                                                    : "text-gray-700 dark:text-gray-300"
+                                                ? "font-bold text-blue-600 dark:text-blue-400"
+                                                : "text-gray-700 dark:text-gray-300"
                                                 }`}
                                         >
                                             {format(day, "d")}
@@ -138,8 +146,8 @@ export default function CalendarPage() {
                                             <div className="flex-1 flex flex-col justify-end">
                                                 <div
                                                     className={`text-[10px] font-medium ${dayData.pnl >= 0
-                                                            ? "text-green-600 dark:text-green-400"
-                                                            : "text-red-600 dark:text-red-400"
+                                                        ? "text-green-600 dark:text-green-400"
+                                                        : "text-red-600 dark:text-red-400"
                                                         }`}
                                                 >
                                                     ${dayData.pnl.toFixed(0)}
@@ -192,8 +200,8 @@ export default function CalendarPage() {
                                         </div>
                                         <p
                                             className={`font-semibold ${parsePL(trade.pnl) >= 0
-                                                    ? "text-green-600 dark:text-green-400"
-                                                    : "text-red-600 dark:text-red-400"
+                                                ? "text-green-600 dark:text-green-400"
+                                                : "text-red-600 dark:text-red-400"
                                                 }`}
                                         >
                                             ${parsePL(trade.pnl).toFixed(2)}

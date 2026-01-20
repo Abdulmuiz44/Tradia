@@ -57,7 +57,7 @@ function TradeJournalNav() {
                                 className={cn(
                                     "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200",
                                     isActive
-                                        ? "bg-blue-600 text-white shadow-md"
+                                        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-md"
                                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                                 )}
                             >
