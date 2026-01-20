@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import LayoutClient from "@/components/LayoutClient";
 import { UserProvider } from "@/context/UserContext";
 import { useNotification } from "@/context/NotificationContext";
@@ -17,6 +18,7 @@ function EditTradeContent() {
   const params = useParams() || {};
   const { notify } = useNotification();
   const tradeId = (params as any)?.id as string;
+  const supabase = createClientComponentClient();
 
   const [trade, setTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +51,42 @@ function EditTradeContent() {
 
     fetchTrade();
   }, [tradeId, router, notify]);
+
+  // Handle screenshot upload to Supabase Storage
+  const handleUploadScreenshot = useCallback(async (file: File, type: 'before' | 'after'): Promise<string> => {
+    if (!session?.user?.id) {
+      throw new Error("You must be logged in to upload screenshots");
+    }
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 9);
+    const fileName = `${session.user.id}/${timestamp}_${randomId}_${type}.${fileExt}`;
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('trade-screenshots')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Screenshot upload error:', error);
+      if (error.message.includes('Bucket not found') || error.message.includes('not found')) {
+        throw new Error("Screenshot storage is not configured. Please contact support.");
+      }
+      throw new Error(`Failed to upload screenshot: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('trade-screenshots')
+      .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
+  }, [session?.user?.id, supabase]);
 
   const handleUpdateTrade = async (updatedData: Partial<Trade>) => {
     setIsSaving(true);
@@ -174,7 +212,20 @@ function EditTradeContent() {
             trade={trade}
             onSubmit={handleUpdateTrade}
             isLoading={isSaving}
+            onUploadScreenshot={handleUploadScreenshot}
           />
+        </div>
+
+        {/* Info Box */}
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
+            💡 Editing Tips
+          </h3>
+          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+            <li>• All your previously entered data is pre-filled in the form</li>
+            <li>• Update the RR by modifying entry, stop loss, or take profit prices</li>
+            <li>• Add or replace screenshots to document your trade setup and result</li>
+          </ul>
         </div>
       </div>
 

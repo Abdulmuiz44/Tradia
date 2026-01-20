@@ -1,23 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
-import { Save, X } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { Save, Upload, X, ImageIcon } from "lucide-react";
+import Image from "next/image";
 import type { Trade } from "@/types/trade";
 
 interface AddTradeFormProps {
   onSubmit: (trade: Partial<Trade>) => void;
   isLoading?: boolean;
+  onUploadScreenshot?: (file: File, type: 'before' | 'after') => Promise<string>;
 }
 
-export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFormProps) {
+// Helper to format datetime-local input value from ISO string
+const formatDateTimeLocal = (isoString: string | undefined): string => {
+  if (!isoString) return "";
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    // Format as YYYY-MM-DDTHH:mm in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch {
+    return "";
+  }
+};
+
+// Helper to convert datetime-local value to ISO string preserving local time
+const dateTimeLocalToISO = (value: string): string => {
+  if (!value) return "";
+  try {
+    // The datetime-local value is in format YYYY-MM-DDTHH:mm
+    // Create a date object treating this as local time
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString();
+  } catch {
+    return "";
+  }
+};
+
+export default function AddTradeForm({ onSubmit, isLoading = false, onUploadScreenshot }: AddTradeFormProps) {
+  // Initialize with current local datetime
+  const now = new Date();
+  const currentDateTime = formatDateTimeLocal(now.toISOString());
+
   const [formData, setFormData] = useState<Partial<Trade>>({
     symbol: "",
     direction: "Buy",
     orderType: "Market Execution",
-    openTime: new Date().toISOString().split("T")[0],
+    openTime: now.toISOString(),
     session: "US",
-    lotSize: 1,
+    lotSize: 0.01,
     entryPrice: 0,
+    exitPrice: 0,
     stopLossPrice: 0,
     takeProfitPrice: 0,
     pnl: 0,
@@ -26,9 +65,54 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
     journalNotes: "",
     strategy: "",
     reasonForTrade: "",
+    beforeScreenshotUrl: "",
+    afterScreenshotUrl: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Screenshot state
+  const [beforePreview, setBeforePreview] = useState<string>("");
+  const [afterPreview, setAfterPreview] = useState<string>("");
+  const [uploadingBefore, setUploadingBefore] = useState(false);
+  const [uploadingAfter, setUploadingAfter] = useState(false);
+
+  const beforeInputRef = useRef<HTMLInputElement>(null);
+  const afterInputRef = useRef<HTMLInputElement>(null);
+
+  // Calculate Risk/Reward ratio automatically
+  const calculatedRR = useMemo(() => {
+    const { entryPrice, stopLossPrice, takeProfitPrice } = formData;
+
+    if (!entryPrice || !stopLossPrice || entryPrice === 0 || stopLossPrice === 0) {
+      return 0;
+    }
+
+    const risk = Math.abs(entryPrice - stopLossPrice);
+    if (risk === 0) return 0;
+
+    // If take profit is set, calculate RR from TP
+    if (takeProfitPrice && takeProfitPrice !== 0) {
+      const reward = Math.abs(takeProfitPrice - entryPrice);
+      return Math.round((reward / risk) * 100) / 100;
+    }
+
+    return 0;
+  }, [formData.entryPrice, formData.stopLossPrice, formData.takeProfitPrice]);
+
+  // Calculate risk in pips/points
+  const riskInPips = useMemo(() => {
+    const { entryPrice, stopLossPrice } = formData;
+    if (!entryPrice || !stopLossPrice) return 0;
+    return Math.abs(entryPrice - stopLossPrice);
+  }, [formData.entryPrice, formData.stopLossPrice]);
+
+  // Calculate reward in pips/points
+  const rewardInPips = useMemo(() => {
+    const { entryPrice, takeProfitPrice } = formData;
+    if (!entryPrice || !takeProfitPrice) return 0;
+    return Math.abs(takeProfitPrice - entryPrice);
+  }, [formData.entryPrice, formData.takeProfitPrice]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -50,7 +134,11 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      // Include the calculated RR in the submitted data
+      onSubmit({
+        ...formData,
+        resultRR: calculatedRR,
+      });
     }
   };
 
@@ -76,6 +164,101 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
     }
   };
 
+  // Handle screenshot file selection
+  const handleScreenshotSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'before' | 'after'
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors(prev => ({
+        ...prev,
+        [type === 'before' ? 'beforeScreenshot' : 'afterScreenshot']: 'Please select an image file'
+      }));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({
+        ...prev,
+        [type === 'before' ? 'beforeScreenshot' : 'afterScreenshot']: 'Image must be less than 5MB'
+      }));
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const previewUrl = event.target?.result as string;
+      if (type === 'before') {
+        setBeforePreview(previewUrl);
+      } else {
+        setAfterPreview(previewUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+
+    // Upload if handler provided
+    if (onUploadScreenshot) {
+      if (type === 'before') {
+        setUploadingBefore(true);
+      } else {
+        setUploadingAfter(true);
+      }
+
+      try {
+        const url = await onUploadScreenshot(file, type);
+        setFormData(prev => ({
+          ...prev,
+          [type === 'before' ? 'beforeScreenshotUrl' : 'afterScreenshotUrl']: url
+        }));
+      } catch (error) {
+        console.error(`Failed to upload ${type} screenshot:`, error);
+        setErrors(prev => ({
+          ...prev,
+          [type === 'before' ? 'beforeScreenshot' : 'afterScreenshot']: 'Failed to upload image'
+        }));
+      } finally {
+        if (type === 'before') {
+          setUploadingBefore(false);
+        } else {
+          setUploadingAfter(false);
+        }
+      }
+    } else {
+      // Store file data URL as temporary URL
+      const reader2 = new FileReader();
+      reader2.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setFormData(prev => ({
+          ...prev,
+          [type === 'before' ? 'beforeScreenshotUrl' : 'afterScreenshotUrl']: dataUrl
+        }));
+      };
+      reader2.readAsDataURL(file);
+    }
+  };
+
+  const removeScreenshot = (type: 'before' | 'after') => {
+    if (type === 'before') {
+      setBeforePreview("");
+      setFormData(prev => ({ ...prev, beforeScreenshotUrl: "" }));
+      if (beforeInputRef.current) {
+        beforeInputRef.current.value = "";
+      }
+    } else {
+      setAfterPreview("");
+      setFormData(prev => ({ ...prev, afterScreenshotUrl: "" }));
+      if (afterInputRef.current) {
+        afterInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Row 1: Symbol & Direction */}
@@ -90,11 +273,10 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
             value={formData.symbol || ""}
             onChange={handleChange}
             placeholder="e.g., EURUSD"
-            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-              errors.symbol
-                ? "border-red-500 dark:border-red-400"
-                : "border-gray-300"
-            }`}
+            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:text-white dark:border-gray-600 ${errors.symbol
+              ? "border-red-500 dark:border-red-400"
+              : "border-gray-300"
+              }`}
           />
           {errors.symbol && (
             <p className="text-red-500 text-sm mt-1">{errors.symbol}</p>
@@ -117,8 +299,8 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
         </div>
       </div>
 
-      {/* Row 2: Entry Price, Stop Loss, Take Profit */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Row 2: Entry Price, Stop Loss, Take Profit, Exit Price */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
           <label className="block text-sm font-medium dark:text-gray-300 mb-2">
             Entry Price *
@@ -130,11 +312,10 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
             onChange={handleChange}
             placeholder="0.00"
             step="0.00001"
-            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-              errors.entryPrice
-                ? "border-red-500 dark:border-red-400"
-                : "border-gray-300"
-            }`}
+            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:text-white dark:border-gray-600 ${errors.entryPrice
+              ? "border-red-500 dark:border-red-400"
+              : "border-gray-300"
+              }`}
           />
           {errors.entryPrice && (
             <p className="text-red-500 text-sm mt-1">{errors.entryPrice}</p>
@@ -152,11 +333,10 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
             onChange={handleChange}
             placeholder="0.00"
             step="0.00001"
-            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-              errors.stopLossPrice
-                ? "border-red-500 dark:border-red-400"
-                : "border-gray-300"
-            }`}
+            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-700 dark:text-white dark:border-gray-600 ${errors.stopLossPrice
+              ? "border-red-500 dark:border-red-400"
+              : "border-gray-300"
+              }`}
           />
           {errors.stopLossPrice && (
             <p className="text-red-500 text-sm mt-1">{errors.stopLossPrice}</p>
@@ -177,6 +357,60 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium dark:text-gray-300 mb-2">
+            Exit Price
+          </label>
+          <input
+            type="number"
+            name="exitPrice"
+            value={formData.exitPrice || ""}
+            onChange={handleChange}
+            placeholder="0.00"
+            step="0.00001"
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+          />
+        </div>
+      </div>
+
+      {/* RR Display - Always Visible */}
+      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Risk/Reward:</span>
+              <span className={`text-xl font-bold ${calculatedRR === 0 ? 'text-gray-400 dark:text-gray-500' :
+                  calculatedRR >= 2 ? 'text-green-600 dark:text-green-400' :
+                    calculatedRR >= 1 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                }`}>
+                {calculatedRR === 0 ? '—' : `1:${calculatedRR}`}
+              </span>
+            </div>
+
+            {riskInPips > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Risk:</span>
+                <span className="font-medium text-red-600 dark:text-red-400">{riskInPips.toFixed(5)}</span>
+              </div>
+            )}
+
+            {rewardInPips > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Reward:</span>
+                <span className="font-medium text-green-600 dark:text-green-400">{rewardInPips.toFixed(5)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {calculatedRR === 0 ? 'Enter prices to calculate RR' :
+              calculatedRR >= 2 ? '✓ Good Risk/Reward' :
+                calculatedRR >= 1 ? '⚠ Moderate Risk/Reward' :
+                  '⚠ Low Risk/Reward'}
+          </div>
+        </div>
       </div>
 
       {/* Row 3: Lot Size, Order Type, Session */}
@@ -190,10 +424,12 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
             name="lotSize"
             value={formData.lotSize || ""}
             onChange={handleChange}
-            placeholder="1.0"
+            placeholder="0.01"
             step="0.01"
+            min="0.01"
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum: 0.01</p>
         </div>
 
         <div>
@@ -231,7 +467,7 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
         </div>
       </div>
 
-      {/* Row 4: Dates */}
+      {/* Row 4: Dates - Fixed timezone handling */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium dark:text-gray-300 mb-2">
@@ -240,19 +476,12 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
           <input
             type="datetime-local"
             name="openTime"
-            value={
-              formData.openTime
-                ? new Date(formData.openTime)
-                    .toISOString()
-                    .slice(0, 16)
-                : ""
-            }
+            value={formatDateTimeLocal(formData.openTime)}
             onChange={(e) => {
+              const isoValue = dateTimeLocalToISO(e.target.value);
               setFormData((prev) => ({
                 ...prev,
-                openTime: e.target.value
-                  ? new Date(e.target.value).toISOString()
-                  : "",
+                openTime: isoValue,
               }));
             }}
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
@@ -266,19 +495,12 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
           <input
             type="datetime-local"
             name="closeTime"
-            value={
-              formData.closeTime
-                ? new Date(formData.closeTime)
-                    .toISOString()
-                    .slice(0, 16)
-                : ""
-            }
+            value={formatDateTimeLocal(formData.closeTime)}
             onChange={(e) => {
+              const isoValue = dateTimeLocalToISO(e.target.value);
               setFormData((prev) => ({
                 ...prev,
-                closeTime: e.target.value
-                  ? new Date(e.target.value).toISOString()
-                  : "",
+                closeTime: isoValue,
               }));
             }}
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
@@ -386,6 +608,122 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
         />
       </div>
 
+      {/* Screenshot Upload Section */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium dark:text-gray-300">Trade Screenshots</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Before Screenshot */}
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-600 dark:text-gray-400">
+              Before Screenshot (Setup/Analysis)
+            </label>
+            <div className="relative">
+              {beforePreview || formData.beforeScreenshotUrl ? (
+                <div className="relative rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="relative w-full h-40">
+                    <Image
+                      src={beforePreview || formData.beforeScreenshotUrl || ""}
+                      alt="Before trade"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeScreenshot('before')}
+                    className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+                    title="Remove screenshot"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {uploadingBefore && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="text-white text-sm">Uploading...</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors bg-gray-50 dark:bg-gray-800">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <ImageIcon className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-semibold">Click to upload</span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG up to 5MB</p>
+                  </div>
+                  <input
+                    ref={beforeInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleScreenshotSelect(e, 'before')}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+            {errors.beforeScreenshot && (
+              <p className="text-red-500 text-sm">{errors.beforeScreenshot}</p>
+            )}
+          </div>
+
+          {/* After Screenshot */}
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-600 dark:text-gray-400">
+              After Screenshot (Result)
+            </label>
+            <div className="relative">
+              {afterPreview || formData.afterScreenshotUrl ? (
+                <div className="relative rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="relative w-full h-40">
+                    <Image
+                      src={afterPreview || formData.afterScreenshotUrl || ""}
+                      alt="After trade"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeScreenshot('after')}
+                    className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+                    title="Remove screenshot"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {uploadingAfter && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="text-white text-sm">Uploading...</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors bg-gray-50 dark:bg-gray-800">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <ImageIcon className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-semibold">Click to upload</span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG up to 5MB</p>
+                  </div>
+                  <input
+                    ref={afterInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleScreenshotSelect(e, 'after')}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+            {errors.afterScreenshot && (
+              <p className="text-red-500 text-sm">{errors.afterScreenshot}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Submit Button */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -393,7 +731,7 @@ export default function AddTradeForm({ onSubmit, isLoading = false }: AddTradeFo
         </p>
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || uploadingBefore || uploadingAfter}
           className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
         >
           <Save className="w-4 h-4" />

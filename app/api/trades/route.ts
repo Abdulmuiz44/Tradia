@@ -70,13 +70,32 @@ export async function POST(request: NextRequest) {
         const accountId = body.account_id || body.accountId;
         if (!accountId) {
             return NextResponse.json(
-                { 
+                {
                     error: "Trading account is required",
                     message: "You must select a trading account before adding a trade. Create or select an account first."
                 },
                 { status: 400 }
             );
         }
+
+        // Calculate RR if not provided
+        const calculateRR = (entryPrice: number, stopLossPrice: number, takeProfitPrice: number): number => {
+            if (!entryPrice || !stopLossPrice || entryPrice === 0 || stopLossPrice === 0) {
+                return 0;
+            }
+            const risk = Math.abs(entryPrice - stopLossPrice);
+            if (risk === 0) return 0;
+            if (takeProfitPrice && takeProfitPrice !== 0) {
+                const reward = Math.abs(takeProfitPrice - entryPrice);
+                return Math.round((reward / risk) * 100) / 100;
+            }
+            return 0;
+        };
+
+        const entryPrice = body.entryPrice || 0;
+        const stopLossPrice = body.stopLossPrice || 0;
+        const takeProfitPrice = body.takeProfitPrice || 0;
+        const resultRR = body.resultRR || calculateRR(entryPrice, stopLossPrice, takeProfitPrice);
 
         const tradeData = {
             user_id: session.user.id,
@@ -88,13 +107,13 @@ export async function POST(request: NextRequest) {
             closetime: body.closeTime ? new Date(body.closeTime).toISOString() : null,
             session: body.session || "",
             lotsize: body.lotSize || 0,
-            entryprice: body.entryPrice || 0,
+            entryprice: entryPrice,
             exitprice: body.exitPrice || null,
-            stoplossprice: body.stopLossPrice || 0,
-            takeprofitprice: body.takeProfitPrice || 0,
+            stoplossprice: stopLossPrice,
+            takeprofitprice: takeProfitPrice,
             pnl: body.pnl || 0,
             outcome: body.outcome || "breakeven",
-            resultrr: body.resultRR || 0,
+            resultrr: resultRR,
             duration: body.duration || "",
             reasonfortrade: body.reasonForTrade || "",
             strategy: body.strategy || "",
