@@ -106,7 +106,10 @@ export default function AccountSwitcher() {
                     />
 
                     {/* Menu */}
-                    <div className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl shadow-xl z-40 overflow-hidden">
+                    <div
+                        className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl shadow-xl z-40 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="max-h-[300px] overflow-y-auto">
                             {accounts.map((account) => (
                                 <div
