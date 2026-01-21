@@ -39,8 +39,8 @@ export default function AccountSwitcher() {
     if (!selectedAccount || accounts.length === 0) {
         return (
             <div className="w-full max-w-xs">
-                <button
-                    onClick={() => router.push("/dashboard/accounts")}
+                <Link
+                    href="/dashboard/accounts"
                     className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#161B22] border border-dashed border-gray-300 dark:border-[#2a2f3a] rounded-xl hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-[#1c2128] transition-all group"
                 >
                     <div className="w-8 h-8 bg-gray-200 dark:bg-[#2a2f3a] rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
@@ -54,7 +54,7 @@ export default function AccountSwitcher() {
                             Set up your trading account
                         </div>
                     </div>
-                </button>
+                </Link>
             </div>
         );
     }
