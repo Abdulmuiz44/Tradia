@@ -126,7 +126,7 @@ export default function AccountForm({
           onChange={(e) => handleChange("name", e.target.value)}
           placeholder="e.g., Personal Account, Prop Firm Account"
           disabled={submitting || isLoading}
-          className={errors.name ? "border-red-500" : ""}
+          className={`bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 ${errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}`}
         />
         {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
       </div>
@@ -144,7 +144,7 @@ export default function AccountForm({
               placeholder="10000"
               step="0.01"
               min="0"
-              className={`pl-7 ${errors.account_size ? "border-red-500" : ""}`}
+              className={`pl-7 bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 ${errors.account_size ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               disabled={submitting || isLoading}
             />
           </div>
@@ -153,7 +153,7 @@ export default function AccountForm({
             onValueChange={(value) => handleChange("currency", value)}
             disabled={submitting || isLoading}
           >
-            <SelectTrigger className="w-24">
+            <SelectTrigger className="w-24 bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -177,7 +177,7 @@ export default function AccountForm({
           onValueChange={(value) => handleChange("platform", value)}
           disabled={submitting || isLoading}
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -199,6 +199,7 @@ export default function AccountForm({
           onChange={(e) => handleChange("broker", e.target.value)}
           placeholder="e.g., XM, FxPro, FTMO"
           disabled={submitting || isLoading}
+          className="bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
       </div>
 
@@ -209,8 +210,8 @@ export default function AccountForm({
           {/* Manual Entry */}
           <Card
             className={`cursor-pointer transition-all ${formData.mode === "manual"
-                ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
               }`}
             onClick={() => handleModeSelect("manual")}
           >
@@ -233,10 +234,10 @@ export default function AccountForm({
           {/* Broker-Linked (Premium) */}
           <Card
             className={`cursor-pointer transition-all relative ${formData.mode === "broker"
-                ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : isPaidPlan
-                  ? "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  : "opacity-75"
+              ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
+              : isPaidPlan
+                ? "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                : "opacity-75"
               }`}
             onClick={() => handleModeSelect("broker")}
           >

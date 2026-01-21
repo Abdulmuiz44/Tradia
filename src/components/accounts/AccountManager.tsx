@@ -131,8 +131,8 @@ export default function AccountManager() {
               <Card
                 key={account.id}
                 className={`cursor-pointer transition-all hover:shadow-md ${isSelected
-                    ? "ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  ? "ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   }`}
                 onClick={() => handleSelectAccount(account)}
               >
@@ -140,8 +140,8 @@ export default function AccountManager() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isSelected
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                         }`}>
                         <Wallet size={20} />
                       </div>
@@ -188,7 +188,7 @@ export default function AccountManager() {
                       className="flex-1"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/dashboard/accounts/edit/${account.id}`);
+                        router.push(`/dashboard/accounts/${account.id}/edit`);
                       }}
                     >
                       <Edit2 size={14} className="mr-1" />
