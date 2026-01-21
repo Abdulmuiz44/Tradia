@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useAccount } from "@/context/AccountContext";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ChevronDown, Plus, Edit2, Trash2, Wallet, Lock } from "lucide-react";
 import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
@@ -10,7 +10,6 @@ import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 export default function AccountSwitcher() {
     const { accounts, selectedAccount, selectAccount, deleteAccount, loading } = useAccount();
     const { data: session } = useSession();
-    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -59,16 +58,6 @@ export default function AccountSwitcher() {
             </div>
         );
     }
-
-    const handleAddAccount = () => {
-        setIsOpen(false);
-        if (canAddAccount) {
-            router.push("/dashboard/accounts/add");
-        } else {
-            // Redirect to upgrade page if limit reached
-            router.push("/dashboard/upgrade");
-        }
-    };
 
     return (
         <div className="relative inline-block w-full max-w-xs">
@@ -137,18 +126,18 @@ export default function AccountSwitcher() {
 
                                         {/* Action buttons */}
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                            <button
+                                            <Link
+                                                href={`/dashboard/accounts/edit/${account.id}`}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setIsOpen(false);
-                                                    router.push(`/dashboard/accounts/edit/${account.id}`);
                                                 }}
                                                 className="p-1.5 hover:bg-gray-200 dark:hover:bg-[#2a2f3a] rounded transition"
                                                 title="Edit account"
                                                 aria-label="Edit account"
                                             >
                                                 <Edit2 size={14} className="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400" />
-                                            </button>
+                                            </Link>
 
                                             {accounts.length > 1 && (
                                                 <button
@@ -176,8 +165,9 @@ export default function AccountSwitcher() {
 
                         {/* Create new account button */}
                         <div className="border-t border-gray-200 dark:border-[#2a2f3a]"></div>
-                        <button
-                            onClick={handleAddAccount}
+                        <Link
+                            href={canAddAccount ? "/dashboard/accounts/add" : "/dashboard/upgrade"}
+                            onClick={() => setIsOpen(false)}
                             className={`w-full px-4 py-3 flex items-center justify-between text-sm font-medium transition ${canAddAccount
                                 ? "text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
                                 : "text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
@@ -193,7 +183,7 @@ export default function AccountSwitcher() {
                                     Upgrade
                                 </span>
                             )}
-                        </button>
+                        </Link>
                     </div>
                 </>
             )}
