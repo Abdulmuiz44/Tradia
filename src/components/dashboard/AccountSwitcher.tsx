@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAccount } from "@/context/AccountContext";
 import { useSession } from "next-auth/react";
-import { ChevronDown, Plus, Edit2, Trash2, Wallet, Lock } from "lucide-react";
+import { ChevronDown, Plus, Check, Wallet, Lock, Settings } from "lucide-react";
 import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 
 export default function AccountSwitcher() {
-    const { accounts, selectedAccount, selectAccount, deleteAccount, loading } = useAccount();
+    const { accounts, selectedAccount, selectAccount, loading } = useAccount();
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
-    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Get user plan and limits
     const userPlan = ((session?.user as any)?.plan || 'starter') as PlanType;
@@ -19,212 +19,142 @@ export default function AccountSwitcher() {
     const maxAccounts = planLimits.maxTradingAccounts === -1 ? Infinity : planLimits.maxTradingAccounts;
     const canAddAccount = accounts.length < maxAccounts;
 
-    // Show loading skeleton instead of null
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Handle account selection with global refresh
+    const handleSelectAccount = (accountId: string) => {
+        selectAccount(accountId);
+        setIsOpen(false);
+        // Dispatch custom event for global refresh
+        window.dispatchEvent(new CustomEvent('accountChanged', { detail: { accountId } }));
+    };
+
+    // Show loading skeleton
     if (loading) {
         return (
-            <div className="w-full max-w-xs">
-                <div className="flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl animate-pulse">
-                    <div className="w-8 h-8 bg-gray-200 dark:bg-[#2a2f3a] rounded-lg"></div>
-                    <div className="flex-1">
-                        <div className="h-4 bg-gray-200 dark:bg-[#2a2f3a] rounded w-24 mb-1"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-[#2a2f3a] rounded w-32"></div>
-                    </div>
-                    <div className="w-5 h-5 bg-gray-200 dark:bg-[#2a2f3a] rounded"></div>
-                </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#161B22] rounded-lg animate-pulse">
+                <div className="w-5 h-5 bg-gray-200 dark:bg-[#2a2f3a] rounded"></div>
+                <div className="w-24 h-4 bg-gray-200 dark:bg-[#2a2f3a] rounded"></div>
+                <div className="w-4 h-4 bg-gray-200 dark:bg-[#2a2f3a] rounded"></div>
             </div>
         );
     }
 
-    // Show create account button if no accounts
+    // Show create account prompt if no accounts
     if (!selectedAccount || accounts.length === 0) {
         return (
-            <div className="w-full max-w-xs">
-                <Link
-                    href="/dashboard/accounts"
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#161B22] border border-dashed border-gray-300 dark:border-[#2a2f3a] rounded-xl hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-[#1c2128] transition-all group"
-                >
-                    <div className="w-8 h-8 bg-gray-200 dark:bg-[#2a2f3a] rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                        <Plus size={16} className="text-gray-500 dark:text-gray-400 group-hover:text-blue-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                            Create Account
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-600">
-                            Set up your trading account
-                        </div>
-                    </div>
-                </Link>
-            </div>
+            <Link
+                href="/dashboard/accounts/add"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#161B22] hover:bg-gray-200 dark:hover:bg-[#1c2128] rounded-lg border border-dashed border-gray-300 dark:border-[#3a3f4a] transition-colors"
+            >
+                <Plus size={16} className="text-gray-500 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Create Account</span>
+            </Link>
         );
     }
 
     return (
-        <div className="relative inline-block w-full max-w-xs">
-            {/* Main button */}
+        <div ref={dropdownRef} className="relative">
+            {/* Trigger Button - Vercel style */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl hover:border-gray-400 dark:hover:border-[#3a3f4a] hover:bg-gray-200 dark:hover:bg-[#1c2128] transition-all shadow-sm"
-                title={`Current account: ${selectedAccount.name}`}
+                className="flex items-center gap-2 px-3 py-2 bg-transparent hover:bg-gray-100 dark:hover:bg-[#1c2128] rounded-lg transition-colors border border-transparent hover:border-gray-200 dark:hover:border-[#2a2f3a]"
             >
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-gray-200 dark:border-[#2a2f3a]">
-                    <Wallet size={16} className="text-blue-500 dark:text-blue-400" />
+                <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <Wallet size={12} className="text-white" />
                 </div>
-                <div className="flex-1 text-left min-w-0">
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {selectedAccount.name}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {selectedAccount.platform} • ${selectedAccount.account_size.toLocaleString()} {selectedAccount.currency}
-                    </div>
-                </div>
+                <span className="text-sm font-medium text-gray-900 dark:text-white max-w-[120px] truncate">
+                    {selectedAccount.name}
+                </span>
                 <ChevronDown
-                    size={18}
-                    className={`flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                    size={14}
+                    className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
             </button>
 
-            {/* Dropdown menu */}
+            {/* Dropdown Menu - Vercel style */}
             {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-30"
-                        onClick={() => setIsOpen(false)}
-                        aria-hidden="true"
-                    />
-
-                    {/* Menu */}
-                    <div
-                        className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl shadow-xl z-40 overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="max-h-[300px] overflow-y-auto">
-                            {accounts.map((account) => (
-                                <div
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-[#161B22] border border-gray-200 dark:border-[#2a2f3a] rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                    {/* Account List */}
+                    <div className="max-h-[280px] overflow-y-auto py-1">
+                        {accounts.map((account) => {
+                            const isSelected = selectedAccount.id === account.id;
+                            return (
+                                <button
                                     key={account.id}
-                                    className={`border-b border-gray-200 dark:border-[#2a2f3a] last:border-b-0 transition ${selectedAccount.id === account.id
-                                        ? "bg-blue-50 dark:bg-blue-500/10"
-                                        : "hover:bg-gray-50 dark:hover:bg-[#1c2128]"
+                                    onClick={() => handleSelectAccount(account.id)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${isSelected
+                                            ? "bg-blue-50 dark:bg-blue-900/20"
+                                            : "hover:bg-gray-50 dark:hover:bg-[#1c2128]"
                                         }`}
                                 >
-                                    <div className="flex items-center justify-between px-4 py-3 group">
-                                        <button
-                                            onClick={() => {
-                                                selectAccount(account.id);
-                                                setIsOpen(false);
-                                            }}
-                                            className="flex-1 text-left"
-                                        >
-                                            <div className="font-medium text-sm text-gray-900 dark:text-white">
+                                    {/* Account Icon */}
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected
+                                            ? "bg-gradient-to-br from-blue-500 to-purple-600"
+                                            : "bg-gray-100 dark:bg-[#2a2f3a]"
+                                        }`}>
+                                        <Wallet size={14} className={isSelected ? "text-white" : "text-gray-500 dark:text-gray-400"} />
+                                    </div>
+
+                                    {/* Account Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-sm text-gray-900 dark:text-white truncate">
                                                 {account.name}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                {account.platform} • ${account.account_size.toLocaleString()} {account.currency}
-                                            </div>
-                                        </button>
-
-                                        {/* Action buttons */}
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                            <Link
-                                                href={`/dashboard/accounts/edit/${account.id}`}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setIsOpen(false);
-                                                }}
-                                                className="p-1.5 hover:bg-gray-200 dark:hover:bg-[#2a2f3a] rounded transition"
-                                                title="Edit account"
-                                                aria-label="Edit account"
-                                            >
-                                                <Edit2 size={14} className="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400" />
-                                            </Link>
-
-                                            {accounts.length > 1 && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setDeleteConfirm(account.id);
-                                                    }}
-                                                    className="p-1.5 hover:bg-gray-200 dark:hover:bg-[#2a2f3a] rounded transition"
-                                                    title="Delete account"
-                                                    aria-label="Delete account"
-                                                >
-                                                    <Trash2 size={14} className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400" />
-                                                </button>
+                                            </span>
+                                            {account.mode === "broker" && (
+                                                <span className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded">
+                                                    API
+                                                </span>
                                             )}
                                         </div>
-
-                                        {/* Selection indicator */}
-                                        {selectedAccount.id === account.id && (
-                                            <div className="w-2 h-2 rounded-full bg-blue-500 ml-2"></div>
-                                        )}
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {account.platform} • ${account.account_size.toLocaleString()} {account.currency}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
 
-                        {/* Create new account button */}
-                        <div className="border-t border-gray-200 dark:border-[#2a2f3a]"></div>
+                                    {/* Selection Indicator */}
+                                    {isSelected && (
+                                        <Check size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-200 dark:border-[#2a2f3a]" />
+
+                    {/* Actions */}
+                    <div className="py-1">
                         <Link
                             href={canAddAccount ? "/dashboard/accounts/add" : "/dashboard/upgrade"}
                             onClick={() => setIsOpen(false)}
-                            className={`w-full px-4 py-3 flex items-center justify-between text-sm font-medium transition ${canAddAccount
-                                ? "text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
-                                : "text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
-                                }`}
+                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#1c2128] transition-colors"
                         >
-                            <span className="flex items-center gap-2">
-                                <Plus size={16} />
-                                Add New Account
-                            </span>
+                            <Plus size={16} className="text-gray-500 dark:text-gray-400" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">Add Account</span>
                             {!canAddAccount && (
-                                <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-                                    <Lock size={12} />
-                                    Upgrade
-                                </span>
+                                <Lock size={12} className="text-amber-500 ml-auto" />
                             )}
                         </Link>
-                    </div>
-                </>
-            )}
-
-            {/* Delete confirmation modal */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
-                    <div
-                        className="absolute inset-0"
-                        onClick={() => setDeleteConfirm(null)}
-                        aria-hidden
-                    />
-                    <div className="relative bg-white dark:bg-[#161B22] rounded-xl p-6 max-w-sm w-full z-10 border border-gray-200 dark:border-[#2a2f3a] shadow-2xl">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                            Delete Account
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                            Are you sure you want to delete this trading account? This action cannot be undone.
-                        </p>
-                        <div className="flex items-center justify-end gap-3">
-                            <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-[#2a2f3a] text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-[#3a3f4a] text-sm font-medium transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        await deleteAccount(deleteConfirm);
-                                        setDeleteConfirm(null);
-                                        setIsOpen(false);
-                                    } catch (error) {
-                                        console.error("Error deleting account:", error);
-                                    }
-                                }}
-                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition"
-                            >
-                                Delete
-                            </button>
-                        </div>
+                        <Link
+                            href="/dashboard/accounts"
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#1c2128] transition-colors"
+                        >
+                            <Settings size={16} className="text-gray-500 dark:text-gray-400" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">Manage Accounts</span>
+                        </Link>
                     </div>
                 </div>
             )}
