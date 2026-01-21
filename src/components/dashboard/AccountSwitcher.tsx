@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAccount } from "@/context/AccountContext";
 import { useSession } from "next-auth/react";
 import { ChevronDown, Plus, Check, Wallet, Lock, Settings } from "lucide-react";
@@ -11,7 +10,6 @@ import { PLAN_LIMITS, PlanType } from "@/lib/planAccess";
 export default function AccountSwitcher() {
     const { accounts, selectedAccount, selectAccount, loading } = useAccount();
     const { data: session } = useSession();
-    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -142,7 +140,7 @@ export default function AccountSwitcher() {
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setIsOpen(false);
-                                router.push(canAddAccount ? "/dashboard/accounts/add" : "/dashboard/upgrade");
+                                window.location.href = canAddAccount ? "/dashboard/accounts/add" : "/dashboard/upgrade";
                             }}
                             className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#1c2128] transition-colors text-left"
                         >
@@ -156,7 +154,7 @@ export default function AccountSwitcher() {
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setIsOpen(false);
-                                router.push("/dashboard/accounts");
+                                window.location.href = "/dashboard/accounts";
                             }}
                             className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#1c2128] transition-colors text-left"
                         >
