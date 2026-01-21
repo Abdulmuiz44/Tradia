@@ -98,7 +98,10 @@ export const authOptions: NextAuthOptions = {
           .maybeSingle();
 
         if (!existingUser) {
-          await supabase.from("users").insert({
+          // Create new user with the OAuth provider's user ID
+          const userId = (user as any).id || crypto.randomUUID();
+          const { error: insertError } = await supabase.from("users").upsert({
+            id: userId,
             email,
             name: user.name ?? "",
             email_verified: true,
@@ -107,7 +110,11 @@ export const authOptions: NextAuthOptions = {
             image: (user as any).image ?? null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          }, { onConflict: "email" });
+
+          if (insertError) {
+            console.error("Failed to create user in signIn callback:", insertError);
+          }
         }
 
         return true;
