@@ -215,19 +215,21 @@ function ColoredValue({ value, forceClass }: { value: React.ReactNode; forceClas
 
 /* Metric explanations */
 const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
-    totalTrades: { title: "Total trades", body: "Total number of trades in the selected range." },
-    wins: { title: "Wins", body: "Number of trades marked as Win." },
-    losses: { title: "Losses", body: "Number of trades marked as Loss." },
-    pnl: { title: "PNL ($)", body: "Net profit / loss across selected trades." },
-    profitFactor: { title: "Profit Factor", body: "Profit / Loss (absolute). Values >1 are preferable." },
-    rrTP: { title: "Total TP (RR)", body: "Sum of winning trades' reward-to-risk (R) values." },
-    rrSL: { title: "Total SL (RR)", body: "Count of trades that resulted in -1R (stop loss)." },
-    best: { title: "Best trade", body: "Single trade with highest positive PnL." },
-    worst: { title: "Worst trade", body: "Single trade with largest negative PnL." },
-    tradesPerDay: { title: "Trades per day", body: "Average trades taken per active day." },
-    mostTraded: { title: "Most traded pair", body: "Symbol with the most trades in the selected range." },
-    rrOverTime: { title: "RR performance over time", body: "Average R (reward-to-risk) per day shown across the date range." },
-    tradiaScore: { title: "Tradia Score", body: "Composite score combining win rate, profit factor, avg RR and consistency." },
+    totalTrades: { title: "Total Trades", body: "The total number of trades recorded in the selected time range. This count includes wins, losses, and breakeven trades." },
+    wins: { title: "Wins", body: "Number of trades marked with outcome 'Win'. Win rate is calculated as Wins / Total Trades × 100." },
+    losses: { title: "Losses", body: "Number of trades marked with outcome 'Loss'. Each loss typically represents a -1R if your stop loss was hit." },
+    pnl: { title: "Total P&L ($)", body: "Your net profit or loss in dollars across all filtered trades. Calculated as: Sum of all trade PnLs. Positive = profitable period, Negative = losing period." },
+    profitFactor: { title: "Profit Factor", body: "Gross Profit ÷ Gross Loss (absolute). A value above 1.0 means you're profitable. Above 2.0 is excellent. Infinity means no losing trades." },
+    rrTP: { title: "Total TP (RR)", body: "Sum of all winning trades' Risk-to-Reward multiples. E.g., if you won 3 trades at 2R, 1.5R, and 1R, Total TP = 4.5R." },
+    rrSL: { title: "Total SL (RR)", body: "Count of trades that hit stop loss (resulted in -1R). Each SL hit subtracts from your total RR performance." },
+    best: { title: "Best Trade", body: "The single trade with the highest positive P&L in this period. Displays the dollar amount and symbol traded." },
+    worst: { title: "Worst Trade", body: "The single trade with the largest negative P&L in this period. Calculated by finding: Min(PnL of all trades). Displays the dollar loss and symbol." },
+    tradesPerDay: { title: "Trades Per Day", body: "Average number of trades you take per active trading day. Calculated as: Total Trades ÷ Number of Days with at least 1 trade." },
+    mostTraded: { title: "Most Traded Pair", body: "The symbol/instrument you traded most frequently in this period based on trade count." },
+    rrOverTime: { title: "RR Performance Over Time", body: "Daily average Risk-to-Reward ratio plotted over your trading period. Helps visualize consistency." },
+    tradiaScore: { title: "Tradia Score", body: "A composite score (0-100) combining: Win Rate (30%), Profit Factor (30%), Avg RR (25%), and Consistency (15%). Higher = better overall performance." },
+    avgPnlPerTrade: { title: "Avg P&L Per Trade", body: "Your average profit or loss per trade. Calculated as: Total P&L ÷ Total Trades. Positive value = on average you make money per trade." },
+    avgDuration: { title: "Avg Trade Duration", body: "Average time from trade open to close in hours. Calculated from trades that have both open and close timestamps." },
 };
 
 const getGreeting = (name = "Trader") => {
@@ -360,7 +362,26 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
         const breakevens = filtered.filter((t) => toStringSafe(getField(t, "outcome")).toLowerCase() === "breakeven").length;
         const winRate = total ? (wins / total) * 100 : 0;
 
-        const pnlOf = (t: TradeType) => toNumber(getField(t, "pnl") ?? getField(t, "profit") ?? getField(t, "netpl"));
+        const pnlOf = (t: TradeType) => {
+            // Try multiple possible field names for PnL
+            const candidates = [
+                getField(t, "pnl"),
+                getField(t, "profit"),
+                getField(t, "netpl"),
+                getField(t, "net_pnl"),
+                getField(t, "realized_pnl"),
+                getField(t, "realizedPnl"),
+                getField(t, "trade_pnl"),
+                getField(t, "profitLoss"),
+                getField(t, "profit_loss"),
+            ];
+            for (const c of candidates) {
+                if (c !== undefined && c !== null && c !== "") {
+                    return toNumber(c);
+                }
+            }
+            return 0;
+        };
         const totalPnl = filtered.reduce((s, t) => s + pnlOf(t), 0);
         const profit = filtered.filter((t) => pnlOf(t) >= 0).reduce((s, t) => s + pnlOf(t), 0);
         const loss = Math.abs(filtered.filter((t) => pnlOf(t) < 0).reduce((s, t) => s + pnlOf(t), 0));
