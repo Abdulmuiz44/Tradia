@@ -63,7 +63,7 @@ export default function AccountSwitcher() {
     const handleAddAccount = () => {
         setIsOpen(false);
         if (canAddAccount) {
-            router.push("/dashboard/accounts");
+            router.push("/dashboard/accounts/add");
         } else {
             // Redirect to upgrade page if limit reached
             router.push("/dashboard/upgrade");
@@ -176,8 +176,8 @@ export default function AccountSwitcher() {
                         <button
                             onClick={handleAddAccount}
                             className={`w-full px-4 py-3 flex items-center justify-between text-sm font-medium transition ${canAddAccount
-                                    ? "text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
-                                    : "text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
+                                ? "text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
+                                : "text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-[#1c2128]"
                                 }`}
                         >
                             <span className="flex items-center gap-2">
