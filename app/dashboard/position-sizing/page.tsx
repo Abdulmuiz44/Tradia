@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { UserProvider } from "@/context/UserContext";
+import { useTrade } from "@/context/TradeContext";
 import Spinner from "@/components/ui/spinner";
 import PositionSizing from "@/components/dashboard/PositionSizing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -216,11 +215,7 @@ function PositionSizingContent() {
 export default function PositionSizingPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <TradeProvider>
-          <PositionSizingContent />
-        </TradeProvider>
-      </UserProvider>
+      <PositionSizingContent />
     </LayoutClient>
   );
 }

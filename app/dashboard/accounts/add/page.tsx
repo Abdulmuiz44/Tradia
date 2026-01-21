@@ -29,7 +29,7 @@ function AddAccountContent() {
         broker: payload.broker,
         mode: payload.mode,
       };
-      
+
       await createAccount(accountPayload);
       notify({
         variant: "success",
@@ -96,15 +96,5 @@ function AddAccountContent() {
 }
 
 export default function AddAccountPage() {
-  return (
-    <LayoutClient>
-      <NotificationProvider>
-        <UserProvider>
-          <AccountProvider>
-            <AddAccountContent />
-          </AccountProvider>
-        </UserProvider>
-      </NotificationProvider>
-    </LayoutClient>
-  );
+  return <AddAccountContent />;
 }

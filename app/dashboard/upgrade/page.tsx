@@ -7,7 +7,6 @@ import { Crown, ArrowRight, Zap, TrendingUp, Shield, Loader2 } from "lucide-reac
 import { getPlanDisplayName, PlanType } from "@/lib/planAccess";
 import { motion } from "framer-motion";
 import LayoutClient from "@/components/LayoutClient";
-import { NotificationProvider } from "@/context/NotificationContext";
 import { getCheckoutUrl } from "@/lib/checkout-urls";
 
 interface PlanOption {
@@ -354,9 +353,7 @@ export default function UpgradePage() {
 
     return (
         <LayoutClient>
-            <NotificationProvider>
-                <UpgradePageContent />
-            </NotificationProvider>
+            <UpgradePageContent />
         </LayoutClient>
     );
 }

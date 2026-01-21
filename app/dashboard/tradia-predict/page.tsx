@@ -1,8 +1,6 @@
 "use client";
 
 import LayoutClient from "@/components/LayoutClient";
-import { TradeProvider } from "@/context/TradeContext";
-import { UserProvider } from "@/context/UserContext";
 import TradiaPredictPanel from "@/components/analytics/TradiaPredictPanel";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -32,13 +30,9 @@ export default function TradiaPredictPage() {
 
   return (
     <LayoutClient>
-      <UserProvider>
-        <TradeProvider>
-          <div className="p-4 md:p-6">
-            <TradiaPredictPanel />
-          </div>
-        </TradeProvider>
-      </UserProvider>
+      <div className="p-4 md:p-6">
+        <TradiaPredictPanel />
+      </div>
     </LayoutClient>
   );
 }

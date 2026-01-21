@@ -283,6 +283,7 @@ const transformTradeForFrontend = (trade: Record<string, unknown>): Trade => {
   return {
     id: String(trade.id ?? raw.id ?? ""),
     user_id: coalesce(trade.user_id as string, raw.user_id as string),
+    account_id: coalesce(trade.account_id as string, trade.accountId as string, raw.account_id as string, raw.accountId as string),
     symbol: String(coalesce(trade.symbol as string, raw.symbol as string, "")).toUpperCase(),
     direction: (coalesce(trade.direction as "Buy" | "Sell", raw.direction as "Buy" | "Sell") ??
       ((trade.type as string) === "BUY"
@@ -410,9 +411,9 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const { selectedAccount } = useAccount();
   const supabase = createClientComponentClient();
 
-  // Filter trades by selected account
+  // Filter trades by selected account - STRICT MODE: Only show trades belonging to the specific account
   const accountFilteredTrades = selectedAccount
-    ? trades.filter(t => !t.account_id || t.account_id === selectedAccount.id)
+    ? trades.filter(t => t.account_id === selectedAccount.id)
     : trades;
 
   const fetchTrades = useCallback(async (): Promise<Trade[]> => {
@@ -498,10 +499,14 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
+        const tradeWithAccount = {
+          ...trade,
+          account_id: trade.account_id || selectedAccount?.id || null
+        };
         const response = await fetch("/api/trades", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(trade),
+          body: JSON.stringify(tradeWithAccount),
         });
 
         if (!response.ok) {
@@ -653,6 +658,10 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
 
       setImportLoading(true);
       try {
+        const tradesWithAccount = tradesToImport.map(t => ({
+          ...t,
+          account_id: t.account_id || selectedAccount?.id || null
+        }));
         const response = await fetch("/api/trades/import", {
           method: "POST",
           headers: {
@@ -660,7 +669,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
             Accept: "application/json",
           },
           body: JSON.stringify({
-            trades: tradesToImport,
+            trades: tradesWithAccount,
             source: "csv-import",
           }),
         });
@@ -773,11 +782,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           const response = await fetch("/api/trades", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              ...trade, 
+            body: JSON.stringify({
+              ...trade,
               id: trade.id,
               user_id: user.id,
-              reviewed 
+              reviewed
             }),
           });
 

@@ -5,9 +5,7 @@ import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { MinimalChatInterface } from "@/components/chat/MinimalChatInterface";
 import type { Trade } from "@/types/trade";
-import { UserProvider } from "@/context/UserContext";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { NotificationProvider } from "@/context/NotificationContext";
+import { useTrade } from "@/context/TradeContext";
 import { Loader2 } from "lucide-react";
 
 function TradesChatContent() {
@@ -71,12 +69,6 @@ function TradesChatContent() {
 
 export default function TradesChatPage() {
     return (
-        <NotificationProvider>
-            <UserProvider>
-                <TradeProvider>
-                    <TradesChatContent />
-                </TradeProvider>
-            </UserProvider>
-        </NotificationProvider>
+        <TradesChatContent />
     );
 }

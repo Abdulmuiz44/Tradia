@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
-import { UserProvider } from "@/context/UserContext";
 import Spinner from "@/components/ui/spinner";
 import TraderEducation from "@/components/dashboard/TraderEducation";
 import MobileBackButton from "@/components/ui/MobileBackButton";
@@ -193,9 +192,7 @@ function TradeEducationContent() {
 export default function TradeEducationPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <TradeEducationContent />
-      </UserProvider>
+      <TradeEducationContent />
     </LayoutClient>
   );
 }

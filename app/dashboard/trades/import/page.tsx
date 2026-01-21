@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LayoutClient from "@/components/LayoutClient";
-import { UserProvider } from "@/context/UserContext";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
+import { useTrade } from "@/context/TradeContext";
 import { useNotification } from "@/context/NotificationContext";
 import { useAccount } from "@/context/AccountContext";
 import Spinner from "@/components/ui/spinner";
@@ -168,13 +167,13 @@ function ImportTradesContent() {
             </div>
           </div>
         ) : (
-           /* Upload Area */
-           <div className={`bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-gray-700 p-8 ${!selectedAccount?.id ? 'opacity-50 pointer-events-none' : ''}`}>
-             <CsvUpload
-               isOpen={true}
-               onClose={() => router.push("/dashboard/trade-history")}
-               onImport={handleImportTrades}
-             />
+          /* Upload Area */
+          <div className={`bg-white dark:bg-[#161B22] rounded-lg border border-gray-200 dark:border-gray-700 p-8 ${!selectedAccount?.id ? 'opacity-50 pointer-events-none' : ''}`}>
+            <CsvUpload
+              isOpen={true}
+              onClose={() => router.push("/dashboard/trade-history")}
+              onImport={handleImportTrades}
+            />
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
@@ -230,11 +229,7 @@ function ImportTradesContent() {
 export default function ImportTradesPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <TradeProvider>
-          <ImportTradesContent />
-        </TradeProvider>
-      </UserProvider>
+      <ImportTradesContent />
     </LayoutClient>
   );
 }

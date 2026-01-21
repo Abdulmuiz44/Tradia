@@ -190,9 +190,7 @@ function UserAnalyticsContent() {
 export default function UserAnalyticsPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <UserAnalyticsContent />
-      </UserProvider>
+      <UserAnalyticsContent />
     </LayoutClient>
   );
 }

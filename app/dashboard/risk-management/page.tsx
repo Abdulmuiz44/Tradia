@@ -4,8 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import LayoutClient from '@/components/LayoutClient';
-import { TradeProvider, useTrade } from '@/context/TradeContext';
-import { UserProvider } from '@/context/UserContext';
+import { useTrade } from '@/context/TradeContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AnimatedDropdown from '@/components/ui/AnimatedDropdown';
 import MobileBackButton from '@/components/ui/MobileBackButton';
@@ -217,11 +216,7 @@ function RiskManagementContent() {
 export default function RiskManagementPage() {
     return (
         <LayoutClient>
-            <UserProvider>
-                <TradeProvider>
-                    <RiskManagementContent />
-                </TradeProvider>
-            </UserProvider>
+            <RiskManagementContent />
         </LayoutClient>
     );
 }

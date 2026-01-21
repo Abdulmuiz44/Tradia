@@ -56,9 +56,15 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAccounts(typedAccounts);
 
       // Auto-select first active account or first account
-      if (typedAccounts.length > 0 && !selectedAccount) {
-        const activeAccount = typedAccounts.find((a) => a.is_active);
-        setSelectedAccount(activeAccount || typedAccounts[0]);
+      if (typedAccounts.length > 0) {
+        // Use a functional update or just check the current value if possible. 
+        // Since we removed selectedAccount from deps, we can't see the latest value easily in closure unless we trust the state.
+        // Actually, we can just set it if it's null.
+        setSelectedAccount((prev) => {
+          if (prev) return prev; // Don't change if already selected
+          const activeAccount = typedAccounts.find((a) => a.is_active);
+          return activeAccount || typedAccounts[0];
+        });
       }
     } catch (err) {
       console.error("Error fetching accounts:", err);
@@ -70,7 +76,7 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } finally {
       setLoading(false);
     }
-  }, [user?.id, supabase, selectedAccount, notify]);
+  }, [user?.id, supabase, notify]);
 
   const refreshStats = useCallback(async () => {
     if (!user?.id) return;

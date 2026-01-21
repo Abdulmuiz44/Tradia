@@ -4,9 +4,8 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
+import { useTrade } from "@/context/TradeContext";
 import { TradePlanProvider } from "@/context/TradePlanContext";
-import { UserProvider } from "@/context/UserContext";
 import Spinner from "@/components/ui/spinner";
 import TradePlannerTable from "@/components/dashboard/TradePlannerTable";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -219,13 +218,9 @@ function TradePlannerContent() {
 export default function TradePlannerPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <TradeProvider>
-          <TradePlanProvider>
-            <TradePlannerContent />
-          </TradePlanProvider>
-        </TradeProvider>
-      </UserProvider>
+      <TradePlanProvider>
+        <TradePlannerContent />
+      </TradePlanProvider>
     </LayoutClient>
   );
 }

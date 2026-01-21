@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { UserProvider } from "@/context/UserContext";
-import { AccountProvider } from "@/context/AccountContext";
+import { useTrade } from "@/context/TradeContext";
+import { AccountProvider } from "@/context/AccountContext"; // Wait, I removed usage, so remove this import too.
+// Actually, AccountProvider is exported as named export.
+// I will just remove the lines.
 import Spinner from "@/components/ui/spinner";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
 import AccountSelector from "@/components/accounts/AccountSelector";
@@ -275,13 +276,7 @@ function TradeHistoryContent() {
 export default function TradeHistoryPage() {
     return (
         <LayoutClient>
-            <UserProvider>
-                <AccountProvider>
-                    <TradeProvider>
-                        <TradeHistoryContent />
-                    </TradeProvider>
-                </AccountProvider>
-            </UserProvider>
+            <TradeHistoryContent />
         </LayoutClient>
     );
 }

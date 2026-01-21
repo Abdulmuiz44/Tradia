@@ -1,4 +1,5 @@
 // app/dashboard/accounts/page.tsx
+// Force rebuild
 import React from "react";
 import AccountManager from "@/components/accounts/AccountManager";
 import { Metadata } from "next";

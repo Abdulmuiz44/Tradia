@@ -4,9 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
-import { UserProvider } from "@/context/UserContext";
-import { TradeProvider } from "@/context/TradeContext";
-import { NotificationProvider } from "@/context/NotificationContext";
 import { Loader2, ArrowLeft, Clock, Trash2 } from "lucide-react";
 
 function ConversationHistoryContent() {
@@ -164,13 +161,7 @@ function ConversationHistoryContent() {
 export default function ConversationHistoryPage() {
     return (
         <LayoutClient>
-            <NotificationProvider>
-                <UserProvider>
-                    <TradeProvider>
-                        <ConversationHistoryContent />
-                    </TradeProvider>
-                </UserProvider>
-            </NotificationProvider>
+            <ConversationHistoryContent />
         </LayoutClient>
     );
 }

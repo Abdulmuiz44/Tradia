@@ -4,7 +4,6 @@ import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LayoutClient from "@/components/LayoutClient";
-import { UserProvider } from "@/context/UserContext";
 import { useNotification } from "@/context/NotificationContext";
 import { useAccount } from "@/context/AccountContext";
 import Spinner from "@/components/ui/spinner";
@@ -171,9 +170,7 @@ function AddTradeContent() {
 export default function AddTradePage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <AddTradeContent />
-      </UserProvider>
+      <AddTradeContent />
     </LayoutClient>
   );
 }

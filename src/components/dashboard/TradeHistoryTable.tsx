@@ -14,6 +14,7 @@ import { useUser } from "@/context/UserContext";
 import { useAccount } from "@/context/AccountContext";
 import AccountSelector from "@/components/accounts/AccountSelector";
 import Modal from "@/components/ui/Modal";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 /* ---------------- helpers ---------------- */
 const toNumber = (v: unknown): number => {
@@ -277,10 +278,11 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
         let filtered = planLimitedTrades.slice();
 
         // Filter by selected account if one is selected
+        // Filter by selected account if one is selected
         if (selectedAccount) {
             filtered = filtered.filter((t) => {
                 const tradeAccount = toStringSafe(getField(t, "account_id") ?? getField(t, "accountId") ?? "");
-                return tradeAccount === selectedAccount.id || !tradeAccount; // Include trades without account_id
+                return tradeAccount === selectedAccount.id;
             });
         }
 
@@ -496,7 +498,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <div className="text-xs text-zinc-400">{toStringSafe(getField(t, "direction"))} • {toStringSafe(getField(t, "orderType"))}</div>
                     </div>
                     <div className="text-right">
-                        <div className={`font-semibold ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>${pnl.toFixed(2)}</div>
+                        <div className={`font-semibold ${pnl >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(pnl, selectedAccount?.currency || "USD")}</div>
                         <div className="text-xs text-zinc-400">{formatRR(getField(t, "resultRR") ?? getField(t, "rr"))}</div>
                     </div>
                 </div>
@@ -596,7 +598,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                                         className={`font-medium ${stats.totalPnl >= 0 ? "text-green-400" : "text-red-400"
                                             }`}
                                     >
-                                        ${stats.totalPnl.toFixed(2)}
+                                        {formatCurrency(stats.totalPnl, selectedAccount?.currency || "USD")}
                                     </div>
                                 </div>
                                 <div className="px-3 py-2 rounded bg-white dark:bg-[#0f1319] border border-gray-200 dark:border-gray-700">
@@ -611,7 +613,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                             <div className="md:hidden flex items-center gap-2 text-xs text-gray-700 dark:text-zinc-300">
                                 <div className="px-2 py-1 rounded bg-white dark:bg-[#0f1319] border border-gray-200 dark:border-gray-700 text-black dark:text-white">T:{stats.total}</div>
                                 <div className="px-2 py-1 rounded bg-white dark:bg-[#0f1319] border border-gray-200 dark:border-gray-700 text-black dark:text-white">W:{stats.winRate}%</div>
-                                <div className="px-2 py-1 rounded bg-white dark:bg-[#0f1319] border border-gray-200 dark:border-gray-700 text-black dark:text-white">{stats.totalPnl >= 0 ? "+" : ""}${stats.totalPnl.toFixed(0)}</div>
+                                <div className="px-2 py-1 rounded bg-white dark:bg-[#0f1319] border border-gray-200 dark:border-gray-700 text-black dark:text-white">{stats.totalPnl >= 0 ? "+" : ""}{formatCurrency(stats.totalPnl, selectedAccount?.currency || "USD")}</div>
                             </div>
                         </div>
                     </div>
@@ -761,7 +763,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                                     {headerCell("Entry Price", true, "entryPrice")}
                                     {headerCell("Stop Loss", true, "stopLossPrice")}
                                     {headerCell("Take Profit", true, "takeProfitPrice")}
-                                    {headerCell("PNL ($)", true, "pnl")}
+                                    {headerCell(`PNL (${selectedAccount ? getCurrencySymbol(selectedAccount.currency) : "$"})`, true, "pnl")}
                                     {headerCell("Duration", true, "duration")}
                                     {headerCell("Outcome", true, "outcome")}
                                     {headerCell("RR", true, "resultRR")}
@@ -809,7 +811,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                                                 <td className="px-3 py-2">{toStringSafe(getField(t, "stopLossPrice"))}</td>
                                                 <td className="px-3 py-2">{toStringSafe(getField(t, "takeProfitPrice"))}</td>
                                                 <td className={`px-3 py-2 ${pnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                                                    ${pnl.toFixed(2)}
+                                                    {formatCurrency(pnl, selectedAccount?.currency || "USD")}
                                                 </td>
                                                 <td className="px-3 py-2">{(() => { const o = toDateOrNull(getField(t, "openTime")); const c = toDateOrNull(getField(t, "closeTime")); return (o && c) ? calcDuration(o.toISOString(), c.toISOString()) : toStringSafe(getField(t, "duration")); })()}</td>
                                                 {/* Outcome column */}
@@ -1032,7 +1034,7 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <div className="text-sm">
                             <div><strong>Symbol:</strong> {tradeToDelete.symbol}</div>
                             <div><strong>Direction:</strong> {tradeToDelete.direction}</div>
-                            <div><strong>P&L:</strong> ${tradeToDelete.pnl?.toFixed(2) || '0.00'}</div>
+                            <div><strong>P&L:</strong> {formatCurrency(tradeToDelete.pnl || 0, selectedAccount?.currency || "USD")}</div>
                         </div>
                     </div>
                 )}

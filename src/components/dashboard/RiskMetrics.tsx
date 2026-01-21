@@ -26,6 +26,8 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { Trade } from "@/types/trade";
+import { useAccount } from "@/context/AccountContext";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 import {
   Popover,
   PopoverContent,
@@ -46,6 +48,10 @@ interface RiskMetricsProps {
 
 export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {}) {
   const { trades: contextTrades } = useTrade();
+  const { selectedAccount } = useAccount();
+  const currencyCode = selectedAccount?.currency || "USD";
+  const currencySymbol = getCurrencySymbol(currencyCode);
+
   const trades = useMemo(() => {
     if (Array.isArray(tradesProp)) return tradesProp;
     if (Array.isArray(contextTrades)) return contextTrades;
@@ -245,8 +251,8 @@ export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {
           <div><p>Avg Drawdown (7d)</p><p>{rollingMetrics.avgDrawdown7d}%</p></div>
           <div><p>Max Drawdown (7d)</p><p>{rollingMetrics.maxDrawdown7d}%</p></div>
           {/* NEW: VaR */}
-          <div><p>Historical VaR (95%)</p><p>${varEstimates.historicalVaR}</p></div>
-          <div><p>Monte Carlo VaR (95%)</p><p>${varEstimates.monteCarloVaR}</p></div>
+          <div><p>Historical VaR (95%)</p><p>{varEstimates.historicalVaR !== "—" ? formatCurrency(Number(varEstimates.historicalVaR), currencyCode) : "—"}</p></div>
+          <div><p>Monte Carlo VaR (95%)</p><p>{varEstimates.monteCarloVaR !== "—" ? formatCurrency(Number(varEstimates.monteCarloVaR), currencyCode) : "—"}</p></div>
         </CardContent>
       </Card>
 
@@ -280,7 +286,7 @@ export default function RiskMetrics({ trades: tradesProp }: RiskMetricsProps = {
               <BarChart data={pnlData}>
                 <XAxis dataKey="idx" />
                 <YAxis />
-                <Tooltip formatter={(val: number) => `$${val.toFixed(2)}`} />
+                <Tooltip formatter={(val: number) => formatCurrency(val, currencyCode)} />
                 <Legend />
                 <Bar dataKey="pnl">
                   {pnlData.map((entry, index) => (

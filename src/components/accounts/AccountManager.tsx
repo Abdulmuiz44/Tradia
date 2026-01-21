@@ -11,11 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Modal from "@/components/ui/Modal";
 import type { TradingAccount } from "@/types/account";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 export default function AccountManager() {
   const { accounts, selectedAccount, selectAccount, stats, deleteAccount, loading } = useAccount();
   const { plan } = useUser();
   const router = useRouter();
+  /* const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null); */
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
 
   // Get plan-specific limits
@@ -159,7 +161,7 @@ export default function AccountManager() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Balance</p>
-                      <p className="font-semibold">${account.account_size.toLocaleString()}</p>
+                      <p className="font-semibold">{formatCurrency(account.account_size, account.currency)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Currency</p>
@@ -198,7 +200,6 @@ export default function AccountManager() {
                       variant="outline"
                       size="sm"
                       className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      disabled={accounts.length === 1}
                       onClick={(e) => {
                         e.stopPropagation();
                         setAccountToDelete(account);
@@ -245,7 +246,7 @@ export default function AccountManager() {
           <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
             <p className="font-semibold text-gray-900 dark:text-white">{accountToDelete.name}</p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              ${accountToDelete.account_size.toFixed(2)} {accountToDelete.currency}
+              {formatCurrency(accountToDelete.account_size, accountToDelete.currency)} {accountToDelete.currency}
             </p>
           </div>
         )}

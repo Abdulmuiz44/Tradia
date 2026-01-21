@@ -4,6 +4,8 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTrade } from "@/context/TradeContext";
+import { useAccount } from "@/context/AccountContext";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 import type { Trade as TradeType } from "@/types/trade";
 import { generateSampleTrades } from "@/lib/sampleTrades";
 import { differenceInCalendarDays, format } from "date-fns";
@@ -218,7 +220,7 @@ const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
     totalTrades: { title: "Total Trades", body: "The total number of trades recorded in the selected time range. This count includes wins, losses, and breakeven trades." },
     wins: { title: "Wins", body: "Number of trades marked with outcome 'Win'. Win rate is calculated as Wins / Total Trades × 100." },
     losses: { title: "Losses", body: "Number of trades marked with outcome 'Loss'. Each loss typically represents a -1R if your stop loss was hit." },
-    pnl: { title: "Total P&L ($)", body: "Your net profit or loss in dollars across all filtered trades. Calculated as: Sum of all trade PnLs. Positive = profitable period, Negative = losing period." },
+    pnl: { title: "Total P&L", body: "Your net profit or loss in the account currency across all filtered trades. Calculated as: Sum of all trade PnLs. Positive = profitable period, Negative = losing period." },
     profitFactor: { title: "Profit Factor", body: "Gross Profit ÷ Gross Loss (absolute). A value above 1.0 means you're profitable. Above 2.0 is excellent. Infinity means no losing trades." },
     rrTP: { title: "Total TP (RR)", body: "Sum of all winning trades' Risk-to-Reward multiples. E.g., if you won 3 trades at 2R, 1.5R, and 1R, Total TP = 4.5R." },
     rrSL: { title: "Total SL (RR)", body: "Count of trades that hit stop loss (resulted in -1R). Each SL hit subtracts from your total RR performance." },
@@ -241,6 +243,11 @@ const getGreeting = (name = "Trader") => {
 
 export default function OverviewCards({ trades: propTrades, fromDate, toDate, session, accountId }: OverviewCardsProps) {
     const { trades: contextTradesFromHook, accountFilteredTrades, importTrades } = useTrade();
+    const { accounts } = useAccount();
+
+    const currentAccount = useMemo(() => accounts.find(a => a.id === accountId), [accounts, accountId]);
+    const currencyCode = currentAccount?.currency || "USD";
+    const currencySymbol = getCurrencySymbol(currencyCode);
 
     const contextTrades = useMemo(() =>
         Array.isArray(contextTradesFromHook) ? (contextTradesFromHook as TradeType[]) : []
@@ -828,7 +835,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                         <div className="text-sm font-semibold">Progress Tracker</div>
                         <div className="text-xs text-zinc-400">Year view — daily net heatmap (green = profit, red = loss)</div>
                     </div>
-                    <div className="text-xs text-zinc-400">Target: ${monthlyTarget}</div>
+                    <div className="text-xs text-zinc-400">Target: {formatCurrency(monthlyTarget, currencyCode)}</div>
                 </div>
 
                 <div className="flex gap-4">
@@ -943,7 +950,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                                             value={progressPct}
                                             color={progressPct > 75 ? "bg-green-500" : progressPct > 40 ? "bg-yellow-500" : "bg-red-500"}
                                         />
-                                        <div className="text-xs text-zinc-400 mt-1">{progressPct}% of ${monthlyTarget}</div>
+                                        <div className="text-xs text-zinc-400 mt-1">{progressPct}% of {formatCurrency(monthlyTarget, currencyCode)}</div>
                                     </div>
                                 </div>
                             </div>
@@ -1050,8 +1057,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                 {renderMetricCard({
                     keyId: "pnl",
                     icon: <DollarSign size={16} />,
-                    title: "PNL ($)",
-                    value: `$${metrics.totalPnl.toFixed(2)}`,
+                    title: `PNL (${currencySymbol})`,
+                    value: formatCurrency(metrics.totalPnl, currencyCode),
                     small: `PF ${metrics.profitFactor === Infinity ? "∞" : Number(metrics.profitFactor).toFixed(2)}`,
                     color: metrics.totalPnl > 0 ? "#10b981" : metrics.totalPnl < 0 ? "#ef4444" : "#64748b",
                     valueClass: metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass,
@@ -1078,7 +1085,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                     keyId: "best",
                     icon: <Star size={16} className="text-yellow-300" />,
                     title: "Best Trade",
-                    value: metrics.best ? `$${toNumber(getField(metrics.best, "pnl")).toFixed(2)}` : "$0.00",
+                    value: metrics.best ? formatCurrency(toNumber(getField(metrics.best, "pnl")), currencyCode) : formatCurrency(0, currencyCode),
                     small: metrics.best ? toStringSafe(getField(metrics.best, "symbol")) : "",
                     color: "#f59e0b",
                 })}
@@ -1086,7 +1093,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                     keyId: "worst",
                     icon: <ThumbsDown size={16} className="text-red-500" />,
                     title: "Worst Trade",
-                    value: metrics.worst ? `$${toNumber(getField(metrics.worst, "pnl")).toFixed(2)}` : "$0.00",
+                    value: metrics.worst ? formatCurrency(toNumber(getField(metrics.worst, "pnl")), currencyCode) : formatCurrency(0, currencyCode),
                     small: metrics.worst ? toStringSafe(getField(metrics.worst, "symbol")) : "",
                     color: "#ef4444",
                     valueClass: negativeClass,
@@ -1112,7 +1119,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                     keyId: "avgPnlPerTrade",
                     icon: <Percent size={16} className="text-yellow-300" />,
                     title: "Avg PnL / Trade",
-                    value: `$${(metrics.avgPnlPerTrade ?? 0).toFixed(2)}`,
+                    value: formatCurrency(metrics.avgPnlPerTrade ?? 0, currencyCode),
                     small: `${metrics.total ?? 0} trades`,
                     color: (metrics.avgPnlPerTrade ?? 0) > 0 ? "#10b981" : (metrics.avgPnlPerTrade ?? 0) < 0 ? "#ef4444" : "#64748b",
                     valueClass: (metrics.avgPnlPerTrade ?? 0) > 0 ? positiveClass : (metrics.avgPnlPerTrade ?? 0) < 0 ? negativeClass : neutralClass,
@@ -1165,7 +1172,7 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="text-xs text-gray-600 dark:text-zinc-400">PNL</div>
-                                <div className={`font-semibold ${metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass}`}>${metrics.totalPnl.toFixed(2)}</div>
+                                <div className={`font-semibold ${metrics.totalPnl > 0 ? positiveClass : metrics.totalPnl < 0 ? negativeClass : neutralClass}`}>{formatCurrency(metrics.totalPnl, currencyCode)}</div>
                                 <button onClick={() => setExplainKey("pnl")} className="p-1 rounded bg-gray-100 dark:bg-[#0f1319] text-gray-600 dark:text-gray-300">
                                     <Info size={14} />
                                 </button>

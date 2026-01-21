@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CreateAccountPayload, UpdateAccountPayload } from "@/types/account";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface AccountFormProps {
   onSubmit: (payload: CreateAccountPayload | UpdateAccountPayload) => Promise<void>;
@@ -126,7 +127,7 @@ export default function AccountForm({
           onChange={(e) => handleChange("name", e.target.value)}
           placeholder="e.g., Personal Account, Prop Firm Account"
           disabled={submitting || isLoading}
-          className={`bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 ${errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+          className={`bg-transparent dark:bg-[#0f1319] dark:focus:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0f1319_inset] [&:-webkit-autofill]:-webkit-text-fill-color-white ${errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}`}
         />
         {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
       </div>
@@ -136,7 +137,9 @@ export default function AccountForm({
         <Label>Account Size / Balance</Label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+            <span className="absolute left-3 top-2.5 text-muted-foreground">
+              {getCurrencySymbol(formData.currency)}
+            </span>
             <Input
               type="number"
               value={formData.account_size || ""}
@@ -144,7 +147,7 @@ export default function AccountForm({
               placeholder="10000"
               step="0.01"
               min="0"
-              className={`pl-7 bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 ${errors.account_size ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              className={`pl-7 bg-transparent dark:bg-[#0f1319] dark:focus:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0f1319_inset] [&:-webkit-autofill]:-webkit-text-fill-color-white ${errors.account_size ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               disabled={submitting || isLoading}
             />
           </div>
@@ -153,7 +156,7 @@ export default function AccountForm({
             onValueChange={(value) => handleChange("currency", value)}
             disabled={submitting || isLoading}
           >
-            <SelectTrigger className="w-24 bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white">
+            <SelectTrigger className="w-24 bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -177,7 +180,7 @@ export default function AccountForm({
           onValueChange={(value) => handleChange("platform", value)}
           disabled={submitting || isLoading}
         >
-          <SelectTrigger className="bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white">
+          <SelectTrigger className="bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -199,7 +202,7 @@ export default function AccountForm({
           onChange={(e) => handleChange("broker", e.target.value)}
           placeholder="e.g., XM, FxPro, FTMO"
           disabled={submitting || isLoading}
-          className="bg-white dark:bg-[#0D1117] border-gray-200 dark:border-[#2a2f3a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+          className="bg-transparent dark:bg-[#0f1319] dark:focus:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0f1319_inset] [&:-webkit-autofill]:-webkit-text-fill-color-white"
         />
       </div>
 

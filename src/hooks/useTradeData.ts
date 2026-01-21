@@ -8,12 +8,15 @@ import type { Trade } from "@/types/trade";
  */
 export function useTradeData() {
   const tradeContext = useTrade();
-  const loading = (tradeContext as any)?.loading || false;
-  const error = (tradeContext as any)?.error || null;
-  const refreshTrades = (tradeContext as any)?.refreshTrades || (() => {});
+  // Safe access to context values
+  const loading = (tradeContext as any)?.importLoading || false;
+  const error = null;
+  const refreshTrades = tradeContext?.refreshTrades || (async () => { });
 
-  // Memoize trades to avoid dependency array issues
-  const trades = useMemo(() => tradeContext?.trades || [], [tradeContext?.trades]);
+  // Memoize trades from context - prefer filtered trades if available
+  const contextFiltered = tradeContext?.accountFilteredTrades;
+  const contextRaw = tradeContext?.trades;
+  const trades = useMemo(() => contextFiltered || contextRaw || [], [contextFiltered, contextRaw]);
 
   // Calculate key metrics
   const metrics = useMemo(() => {

@@ -4,10 +4,8 @@ import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { TradePlanProvider } from "@/context/TradePlanContext";
-import { UserProvider } from "@/context/UserContext";
-import { NotificationProvider } from "@/context/NotificationContext";
+import { useTrade } from "@/context/TradeContext";
+import { TradePlanProvider } from "@/context/TradePlanContext"; // TradePlanProvider is still used locally in tab "planner"
 import { useAccount } from "@/context/AccountContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import TradeMigrationModal from "@/components/modals/TradeMigrationModal";
@@ -918,15 +916,9 @@ function DashboardContent() {
 export default function DashboardPage() {
     return (
         <ClientOnly>
-            <NotificationProvider>
-                <UserProvider>
-                    <TradeProvider>
-                        <LayoutClient>
-                            <DashboardContent />
-                        </LayoutClient>
-                    </TradeProvider>
-                </UserProvider>
-            </NotificationProvider>
+            <LayoutClient>
+                <DashboardContent />
+            </LayoutClient>
         </ClientOnly>
     );
 }

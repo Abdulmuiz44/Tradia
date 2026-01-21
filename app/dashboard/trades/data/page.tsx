@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { UserProvider } from "@/context/UserContext";
+import { useTrade } from "@/context/TradeContext";
 import Spinner from "@/components/ui/spinner";
 import TradiaAIAnalysis from "@/components/dashboard/TradiaAIAnalysis";
 import MobileBackButton from "@/components/ui/MobileBackButton";
@@ -218,11 +217,7 @@ function TradesDataContent() {
 export default function TradesDataPage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <TradeProvider>
-          <TradesDataContent />
-        </TradeProvider>
-      </UserProvider>
+      <TradesDataContent />
     </LayoutClient>
   );
 }

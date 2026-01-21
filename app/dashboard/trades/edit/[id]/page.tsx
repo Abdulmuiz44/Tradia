@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LayoutClient from "@/components/LayoutClient";
-import { UserProvider } from "@/context/UserContext";
 import { useNotification } from "@/context/NotificationContext";
 import Spinner from "@/components/ui/spinner";
 import { ArrowLeft, Trash2 } from "lucide-react";
@@ -245,9 +244,7 @@ function EditTradeContent() {
 export default function EditTradePage() {
   return (
     <LayoutClient>
-      <UserProvider>
-        <EditTradeContent />
-      </UserProvider>
+      <EditTradeContent />
     </LayoutClient>
   );
 }

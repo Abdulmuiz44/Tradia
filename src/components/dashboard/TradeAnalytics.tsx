@@ -73,6 +73,8 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Trade } from "@/types/trade";
 import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
+import { useAccount } from "@/context/AccountContext";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 // Types
 interface AnalyticsMetric {
@@ -107,6 +109,10 @@ interface RiskMetrics {
 
 export default function TradeAnalytics({ trades, session, isAdmin, className = "" }: { trades: any[], session: any, isAdmin: boolean, className?: string }) {
   const router = useRouter();
+  const { selectedAccount } = useAccount();
+  const currencyCode = selectedAccount?.currency || "USD";
+  const currencySymbol = getCurrencySymbol(currencyCode);
+
   const [accountBalance, setAccountBalance] = useState<number>(0);
   const [activeView, setActiveView] = useState<'overview' | 'performance' | 'risk' | 'patterns' | 'forecast' | 'guard' | 'tilt' | 'prop' | 'matcher' | 'controls'>('overview');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
@@ -210,7 +216,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
     const metrics: AnalyticsMetric[] = [
       {
         label: "Account Balance",
-        value: `$${accountBalance.toFixed(2)}`,
+        value: formatCurrency(accountBalance, currencyCode),
         icon: <DollarSign className="w-4 h-4" />,
         color: "text-emerald-400"
       },
@@ -230,7 +236,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
       },
       {
         label: "Total P&L",
-        value: `$${totalPnL.toFixed(2)}`,
+        value: formatCurrency(totalPnL, currencyCode),
         change: totalPnL > 0 ? 12.5 : -8.3,
         trend: totalPnL > 0 ? 'up' : 'down',
         icon: totalPnL > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />,
@@ -238,7 +244,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
       },
       {
         label: "Avg Trade",
-        value: `$${avgTrade.toFixed(2)}`,
+        value: formatCurrency(avgTrade, currencyCode),
         icon: <DollarSign className="w-4 h-4" />,
         color: "text-purple-400"
       },
@@ -491,7 +497,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
               <AreaChart data={performanceData}>
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, 'Equity']} />
+                <Tooltip formatter={(value: number) => [formatCurrency(value, currencyCode), 'Equity']} />
                 <Area
                   type="monotone"
                   dataKey="equity"
@@ -599,7 +605,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
               <BarChart data={monthlyPnLData}>
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, 'P&L']} />
+                <Tooltip formatter={(value: number) => [formatCurrency(value, currencyCode), 'P&L']} />
                 <Bar dataKey="pnl" fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
@@ -645,7 +651,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
                 <BarChart data={symbolPerformanceData} layout="horizontal">
                   <XAxis type="number" />
                   <YAxis dataKey="symbol" type="category" width={60} />
-                  <Tooltip formatter={(value) => [`$${value}`, 'P&L']} />
+                  <Tooltip formatter={(value: number) => [formatCurrency(value, currencyCode), 'P&L']} />
                   <Bar dataKey="pnl" fill="#8b5cf6" />
                 </BarChart>
               </ResponsiveContainer>
@@ -672,7 +678,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
                 <YAxis yAxisId="winRate" orientation="right" />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="pnl" dataKey="pnl" fill="#10b981" name="P&L ($)" />
+                <Bar yAxisId="pnl" dataKey="pnl" fill="#10b981" name={`P&L (${currencySymbol})`} />
                 <Line yAxisId="winRate" type="monotone" dataKey="winRate" stroke="#f59e0b" strokeWidth={3} name="Win Rate (%)" />
               </BarChart>
             </ResponsiveContainer>

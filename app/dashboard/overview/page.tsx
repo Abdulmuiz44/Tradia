@@ -4,10 +4,8 @@ import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LayoutClient from "@/components/LayoutClient";
-import { TradeProvider, useTrade } from "@/context/TradeContext";
-import { UserProvider } from "@/context/UserContext";
-import { NotificationProvider } from "@/context/NotificationContext";
-import { AccountProvider, useAccount } from "@/context/AccountContext";
+import { useTrade } from "@/context/TradeContext";
+import { useAccount } from "@/context/AccountContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import OverviewCards from "@/components/dashboard/OverviewCards";
 import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
@@ -462,8 +460,8 @@ function OverviewContent() {
                                             key={f.value}
                                             onClick={() => setFilter(f.value)}
                                             className={`cursor-pointer px-3 py-2 rounded-lg mb-1 transition-colors flex items-center justify-between ${filter === f.value
-                                                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-                                                    : "hover:bg-gray-50 dark:hover:bg-[#1c2128] text-gray-700 dark:text-gray-300"
+                                                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                                                : "hover:bg-gray-50 dark:hover:bg-[#1c2128] text-gray-700 dark:text-gray-300"
                                                 }`}
                                         >
                                             <span>{f.label}</span>
@@ -508,20 +506,12 @@ function OverviewContent() {
     );
 }
 
-function OverviewPage() {
+export default function OverviewPage() {
     return (
         <LayoutClient>
-            <NotificationProvider>
-                <UserProvider>
-                    <AccountProvider>
-                        <TradeProvider>
-                            <OverviewContent />
-                        </TradeProvider>
-                    </AccountProvider>
-                </UserProvider>
-            </NotificationProvider>
+            <OverviewContent />
         </LayoutClient>
     );
 }
 
-export default OverviewPage;
+

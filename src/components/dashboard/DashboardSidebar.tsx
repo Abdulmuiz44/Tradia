@@ -110,13 +110,15 @@ export default function DashboardSidebar({
             )}
           </div>
         </div>
-        <Link
-          href="/dashboard/accounts"
-          onClick={handleMobileClose}
+        <button
+          onClick={() => {
+            window.location.href = "/dashboard/accounts";
+            handleMobileClose();
+          }}
           className="block w-full text-center px-3 py-2 bg-white dark:bg-[#161B22] hover:bg-gray-50 dark:hover:bg-[#1c2128] rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors border border-gray-200 dark:border-gray-700"
         >
           Manage Accounts ({accounts?.length || 0})
-        </Link>
+        </button>
       </div>
 
       {/* Navigation */}

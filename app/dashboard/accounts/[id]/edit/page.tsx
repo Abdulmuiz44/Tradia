@@ -3,10 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
-import LayoutClient from "@/components/LayoutClient";
-import { UserProvider } from "@/context/UserContext";
-import { NotificationProvider } from "@/context/NotificationContext";
-import { AccountProvider, useAccount } from "@/context/AccountContext";
+import { useAccount } from "@/context/AccountContext";
 import { useNotification } from "@/context/NotificationContext";
 import AccountForm from "@/components/accounts/AccountForm";
 import Modal from "@/components/ui/Modal";
@@ -22,6 +19,8 @@ function EditAccountContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [account, setAccount] = useState(accountId ? accounts.find((a) => a.id === accountId) : undefined);
+
+
 
   useEffect(() => {
     const foundAccount = accounts.find((a) => a.id === accountId);
@@ -202,16 +201,7 @@ function EditAccountContent() {
   );
 }
 
+// Export directly as the providers are global in app/layout.tsx
 export default function EditAccountPage() {
-  return (
-    <LayoutClient>
-      <NotificationProvider>
-        <UserProvider>
-          <AccountProvider>
-            <EditAccountContent />
-          </AccountProvider>
-        </UserProvider>
-      </NotificationProvider>
-    </LayoutClient>
-  );
+  return <EditAccountContent />;
 }
