@@ -1,6 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Lock, Zap, CheckCircle } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CreateAccountPayload, UpdateAccountPayload } from "@/types/account";
 
 interface AccountFormProps {
@@ -18,6 +26,11 @@ export default function AccountForm({
   initialData,
   isEdit = false,
 }: AccountFormProps) {
+  const { plan } = useUser();
+  const router = useRouter();
+  const userPlan = String(plan || 'starter').toLowerCase();
+  const isPaidPlan = ['pro', 'plus', 'elite'].includes(userPlan);
+
   const [formData, setFormData] = useState<CreateAccountPayload>({
     name: initialData?.name || "",
     account_size: initialData?.account_size || 0,
@@ -54,6 +67,11 @@ export default function AccountForm({
       newErrors.account_size = "Account size must be greater than 0";
     }
 
+    // Prevent broker mode for non-paid users
+    if (formData.mode === "broker" && !isPaidPlan) {
+      newErrors.mode = "Broker-linked mode requires a Pro plan or higher";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -73,18 +91,10 @@ export default function AccountForm({
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
+  const handleChange = (name: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "number"
-          ? value === ""
-            ? 0
-            : parseFloat(value)
-          : value,
+      [name]: value,
     }));
     // Clear error for this field
     if (errors[name]) {
@@ -96,144 +106,209 @@ export default function AccountForm({
     }
   };
 
+  const handleModeSelect = (mode: "manual" | "broker") => {
+    if (mode === "broker" && !isPaidPlan) {
+      // Don't allow selection, show upgrade prompt
+      return;
+    }
+    handleChange("mode", mode);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Account Name */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Account Name</label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="name">Account Name</Label>
+        <Input
+          id="name"
           type="text"
-          name="name"
           value={formData.name}
-          onChange={handleChange}
+          onChange={(e) => handleChange("name", e.target.value)}
           placeholder="e.g., Personal Account, Prop Firm Account"
-          className={`w-full px-3 py-2 rounded bg-[#0f1319] border ${errors.name ? "border-red-500" : "border-gray-700"
-            } text-white placeholder-gray-500 focus:outline-none focus:border-blue-500`}
           disabled={submitting || isLoading}
+          className={errors.name ? "border-red-500" : ""}
         />
-        {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+        {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
       </div>
 
       {/* Account Size */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Account Size / Balance</label>
+      <div className="space-y-2">
+        <Label>Account Size / Balance</Label>
         <div className="flex gap-2">
-          <input
-            type="number"
-            name="account_size"
-            value={formData.account_size || ""}
-            onChange={handleChange}
-            placeholder="e.g., 10000"
-            step="0.01"
-            min="0"
-            className={`flex-1 px-3 py-2 rounded bg-[#0f1319] border ${errors.account_size ? "border-red-500" : "border-gray-700"
-              } text-white placeholder-gray-500 focus:outline-none focus:border-blue-500`}
-            disabled={submitting || isLoading}
-          />
-          <select
-            name="currency"
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+            <Input
+              type="number"
+              value={formData.account_size || ""}
+              onChange={(e) => handleChange("account_size", parseFloat(e.target.value) || 0)}
+              placeholder="10000"
+              step="0.01"
+              min="0"
+              className={`pl-7 ${errors.account_size ? "border-red-500" : ""}`}
+              disabled={submitting || isLoading}
+            />
+          </div>
+          <Select
             value={formData.currency}
-            onChange={handleChange}
-            className="px-3 py-2 rounded bg-[#0f1319] border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+            onValueChange={(value) => handleChange("currency", value)}
             disabled={submitting || isLoading}
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="JPY">JPY</option>
-            <option value="AUD">AUD</option>
-            <option value="CAD">CAD</option>
-          </select>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+              <SelectItem value="GBP">GBP</SelectItem>
+              <SelectItem value="JPY">JPY</SelectItem>
+              <SelectItem value="AUD">AUD</SelectItem>
+              <SelectItem value="CAD">CAD</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        {errors.account_size && (
-          <p className="text-red-400 text-xs mt-1">{errors.account_size}</p>
-        )}
+        {errors.account_size && <p className="text-red-500 text-xs">{errors.account_size}</p>}
       </div>
 
       {/* Platform */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Trading Platform</label>
-        <select
-          name="platform"
+      <div className="space-y-2">
+        <Label>Trading Platform</Label>
+        <Select
           value={formData.platform}
-          onChange={handleChange}
-          className="w-full px-3 py-2 rounded bg-[#0f1319] border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          onValueChange={(value) => handleChange("platform", value)}
           disabled={submitting || isLoading}
         >
-          <option value="MT5">MetaTrader 5 (MT5)</option>
-          <option value="MetaTrader4">MetaTrader 4 (MT4)</option>
-          <option value="cTrader">cTrader</option>
-          <option value="Manual">Manual Entry</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="MT5">MetaTrader 5 (MT5)</SelectItem>
+            <SelectItem value="MetaTrader4">MetaTrader 4 (MT4)</SelectItem>
+            <SelectItem value="cTrader">cTrader</SelectItem>
+            <SelectItem value="TradingView">TradingView</SelectItem>
+            <SelectItem value="Manual">Manual Entry</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Broker (optional) */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Broker (Optional)</label>
-        <input
+      <div className="space-y-2">
+        <Label>Broker (Optional)</Label>
+        <Input
           type="text"
-          name="broker"
           value={formData.broker || ""}
-          onChange={handleChange}
-          placeholder="e.g., XM, FxPro, Saxo Bank"
-          className="w-full px-3 py-2 rounded bg-[#0f1319] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          onChange={(e) => handleChange("broker", e.target.value)}
+          placeholder="e.g., XM, FxPro, FTMO"
           disabled={submitting || isLoading}
         />
       </div>
 
       {/* Account Mode */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Account Mode</label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex items-center gap-2 p-3 rounded bg-[#0f1319] border border-gray-700 cursor-pointer hover:bg-gray-750">
-            <input
-              type="radio"
-              name="mode"
-              value="manual"
-              checked={formData.mode === "manual"}
-              onChange={handleChange}
-              disabled={submitting || isLoading}
-              className="w-4 h-4"
-            />
-            <span className="text-sm">Manual Entry</span>
-          </label>
-          <label className="flex items-center gap-2 p-3 rounded bg-[#0f1319] border border-gray-700 cursor-pointer hover:bg-gray-750">
-            <input
-              type="radio"
-              name="mode"
-              value="broker"
-              checked={formData.mode === "broker"}
-              onChange={handleChange}
-              disabled={submitting || isLoading}
-              className="w-4 h-4"
-            />
-            <span className="text-sm">Broker-Linked</span>
-          </label>
+      <div className="space-y-3">
+        <Label>Account Mode</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Manual Entry */}
+          <Card
+            className={`cursor-pointer transition-all ${formData.mode === "manual"
+                ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              }`}
+            onClick={() => handleModeSelect("manual")}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.mode === "manual" ? "border-blue-500 bg-blue-500" : "border-gray-300 dark:border-gray-600"
+                  }`}>
+                  {formData.mode === "manual" && <CheckCircle size={12} className="text-white" />}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-white">Manual Entry</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Manually enter trades to track your account. Perfect for paper trading or brokers without API support.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Broker-Linked (Premium) */}
+          <Card
+            className={`cursor-pointer transition-all relative ${formData.mode === "broker"
+                ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : isPaidPlan
+                  ? "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  : "opacity-75"
+              }`}
+            onClick={() => handleModeSelect("broker")}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.mode === "broker" ? "border-blue-500 bg-blue-500" : "border-gray-300 dark:border-gray-600"
+                  }`}>
+                  {formData.mode === "broker" && <CheckCircle size={12} className="text-white" />}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 dark:text-white">Broker-Linked</p>
+                    {!isPaidPlan && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
+                        <Lock size={10} />
+                        Pro+
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Connect your broker API for automatic trade syncing and real-time updates.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <p className="text-xs text-gray-400 mt-2">
-          {formData.mode === "manual"
-            ? "Manually enter trades to track your account"
-            : "Link your broker account to auto-sync trades"}
-        </p>
+
+        {/* Upgrade Prompt for non-paid users selecting broker mode */}
+        {!isPaidPlan && formData.mode !== "broker" && (
+          <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <Zap size={18} className="text-amber-600 dark:text-amber-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Unlock Broker-Linked Mode
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Upgrade to Pro to connect your broker and auto-sync trades
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => router.push("/dashboard/upgrade")}
+            >
+              Upgrade
+            </Button>
+          </div>
+        )}
+
+        {errors.mode && <p className="text-red-500 text-xs">{errors.mode}</p>}
       </div>
 
       {/* Form Actions */}
-      <div className="flex gap-3 pt-4 border-t border-gray-700">
-        <button
+      <div className="flex gap-3 pt-4 border-t">
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
           disabled={submitting || isLoading}
-          className="flex-1 px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 transition disabled:opacity-50"
+          className="flex-1"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={submitting || isLoading}
-          className="flex-1 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 transition disabled:opacity-50 font-semibold"
+          className="flex-1"
         >
-          {submitting || isLoading ? "Creating..." : "Create Account"}
-        </button>
+          {submitting || isLoading ? "Saving..." : isEdit ? "Update Account" : "Create Account"}
+        </Button>
       </div>
     </form>
   );
