@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminSupabase } from "@/utils/supabase/admin";
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = createClient();
+    const supabase = createAdminSupabase();
     let user = null;
 
     // First try to get user by ID if available
