@@ -1,19 +1,26 @@
-// src/app/dashboard/settings/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { useSession } from "next-auth/react";
 import {
-  Settings,
+  Settings as SettingsIcon,
   Moon,
   Sun,
   Bell,
   Shield,
-  Globe,
   Save,
-  RefreshCw
+  Loader2,
+  Monitor,
+  Globe
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import FeatureLock from "@/components/FeatureLock";
 import TrialStatusCard from "@/components/TrialStatusCard";
 
@@ -36,7 +43,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { user, loading, plan } = useUser();
   const [settings, setSettings] = useState<UserSettings>({
-    theme: 'dark',
+    theme: 'system',
     language: 'en',
     timezone: 'UTC',
     notifications: {
@@ -64,17 +71,19 @@ export default function SettingsPage() {
 
   const loadSettings = async () => {
     try {
-      // Load from API (no localStorage)
       const res = await fetch('/api/user/settings');
       if (res.ok) {
         const data = await res.json();
         if (data?.settings) {
-          const parsed = data.settings;
-          if (parsed && typeof parsed === 'object') {
-            setSettings(prev => ({ ...prev, ...parsed }));
-            if (parsed.riskControls) {
-              setRiskControls(prev => ({ ...prev, ...parsed.riskControls }));
-            }
+          // Merge defaults with loaded data to prevent missing keys
+          setSettings(prev => ({
+            ...prev,
+            ...data.settings,
+            notifications: { ...prev.notifications, ...(data.settings.notifications || {}) },
+            privacy: { ...prev.privacy, ...(data.settings.privacy || {}) }
+          }));
+          if (data.settings.riskControls) {
+            setRiskControls(prev => ({ ...prev, ...data.settings.riskControls }));
           }
         }
       }
@@ -86,7 +95,6 @@ export default function SettingsPage() {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      // Save to API (no localStorage)
       const payload = { ...settings, riskControls };
       await fetch('/api/user/settings', {
         method: 'PATCH',
@@ -94,9 +102,8 @@ export default function SettingsPage() {
         body: JSON.stringify({ settings: payload })
       });
 
-      // Apply theme immediately
+      // Apply theme
       applyTheme(settings.theme);
-
       alert('Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -120,252 +127,143 @@ export default function SettingsPage() {
 
   const updateSetting = (section: keyof UserSettings, key: string, value: any) => {
     setSettings(prev => {
-      const next: UserSettings = {
-        ...prev,
-        [section]: typeof prev[section] === 'object' && prev[section] !== null
-          ? { ...(prev[section] as Record<string, any>), [key]: value } as any
-          : (value as any)
-      } as UserSettings;
+      const next = { ...prev };
+      if (section === 'theme' || section === 'language' || section === 'timezone') {
+        (next as any)[section] = value;
+      } else {
+        (next as any)[section] = { ...(prev[section] as any), [key]: value };
+      }
 
-      // Apply theme instantly when changed
       if (section === 'theme' && key === 'theme') {
         applyTheme(value as string);
       }
-
       return next;
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (!loading && !user) {
-    router.push('/login');
-    return null;
-  }
+  if (loading) return null; // Or a skeleton
 
   return (
-    <div className="min-h-screen bg-[#000000] text-[#FFFFFF]">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-[#FFFFFF]">Settings</h1>
-          <p className="text-[#71767B]">Customize your trading experience</p>
+    <div className="space-y-8 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+          <p className="text-muted-foreground">Customize your trading experience and preference.</p>
         </div>
+        <div className="flex items-center space-x-2">
+          <Button onClick={saveSettings} disabled={saving}>
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Save Changes
+          </Button>
+        </div>
+      </div>
 
-        <div className="space-y-6">
-          {/* Trial status */}
-          <TrialStatusCard />
+      <TrialStatusCard />
 
-          {/* Appearance Settings */}
-          <div className="bg-[#15202B] rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Settings className="w-6 h-6" />
-              Appearance
-            </h2>
-
-            <div className="space-y-6">
-              {/* Theme */}
-              <div>
-                <label className="block text-sm font-medium mb-3">Theme</label>
-                <div className="grid grid-cols-3 gap-4">
+      <div className="grid gap-6">
+        {/* Appearance */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><SettingsIcon className="w-5 h-5" /> Appearance</CardTitle>
+            <CardDescription>Manage theme and locale preferences.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label>Theme</Label>
+                <div className="flex bg-muted p-1 rounded-lg w-max">
                   {[
-                    { value: 'light', label: 'Light', icon: Sun },
-                    { value: 'dark', label: 'Dark', icon: Moon },
-                    { value: 'system', label: 'System', icon: Settings }
-                  ].map((theme) => {
-                    const Icon = theme.icon;
+                    { val: 'light', icon: Sun, label: 'Light' },
+                    { val: 'dark', icon: Moon, label: 'Dark' },
+                    { val: 'system', icon: Monitor, label: 'System' }
+                  ].map((opt) => {
+                    const Icon = opt.icon;
+                    const active = settings.theme === opt.val;
                     return (
                       <button
-                        key={theme.value}
-                        onClick={() => updateSetting('theme', 'theme', theme.value)}
-                        className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${settings.theme === theme.value
-                            ? 'border-blue-500 bg-blue-600'
-                            : 'border-gray-600 hover:border-gray-500'
-                          }`}
+                        key={opt.val}
+                        onClick={() => updateSetting('theme', 'theme', opt.val)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${active ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                       >
-                        <Icon className="w-5 h-5" />
-                        <span>{theme.label}</span>
+                        <Icon className="w-4 h-4" /> {opt.label}
                       </button>
-                    );
+                    )
                   })}
                 </div>
               </div>
-
-              {/* Language */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Language</label>
-                <select
-                  value={settings.language}
-                  onChange={(e) => updateSetting('language', 'language', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="en">English</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
-                  <option value="de">Deutsch</option>
-                  <option value="zh">中文</option>
-                </select>
-              </div>
-
-              {/* Timezone */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Timezone</label>
-                <select
-                  value={settings.timezone}
-                  onChange={(e) => updateSetting('timezone', 'timezone', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">Eastern Time</option>
-                  <option value="America/Chicago">Central Time</option>
-                  <option value="America/Denver">Mountain Time</option>
-                  <option value="America/Los_Angeles">Pacific Time</option>
-                  <option value="Europe/London">London</option>
-                  <option value="Europe/Paris">Paris</option>
-                  <option value="Asia/Tokyo">Tokyo</option>
-                  <option value="Africa/Lagos">West Africa (Lagos)</option>
-                </select>
-              </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Notification Settings */}
-          <div className="bg-[#15202B] rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Bell className="w-6 h-6" />
-              Notifications
-            </h2>
-
-            <div className="space-y-4">
-              {[
-                { key: 'email', label: 'Email Notifications', description: 'Receive updates via email' },
-                { key: 'push', label: 'Push Notifications', description: 'Browser notifications' },
-                { key: 'tradeAlerts', label: 'Trade Alerts', description: 'Notifications for trade events' },
-                { key: 'weeklyReports', label: 'Weekly Reports', description: 'Weekly performance summaries' }
-              ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                  <div>
-                    <h3 className="font-medium">{item.label}</h3>
-                    <p className="text-sm text-gray-400">{item.description}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={(settings.notifications as any)[item.key]}
-                      onChange={(e) => updateSetting('notifications', item.key, e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
+        {/* Notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Bell className="w-5 h-5" /> Notifications</CardTitle>
+            <CardDescription>Configure how you want to be alerted.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              { key: 'email', label: 'Email Notifications', desc: 'Receive daily summaries and updates.' },
+              { key: 'push', label: 'Push Notifications', desc: 'Real-time alerts for trade execs.' },
+              { key: 'tradeAlerts', label: 'Trade Alerts', desc: 'Get notified on SL/TP hits.' },
+            ].map(item => (
+              <div key={item.key} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                <div className="space-y-0.5">
+                  <Label className="text-base">{item.label}</Label>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Privacy Settings */}
-          <div className="bg-[#15202B] rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Shield className="w-6 h-6" />
-              Privacy & Analytics
-            </h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                <div>
-                  <h3 className="font-medium">Analytics & Usage Data</h3>
-                  <p className="text-sm text-gray-400">Help us improve by sharing anonymous usage data</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.privacy.analytics}
-                    onChange={(e) => updateSetting('privacy', 'analytics', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+                <Switch
+                  checked={(settings.notifications as any)[item.key]}
+                  onCheckedChange={(checked) => updateSetting('notifications', item.key, checked)}
+                />
               </div>
-            </div>
-          </div>
+            ))}
+          </CardContent>
+        </Card>
 
-          {/* Risk Controls */}
-          <div className="bg-[#15202B] rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Shield className="w-6 h-6" />
-              Risk Controls
-            </h2>
-
+        {/* Risk Controls (Re-integrated from previous settings logic) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Shield className="w-5 h-5" /> Global Risk Limits</CardTitle>
+            <CardDescription>These limits apply to your main trading tracking.</CardDescription>
+          </CardHeader>
+          <CardContent>
             <FeatureLock requiredPlan={plan === 'starter' ? 'plus' : undefined}>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-300 mb-1">Daily loss limit (USD)</label>
-                  <input
-                    type="number"
-                    value={riskControls.maxDailyLossUSD}
-                    onChange={(e) => setRiskControls(prev => ({ ...prev, maxDailyLossUSD: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label>Max Daily Loss ($)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      className="pl-7"
+                      value={riskControls.maxDailyLossUSD}
+                      onChange={(e) => setRiskControls(prev => ({ ...prev, maxDailyLossUSD: Number(e.target.value) }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-300 mb-1">Max trades per day</label>
-                  <input
+                <div className="space-y-2">
+                  <Label>Max Trades / Day</Label>
+                  <Input
                     type="number"
                     value={riskControls.maxTradesPerDay}
                     onChange={(e) => setRiskControls(prev => ({ ...prev, maxTradesPerDay: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-300 mb-1">Break after consecutive losses</label>
-                  <input
-                    type="number"
-                    value={riskControls.breakAfterConsecutiveLosses}
-                    onChange={(e) => setRiskControls(prev => ({ ...prev, breakAfterConsecutiveLosses: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    id="enforceBlocks"
-                    type="checkbox"
-                    checked={riskControls.enforceBlocks}
-                    onChange={(e) => setRiskControls(prev => ({ ...prev, enforceBlocks: e.target.checked }))}
-                    className="h-4 w-4"
-                  />
-                  <label htmlFor="enforceBlocks" className="text-sm text-gray-300">Strong warnings (Pro/Elite)</label>
+                <div className="space-y-2">
+                  <Label>Strict Mode</Label>
+                  <div className="flex items-center gap-3 border p-3 rounded-lg">
+                    <Switch
+                      checked={riskControls.enforceBlocks}
+                      onCheckedChange={(checked) => setRiskControls(prev => ({ ...prev, enforceBlocks: checked }))}
+                    />
+                    <span className="text-sm">Enforce Blocks?</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 text-xs text-gray-400">Risk Guard shows reminders or strong warnings when limits are hit. Adjust these to match your plan rules (e.g., prop-challenge risk).</div>
             </FeatureLock>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex justify-end">
-            <button
-              onClick={saveSettings}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  Save Settings
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

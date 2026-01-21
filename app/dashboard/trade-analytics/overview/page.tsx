@@ -126,6 +126,7 @@ export default function AnalyticsOverviewPage() {
             avgTrade,
             profitFactor,
             bestStreak: maxStreak,
+            worstTrade: Math.min(...filteredTrades.map(t => getTradePnl(t)), 0),
             grossProfit,
             grossLoss
         };
@@ -238,8 +239,8 @@ export default function AnalyticsOverviewPage() {
                             key={t}
                             onClick={() => setTimeframe(t as any)}
                             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${timeframe === t
-                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
                                 }`}
                         >
                             {t.toUpperCase()}
@@ -321,6 +322,41 @@ export default function AnalyticsOverviewPage() {
                         </div>
                         <div className="bg-yellow-100 dark:bg-yellow-900/20 p-2 rounded-full">
                             <Award className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+
+
+            {/* Additional Metrics Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Avg PnL / Trade */}
+                <Card>
+                    <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Avg PnL / Trade</p>
+                            <h3 className={`text-2xl font-bold ${metrics.avgTrade >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                ${metrics.avgTrade.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </h3>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-900/20 p-2 rounded-full">
+                            <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Worst Trade */}
+                <Card>
+                    <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Worst Trade</p>
+                            <h3 className="text-2xl font-bold text-red-500">
+                                ${metrics.worstTrade.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </h3>
+                        </div>
+                        <div className="bg-red-100 dark:bg-red-900/20 p-2 rounded-full">
+                            <ArrowDownRight className="w-5 h-5 text-red-600 dark:text-red-400" />
                         </div>
                     </CardContent>
                 </Card>
@@ -465,6 +501,6 @@ export default function AnalyticsOverviewPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 }
