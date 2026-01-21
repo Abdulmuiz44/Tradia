@@ -229,7 +229,7 @@ const METRIC_EXPLANATIONS: Record<string, { title: string; body: string }> = {
     rrOverTime: { title: "RR Performance Over Time", body: "Daily average Risk-to-Reward ratio plotted over your trading period. Helps visualize consistency." },
     tradiaScore: { title: "Tradia Score", body: "A composite score (0-100) combining: Win Rate (30%), Profit Factor (30%), Avg RR (25%), and Consistency (15%). Higher = better overall performance." },
     avgPnlPerTrade: { title: "Avg P&L Per Trade", body: "Your average profit or loss per trade. Calculated as: Total P&L ÷ Total Trades. Positive value = on average you make money per trade." },
-    avgDuration: { title: "Avg Trade Duration", body: "Average time from trade open to close in hours. Calculated from trades that have both open and close timestamps." },
+    avgTradeDuration: { title: "Avg Trade Duration", body: "Average time from trade open to close in hours. Calculated from trades that have both open and close timestamps." },
 };
 
 const getGreeting = (name = "Trader") => {
