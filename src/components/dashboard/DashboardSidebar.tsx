@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAccount } from "@/context/AccountContext";
 import {
   BarChart3,
@@ -70,20 +70,21 @@ export default function DashboardSidebar({
   isMobile = false,
   onClose,
 }: DashboardSidebarProps) {
-  const router = useRouter();
-  const { selectedAccount, accounts } = useAccount();
+  // Safely access account context
+  let selectedAccount = null;
+  let accounts: any[] = [];
+  try {
+    const accountContext = useAccount();
+    selectedAccount = accountContext.selectedAccount;
+    accounts = accountContext.accounts || [];
+  } catch (e) {
+    // Context not available, will show default state
+  }
 
   const handleTabClick = (tab: TabDef) => {
     if (!tab.href) {
       setActiveTab(tab.value);
     }
-    if (isMobile && onClose) {
-      onClose();
-    }
-  };
-
-  const handleManageAccounts = () => {
-    router.push("/dashboard/accounts");
     if (isMobile && onClose) {
       onClose();
     }
@@ -103,7 +104,7 @@ export default function DashboardSidebar({
               <>
                 <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{selectedAccount.name}</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  ${selectedAccount.account_size.toLocaleString()} {selectedAccount.currency}
+                  ${selectedAccount.account_size?.toLocaleString() || '0'} {selectedAccount.currency || 'USD'}
                 </p>
               </>
             ) : (
@@ -111,8 +112,9 @@ export default function DashboardSidebar({
             )}
           </div>
         </div>
-        <button
-          onClick={handleManageAccounts}
+        <Link
+          href="/dashboard/accounts"
+          onClick={() => isMobile && onClose?.()}
           className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-[#161B22] hover:bg-gray-50 dark:hover:bg-[#1c2128] rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors border border-gray-200 dark:border-gray-700"
         >
           <span>Manage Accounts</span>
@@ -120,7 +122,7 @@ export default function DashboardSidebar({
             <span className="text-xs text-gray-400 dark:text-gray-500">{accounts.length}</span>
             <ChevronRight className="w-4 h-4" />
           </div>
-        </button>
+        </Link>
       </div>
 
       {/* Navigation */}
