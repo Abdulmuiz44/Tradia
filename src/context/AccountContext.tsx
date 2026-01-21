@@ -25,10 +25,10 @@ const AccountContext = createContext<AccountContextType | undefined>(undefined);
 export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AccountStats | null>(null);
   const { notify } = useNotification();
-  const { user, plan } = useUser();
+  const { user, plan, loading: userLoading } = useUser();
   const supabase = createClientComponentClient();
 
   // Get max accounts based on user's plan
@@ -156,9 +156,9 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
         throw err;
       }
-      },
-      [user?.id, supabase, accounts.length, plan, MAX_ACCOUNTS, getMaxAccountsForPlan, notify]
-      );
+    },
+    [user?.id, supabase, accounts.length, plan, MAX_ACCOUNTS, getMaxAccountsForPlan, notify]
+  );
 
   const updateAccount = useCallback(
     async (accountId: string, payload: UpdateAccountPayload): Promise<TradingAccount> => {
@@ -253,10 +253,15 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Load accounts on mount and when user changes
   useEffect(() => {
+    if (userLoading) return;
+
     if (user?.id) {
       fetchAccounts();
+    } else {
+      setAccounts([]);
+      setLoading(false);
     }
-  }, [user?.id, fetchAccounts]);
+  }, [user?.id, userLoading, fetchAccounts]);
 
   // Restore selected account from localStorage
   useEffect(() => {
