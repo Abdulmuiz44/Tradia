@@ -445,6 +445,16 @@ function OverviewContent() {
                                 {mounted && theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                             </button>
 
+                            {/* Command Center Shortcut */}
+                            <button
+                                onClick={() => router.push("/dashboard")}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-md transition-all hidden sm:flex"
+                                title="Go to Command Center"
+                            >
+                                <Activity size={16} />
+                                <span className="text-sm font-medium">Command Center</span>
+                            </button>
+
                             {/* Filter */}
                             <AnimatedDropdown
                                 title="Filter Trades"
