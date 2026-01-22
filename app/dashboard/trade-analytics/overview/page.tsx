@@ -80,9 +80,12 @@ export default function AnalyticsOverviewPage() {
         // So maybe they want to see "How much would I have based on this period's performance?".
         // I will compute: Total Initial Balance + Filtered PnL.
 
-        const totalInitialBalance = accounts.reduce((sum, acc) => sum + (Number(acc.account_size) || 0), 0);
+        // Use the selected account balance or initial balance. 
+        // If we want "Current Balance", we might just take account.account_size directly if it's updated.
+        // But if we want "Initial + PnL", we use initial_balance.
+        const selectedAccountInitial = accounts.find(a => a.id === selectedAccount?.id)?.initial_balance || selectedAccount?.account_size || 0;
         const totalPnL = filteredTrades.reduce((sum, t) => sum + getTradePnl(t), 0);
-        const currentBalance = totalInitialBalance + totalPnL;
+        const currentBalance = selectedAccountInitial + totalPnL;
 
         const totalTrades = filteredTrades.length;
         const winningTrades = filteredTrades.filter(t => (t.outcome || '').toLowerCase() === 'win').length;

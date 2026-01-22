@@ -10,7 +10,7 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 export default function AnalyticsPropPage() {
     const { data: session } = useSession();
     const { accountFilteredTrades: trades } = useTrade();
-    const { accounts } = useAccount();
+    const { selectedAccount } = useAccount();
 
     const rawPlan = String((session?.user as any)?.plan || 'starter').toLowerCase();
     const plan = (rawPlan === 'free' ? 'starter' : rawPlan) as 'starter' | 'pro' | 'plus' | 'elite';
@@ -20,9 +20,9 @@ export default function AnalyticsPropPage() {
         return levels.indexOf(plan) >= levels.indexOf(required);
     };
 
-    const totalInternalBalance = accounts.reduce((sum, acc) => sum + (Number(acc.account_size) || 0), 0);
+    const initialBalance = selectedAccount?.initial_balance || selectedAccount?.account_size || 0;
     const totalPnL = trades.reduce((sum, t) => sum + (Number(t.pnl) || 0), 0);
-    const currentBalance = totalInternalBalance + totalPnL;
+    const currentBalance = initialBalance + totalPnL;
 
     if (!hasPlan('plus')) {
         return (
@@ -40,6 +40,10 @@ export default function AnalyticsPropPage() {
             trades={trades}
             plan={plan}
             accountBalance={currentBalance}
+            dailyLossLimit={selectedAccount?.daily_loss_limit}
+            maxDrawdown={selectedAccount?.max_drawdown}
+            profitTarget={selectedAccount?.profit_target}
+            maxTradingDays={selectedAccount?.max_trading_days}
         />
     );
 }

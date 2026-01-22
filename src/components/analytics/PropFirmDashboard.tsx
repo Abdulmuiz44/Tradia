@@ -11,40 +11,48 @@ import { format } from "date-fns";
 
 type PlanTier = "starter" | "pro" | "plus" | "elite";
 
-type PropFirmDashboardProps = {
-  trades: Trade[];
-  plan: PlanTier;
-  accountBalance?: number | null;
-};
-
-interface ChallengeProfile {
-  label: string;
-  targetPct: number;
-  dailyLossPct: number;
-  maxDrawdownPct: number;
-  phaseDays: number;
-  phaseCount: number;
-}
-
 const DEFAULT_BALANCE = 100000;
-
-const CHALLENGE_BY_PLAN: Record<PlanTier, ChallengeProfile> = {
-  starter: { label: "Evaluation Mode", targetPct: 0.1, dailyLossPct: 0.05, maxDrawdownPct: 0.1, phaseDays: 30, phaseCount: 1 },
-  pro: { label: "50k Evaluation", targetPct: 0.08, dailyLossPct: 0.045, maxDrawdownPct: 0.09, phaseDays: 30, phaseCount: 2 },
-  plus: { label: "100k Evaluation", targetPct: 0.1, dailyLossPct: 0.04, maxDrawdownPct: 0.08, phaseDays: 35, phaseCount: 2 },
-  elite: { label: "200k Funding Sprint", targetPct: 0.12, dailyLossPct: 0.035, maxDrawdownPct: 0.07, phaseDays: 40, phaseCount: 2 },
-};
 
 function formatCurrency(value: number): string {
   const rounded = Math.round(value * 100) / 100;
   return `${rounded < 0 ? "-" : ""}$${Math.abs(rounded).toLocaleString()}`;
 }
 
-export default function PropFirmDashboard({ trades, plan, accountBalance }: PropFirmDashboardProps) {
-  const profile = CHALLENGE_BY_PLAN[plan];
+type PropFirmDashboardProps = {
+  trades: Trade[];
+  plan: PlanTier;
+  accountBalance?: number | null;
+  dailyLossLimit?: number;
+  maxDrawdown?: number;
+  profitTarget?: number;
+  maxTradingDays?: number | null;
+};
+
+// ... (keep CHALLENGE_BY_PLAN for fallback or reference if needed, but prioritize props)
+
+export default function PropFirmDashboard({
+  trades,
+  plan,
+  accountBalance,
+  dailyLossLimit,
+  maxDrawdown,
+  profitTarget,
+  maxTradingDays
+}: PropFirmDashboardProps) {
+  // Use passed props, or fallback to defaults (avoiding hard error) 
+  // Ideally we shouldn't use CHALLENGE_BY_PLAN at all for limits if user configured them.
+  // If user hasn't configured them, maybe we can default to proportional values (5%, 10%) of balance.
+
   const baseBalance = accountBalance && accountBalance > 0 ? accountBalance : DEFAULT_BALANCE;
 
+  // Determine limits
+  const target = profitTarget || (baseBalance * 0.1); // Default 10%
+  const maxDaily = dailyLossLimit || (baseBalance * 0.05); // Default 5%
+  const maxTotal = maxDrawdown || (baseBalance * 0.10); // Default 10%
+  const phaseDays = maxTradingDays || 0; // 0 means no limit
+
   const metrics = useMemo(() => {
+    // ... (sorting logic stays same)
     const sorted = [...trades]
       .filter((trade) => Number.isFinite(Number(trade.pnl)))
       .sort((a, b) => {
@@ -55,7 +63,7 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
 
     let cumulative = 0;
     let peak = 0;
-    let maxDrawdown = 0;
+    let maxDrawdownVal = 0;
     const dailyMap = new Map<string, number>();
 
     sorted.forEach((trade) => {
@@ -63,7 +71,7 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
       cumulative += pnl;
       if (cumulative > peak) peak = cumulative;
       const drawdown = peak - cumulative;
-      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+      if (drawdown > maxDrawdownVal) maxDrawdownVal = drawdown;
 
       const date = trade.closeTime || trade.openTime;
       if (date) {
@@ -72,10 +80,11 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
       }
     });
 
-    const target = baseBalance * profile.targetPct;
-    const maxDailyLoss = baseBalance * profile.dailyLossPct;
-    const maxTotalLoss = baseBalance * profile.maxDrawdownPct;
     const progressPct = target === 0 ? 0 : Math.min(100, Math.max(0, (cumulative / target) * 100));
+
+    // ... (rest of logic using local variables target, maxDaily, maxTotal)
+    // We need to replace usages of `profile.dailyLossPct` etc with our calculated values.
+
 
     let largestDayLoss = 0;
     let largestDayGain = 0;
@@ -84,29 +93,29 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
     dailyMap.forEach((pnl, day) => {
       if (pnl < largestDayLoss) largestDayLoss = pnl;
       if (pnl > largestDayGain) largestDayGain = pnl;
-      if (Math.abs(pnl) > maxDailyLoss) breachDays += 1;
+      if (Math.abs(pnl) > maxDaily) breachDays += 1;
     });
 
     const daysTraded = dailyMap.size;
-    const pass = cumulative >= target && breachDays === 0 && maxDrawdown <= maxTotalLoss;
-    const riskState = breachDays > 0 || maxDrawdown > maxTotalLoss ? "at-risk" : progressPct >= 70 ? "close" : "on-track";
+    const pass = cumulative >= target && breachDays === 0 && maxDrawdownVal <= maxTotal;
+    const riskState = breachDays > 0 || maxDrawdownVal > maxTotal ? "at-risk" : progressPct >= 70 ? "close" : "on-track";
 
     return {
       cumulative,
       target,
-      maxDailyLoss,
-      maxTotalLoss,
+      maxDailyLoss: maxDaily,
+      maxTotalLoss: maxTotal,
       progressPct,
       largestDayLoss,
       largestDayGain,
       breachDays,
       daysTraded,
-      maxDrawdown,
+      maxDrawdown: maxDrawdownVal,
       riskState,
       pass,
       trailingDaily: Array.from(dailyMap.entries()).slice(-10),
     };
-  }, [trades, baseBalance, profile]);
+  }, [trades, baseBalance, target, maxDaily, maxTotal]);
 
   const complianceItems = [
     {
@@ -133,17 +142,7 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
 
   const riskBadge = metrics.riskState === "at-risk" ? "bg-red-500/10 text-red-300 border border-red-500/40"
     : metrics.riskState === "close" ? "bg-yellow-500/10 text-yellow-200 border border-yellow-500/40"
-    : "bg-emerald-500/10 text-emerald-200 border border-emerald-500/40";
-
-  const upgradePath = plan === "starter" ? "pro" : plan === "pro" ? "plus" : plan === "plus" ? "elite" : "elite";
-
-  const upgrade = () => {
-    try {
-      (window as any).location.assign(`/checkout?plan=${upgradePath}&billing=monthly`);
-    } catch {
-      // ignore
-    }
-  };
+      : "bg-emerald-500/10 text-emerald-200 border border-emerald-500/40";
 
   return (
     <Card className="border border-white/10 bg-black/30">
@@ -154,7 +153,7 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Badge className={`text-xs px-3 py-1 ${riskBadge}`}>{profile.label}</Badge>
+          <Badge className={`text-xs px-3 py-1 ${riskBadge}`}>{phaseDays > 0 ? "Time Limit Active" : "No Time Limit"}</Badge>
           <div className="text-sm text-muted-foreground">
             {metrics.pass ? "Challenge passed" : metrics.riskState === "at-risk" ? "Risk of violation" : "Within evaluation guardrails"}
           </div>
@@ -178,9 +177,9 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
               <Flag className="w-4 h-4 text-emerald-300" />
               <span className="text-sm font-semibold">Days traded</span>
             </div>
-            <div className="text-2xl font-bold">{metrics.daysTraded} / {profile.phaseDays}</div>
+            <div className="text-2xl font-bold">{metrics.daysTraded} {phaseDays > 0 ? `/ ${phaseDays}` : ""}</div>
             <div className="text-xs text-muted-foreground">
-              Complete at least {Math.ceil(profile.phaseDays * 0.4)} active days per phase
+              {phaseDays > 0 ? `Complete within ${phaseDays} days` : "No maximum trading days limit"}
             </div>
           </div>
         </div>
@@ -225,19 +224,8 @@ export default function PropFirmDashboard({ trades, plan, accountBalance }: Prop
           <ul className="list-disc list-inside space-y-1">
             <li>Lock in progress with reduced risk once you reach 80% of the target.</li>
             <li>Keep daily loss under {formatCurrency(metrics.maxDailyLoss)} to avoid resets.</li>
-            <li>Book at least {profile.phaseCount} journal reviews before phase completion.</li>
           </ul>
         </div>
-
-        {plan !== "elite" && (
-          <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 p-4 text-sm text-blue-100">
-            <div className="font-semibold flex items-center gap-2 mb-1"><ArrowUpRight className="w-4 h-4" /> Unlock elite prop automations</div>
-            <p className="mb-3">Elite adds auto-sync with challenge dashboards, breach SMS alerts, and multi-phase tracking.</p>
-            <Button size="sm" variant="outline" className="border-blue-400 text-blue-100" onClick={upgrade}>
-              Upgrade for elite prop toolkit
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
