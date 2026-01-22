@@ -10,7 +10,7 @@ import { AccountProvider } from "@/context/AccountContext"; // Wait, I removed u
 // I will just remove the lines.
 import Spinner from "@/components/ui/spinner";
 import TradeHistoryTable from "@/components/dashboard/TradeHistoryTable";
-import AccountSelector from "@/components/accounts/AccountSelector";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 import MobileBackButton from "@/components/ui/MobileBackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, RefreshCw, Plus, Upload, Bot } from "lucide-react";
@@ -212,9 +212,9 @@ function TradeHistoryContent() {
 
                     {/* Content */}
                     <div className="flex-1 overflow-auto p-6">
-                        {/* Sticky Account Selector */}
-                        <div className="sticky top-0 mb-6 max-w-sm z-30 bg-white dark:bg-[#0f1319] pb-4">
-                            <AccountSelector showCreateButton={true} showActions={true} />
+                        {/* Account Switcher */}
+                        <div className="mb-6 flex items-center gap-4">
+                            <AccountSwitcher />
                         </div>
 
                         {/* Stats Cards */}
