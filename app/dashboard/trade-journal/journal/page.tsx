@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { format, isSameDay } from "date-fns";
 import type { Trade } from "@/types/trade";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 // Helper functions
 const parsePL = (v?: string | number | null): number => {
@@ -108,40 +109,43 @@ export default function JournalPage() {
             <Card className="bg-white dark:bg-[#161B22] border-gray-200 dark:border-gray-700">
                 <CardContent className="p-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex flex-wrap items-center gap-2">
-                            {[
-                                { label: "All", value: "all" },
-                                { label: "Wins", value: "win" },
-                                { label: "Losses", value: "loss" },
-                                { label: "B/E", value: "breakeven" },
-                            ].map((item) => (
+                        <div className="flex flex-wrap items-center gap-3">
+                            <AccountSwitcher />
+                            <div className="flex flex-wrap items-center gap-2">
+                                {[
+                                    { label: "All", value: "all" },
+                                    { label: "Wins", value: "win" },
+                                    { label: "Losses", value: "loss" },
+                                    { label: "B/E", value: "breakeven" },
+                                ].map((item) => (
+                                    <Button
+                                        key={item.value}
+                                        size="sm"
+                                        variant={filter === item.value ? "default" : "outline"}
+                                        onClick={() => setFilter(item.value as typeof filter)}
+                                        className={
+                                            filter === item.value
+                                                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                                : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                                        }
+                                    >
+                                        {item.label}
+                                    </Button>
+                                ))}
                                 <Button
-                                    key={item.value}
                                     size="sm"
-                                    variant={filter === item.value ? "default" : "outline"}
-                                    onClick={() => setFilter(item.value as typeof filter)}
+                                    variant={pinnedOnly ? "default" : "outline"}
+                                    onClick={() => setPinnedOnly((val) => !val)}
                                     className={
-                                        filter === item.value
-                                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                        pinnedOnly
+                                            ? "bg-yellow-500 hover:bg-yellow-600 text-white"
                                             : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                                     }
                                 >
-                                    {item.label}
+                                    <Star className="h-4 w-4 mr-1" />
+                                    Pinned ({totalPinned})
                                 </Button>
-                            ))}
-                            <Button
-                                size="sm"
-                                variant={pinnedOnly ? "default" : "outline"}
-                                onClick={() => setPinnedOnly((val) => !val)}
-                                className={
-                                    pinnedOnly
-                                        ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                                        : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
-                                }
-                            >
-                                <Star className="h-4 w-4 mr-1" />
-                                Pinned ({totalPinned})
-                            </Button>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="relative">

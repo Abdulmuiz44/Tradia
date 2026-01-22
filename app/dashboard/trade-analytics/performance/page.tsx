@@ -14,6 +14,7 @@ import {
     Line
 } from "recharts";
 import { getTradePnl } from '@/lib/trade-date-utils';
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 export default function AnalyticsPerformancePage() {
     const { accountFilteredTrades: trades } = useTrade();
@@ -49,6 +50,11 @@ export default function AnalyticsPerformancePage() {
 
     return (
         <div className="space-y-6">
+            {/* Header with Account Switcher */}
+            <div className="flex items-center gap-4">
+                <AccountSwitcher />
+            </div>
+
             {/* Performance by Symbol */}
             <Card>
                 <CardHeader>

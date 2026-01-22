@@ -6,6 +6,7 @@ import { useTrade } from "@/context/TradeContext";
 import { useAccount } from "@/context/AccountContext";
 import PropFirmDashboard from "@/components/analytics/PropFirmDashboard";
 import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 export default function AnalyticsPropPage() {
     const { data: session } = useSession();
@@ -36,14 +37,21 @@ export default function AnalyticsPropPage() {
     }
 
     return (
-        <PropFirmDashboard
-            trades={trades}
-            plan={plan}
-            accountBalance={currentBalance}
-            dailyLossLimit={selectedAccount?.daily_loss_limit}
-            maxDrawdown={selectedAccount?.max_drawdown}
-            profitTarget={selectedAccount?.profit_target}
-            maxTradingDays={selectedAccount?.max_trading_days}
-        />
+        <div className="space-y-6">
+            {/* Header with Account Switcher */}
+            <div className="flex items-center gap-4">
+                <AccountSwitcher />
+            </div>
+
+            <PropFirmDashboard
+                trades={trades}
+                plan={plan}
+                accountBalance={currentBalance}
+                dailyLossLimit={selectedAccount?.daily_loss_limit}
+                maxDrawdown={selectedAccount?.max_drawdown}
+                profitTarget={selectedAccount?.profit_target}
+                maxTradingDays={selectedAccount?.max_trading_days}
+            />
+        </div>
     );
 }
