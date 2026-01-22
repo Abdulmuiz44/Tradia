@@ -24,7 +24,7 @@ const parsePL = (v?: string | number | null): number => {
 };
 
 export default function CalendarPage() {
-    const { trades = [] } = useTrade() as any;
+    const { accountFilteredTrades: trades = [] } = useTrade() as any;
     const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 

@@ -17,7 +17,7 @@ import {
 } from "recharts";
 
 export default function AnalyticsRiskPage() {
-    const { trades } = useTrade();
+    const { accountFilteredTrades: trades } = useTrade();
     const { data: session } = useSession();
 
     const rawPlan = String((session?.user as any)?.plan || 'starter').toLowerCase();

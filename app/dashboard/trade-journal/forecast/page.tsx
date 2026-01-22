@@ -19,7 +19,7 @@ const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
 
 export default function ForecastPage() {
     const { data: session } = useSession();
-    const { trades = [] } = useTrade() as any;
+    const { accountFilteredTrades: trades = [] } = useTrade() as any;
 
     const rawPlan = (session?.user as any)?.plan;
     const planType = (String(rawPlan || "").toLowerCase() || "starter") as PlanType;

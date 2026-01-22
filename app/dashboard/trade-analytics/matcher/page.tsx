@@ -8,7 +8,7 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 
 export default function AnalyticsMatcherPage() {
     const { data: session } = useSession();
-    const { trades } = useTrade();
+    const { accountFilteredTrades: trades } = useTrade();
 
     const rawPlan = String((session?.user as any)?.plan || 'starter').toLowerCase();
     const plan = (rawPlan === 'free' ? 'starter' : rawPlan) as 'starter' | 'pro' | 'plus' | 'elite';

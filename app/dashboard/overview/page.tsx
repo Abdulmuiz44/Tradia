@@ -121,7 +121,7 @@ const isTradeInRange = (tr: any, fromMs: number, toMs: number): boolean => {
 function OverviewContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const { trades, refreshTrades } = useTrade();
+    const { accountFilteredTrades: trades, refreshTrades } = useTrade();
     const { selectedAccount } = useAccount();
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);

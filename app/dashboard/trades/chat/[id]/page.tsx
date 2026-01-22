@@ -12,7 +12,7 @@ function TradesChatContent() {
     const { data: session, status } = useSession();
     const params = useParams();
     const conversationIdFromUrl = params?.id as string || null;
-    const { trades } = useTrade();
+    const { accountFilteredTrades: trades } = useTrade();
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {

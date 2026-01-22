@@ -16,7 +16,7 @@ const parsePL = (v?: string | number | null): number => {
 
 export default function RiskPage() {
     const { data: session } = useSession();
-    const { trades = [] } = useTrade() as any;
+    const { accountFilteredTrades: trades = [] } = useTrade() as any;
 
     const rawPlan = (session?.user as any)?.plan;
     const planType = (String(rawPlan || "").toLowerCase() || "starter") as PlanType;

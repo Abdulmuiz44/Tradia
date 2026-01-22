@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 function RiskManagementContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const { trades, refreshTrades } = useTrade();
+    const { accountFilteredTrades: trades, refreshTrades } = useTrade();
     const { metrics, performanceBySymbol, tradesByDirection } = useTradeData();
     const [refreshing, setRefreshing] = useState(false);
     const [userInitial, setUserInitial] = useState('U');

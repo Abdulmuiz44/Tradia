@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { getTradeDate } from '@/lib/trade-date-utils';
 
 export default function AnalyticsPatternsPage() {
-    const { trades } = useTrade();
+    const { accountFilteredTrades: trades } = useTrade();
 
     const performanceData = useMemo(() => {
         const dailyData: { [key: string]: { date: string, trades: number } } = {};

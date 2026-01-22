@@ -38,7 +38,7 @@ const fmtDateTime = (d?: string | Date) => {
 
 export default function JournalPage() {
     const { data: session } = useSession();
-    const { trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
+    const { accountFilteredTrades: trades = [], updateTrade, deleteTrade, refreshTrades } = useTrade() as any;
 
     const [filter, setFilter] = useState<"all" | "win" | "loss" | "breakeven">("all");
     const [search, setSearch] = useState("");
@@ -198,8 +198,8 @@ export default function JournalPage() {
                                                 <button
                                                     onClick={() => togglePin(id)}
                                                     className={`p-1 rounded ${isPinned
-                                                            ? "text-yellow-500"
-                                                            : "text-gray-400 hover:text-yellow-500"
+                                                        ? "text-yellow-500"
+                                                        : "text-gray-400 hover:text-yellow-500"
                                                         }`}
                                                 >
                                                     <Star className={`h-5 w-5 ${isPinned ? "fill-current" : ""}`} />
@@ -242,8 +242,8 @@ export default function JournalPage() {
                                                 <div className="text-right">
                                                     <p
                                                         className={`font-semibold ${trade.pnlValue >= 0
-                                                                ? "text-green-600 dark:text-green-400"
-                                                                : "text-red-600 dark:text-red-400"
+                                                            ? "text-green-600 dark:text-green-400"
+                                                            : "text-red-600 dark:text-red-400"
                                                             }`}
                                                     >
                                                         {currencyFormatter.format(trade.pnlValue)}

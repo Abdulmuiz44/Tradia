@@ -16,7 +16,7 @@ import {
 import { getTradePnl } from '@/lib/trade-date-utils';
 
 export default function AnalyticsPerformancePage() {
-    const { trades } = useTrade();
+    const { accountFilteredTrades: trades } = useTrade();
 
     // Pattern analysis data logic
     const patternData = useMemo(() => {

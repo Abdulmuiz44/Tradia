@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 function TradesDataContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { trades, refreshTrades } = useTrade();
+  const { accountFilteredTrades: trades, refreshTrades } = useTrade();
   const [refreshing, setRefreshing] = useState(false);
   const [userInitial, setUserInitial] = useState("U");
 

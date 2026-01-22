@@ -9,7 +9,7 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 
 export default function AnalyticsPropPage() {
     const { data: session } = useSession();
-    const { trades } = useTrade();
+    const { accountFilteredTrades: trades } = useTrade();
     const { accounts } = useAccount();
 
     const rawPlan = String((session?.user as any)?.plan || 'starter').toLowerCase();

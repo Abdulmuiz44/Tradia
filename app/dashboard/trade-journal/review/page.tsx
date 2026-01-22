@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Clipboard, CheckCircle, XCircle, Clock } from "lucide-react";
 
 export default function ReviewPage() {
-    const { trades = [], updateTrade } = useTrade() as any;
+    const { accountFilteredTrades: trades = [], updateTrade } = useTrade() as any;
 
     const unreviewedTrades = useMemo(() => {
         return trades.filter((t: any) => !t.reviewed);
