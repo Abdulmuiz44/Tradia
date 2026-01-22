@@ -197,7 +197,7 @@ export async function PATCH(request: NextRequest) {
         if (body.symbol) updateData.symbol = body.symbol;
         if (body.direction) updateData.direction = body.direction;
         if (body.side) updateData.side = body.side.toLowerCase();
-        if (body.lotSize !== undefined) updateData.quantity = body.lotSize;
+        if (body.lotSize !== undefined) updateData.lotsize = body.lotSize;
         if (body.lotsize !== undefined) updateData.lotsize = body.lotsize;
         if (body.entryPrice !== undefined) updateData.entryprice = body.entryPrice;
         if (body.exitPrice !== undefined) updateData.exitprice = body.exitPrice;

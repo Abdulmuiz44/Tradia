@@ -152,7 +152,7 @@ export default function AddTradeForm({ onSubmit, isLoading = false, onUploadScre
       ...prev,
       [name]:
         type === "number"
-          ? parseFloat(value) || 0
+          ? value === "" ? 0 : parseFloat(value)
           : value,
     }));
     if (errors[name]) {
@@ -381,9 +381,9 @@ export default function AddTradeForm({ onSubmit, isLoading = false, onUploadScre
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Risk/Reward:</span>
               <span className={`text-xl font-bold ${calculatedRR === 0 ? 'text-gray-400 dark:text-gray-500' :
-                  calculatedRR >= 2 ? 'text-green-600 dark:text-green-400' :
-                    calculatedRR >= 1 ? 'text-yellow-600 dark:text-yellow-400' :
-                      'text-red-600 dark:text-red-400'
+                calculatedRR >= 2 ? 'text-green-600 dark:text-green-400' :
+                  calculatedRR >= 1 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-red-600 dark:text-red-400'
                 }`}>
                 {calculatedRR === 0 ? '—' : `1:${calculatedRR}`}
               </span>

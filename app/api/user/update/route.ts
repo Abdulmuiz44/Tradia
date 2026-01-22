@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminSupabase } from "@/utils/supabase/admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +32,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = createAdminSupabase();
 
     // Build update object with only provided fields
     const updateData: Record<string, any> = {
