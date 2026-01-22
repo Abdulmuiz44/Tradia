@@ -48,7 +48,7 @@ import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
 export default function AnalyticsOverviewPage() {
     const { data: session } = useSession();
     const { accountFilteredTrades: trades } = useTrade();
-    const { accounts } = useAccount();
+    const { accounts, selectedAccount } = useAccount();
     const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
 
     // Plan/role from session
