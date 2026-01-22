@@ -64,20 +64,20 @@ export default function AccountSwitcher() {
 
     return (
         <div ref={dropdownRef} className="relative">
-            {/* Trigger Button - Vercel style */}
+            {/* Trigger Button - Improved visibility */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 bg-transparent hover:bg-gray-100 dark:hover:bg-[#1c2128] rounded-lg transition-colors border border-transparent hover:border-gray-200 dark:hover:border-[#2a2f3a]"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#1c2128] hover:bg-gray-200 dark:hover:bg-[#252d38] rounded-lg transition-colors border border-gray-300 dark:border-[#3a4050]"
             >
                 <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <Wallet size={12} className="text-white" />
                 </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white max-w-[120px] truncate">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white max-w-[120px] truncate">
                     {selectedAccount.name}
                 </span>
                 <ChevronDown
                     size={14}
-                    className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                    className={`text-gray-600 dark:text-gray-300 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
             </button>
 
