@@ -44,6 +44,7 @@ import { getTradeDate, getTradePnl } from '@/lib/trade-date-utils';
 import WeeklyCoachRecap from "@/components/analytics/WeeklyCoachRecap";
 import ProInsights from "@/components/analytics/ProInsights";
 import { CompactUpgradePrompt } from "@/components/UpgradePrompt";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 export default function AnalyticsOverviewPage() {
     const { data: session } = useSession();
@@ -236,19 +237,22 @@ export default function AnalyticsOverviewPage() {
         <div className="space-y-6">
             {/* Controls */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex bg-gray-100 dark:bg-[#161B22] p-1 rounded-lg w-max">
-                    {['7d', '30d', '90d', '1y', 'all'].map((t) => (
-                        <button
-                            key={t}
-                            onClick={() => setTimeframe(t as any)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${timeframe === t
-                                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
-                                }`}
-                        >
-                            {t.toUpperCase()}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-4">
+                    <AccountSwitcher />
+                    <div className="flex bg-gray-100 dark:bg-[#161B22] p-1 rounded-lg w-max">
+                        {['7d', '30d', '90d', '1y', 'all'].map((t) => (
+                            <button
+                                key={t}
+                                onClick={() => setTimeframe(t as any)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${timeframe === t
+                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                                    }`}
+                            >
+                                {t.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
