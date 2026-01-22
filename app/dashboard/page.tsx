@@ -45,7 +45,7 @@ type DashboardTabDef = {
 };
 
 const BASE_TAB_DEFS: DashboardTabDef[] = [
-    { value: "dashboard", label: "Command Center", icon: "Activity" },
+    { value: "dashboard", label: "Command Center", icon: "Activity", href: "/dashboard" },
     { value: "overview", label: "Overview", icon: "BarChart3", href: "/dashboard/overview" },
     { value: "history", label: "Trade History", icon: "History", href: "/dashboard/trade-history" },
     { value: "journal", label: "Trade Journal", icon: "BookOpen", href: "/dashboard/trade-journal" },
