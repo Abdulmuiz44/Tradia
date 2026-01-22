@@ -12,7 +12,7 @@ import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import Spinner from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, X, Menu, Sun, Moon, RefreshCw, Filter, Lock, Crown } from "lucide-react";
+import { User, Settings, X, Menu, Sun, Moon, RefreshCw, Filter, Lock, Crown, Activity } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
