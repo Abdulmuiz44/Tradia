@@ -42,6 +42,13 @@ const dateTimeLocalToISO = (value: string): string => {
   }
 };
 
+// Helper to get value from either camelCase or lowercase field name
+const getValue = <T,>(camel: T | undefined, lower: T | undefined, defaultVal: T): T => {
+  if (camel !== undefined && camel !== null && camel !== '') return camel;
+  if (lower !== undefined && lower !== null && lower !== '') return lower;
+  return defaultVal;
+};
+
 export default function EditTradeForm({ trade, onSubmit, isLoading = false, onUploadScreenshot }: EditTradeFormProps) {
   const [formData, setFormData] = useState<Partial<Trade>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,13 +61,6 @@ export default function EditTradeForm({ trade, onSubmit, isLoading = false, onUp
 
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
-
-  // Helper to get value from either camelCase or lowercase field name
-  const getValue = <T,>(camel: T | undefined, lower: T | undefined, defaultVal: T): T => {
-    if (camel !== undefined && camel !== null && camel !== '') return camel;
-    if (lower !== undefined && lower !== null && lower !== '') return lower;
-    return defaultVal;
-  };
 
   // Initialize form with trade data
   useEffect(() => {

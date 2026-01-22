@@ -514,8 +514,9 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           throw new Error(errorData.error ?? "Failed to add trade");
         }
 
-        const data = (await response.json()) as { trade: Record<string, unknown> };
-        const transformedTrade = transformTradeForFrontend(data.trade);
+        const json = (await response.json()) as Record<string, unknown>;
+        const tradeData = (json.trade as Record<string, unknown>) ?? json;
+        const transformedTrade = transformTradeForFrontend(tradeData);
         setTrades((prev: Trade[]) => [transformedTrade, ...prev]);
         notify({
           variant: "success",
@@ -531,7 +532,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     },
-    [notify, trades.length, user?.id, user?.plan],
+    [notify, trades.length, user?.id, user?.plan, selectedAccount],
   );
 
   const updateTrade = useCallback(
@@ -561,8 +562,9 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           throw new Error(errorData.error ?? "Failed to update trade");
         }
 
-        const data = (await response.json()) as { trade: Record<string, unknown> };
-        const transformedTrade = transformTradeForFrontend(data.trade);
+        const json = (await response.json()) as Record<string, unknown>;
+        const tradeData = (json.trade as Record<string, unknown>) ?? json;
+        const transformedTrade = transformTradeForFrontend(tradeData);
         setTrades((prev: Trade[]) =>
           prev.map((existing) => (existing.id === trade.id ? transformedTrade : existing)),
         );
@@ -731,7 +733,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         setImportLoading(false);
       }
     },
-    [notify, refreshTrades],
+    [notify, refreshTrades, selectedAccount],
   );
 
   useEffect(() => {
