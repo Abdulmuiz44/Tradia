@@ -45,7 +45,7 @@ type DashboardTabDef = {
 };
 
 const BASE_TAB_DEFS: DashboardTabDef[] = [
-    { value: "dashboard", label: "Command Center", icon: "Activity", href: "/dashboard" },
+    { value: "dashboard", label: "Prop Dashboard", icon: "Activity", href: "/dashboard" },
     { value: "overview", label: "Overview", icon: "BarChart3", href: "/dashboard/overview" },
     { value: "history", label: "Trade History", icon: "History", href: "/dashboard/trade-history" },
     { value: "journal", label: "Trade Journal", icon: "BookOpen", href: "/dashboard/trade-journal" },
@@ -209,7 +209,7 @@ function PropFirmDashboardContent() {
                                 <Menu size={24} />
                             </button>
                             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                                Command Center
+                                Prop Dashboard
                             </h1>
                         </div>
                         <div className="flex items-center gap-4">

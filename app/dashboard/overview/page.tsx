@@ -28,7 +28,7 @@ type DashboardTabDef = {
 
 // Base tabs available to all users
 const BASE_TAB_DEFS: DashboardTabDef[] = [
-    { value: "dashboard", label: "Command Center", icon: "Activity", href: "/dashboard" },
+    { value: "dashboard", label: "Prop Dashboard", icon: "Activity", href: "/dashboard" },
     { value: "overview", label: "Overview", icon: "BarChart3" },
     { value: "history", label: "Trade History", icon: "History", href: "/dashboard/trade-history" },
     { value: "journal", label: "Trade Journal", icon: "BookOpen", href: "/dashboard/trade-journal" },
@@ -452,10 +452,10 @@ function OverviewContent() {
                             <button
                                 onClick={() => router.push("/dashboard")}
                                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-md transition-all hidden sm:flex"
-                                title="Go to Command Center"
+                                title="Go to Prop Dashboard"
                             >
                                 <Activity size={16} />
-                                <span className="text-sm font-medium">Command Center</span>
+                                <span className="text-sm font-medium">Prop Dashboard</span>
                             </button>
 
                             {/* Filter */}
