@@ -208,7 +208,7 @@ function PropFirmDashboardContent() {
                             <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                                 <Menu size={24} />
                             </button>
-                            <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Dashboard
                             </h1>
                         </div>
