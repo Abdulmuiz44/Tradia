@@ -143,6 +143,11 @@ function EditAccountContent() {
               platform: account.platform,
               broker: account.broker || undefined,
               mode: account.mode,
+              prop_firm: account.prop_firm,
+              daily_loss_limit: account.daily_loss_limit,
+              max_drawdown: account.max_drawdown,
+              profit_target: account.profit_target,
+              max_trading_days: account.max_trading_days,
             }}
             onSubmit={handleUpdateAccount}
             onCancel={() => router.back()}

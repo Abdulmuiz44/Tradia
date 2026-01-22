@@ -132,6 +132,12 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
           mode: payload.mode || "manual",
           is_active: true,
           initial_balance: payload.account_size,
+          // Prop firm fields
+          prop_firm: payload.prop_firm,
+          daily_loss_limit: payload.daily_loss_limit,
+          max_drawdown: payload.max_drawdown,
+          profit_target: payload.profit_target,
+          max_trading_days: payload.max_trading_days,
         };
 
         const { data, error } = await supabase

@@ -28,6 +28,12 @@ function AddAccountContent() {
         platform: payload.platform,
         broker: payload.broker,
         mode: payload.mode,
+        // Prop firm fields
+        prop_firm: payload.prop_firm,
+        daily_loss_limit: payload.daily_loss_limit,
+        max_drawdown: payload.max_drawdown,
+        profit_target: payload.profit_target,
+        max_trading_days: payload.max_trading_days,
       };
 
       await createAccount(accountPayload);

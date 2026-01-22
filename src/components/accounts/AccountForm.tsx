@@ -39,6 +39,11 @@ export default function AccountForm({
     platform: initialData?.platform || "MT5",
     broker: initialData?.broker || "",
     mode: initialData?.mode || "manual",
+    prop_firm: initialData?.prop_firm || "",
+    daily_loss_limit: initialData?.daily_loss_limit || 0,
+    max_drawdown: initialData?.max_drawdown || 0,
+    profit_target: initialData?.profit_target || 0,
+    max_trading_days: initialData?.max_trading_days || 0,
   });
 
   useEffect(() => {
@@ -50,6 +55,11 @@ export default function AccountForm({
         platform: initialData.platform || "MT5",
         broker: initialData.broker || "",
         mode: initialData.mode || "manual",
+        prop_firm: initialData.prop_firm || "",
+        daily_loss_limit: initialData.daily_loss_limit || 0,
+        max_drawdown: initialData.max_drawdown || 0,
+        profit_target: initialData.profit_target || 0,
+        max_trading_days: initialData.max_trading_days || 0,
       });
     }
   }, [initialData]);
@@ -202,8 +212,99 @@ export default function AccountForm({
           onChange={(e) => handleChange("broker", e.target.value)}
           placeholder="e.g., XM, FxPro, FTMO"
           disabled={submitting || isLoading}
-          className="bg-transparent dark:bg-[#0f1319] dark:focus:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0f1319_inset] [&:-webkit-autofill]:-webkit-text-fill-color-white"
+          className={`bg-transparent dark:bg-[#0f1319] dark:focus:bg-[#0f1319] border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0f1319_inset] [&:-webkit-autofill]:-webkit-text-fill-color-white`}
         />
+      </div>
+
+      {/* Prop Firm Configuration */}
+      <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-semibold">Prop Firm Details</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="prop-firm-toggle" className="text-sm cursor-pointer">{formData.prop_firm ? 'Yes' : 'No'}</Label>
+            <input
+              type="checkbox"
+              id="prop-firm-toggle"
+              checked={!!formData.prop_firm}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  handleChange("prop_firm", "Prop Firm");
+                } else {
+                  handleChange("prop_firm", "");
+                  handleChange("daily_loss_limit", 0);
+                  handleChange("max_drawdown", 0);
+                  handleChange("profit_target", 0);
+                  handleChange("max_trading_days", 0);
+                }
+              }}
+              className="accent-blue-600 w-4 h-4 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {!!formData.prop_firm && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Prop Firm Name</Label>
+                <Input
+                  type="text"
+                  value={formData.prop_firm === "Prop Firm" ? "" : formData.prop_firm || ""}
+                  onChange={(e) => handleChange("prop_firm", e.target.value)}
+                  placeholder="e.g., FTMO, TopStep"
+                  className="bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Max Trading Days (Optional)</Label>
+                <Input
+                  type="number"
+                  value={formData.max_trading_days || ""}
+                  onChange={(e) => handleChange("max_trading_days", parseFloat(e.target.value) || 0)}
+                  placeholder="e.g., 30 (Leave empty for no limit)"
+                  className="bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Daily Loss Limit ({getCurrencySymbol(formData.currency)})</Label>
+                <Input
+                  type="number"
+                  value={formData.daily_loss_limit || ""}
+                  onChange={(e) => handleChange("daily_loss_limit", parseFloat(e.target.value) || 0)}
+                  placeholder="e.g., 500"
+                  className="bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Max Drawdown ({getCurrencySymbol(formData.currency)})</Label>
+                <Input
+                  type="number"
+                  value={formData.max_drawdown || ""}
+                  onChange={(e) => handleChange("max_drawdown", parseFloat(e.target.value) || 0)}
+                  placeholder="e.g., 1000"
+                  className="bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Profit Target ({getCurrencySymbol(formData.currency)})</Label>
+                <Input
+                  type="number"
+                  value={formData.profit_target || ""}
+                  onChange={(e) => handleChange("profit_target", parseFloat(e.target.value) || 0)}
+                  placeholder="e.g., 1000"
+                  className="bg-transparent dark:bg-[#0f1319] border-gray-200 dark:border-gray-700"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/10 p-2 rounded">
+              These values will be used to visualize your progress and risk on the Dashboard.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Account Mode */}

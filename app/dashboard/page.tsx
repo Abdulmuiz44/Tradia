@@ -90,14 +90,21 @@ function PropFirmDashboardContent() {
     }, [trades]);
 
     const accountSize = selectedAccount?.account_size || 100000;
-    const maxDailyLoss = accountSize * 0.05;
-    const maxTotalDrawdown = accountSize * 0.10;
+
+    // Dynamic Limits from Account Settings or defaults (5% / 10%)
+    const maxDailyLoss = selectedAccount?.daily_loss_limit || (accountSize * 0.05);
+    const maxTotalDrawdown = selectedAccount?.max_drawdown || (accountSize * 0.10);
+    const profitTarget = selectedAccount?.profit_target || (accountSize * 0.10); // Default 10% target
+    const maxTradingDays = selectedAccount?.max_trading_days || null;
+
     const currentDailyDrawdown = Math.abs(Math.min(dailyMetrics.pnl, 0));
     const dailyDrawdownPercent = Math.min((currentDailyDrawdown / maxDailyLoss) * 100, 100);
 
     const totalPnL = trades.reduce((sum: number, t: any) => sum + (Number(t.pnl) || 0), 0);
     const currentTotalDrawdown = Math.abs(Math.min(totalPnL, 0));
     const totalDrawdownPercent = Math.min((currentTotalDrawdown / maxTotalDrawdown) * 100, 100);
+
+    const profitTargetPercent = Math.min((Math.max(totalPnL, 0) / profitTarget) * 100, 100);
 
     const equityData = useMemo(() => {
         const initialBalance = accountSize - totalPnL;
@@ -222,7 +229,8 @@ function PropFirmDashboardContent() {
                         <div className="max-w-7xl mx-auto space-y-6">
 
                             {/* Metrics Row */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Metrics Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <Card className="border-none bg-white dark:bg-[#161B22] bg-opacity-50 backdrop-blur-sm shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center justify-between">
@@ -234,7 +242,7 @@ function PropFirmDashboardContent() {
                                             <span className="text-2xl font-bold dark:text-white">${currentDailyDrawdown.toFixed(2)}</span>
                                             <span className="text-sm text-gray-500">Max: ${maxDailyLoss.toLocaleString()}</span>
                                         </div>
-                                        <Progress value={dailyDrawdownPercent} className={`h-2 ${dailyDrawdownPercent > 80 ? 'bg-red-100' : 'bg-blue-100'}`} />
+                                        <Progress value={dailyDrawdownPercent} className={`h-2 ${dailyDrawdownPercent > 80 ? 'bg-red-500' : 'bg-blue-500'}`} />
                                     </CardContent>
                                 </Card>
 
@@ -249,7 +257,22 @@ function PropFirmDashboardContent() {
                                             <span className="text-2xl font-bold dark:text-white">${currentTotalDrawdown.toFixed(2)}</span>
                                             <span className="text-sm text-gray-500">Max: ${maxTotalDrawdown.toLocaleString()}</span>
                                         </div>
-                                        <Progress value={totalDrawdownPercent} className="h-2" />
+                                        <Progress value={totalDrawdownPercent} className={`h-2 ${totalDrawdownPercent > 80 ? 'bg-red-500' : 'bg-purple-500'}`} />
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-none bg-white dark:bg-[#161B22] bg-opacity-50 backdrop-blur-sm shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center justify-between">
+                                            Profit Target <Crown className="h-4 w-4 text-amber-500" />
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex items-end justify-between mb-2">
+                                            <span className="text-2xl font-bold dark:text-white">${Math.max(totalPnL, 0).toFixed(2)}</span>
+                                            <span className="text-sm text-gray-500">Goal: ${profitTarget.toLocaleString()}</span>
+                                        </div>
+                                        <Progress value={profitTargetPercent} className="h-2 bg-amber-100" />
                                     </CardContent>
                                 </Card>
 

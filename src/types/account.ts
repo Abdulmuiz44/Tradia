@@ -16,6 +16,12 @@ export interface TradingAccount {
   total_pnl?: number;
   created_at: string;
   updated_at: string;
+  // Prop Firm Specific Fields
+  prop_firm?: string;
+  daily_loss_limit?: number;
+  max_drawdown?: number;
+  profit_target?: number;
+  max_trading_days?: number | null; // null means no limit
 }
 
 export interface CreateAccountPayload {
@@ -25,6 +31,12 @@ export interface CreateAccountPayload {
   platform?: 'MT5' | 'MetaTrader4' | 'cTrader' | 'Manual';
   broker?: string;
   mode?: 'manual' | 'broker';
+  // Prop Firm Fields
+  prop_firm?: string;
+  daily_loss_limit?: number;
+  max_drawdown?: number;
+  profit_target?: number;
+  max_trading_days?: number | null;
 }
 
 export interface UpdateAccountPayload {
@@ -34,6 +46,12 @@ export interface UpdateAccountPayload {
   platform?: 'MT5' | 'MetaTrader4' | 'cTrader' | 'Manual';
   broker?: string;
   is_active?: boolean;
+  // Prop Firm Fields
+  prop_firm?: string;
+  daily_loss_limit?: number;
+  max_drawdown?: number;
+  profit_target?: number;
+  max_trading_days?: number | null;
 }
 
 export interface AccountStats {
