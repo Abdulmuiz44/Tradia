@@ -138,6 +138,10 @@ function PropFirmDashboardContent() {
                 </div>
 
                 <div className="flex-1 p-4 overflow-y-auto">
+                    {/* Account Switcher - Visible in mobile sidebar */}
+                    <div className="lg:hidden mb-4">
+                        <AccountSwitcher />
+                    </div>
                     <DashboardSidebar tabs={BASE_TAB_DEFS} activeTab={activeTab} setActiveTab={setActiveTab} />
                 </div>
 

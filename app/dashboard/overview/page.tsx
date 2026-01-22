@@ -397,6 +397,9 @@ function OverviewContent() {
                             </button>
                         </div>
                         <div className="p-4">
+                            <div className="mb-4">
+                                <AccountSwitcher />
+                            </div>
                             <DashboardSidebar
                                 tabs={TAB_DEFS}
                                 activeTab={activeTab}
@@ -423,7 +426,7 @@ function OverviewContent() {
                             </button>
 
                             {/* Account Switcher - Always visible on left */}
-                            <div className="hidden sm:block">
+                            <div className="block">
                                 <AccountSwitcher />
                             </div>
                         </div>
