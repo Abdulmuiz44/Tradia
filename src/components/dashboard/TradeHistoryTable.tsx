@@ -12,7 +12,7 @@ import type { Trade } from "@/types/trade";
 import JournalModal from "@/components/modals/JournalModal";
 import { useUser } from "@/context/UserContext";
 import { useAccount } from "@/context/AccountContext";
-import AccountSelector from "@/components/accounts/AccountSelector";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 import Modal from "@/components/ui/Modal";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
@@ -620,10 +620,10 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Account Selector */}
+                    {/* Account Switcher */}
                     {accounts.length > 0 && (
-                        <div className="flex-1 max-w-xs">
-                            <AccountSelector showCreateButton={true} />
+                        <div className="flex-1">
+                            <AccountSwitcher />
                         </div>
                     )}
 
