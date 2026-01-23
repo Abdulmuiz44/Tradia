@@ -13,6 +13,7 @@ import { User, Settings, RefreshCw } from "lucide-react";
 import { signOut } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
 import { Button } from "@/components/ui/button";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 function TradePlannerContent() {
   const { data: session, status } = useSession();
@@ -136,6 +137,7 @@ function TradePlannerContent() {
             </div>
 
             <div className="flex items-center gap-3">
+              <AccountSwitcher />
               <Button
                 onClick={handleRefresh}
                 disabled={refreshing}

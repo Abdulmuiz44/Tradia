@@ -12,6 +12,7 @@ import { User, Settings, RefreshCw } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTradeData } from '@/hooks/useTradeData';
+import AccountSwitcher from '@/components/dashboard/AccountSwitcher';
 
 // Components
 import RiskExposureOverview from '@/components/dashboard/risk-management/RiskExposureOverview';
@@ -143,6 +144,7 @@ function RiskManagementContent() {
                         </div>
 
                         <div className="flex items-center gap-3">
+                            <AccountSwitcher />
                             <Button
                                 onClick={handleRefresh}
                                 disabled={refreshing}

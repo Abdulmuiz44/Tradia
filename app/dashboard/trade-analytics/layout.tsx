@@ -18,6 +18,7 @@ import {
     GitMerge,
     Settings
 } from "lucide-react";
+import AccountSwitcher from "@/components/dashboard/AccountSwitcher";
 
 const NAV_ITEMS = [
     { href: "/dashboard/trade-analytics/overview", label: "Overview", icon: LayoutDashboard },
@@ -76,17 +77,22 @@ export default function TradeAnalyticsLayout({
             <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
                 {/* Page Header */}
                 <header className="bg-white dark:bg-[#161B22] border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-4">
-                    <div className="flex items-center gap-3">
-                        <div className="lg:hidden">
-                            <MobileBackButton />
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="lg:hidden">
+                                <MobileBackButton />
+                            </div>
+                            <div>
+                                <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                                    Trade Analytics
+                                </h1>
+                                <p className="hidden md:block text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Deep insights into your trading performance and patterns
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                                Trade Analytics
-                            </h1>
-                            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Deep insights into your trading performance and patterns
-                            </p>
+                        <div className="flex items-center gap-2">
+                            <AccountSwitcher />
                         </div>
                     </div>
                 </header>
