@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Trash2, Edit2, Activity, Wallet, Settings, ChevronRight, Lock } from "lucide-react";
+import { Plus, Trash2, Edit2, Activity, Wallet, Settings, ChevronRight, Lock, Link as LinkIcon } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
 import { useUser } from "@/context/UserContext";
 import { PLAN_LIMITS, type PlanType } from "@/lib/planAccess";
@@ -12,13 +12,15 @@ import { Badge } from "@/components/ui/badge";
 import Modal from "@/components/ui/Modal";
 import type { TradingAccount } from "@/types/account";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
+import MT5Connect from "@/components/MT5Connect";
+import DashboardMetrics from "@/components/DashboardMetrics";
 
 export default function AccountManager() {
   const { accounts, selectedAccount, selectAccount, stats, deleteAccount, loading } = useAccount();
-  const { plan } = useUser();
+  const { user, plan } = useUser();
   const router = useRouter();
-  /* const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null); */
   const [accountToDelete, setAccountToDelete] = useState<TradingAccount | null>(null);
+  const [showMT5Modal, setShowMT5Modal] = useState(false);
 
   // Get plan-specific limits
   const userPlan = (plan as PlanType) || 'starter';
@@ -75,12 +77,22 @@ export default function AccountManager() {
           <Badge variant="outline" className="text-xs">
             {accountsRemaining === Infinity ? "Unlimited" : `${accountsRemaining} remaining`}
           </Badge>
+          <Button variant="outline" onClick={() => setShowMT5Modal(true)}>
+            <LinkIcon size={18} className="mr-2" />
+            Connect MT5
+          </Button>
           <Button onClick={handleAddAccountClick} disabled={!canAddAccount}>
             <Plus size={18} className="mr-2" />
             New Account
           </Button>
         </div>
       </div>
+
+      {user?.id && (
+        <div className="mb-6">
+           <DashboardMetrics userId={user.id} />
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -233,6 +245,21 @@ export default function AccountManager() {
           </CardContent>
         </Card>
       )}
+
+      {/* MT5 Connect Modal */}
+      <Modal
+        isOpen={showMT5Modal}
+        onClose={() => setShowMT5Modal(false)}
+        title="Connect MT5 Account"
+        description="Link your MT5 account for automatic syncing."
+        size="md"
+      >
+        {user?.id ? (
+            <MT5Connect userId={user.id} />
+        ) : (
+            <div>Loading user data...</div>
+        )}
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

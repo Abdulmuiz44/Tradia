@@ -35,6 +35,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import DashboardMetrics from "@/components/DashboardMetrics";
 
 // --- Tab Definitions ---
 type DashboardTabDef = {
@@ -229,7 +230,13 @@ function PropFirmDashboardContent() {
                         <div className="max-w-7xl mx-auto space-y-6">
 
                             {/* Metrics Row */}
-                            {/* Metrics Row */}
+                            {session?.user?.id && (
+                                <div className="mb-6">
+                                    <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">MT5 Live Stats</h2>
+                                    <DashboardMetrics userId={session.user.id} />
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <Card className="border-none bg-white dark:bg-[#161B22] bg-opacity-50 backdrop-blur-sm shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                                     <CardHeader className="pb-2">
