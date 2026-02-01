@@ -255,7 +255,7 @@ export default function AccountManager() {
         size="md"
       >
         {user?.id ? (
-            <MT5Connect userId={user.id} />
+            <MT5Connect userId={user.id} onSuccess={() => setShowMT5Modal(false)} />
         ) : (
             <div>Loading user data...</div>
         )}

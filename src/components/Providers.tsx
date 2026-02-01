@@ -6,6 +6,7 @@ import { UserProvider } from "@/context/UserContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { TradeProvider } from "@/context/TradeContext";
 import { AccountProvider } from "@/context/AccountContext";
+import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +17,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <AccountProvider>
               <TradeProvider>
                 {children}
+                <Toaster richColors position="top-right" />
               </TradeProvider>
             </AccountProvider>
           </NotificationProvider>

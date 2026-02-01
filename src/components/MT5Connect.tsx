@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'sonner';
 
-export default function MT5Connect({ userId }: { userId: string }) {
+export default function MT5Connect({ userId, onSuccess }: { userId: string; onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     login: '',
-    serverUrl: 'http://localhost:8080', // Default as per prompt
+    serverUrl: 'http://localhost:8000', // Default as per prompt
     apiKey: ''
   });
 
@@ -17,6 +17,7 @@ export default function MT5Connect({ userId }: { userId: string }) {
     setLoading(true);
 
     try {
+      // 1. Connect (Save Credentials)
       const res = await fetch('/api/connect-mt5', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -28,8 +29,20 @@ export default function MT5Connect({ userId }: { userId: string }) {
       if (!res.ok) throw new Error(data.error || 'Failed to connect');
 
       toast.success('MT5 Account Connected Successfully!');
-      // Optionally trigger an immediate sync
-      // await fetch(`/api/sync-mt5/${userId}`);
+      
+      // 2. Trigger Initial Sync
+      try {
+        toast.info('Starting initial sync...');
+        await fetch(`/api/sync-mt5/${userId}`);
+        toast.success('Initial sync complete!');
+      } catch (syncError) {
+        console.error('Sync failed:', syncError);
+        toast.warning('Connected, but initial sync failed. It will retry automatically.');
+      }
+
+      // 3. Close Modal
+      if (onSuccess) onSuccess();
+
     } catch (error: any) {
       toast.error(error.message);
     } finally {

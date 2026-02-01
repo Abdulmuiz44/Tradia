@@ -54,82 +54,35 @@ export async function syncMT5Account(userId: string) {
       const { account_login, server_url, api_key_encrypted, last_sync } = account;
       const apiKey = decryptKey(api_key_encrypted); // TODO: Implement actual decryption
 
-      // 2. Fetch Data from MT5 REST API
-      const headers = { 'Authorization': `Bearer ${apiKey}` }; // Assuming Bearer auth or similar
+      // 2. Fetch Data from MT5 REST API (Python Service)
+      // The Python service exposes /sync-trades?user_id=...&login=...
+      const syncUrl = `${server_url}/sync-trades`;
       
-      // A. Account Info
-      let accountInfo;
       try {
-          const res = await axios.get(`${server_url}/api/account/${account_login}`, { headers });
-          accountInfo = res.data;
-      } catch (e) {
-          console.error(`Failed to fetch account info for ${account_login}`, e);
-          continue;
-      }
-
-      // B. Positions (Open Trades)
-      // const positionsRes = await axios.get(`${server_url}/api/positions/${account_login}`, { headers });
-      // const positions = positionsRes.data;
-
-      // C. History (New Trades)
-      const fromDate = last_sync ? new Date(last_sync).toISOString() : '2020-01-01T00:00:00';
-      let history = [];
-      try {
-          const historyRes = await axios.get(`${server_url}/api/history/${account_login}`, { 
-            headers,
-            params: { from: fromDate } 
+          const res = await axios.get(syncUrl, { 
+            params: { 
+                user_id: userId, 
+                login: account_login 
+            }
           });
-          history = historyRes.data;
-      } catch (e) {
-          console.error(`Failed to fetch history for ${account_login}`, e);
+          
+          const result = res.data;
+          
+          if (result.ok) {
+              results.push({ 
+                  login: account_login, 
+                  status: 'synced', 
+                  trades_count: result.imported,
+                  message: result.message
+              });
+          } else {
+              console.error(`Sync failed for ${account_login}:`, result.message);
+          }
+
+      } catch (e: any) {
+          console.error(`Failed to fetch sync data for ${account_login}`, e.message);
+          results.push({ login: account_login, status: 'error', error: e.message });
       }
-
-      // 3. Compute Metrics
-      // Simplified calculations
-      const balance = accountInfo.balance;
-      const equity = accountInfo.equity;
-      const margin = accountInfo.margin;
-
-      // Example: Win Rate from recent history
-      const recentTrades = history.filter((t: any) => t.type === 'buy' || t.type === 'sell');
-      const wins = recentTrades.filter((t: any) => t.profit > 0).length;
-      const winRate = recentTrades.length > 0 ? (wins / recentTrades.length) * 100 : 0;
-
-      // 4. Update Supabase
-      // Update Account Stats
-      await supabase
-        .from('mt5_accounts')
-        .update({
-          balance,
-          equity,
-          margin,
-          win_rate: winRate,
-          last_sync: new Date().toISOString()
-        })
-        .eq('id', account.id);
-
-      // Upsert Trades
-      if (history.length > 0) {
-        const tradesToUpsert = history.map((t: any) => ({
-          id: t.ticket, // Using Ticket as ID
-          user_id: userId,
-          mt5_account_id: account.id,
-          symbol: t.symbol,
-          type: t.type,
-          volume: t.volume,
-          profit: t.profit,
-          open_time: t.time || t.open_time, // Adjust based on actual API response
-          // Map other fields as needed
-        }));
-
-        const { error: tradeError } = await supabase
-          .from('trades')
-          .upsert(tradesToUpsert, { onConflict: 'id' });
-        
-        if (tradeError) console.error('Error upserting trades:', tradeError);
-      }
-      
-      results.push({ login: account_login, status: 'synced', trades_count: history.length });
     }
 
     return results;
