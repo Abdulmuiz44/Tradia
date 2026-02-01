@@ -981,52 +981,6 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
                 </div>
             </div>
 
-            {/* Sample Data Banner - Show when no trades exist */}
-            {allTrades.length === 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-600/20 dark:to-purple-600/20 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 mb-6 shadow-sm">
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="text-2xl">📊</div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Welcome to Tradia!</h3>
-                                    <p className="text-sm text-gray-700 dark:text-gray-300">Ready to start analyzing your trading performance?</p>
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap gap-3 mt-4">
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            const sampleTrades = generateSampleTrades();
-                                            await importTrades(sampleTrades);
-                                        } catch (error) {
-                                            console.error('Failed to load sample data:', error);
-                                        }
-                                    }}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    Load Sample Data
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        // Navigate to trade history or show import modal
-                                        if (window && window.dispatchEvent) {
-                                            window.dispatchEvent(new CustomEvent('showImportModal'));
-                                        }
-                                    }}
-                                    className="px-4 py-2 border border-blue-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-gray-500 text-blue-700 dark:text-gray-300 dark:hover:text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    Import Your Trades
-                                </button>
-                            </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
-                                Sample data includes realistic EUR/USD, BTC/USDT, and ETH/USDT trades to explore Tradia&apos;s features.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* KPI cards (including avg pnl & avg duration inline among them) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {renderMetricCard({
