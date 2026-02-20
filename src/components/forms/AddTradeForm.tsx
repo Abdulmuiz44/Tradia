@@ -81,9 +81,11 @@ export default function AddTradeForm({ onSubmit, isLoading = false, onUploadScre
   const afterInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate Risk/Reward ratio automatically
-  const calculatedRR = useMemo(() => {
-    const { entryPrice, stopLossPrice, takeProfitPrice } = formData;
+  const entryPrice = formData.entryPrice;
+  const stopLossPrice = formData.stopLossPrice;
+  const takeProfitPrice = formData.takeProfitPrice;
 
+  const calculatedRR = useMemo(() => {
     if (!entryPrice || !stopLossPrice || entryPrice === 0 || stopLossPrice === 0) {
       return 0;
     }
@@ -98,21 +100,19 @@ export default function AddTradeForm({ onSubmit, isLoading = false, onUploadScre
     }
 
     return 0;
-  }, [formData.entryPrice, formData.stopLossPrice, formData.takeProfitPrice]);
+  }, [entryPrice, stopLossPrice, takeProfitPrice]);
 
   // Calculate risk in pips/points
   const riskInPips = useMemo(() => {
-    const { entryPrice, stopLossPrice } = formData;
     if (!entryPrice || !stopLossPrice) return 0;
     return Math.abs(entryPrice - stopLossPrice);
-  }, [formData.entryPrice, formData.stopLossPrice]);
+  }, [entryPrice, stopLossPrice]);
 
   // Calculate reward in pips/points
   const rewardInPips = useMemo(() => {
-    const { entryPrice, takeProfitPrice } = formData;
     if (!entryPrice || !takeProfitPrice) return 0;
     return Math.abs(takeProfitPrice - entryPrice);
-  }, [formData.entryPrice, formData.takeProfitPrice]);
+  }, [entryPrice, takeProfitPrice]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
