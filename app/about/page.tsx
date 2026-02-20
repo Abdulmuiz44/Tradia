@@ -101,9 +101,9 @@ export default function AboutPage(): React.ReactElement {
                   About Tradia
                 </h1>
                 <p className="mt-5 text-lg text-gray-200 max-w-2xl">
-                  Tradia's mission is to provide Forex and Prop Firm traders with institutional-grade
-                  analytics and AI coaching. We help you eliminate the guesswork, protect your equity,
-                  and scale consistent profitability in your funded journey.
+                  Tradia&rsquo;s mission is to provide Forex and Prop Firm traders with institutional-grade
+                   analytics and AI coaching. We help you eliminate the guesswork, protect your equity,
+                   and scale consistent profitability in your funded journey.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href="/signup" className="px-5 py-3 bg-white text-black rounded-lg hover:bg-gray-200 font-semibold border border-gray-300">
@@ -162,7 +162,7 @@ export default function AboutPage(): React.ReactElement {
         <section className="max-w-7xl mx-auto px-6 py-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Trade Tracker, Trading Journal & Risk Tools</h2>
           <p className="mt-2 text-gray-700 dark:text-gray-300 max-w-3xl">
-            Whether you're tackling a new Prop Firm challenge or managing a $200k funded account,
+            Whether you&rsquo;re tackling a new Prop Firm challenge or managing a $200k funded account,
             Tradia brings a professional trading command center to your fingertips. We prioritize
             the metrics that matter most to Forex specialists: drawdown preservation, session win rates,
             and psychological discipline.
@@ -194,10 +194,10 @@ export default function AboutPage(): React.ReactElement {
             </p>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <blockquote className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
-                “Tradia fixed my drawdown leaks. I passed my 100k evaluation in 2 weeks after following the AI's session advice.” — Amina K.
+                “Tradia fixed my drawdown leaks. I passed my 100k evaluation in 2 weeks after following the AI&rsquo;s session advice.” — Amina K.
               </blockquote>
               <blockquote className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
-                “Tagging my 'ICT Silver Bullet' setups revealed I was actually losing money on them. Tradia saved my capital.” — Sam R.
+                “Tagging my &lsquo;ICT Silver Bullet&rsquo; setups revealed I was actually losing money on them. Tradia saved my capital.” — Sam R.
               </blockquote>
               <blockquote className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
                 “The London session analytics are elite. I now know exactly when to walk away from the screens.” — Noah P.
@@ -225,7 +225,7 @@ export default function AboutPage(): React.ReactElement {
               },
               {
                 q: "How does the AI Coaching work?",
-                a: "The AI analyzes your trading patterns over time to find 'behavioral leaks'. It will tell you if you're overtrading during the Asian session or if your stop losses are too tight for your strategy.",
+                a: "The AI analyzes your trading patterns over time to find 'behavioral leaks'. It will tell you if you&rsquo;re overtrading during the Asian session or if your stop losses are too tight for your strategy.",
               },
             ].map((f) => (
               <div key={f.q} className="bg-white/70 dark:bg-[#0f1319]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-5">
@@ -254,3 +254,4 @@ export default function AboutPage(): React.ReactElement {
     </>
   );
 }
+
