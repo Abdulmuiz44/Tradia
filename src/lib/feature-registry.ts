@@ -14,7 +14,7 @@ export const FEATURES: FeatureAnnouncement[] = [
   {
     id: 'multi-accounts',
     title: 'Multiple Account Support',
-    body: 'Manage up to 10 trading accounts. Track separate balances, platforms, and performance metrics for each account.',
+    body: 'Manage your funded accounts from one dashboard. Track separate balances, Prop Firm rules, and session-specific performance across all your connections.',
     date: '2026-01-18T00:00:00.000Z',
     minPlan: 'starter',
   },
@@ -64,7 +64,7 @@ export const FEATURES: FeatureAnnouncement[] = [
   {
     id: 'journal-mistakes',
     title: 'Journal: Mistake Analyzer',
-    body: 'Find recurring losses by strategy, symbol, and trading hour with suggested guardrails.',
+    body: 'Find recurring evaluation-killers by session, pair, and entry-timing with suggested risk guardrails to protect your funded accounts.',
     date: '2025-09-16T00:00:00.000Z',
     minPlan: 'pro',
   },

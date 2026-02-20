@@ -29,33 +29,33 @@ import Footer from "@/components/Footer";
 const FEATURES_ORIG = [
     {
         icon: <AiOutlineBarChart className="w-7 h-7" />,
-        title: "Smart Performance Tracking",
-        description: "Real-time metrics, charts and behavioral insights to level-up your trading.",
+        title: "Prop Firm Challenge Insights",
+        description: "Analyze your trades against prop firm rules to ensure you stay within drawdown limits and hit profit targets.",
     },
     {
         icon: <AiOutlineLock className="w-7 h-7" />,
-        title: "Secure & Private",
-        description: "Your trading data is encrypted and accessible only to you.",
+        title: "Advanced Risk Guardrails",
+        description: "AI-powered risk management that flags over-leveraging and revenge trading before they blow your account.",
     },
     {
         icon: <AiOutlineThunderbolt className="w-7 h-7" />,
-        title: "Lightning-Fast Feedback",
-        description: "AI-powered trade reviews & suggestions in seconds.",
+        title: "Forex Edge Discovery",
+        description: "Identify which currency pairs and sessions provide your highest probability setups with deep-dive analytics.",
     },
     {
         icon: <AiOutlineGlobal className="w-7 h-7" />,
-        title: "Trade Anywhere",
-        description: "Responsive web app and mobile-friendly dashboards for traders on the move.",
+        title: "Automated Trade Journal",
+        description: "Sync your TradingView or MetaTrader history instantly. No more manual data entry — just pure growth.",
     },
 ];
 
 const BENEFITS = [
-    { title: "Win Rate & P/L", desc: "Understand your profitability at a glance." },
-    { title: "Risk Metrics", desc: "Drawdown, lot-size averages and quick risk checks." },
-    { title: "Trade Timeline", desc: "Visualize your performance over time." },
-    { title: "AI Hints", desc: "Automated notes on recurring mistakes (Pro)." },
-    { title: "Strategy Tags", desc: "Label trades and filter performance per strategy." },
-    { title: "Performance Analytics", desc: "Comprehensive charts and metrics for better trading decisions." },
+    { title: "Prop Firm Ready", desc: "Track max daily drawdown and evaluation progress in real-time." },
+    { title: "Forex Session Alpha", desc: "Know if you're a London session beast or a NY session fader." },
+    { title: "Risk/Reward Mastery", desc: "Visual charts that reveal exactly where you're leaving money on the table." },
+    { title: "AI Psychology Coach", desc: "Automated alerts for FOMO, revenge trading, and grid-trading traps." },
+    { title: "Strategy Analytics", desc: "Label strategy setups like 'OB/Fair Value Gap' and see their win rates." },
+    { title: "Funded Account Guard", desc: "Protect your capital with professional-grade exposure metrics." },
 ];
 
 const PLANS = [
@@ -64,9 +64,9 @@ const PLANS = [
         name: "Starter",
         monthly: 0,
         yearly: 0,
-        highlights: ["Basic trade analytics", "30 days trade history", "CSV trade import"],
-        cta: "Get started (Free)",
-        tag: "Free forever",
+        highlights: ["Forex trade analytics", "30 days trade history", "CSV trade import", "Basic risk metrics"],
+        cta: "Start Tracking Free",
+        tag: "Perfect for Beginners",
     },
     {
         id: "pro",
@@ -74,15 +74,15 @@ const PLANS = [
         monthly: 9,
         yearly: 90,
         highlights: [
-            "All Starter features",
+            "Everything in Starter",
             "6 months trade history",
-            "Advanced analytics",
-            "AI weekly summary",
-            "Personalized strategy recommendations",
-            "Risk management analysis & optimization"
+            "Prop Firm Rule Analytics",
+            "AI Weekly Edge Summary",
+            "Session-based Performance",
+            "Risk Management Optimization"
         ],
-        cta: "Upgrade to Pro",
-        tag: "Most popular",
+        cta: "Scale Your Trading",
+        tag: "Most Popular",
     },
     {
         id: "plus",
@@ -90,14 +90,15 @@ const PLANS = [
         monthly: 19,
         yearly: 190,
         highlights: [
-            "All Pro features",
-            "Unlimited history",
-            "AI trade reviews & SL/TP suggestions",
-            "Image processing for trade screenshots",
-            "Real-time performance analytics & insights"
+            "Everything in Pro",
+            "Unlimited trade history",
+            "AI Screenshot Analysis",
+            "Drawdown Protection Engine",
+            "Daily Evaluation Reports",
+            "Strategy Backtest Sync"
         ],
-        cta: "Upgrade to Plus",
-        tag: "For active traders",
+        cta: "Master the Markets",
+        tag: "For Funded Traders",
     },
     {
         id: "elite",
@@ -106,20 +107,21 @@ const PLANS = [
         yearly: 390,
         highlights: [
             "Everything in Plus",
-            "AI strategy builder",
-            "Prop-firm dashboard",
-            "All AI features included",
-            "Priority support"
+            "AI Strategy Builder",
+            "Full Prop-Firm Dashboard",
+            "Institutional Alpha Tools",
+            "Priority Strategy Coaching",
+            "Early Access to AI Predictive"
         ],
-        cta: "Upgrade to Elite",
-        tag: "Advanced",
+        cta: "Join the Elite",
+        tag: "Professional Choice",
     },
 ];
 
 const TESTIMONIALS = [
-    { name: "Amina K.", role: "Scalper", text: "Tradia pinpointed my sizing leaks and improved my RR immediately.", initials: "A" },
-    { name: "Sam R.", role: "Swing Trader", text: "Tagging strategies changed everything — now I trade the winners.", initials: "S" },
-    { name: "Noah P.", role: "Risk Manager", text: "Audit-ready exports and clear risk charts saved our team hours.", initials: "N" },
+    { name: "Amina K.", role: "Prop Firm Funded Trader", text: "Tradia fixed my drawdown leaks. I passed my 100k evaluation in 2 weeks after following the AI's session advice.", initials: "A" },
+    { name: "Sam R.", role: "Forex Specialist", text: "Tagging my 'ICT Silver Bullet' setups revealed I was actually losing money on them. Tradia saved my capital.", initials: "S" },
+    { name: "Noah P.", role: "Professional Scalper", text: "The London session analytics are elite. I now know exactly when to walk away from the screens.", initials: "N" },
 ];
 
 /* Loading component for lazy loading */
@@ -203,20 +205,20 @@ export default function Home(): React.ReactElement {
                                     transition={{ duration: 0.5 }}
                                     className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-gray-900 dark:text-white"
                                 >
-                                    Stop Guessing Trades — AI Uncovers Your Winning Edge in 30 Seconds
+                                    Stop Blowing Prop Firm Accounts — Use AI to Secure Your Edge
                                 </motion.h1>
 
-                                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
-                                    Traders like you boosted win rates 20% — upload a sample trade to see yours free.
+                                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-xl text-gray-600 dark:text-gray-300 max-w-2xl font-medium">
+                                    The #1 AI Trading Journal for serius Forex & Prop Firm traders. Track drawdown, analyze sessions, and scale your funded journey.
                                 </motion.p>
 
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
-                                    Join thousands of traders who use Tradia to analyze their trading performance, identify patterns, optimize strategies, and make data-driven decisions that lead to consistent profits in the financial markets.
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-base text-gray-500 dark:text-gray-400 max-w-2xl">
+                                    Stop guessing and start scaling. Tradia analyzes thousands of your Forex data points to reveal exactly why you're missing fundings and how to fix it in 30 seconds.
                                 </motion.div>
 
                                 <div className="mt-8 flex flex-wrap gap-3 items-center">
-                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-white text-black hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 px-6 py-3 rounded-full shadow-lg font-bold text-lg border border-gray-300 dark:border-white">
-                                        Get Your Free AI Review <AiOutlineArrowRight />
+                                    <motion.button onClick={navSignup} whileTap={{ scale: 0.98 }} className="inline-flex items-center gap-3 bg-white text-black hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 px-8 py-4 rounded-full shadow-2xl font-bold text-xl border border-gray-300 dark:border-white transition-all transform hover:scale-105">
+                                        Start Scaling Your Edge <AiOutlineArrowRight />
                                     </motion.button>
 
                                     <Link
@@ -271,8 +273,8 @@ export default function Home(): React.ReactElement {
                 <section className="py-12 px-6 bg-white dark:bg-black">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-black dark:text-white">Advanced Trading Analytics Platform</h2>
-                            <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Everything traders need to analyze performance, improve strategies and scale profits — built around real trading workflows and powered by artificial intelligence.</p>
+                            <h2 className="text-3xl font-bold text-black dark:text-white">Precision Tools for Modern Prop Firm Traders</h2>
+                            <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Everything you need to master your psychology, protect your drawdown, and finally secure that 6-figure funding.</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -284,10 +286,10 @@ export default function Home(): React.ReactElement {
                                             <h3 className="font-semibold text-lg text-black dark:text-white">{f.title}</h3>
                                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{f.description}</p>
                                             {/* Add feature examples */}
-                                            {i === 0 && <p className="mt-2 text-xs text-gray-500">Example: Track your EUR/USD win rate from 45% to 62% after optimizing entries.</p>}
-                                            {i === 1 && <p className="mt-2 text-xs text-gray-500">Example: End-to-end encryption ensures your trade data stays private.</p>}
-                                            {i === 2 && <p className="mt-2 text-xs text-gray-500">Example: Get AI feedback on your last 10 trades in under 30 seconds.</p>}
-                                            {i === 3 && <p className="mt-2 text-xs text-gray-500">Example: Access your analytics on mobile while traveling.</p>}
+                                            {i === 0 && <p className="mt-2 text-xs text-gray-500">Example: See exactly how close you are to violating your daily loss limit.</p>}
+                                            {i === 1 && <p className="mt-2 text-xs text-gray-500">Example: Automatic alerts when your position size exceeds 1% risk.</p>}
+                                            {i === 2 && <p className="mt-2 text-xs text-gray-500">Example: Discover why your EUR/USD trades are 3x more profitable than GBP/JPY.</p>}
+                                            {i === 3 && <p className="mt-2 text-xs text-gray-500">Example: Link your MT4/MT5 and watch your journal populate automatically.</p>}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -296,7 +298,7 @@ export default function Home(): React.ReactElement {
 
                         <div className="mt-8 text-center">
                             <button onClick={navSignup} className="inline-flex items-center gap-2 rounded-full px-6 py-3 bg-white text-black hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 font-semibold shadow border border-gray-300 dark:border-white">
-                                Start Trading Analysis Free <AiOutlineArrowRight />
+                                Start Your Prop Firm Evaluation <AiOutlineArrowRight />
                             </button>
                         </div>
                     </div>
@@ -337,10 +339,9 @@ export default function Home(): React.ReactElement {
                 <section className="py-16 px-6 bg-white dark:bg-black">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-12">
-                            <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Why Professional Traders Choose Tradia</h2>
+                            <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Built by Traders, for Serious Forex Careers</h2>
                             <p className="text-gray-700 dark:text-gray-300 max-w-3xl mx-auto text-lg">
-                                Join thousands of successful traders who have transformed their trading performance using our comprehensive analytics platform.
-                                From day traders to swing traders, Tradia provides the insights and tools needed to trade with confidence.
+                                Tradia isn't just a spreadsheet. It's a professional-grade command center that helps you treat trading like a business. Join thousands of funded traders who found their edge with our AI.
                             </p>
                         </div>
 
@@ -349,11 +350,10 @@ export default function Home(): React.ReactElement {
                                 <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <AiOutlineBarChart className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Data-Driven Trading Decisions</h3>
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Prop Firm Rule Compliance</h3>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Make informed trading decisions based on comprehensive performance analytics. Track your win rate,
-                                    risk-reward ratios, and identify patterns that lead to profitable trades. Our platform helps you
-                                    understand what works in your trading strategy.
+                                    Never fail an evaluation due to a technicality again. Our dashboard tracks your max daily loss,
+                                    profit targets, and consistency scores according to major prop firm requirements (FTMO, MyFundedFX, etc.).
                                 </p>
                             </div>
 
@@ -361,11 +361,10 @@ export default function Home(): React.ReactElement {
                                 <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <AiOutlineThunderbolt className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">AI-Powered Trade Analysis</h3>
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Forex Psychology AI</h3>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Leverage artificial intelligence to analyze your trading performance. Get automated insights,
-                                    trade reviews, and recommendations for improving your entry and exit strategies. Our AI
-                                    identifies mistakes and suggests optimizations for better trading results.
+                                    Our AI coach analyzes your trade timing and notes to catch behavioral traps. It flags when you're
+                                    revenge trading after a loss or closing winners too early, helping you build the iron discipline needed for funding.
                                 </p>
                             </div>
 
@@ -373,11 +372,10 @@ export default function Home(): React.ReactElement {
                                 <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <AiOutlineGlobal className="w-8 h-8 text-black dark:text-white" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Comprehensive Trading Analytics</h3>
+                                <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Precision Session Data</h3>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Get detailed insights into your trading performance with advanced analytics and AI-powered recommendations.
-                                    Whether you trade forex, stocks, commodities, or cryptocurrencies, Tradia provides
-                                    comprehensive analysis to help you improve your trading strategies.
+                                    See your stats broken down by the London, New York, and Asian sessions. Know exactly when your
+                                    strategy has the highest probability of success so you can stop overtrading during low-liquidity gaps.
                                 </p>
                             </div>
 
@@ -535,7 +533,7 @@ export default function Home(): React.ReactElement {
                         </div>
 
                         <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
-                            Need a custom plan or prop-firm support? <Link href="/contact" className="text-indigo-600 dark:text-indigo-300 hover:underline">Contact us</Link>.
+                            Need a custom plan for your trading floor or prop-firm group? <Link href="/contact" className="text-indigo-600 dark:text-indigo-300 hover:underline">Contact us</Link>.
                         </div>
                     </div>
                 </section>
@@ -611,13 +609,13 @@ export default function Home(): React.ReactElement {
                 <section className="py-16 px-6 bg-white dark:bg-black">
                     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div>
-                            <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Frequently asked questions</h3>
+                            <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Top Questions from Prop Traders</h3>
 
                             <div className="space-y-3">
                                 {[
-                                    { q: "Is there a free plan?", a: "Yes — Starter is free forever with 30-day trade history, basic analytics, and CSV import. Upgrade anytime to unlock advanced AI features." },
-                                    { q: "How does AI help?", a: "AI reviews entry/exit context to give actionable suggestions like sizing changes, stop recommendations and repeatable lessons to improve your trading." },
-                                    { q: "Can I change plans anytime?", a: "Yes, upgrade or downgrade anytime. Annual plans get a 20% discount and are billed upfront." },
+                                    { q: "Can I track my FTMO / Prop Firm evaluation?", a: "Absolutely. Tradia is built to track drawdown and consistency rules, making it the perfect companion for anyone navigating prop firm challenges." },
+                                    { q: "How does the AI help me pass?", a: "The AI identifies 'Account Killers' — the specific mistakes that lead to large drawdowns. By fixing these, you increase your probability of hitting the profit target safely." },
+                                    { q: "Does it support MT4/MT5 and TradingView?", a: "Yes. You can import your trade history via CSV or sync screenshots directly to get instant AI analysis on your setups." },
                                 ].map((fq, i) => (
                                     <details key={i} className="p-4 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-900/50">
                                         <summary className="font-medium text-gray-900 dark:text-white cursor-pointer">{fq.q}</summary>
@@ -628,14 +626,14 @@ export default function Home(): React.ReactElement {
                         </div>
 
                         <div className="rounded-xl p-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-md dark:shadow-none">
-                            <h4 className="text-xl font-bold text-black dark:text-white">Ready to stop guessing and start improving?</h4>
-                            <p className="mt-2 text-gray-600 dark:text-gray-300">Create an account and upload your first trade history — get instant insights and AI trade reviews.</p>
+                            <h4 className="text-xl font-bold text-black dark:text-white">Stop risking your capital on guesswork.</h4>
+                            <p className="mt-2 text-gray-600 dark:text-gray-300">Secure your edge today and join the top 1% of funded traders who use data to win.</p>
                             <div className="mt-6 flex gap-3">
-                                <button onClick={navSignup} className="bg-white hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold transition-colors border border-gray-300">Create free account</button>
-                                <Link href="/pricing" className="px-6 py-3 rounded-full border-2 border-black dark:border-white text-black dark:text-white font-semibold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">See plans</Link>
+                                <button onClick={navSignup} className="bg-white hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold transition-colors border border-gray-300">Start Your Trial</button>
+                                <Link href="/pricing" className="px-6 py-3 rounded-full border-2 border-black dark:border-white text-black dark:text-white font-semibold hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">Compare Plans</Link>
                             </div>
 
-                            <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">Need help? <Link href="/contact" className="text-black dark:text-white underline">Contact us</Link>.</div>
+                            <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">Questions? <Link href="/contact" className="text-black dark:text-white underline">Talk to a Trading Expert</Link>.</div>
                         </div>
                     </div>
                 </section>

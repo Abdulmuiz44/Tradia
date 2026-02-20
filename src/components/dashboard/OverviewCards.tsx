@@ -643,8 +643,8 @@ export default function OverviewCards({ trades: propTrades, fromDate, toDate, se
     const negativeClass = "text-red-600 dark:text-red-400";
     const neutralClass = "text-black dark:text-white";
 
-    // show only first name and prefix with "Trader "
-    const displayName = (userName ?? "Trader").trim() || "Trader";
+    // show only first name and prefix with "Forex Trader "
+    const displayName = `Forex Trader ${(userName ?? "Trader").trim() || "Trader"}`;
     const greeting = getGreeting(displayName);
     const progressPct = Math.max(0, Math.min(100, Math.round((metrics.totalPnl / (monthlyTarget || 1)) * 100)));
 

@@ -25,8 +25,8 @@ export const PricingPage: React.FC<PricingPageProps> = ({
           Choose Your Trading Plan
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Unlock the full potential of your trading with AI-powered insights,
-          advanced analytics, and professional tools tailored for traders at every level.
+          Secure your edge and scale your funded career. Tradia provides the post-trade analytics,
+          risk guardrails, and Prop Firm insights needed for consistent profitability.
         </p>
         {highlightAI && (
           <div className="mt-6 inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">

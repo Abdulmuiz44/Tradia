@@ -6,24 +6,16 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Tradia | AI Trading Journal, Trade Tracker & Performance Analytics",
+  title: "About Tradia — Built for Forex & Prop Firm Traders",
   description:
-    "Discover Tradia — the AI-powered trading journal and trade tracker built to improve trading performance. Track trades, analyze P&L, optimize risk, and grow consistency across Forex, stocks, crypto and futures.",
+    "Discover Tradia — the AI-powered trading journal built specifically for Forex and Prop Firm traders. Protect your drawdown, analyze session performance, and scale your funded career.",
   keywords: [
-    "trading performance",
-    "trade tracker",
-    "trading journal",
-    "ai trading journal",
-    "forex trade journal",
-    "crypto trading tracker",
-    "stock trading analytics",
-    "risk management",
-    "win rate analysis",
-    "pnl analytics",
-    "trade log",
-    "journal app for traders",
-    "position sizing",
-    "drawdown tracking",
+    "Forex trading journal",
+    "Prop firm trade tracker",
+    "funded trader analytics",
+    "drawdown management tool",
+    "AI trading coach",
+    "MetaTrader journal sync",
   ],
   alternates: { canonical: "/about" },
   openGraph: {
@@ -109,9 +101,9 @@ export default function AboutPage(): React.ReactElement {
                   About Tradia
                 </h1>
                 <p className="mt-5 text-lg text-gray-200 max-w-2xl">
-                  Tradia is the AI trading journal, trade tracker and performance analytics platform
-                  built to help traders improve win rate, protect capital with better risk management,
-                  and scale consistent profitability across Forex, stocks, crypto and futures.
+                  Tradia's mission is to provide Forex and Prop Firm traders with institutional-grade
+                  analytics and AI coaching. We help you eliminate the guesswork, protect your equity,
+                  and scale consistent profitability in your funded journey.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href="/signup" className="px-5 py-3 bg-white text-black rounded-lg hover:bg-gray-200 font-semibold border border-gray-300">
@@ -170,9 +162,10 @@ export default function AboutPage(): React.ReactElement {
         <section className="max-w-7xl mx-auto px-6 py-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Trade Tracker, Trading Journal & Risk Tools</h2>
           <p className="mt-2 text-gray-700 dark:text-gray-300 max-w-3xl">
-            Everything you need to manage your trading performance in one place. Whether you trade
-            Forex, stocks, crypto, or futures, Tradia brings a professional trading journal, flexible
-            trade tracker, and intelligent risk analytics together so you can sharpen your edge.
+            Whether you're tackling a new Prop Firm challenge or managing a $200k funded account,
+            Tradia brings a professional trading command center to your fingertips. We prioritize
+            the metrics that matter most to Forex specialists: drawdown preservation, session win rates,
+            and psychological discipline.
           </p>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
@@ -201,13 +194,13 @@ export default function AboutPage(): React.ReactElement {
             </p>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <blockquote className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
-                “Tradia showed me exactly where my sizing leaked. My RR improved in a week.” — Amina K.
+                “Tradia fixed my drawdown leaks. I passed my 100k evaluation in 2 weeks after following the AI's session advice.” — Amina K.
               </blockquote>
               <blockquote className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
-                “Strategy tagging made my patterns obvious. I dropped the losers and scaled the winners.” — Sam R.
+                “Tagging my 'ICT Silver Bullet' setups revealed I was actually losing money on them. Tradia saved my capital.” — Sam R.
               </blockquote>
               <blockquote className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
-                “Clean exports and clear risk charts saved me hours every month.” — Noah P.
+                “The London session analytics are elite. I now know exactly when to walk away from the screens.” — Noah P.
               </blockquote>
             </div>
           </div>
@@ -219,20 +212,20 @@ export default function AboutPage(): React.ReactElement {
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
             {[
               {
-                q: "What is a trading journal and why do traders need one?",
-                a: "A trading journal records entries, exits and reasoning for every trade. It helps track performance, refine strategy, and improve discipline. Tradia makes journaling fast and provides analytics you can act on.",
+                q: "Does Tradia support Prop Firm evaluations?",
+                a: "Yes. Tradia is specifically optimized for Prop Firm traders. Our dashboard tracks daily/max drawdown and consistency scores to help you stay compliant with your firm's rules.",
               },
               {
-                q: "Can I use Tradia as a trade tracker for Forex, stocks and crypto?",
-                a: "Yes. Tradia works across instruments — Forex, stocks, crypto and futures. Import trades via CSV or add them manually.",
+                q: "Can I import my MT4/MT5 trade history?",
+                a: "Yes. You can easily export your history from MetaTrader as a CSV and upload it to Tradia for instant AI analysis and deep metric breakdowns.",
               },
               {
-                q: "How does Tradia improve trading performance?",
-                a: "Tradia surfaces win rate, P&L, drawdown and expectancy across strategy tags, sessions and symbols. Our AI flags mistakes and risk issues so you can adjust faster.",
+                q: "Which Forex pairs does it support?",
+                a: "Tradia supports all major, minor, and exotic Forex pairs, along with commodities like Gold (XAUUSD) and Oil, which are favorites among prop traders.",
               },
               {
-                q: "Is my data secure?",
-                a: "Your data is encrypted and protected by industry-standard best practices. You control your trading journal and exports.",
+                q: "How does the AI Coaching work?",
+                a: "The AI analyzes your trading patterns over time to find 'behavioral leaks'. It will tell you if you're overtrading during the Asian session or if your stop losses are too tight for your strategy.",
               },
             ].map((f) => (
               <div key={f.q} className="bg-white/70 dark:bg-[#0f1319]/70 border border-gray-200/70 dark:border-white/10 rounded-xl p-5">
