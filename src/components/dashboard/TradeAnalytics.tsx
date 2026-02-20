@@ -264,7 +264,7 @@ export default function TradeAnalytics({ trades, session, isAdmin, className = "
       }
     ];
     return metrics;
-  }, [filteredTrades, accountBalance]);
+  }, [filteredTrades, accountBalance, currencyCode]);
 
   // Monthly P&L data
   const monthlyPnLData = useMemo(() => {

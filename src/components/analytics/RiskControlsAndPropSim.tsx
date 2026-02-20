@@ -58,7 +58,7 @@ export default function RiskControlsAndPropSim({
                 if (typeof s.cooldownMins === 'number') setCooldownMins(s.cooldownMins);
             }
             const rawCl = localStorage.getItem('pretrade_checklist');
-            if (rawCl) setChecklist({ ...checklist, ...JSON.parse(rawCl) });
+            if (rawCl) setChecklist(prev => ({ ...prev, ...JSON.parse(rawCl) }));
         } catch { }
     }, []); // Empty dependency array for load only
 
@@ -237,8 +237,8 @@ export default function RiskControlsAndPropSim({
                                 key={item.key}
                                 onClick={() => setChecklist((c) => ({ ...c, [item.key]: !c[item.key as keyof typeof c] }))}
                                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${checklist[item.key as keyof typeof checklist]
-                                        ? 'border-green-500/50 bg-green-500/10 dark:bg-green-900/20'
-                                        : 'border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    ? 'border-green-500/50 bg-green-500/10 dark:bg-green-900/20'
+                                    : 'border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'
                                     }`}
                             >
                                 {checklist[item.key as keyof typeof checklist]

@@ -115,7 +115,7 @@ export default function PropFirmDashboard({
       pass,
       trailingDaily: Array.from(dailyMap.entries()).slice(-10),
     };
-  }, [trades, baseBalance, target, maxDaily, maxTotal]);
+  }, [trades, target, maxDaily, maxTotal]);
 
   const complianceItems = [
     {
