@@ -134,7 +134,7 @@ export default function AnalyticsOverviewPage() {
             grossProfit,
             grossLoss
         };
-    }, [filteredTrades, accounts]);
+    }, [filteredTrades, accounts, selectedAccount?.id, selectedAccount?.account_size]);
 
     // Chart Data Preparation
     const performanceData = useMemo(() => {
