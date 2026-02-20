@@ -119,7 +119,7 @@ const PLANS = [
 ];
 
 const TESTIMONIALS = [
-    { name: "Amina K.", role: "Prop Firm Funded Trader", text: "Tradia fixed my drawdown leaks. I passed my 100k evaluation in 2 weeks after following the AI's session advice.", initials: "A" },
+    { name: "Amina K.", role: "Prop Firm Funded Trader", text: "Tradia fixed my drawdown leaks. I passed my 100k evaluation in 2 weeks after following the AI&apos;s session advice.", initials: "A" },
     { name: "Sam R.", role: "Forex Specialist", text: "Tagging my 'ICT Silver Bullet' setups revealed I was actually losing money on them. Tradia saved my capital.", initials: "S" },
     { name: "Noah P.", role: "Professional Scalper", text: "The London session analytics are elite. I now know exactly when to walk away from the screens.", initials: "N" },
 ];
@@ -205,15 +205,15 @@ export default function Home(): React.ReactElement {
                                     transition={{ duration: 0.5 }}
                                     className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-gray-900 dark:text-white"
                                 >
-                                    Stop Blowing Prop Firm Accounts — Use AI to Secure Your Edge
+                                    Stop Blowing Prop Firm Accounts &mdash; Use AI to Secure Your Edge
                                 </motion.h1>
 
                                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-6 text-xl text-gray-600 dark:text-gray-300 max-w-2xl font-medium">
-                                    The #1 AI Trading Journal for serius Forex & Prop Firm traders. Track drawdown, analyze sessions, and scale your funded journey.
+                                    The #1 AI Trading Journal for serious Forex &amp; Prop Firm traders. Track drawdown, analyze sessions, and scale your funded journey.
                                 </motion.p>
 
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.24 }} className="mt-4 text-base text-gray-500 dark:text-gray-400 max-w-2xl">
-                                    Stop guessing and start scaling. Tradia analyzes thousands of your Forex data points to reveal exactly why you're missing fundings and how to fix it in 30 seconds.
+                                    Stop guessing and start scaling. Tradia analyzes thousands of your Forex data points to reveal exactly why you&rsquo;re missing fundings and how to fix it in 30 seconds.
                                 </motion.div>
 
                                 <div className="mt-8 flex flex-wrap gap-3 items-center">
@@ -341,7 +341,7 @@ export default function Home(): React.ReactElement {
                         <div className="text-center mb-12">
                             <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Built by Traders, for Serious Forex Careers</h2>
                             <p className="text-gray-700 dark:text-gray-300 max-w-3xl mx-auto text-lg">
-                                Tradia isn't just a spreadsheet. It's a professional-grade command center that helps you treat trading like a business. Join thousands of funded traders who found their edge with our AI.
+                                Tradia isn&rsquo;t just a spreadsheet. It&rsquo;s a professional-grade command center that helps you treat trading like a business. Join thousands of funded traders who found their edge with our AI.
                             </p>
                         </div>
 
@@ -363,7 +363,7 @@ export default function Home(): React.ReactElement {
                                 </div>
                                 <h3 className="text-xl font-semibold mb-3 text-black dark:text-white">Forex Psychology AI</h3>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Our AI coach analyzes your trade timing and notes to catch behavioral traps. It flags when you're
+                                    Our AI coach analyzes your trade timing and notes to catch behavioral traps. It flags when you&rsquo;re
                                     revenge trading after a loss or closing winners too early, helping you build the iron discipline needed for funding.
                                 </p>
                             </div>
@@ -614,7 +614,7 @@ export default function Home(): React.ReactElement {
                             <div className="space-y-3">
                                 {[
                                     { q: "Can I track my FTMO / Prop Firm evaluation?", a: "Absolutely. Tradia is built to track drawdown and consistency rules, making it the perfect companion for anyone navigating prop firm challenges." },
-                                    { q: "How does the AI help me pass?", a: "The AI identifies 'Account Killers' — the specific mistakes that lead to large drawdowns. By fixing these, you increase your probability of hitting the profit target safely." },
+                                    { q: "How does the AI help me pass?", a: "The AI identifies &apos;Account Killers&apos; &mdash; the specific mistakes that lead to large drawdowns. By fixing these, you increase your probability of hitting the profit target safely." },
                                     { q: "Does it support MT4/MT5 and TradingView?", a: "Yes. You can import your trade history via CSV or sync screenshots directly to get instant AI analysis on your setups." },
                                 ].map((fq, i) => (
                                     <details key={i} className="p-4 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-gray-900/50">
