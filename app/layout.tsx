@@ -17,8 +17,8 @@ import TrialBanner from "@/components/TrialBanner";
 // SEO Metadata
 export const metadata: Metadata = {
   title: "Tradia | AI Trading Performance & Analytics",
-  description: "Tradia is your AI trading performance hub: add trades manually or import via CSV to analyze performance, get insights, and improve consistency. Start free and upgrade anytime.",
-  keywords: "trade analysis, trading performance, AI trading assistant, trade journal, trading insights, forex trading, trading analytics, CSV import",
+  description: "Tradia is the #1 AI trading journal for Forex & Prop Firm traders. Track drawdown, analyze London/NY sessions, and scale your funded journey with AI-driven insights.",
+  keywords: "Forex trading journal, Prop firm tracker, trade analysis, AI trading coach, trade journal, funded trader analytics, London session alpha, risk management",
   authors: [{ name: "Tradia Team" }],
   creator: "Tradia",
   publisher: "Tradia",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Tradia | AI Trading Performance & Analytics",
-    description: "AI-powered trade analytics, coaching, CSV import, prop-firm simulator and risk controls — all in one.",
+    description: "The AI-powered command center for Forex & Prop Firm traders. Protect your drawdown, master your edge, and scale your funded career.",
     url: "https://tradiaai.app",
     siteName: "Tradia",
     images: [
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Tradia | AI Trading Performance & Analytics",
-    description: "Analyze trades, get AI insights and risk controls, and level up your consistency.",
+    description: "Stop blowing prop firm accounts. Use AI to analyze your sessions, protect your drawdown, and scale your funded journey.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Tradia",
-    "description": "AI-powered trading performance assistant. Add trades manually or import via CSV to analyze performance, get AI insights, and improve your trading strategy.",
+    "description": "AI-powered trading performance hub built for Forex and Prop Firm traders. Analyze sessions, protect drawdown, and scale funded careers with institutional-grade analytics.",
     "url": "https://tradiaai.app",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web Browser",
