@@ -6,38 +6,39 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Tradia — Built for Forex & Prop Firm Traders",
+  title: "About Tradia — The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
   description:
-    "Discover Tradia — the AI-powered trading journal built specifically for Forex and Prop Firm traders. Protect your drawdown, analyze session performance, and scale your funded career.",
+    "The #1 AI Trading Journal for serious Forex and Prop Firm traders. Track trades, analyze sessions, protect your drawdown, and scale your funded career with institutional-grade analytics.",
   keywords: [
     "Forex trading journal",
     "Prop firm trade tracker",
+    "AI trading journal",
     "funded trader analytics",
-    "drawdown management tool",
-    "AI trading coach",
-    "MetaTrader journal sync",
+    "drawdown management",
+    "trading psychology AI",
+    "session analysis",
   ],
   alternates: { canonical: "/about" },
   openGraph: {
     url: "/about",
-    title: "About Tradia | AI Trading Journal, Trade Tracker & Performance Analytics",
+    title: "About Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
     description:
-      "Tradia helps traders track performance, journal trades, and get AI insights to boost consistency across Forex, stocks, crypto, and futures.",
+      "The #1 AI Trading Journal for serious Forex and Prop Firm traders. Track trades, analyze performance, and get AI insights to scale your funded journey.",
     type: "article",
     images: [
       {
         url: "/TradiaDashboard.png",
         width: 1200,
         height: 630,
-        alt: "Tradia trading performance dashboard and trading journal",
+        alt: "Tradia - The #1 AI Trading Journal for serious Forex & Prop Firm traders",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "About Tradia | AI Trading Journal & Trade Tracker",
+    title: "About Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
     description:
-      "AI trading journal and trade tracker to improve your win rate, P&L and risk management.",
+      "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Track, analyze, and scale your trading performance.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },

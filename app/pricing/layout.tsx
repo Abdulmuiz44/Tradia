@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing — Tradia AI Trading Assistant",
+  title: "Pricing — The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
   description:
-    "Simple pricing for traders. Start free and upgrade to unlock AI trade reviews, advanced analytics, and multi‑account features.",
+    "Simple pricing for the #1 AI Trading Journal. Start free and upgrade to unlock advanced AI features, extended trade history, and premium analytics.",
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: "Tradia Pricing — Simple plans for serious traders",
+    title: "Tradia Pricing — The #1 AI Trading Journal Plans",
     description:
-      "Choose a plan that fits your trading. Free to start. Upgrade for AI‑powered insights, unlimited history, and more.",
+      "Choose your plan to access the #1 AI Trading Journal for serious Forex and Prop Firm traders. Start free. Upgrade for AI insights, unlimited history, and more.",
     url: "/pricing",
     siteName: "Tradia",
     images: [
@@ -16,24 +16,24 @@ export const metadata: Metadata = {
         url: "/TradiaDashboard.png",
         width: 1200,
         height: 630,
-        alt: "Tradia pricing and dashboard preview",
+        alt: "Tradia - The #1 AI Trading Journal for serious Forex & Prop Firm traders pricing",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tradia Pricing",
+    title: "Tradia Pricing — The #1 AI Trading Journal",
     description:
-      "Start free. Upgrade for AI trade reviews, longer history and more.",
+      "Start free with the #1 AI Trading Journal. Upgrade for AI insights, unlimited history, and professional-grade analytics.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },
   keywords: [
-    "trading pricing",
-    "forex journal pricing",
-    "AI trading assistant plans",
-    "Trading analytics subscription",
+    "AI trading journal pricing",
+    "Forex journal pricing",
+    "Prop firm trading plans",
+    "Trade analysis subscription",
   ],
 };
 

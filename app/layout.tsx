@@ -16,9 +16,9 @@ import TrialBanner from "@/components/TrialBanner";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Tradia | AI Trading Performance & Analytics",
-  description: "Tradia is the #1 AI trading journal for Forex & Prop Firm traders. Track drawdown, analyze London/NY sessions, and scale your funded journey with AI-driven insights.",
-  keywords: "Forex trading journal, Prop firm tracker, trade analysis, AI trading coach, trade journal, funded trader analytics, London session alpha, risk management",
+  title: "Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
+  description: "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Track drawdown, analyze London/NY sessions, and scale your funded journey with institutional-grade analytics.",
+  keywords: "Forex trading journal, Prop firm trade tracker, AI trading coach, trade analysis, funded trader analytics, drawdown management, session performance, risk management",
   authors: [{ name: "Tradia Team" }],
   creator: "Tradia",
   publisher: "Tradia",
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: "Tradia | AI Trading Performance & Analytics",
-    description: "The AI-powered command center for Forex & Prop Firm traders. Protect your drawdown, master your edge, and scale your funded career.",
+    title: "Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
+    description: "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Master your edge with institutional-grade analytics and AI coaching.",
     url: "https://tradiaai.app",
     siteName: "Tradia",
     images: [
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
         url: "/TradiaDashboard.png",
         width: 1200,
         height: 630,
-        alt: "Tradia Trading Dashboard - AI-powered trade analysis platform",
+        alt: "Tradia - The #1 AI Trading Journal for serious Forex & Prop Firm traders",
       },
     ],
     locale: "en_US",
@@ -49,8 +49,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tradia | AI Trading Performance & Analytics",
-    description: "Stop blowing prop firm accounts. Use AI to analyze your sessions, protect your drawdown, and scale your funded journey.",
+    title: "Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
+    description: "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Track trades, protect drawdown, and scale your funded journey.",
     images: ["/TradiaDashboard.png"],
     creator: "@tradia_app",
   },
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Tradia",
-    "description": "AI-powered trading performance hub built for Forex and Prop Firm traders. Analyze sessions, protect drawdown, and scale funded careers with institutional-grade analytics.",
+    "description": "The #1 AI Trading Journal for serious Forex and Prop Firm traders. Track drawdown, analyze sessions, and scale funded careers with institutional-grade analytics.",
     "url": "https://tradiaai.app",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web Browser",
