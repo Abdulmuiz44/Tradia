@@ -177,6 +177,38 @@ export const MT5_SCHEMA = {
     CREATE INDEX IF NOT EXISTS idx_mt5_security_audit_action ON mt5_security_audit(action);
     CREATE INDEX IF NOT EXISTS idx_mt5_security_audit_severity ON mt5_security_audit(severity);
     CREATE INDEX IF NOT EXISTS idx_mt5_security_audit_created_at ON mt5_security_audit(created_at DESC);
+  `,
+
+  // Trading Rules & Risk Settings
+  trading_rules: `
+    CREATE TABLE IF NOT EXISTS trading_rules (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      daily_drawdown_limit_pct DECIMAL(5,2) DEFAULT 1.00,
+      max_drawdown_limit_pct DECIMAL(5,2) DEFAULT 5.00,
+      profit_target_pct DECIMAL(5,2) DEFAULT 10.00,
+      max_trades_per_day INTEGER DEFAULT 5,
+      enforce_halt BOOLEAN DEFAULT false,
+      starting_equity DECIMAL(15,2) DEFAULT 0.00,
+      prop_firm_preset VARCHAR(50), -- 'ftmo', 'apex', 'topstep'
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_trading_rules_updated_at ON trading_rules(updated_at DESC);
+
+    -- Updated timestamp trigger
+    CREATE OR REPLACE FUNCTION update_trading_rules_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER trigger_trading_rules_updated_at
+      BEFORE UPDATE ON trading_rules
+      FOR EACH ROW
+      EXECUTE FUNCTION update_trading_rules_updated_at();
   `
 };
 

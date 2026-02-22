@@ -219,14 +219,6 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
     const [page, setPage] = useState<number>(1);
     const pageSize = 20;
 
-    // TODO: Implement full cloud migration logic
-    const migrateLocalTrades = () => {
-        notify({
-            variant: "info",
-            title: "Cloud Sync In Development",
-            description: "This feature to migrate local trades to the cloud is coming soon!",
-        });
-    };
 
     // Migrate any old 'userTrades' cache into the unified TradeContext store ('trade-history').
     useEffect(() => {
@@ -654,15 +646,6 @@ export default function TradeHistoryTable({ trades: overrideTrades }: TradeHisto
                         <FilePlus size={18} className="text-gray-700 dark:text-gray-300" />
                     </button>
 
-                    {/* 
-                    <button
-                        className="p-2 bg-white dark:bg-[#0f1319] rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                        onClick={migrateLocalTrades}
-                        title="Migrate to Cloud"
-                    >
-                        <UploadCloud size={18} className="text-gray-700 dark:text-gray-300" />
-                    </button>
-*/}
 
                     <button
                         className="p-2 bg-red-900/50 rounded-full hover:bg-red-800/70"

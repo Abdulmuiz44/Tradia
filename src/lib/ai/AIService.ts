@@ -1629,6 +1629,39 @@ What specific aspect of your trading would you like to explore? I'm here to help
         .trim();
     } catch { return text; }
   }
+
+  /**
+   * Analyze a journal entry note to suggest tags and identify mistakes
+   */
+  public async analyzeJournalEntry(note: string): Promise<{ tags: string[]; mistakes: string[] }> {
+    const text = note.toLowerCase();
+    const suggestions = {
+      tags: [] as string[],
+      mistakes: [] as string[]
+    };
+
+    // Strategy detection
+    if (text.includes('ict') || text.includes('fvg') || text.includes('liquidity')) suggestions.tags.push('ICT');
+    if (text.includes('smc') || text.includes('order block') || text.includes('ob')) suggestions.tags.push('SMC');
+    if (text.includes('scalp') || text.includes('1m') || text.includes('5m')) suggestions.tags.push('Scalp');
+    if (text.includes('swing') || text.includes('daily')) suggestions.tags.push('Swing');
+    if (text.includes('breakout') || text.includes('retest')) suggestions.tags.push('Breakout');
+    if (text.includes('divergence') || text.includes('rsi')) suggestions.tags.push('Indicator');
+
+    // Mistake detection
+    if (text.includes('fomo') || text.includes('chased') || text.includes('missed entry')) suggestions.mistakes.push('FOMO');
+    if (text.includes('revenge') || text.includes('angry') || text.includes('get back')) suggestions.mistakes.push('Revenge Trading');
+    if (text.includes('overtrade') || (text.includes('too many') && text.includes('trades'))) suggestions.mistakes.push('Overtrading');
+    if (text.includes('stopped out early') || text.includes('moved sl')) suggestions.mistakes.push('Poor SL Management');
+    if (text.includes('greed') || text.includes('held too long')) suggestions.mistakes.push('Greed');
+    if (text.includes('early exit')) suggestions.mistakes.push('Early Exit');
+
+    // Limit suggestions
+    suggestions.tags = Array.from(new Set(suggestions.tags)).slice(0, 5);
+    suggestions.mistakes = Array.from(new Set(suggestions.mistakes)).slice(0, 3);
+
+    return suggestions;
+  }
 }
 
 export const aiService = AIService.getInstance();

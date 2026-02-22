@@ -184,3 +184,48 @@ export async function updateUserProfile(userId: string, updates: any) {
     throw error;
   }
 }
+
+// Trading Rules (Risk Management)
+export async function getTradingRules(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('trading_rules')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('getTradingRules error:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('getTradingRules error:', error);
+    return null;
+  }
+}
+
+export async function updateTradingRules(userId: string, rules: any) {
+  try {
+    const { data, error } = await supabase
+      .from('trading_rules')
+      .upsert({
+        user_id: userId,
+        ...rules,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('updateTradingRules error:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('updateTradingRules error:', error);
+    throw error;
+  }
+}

@@ -40,7 +40,9 @@ import {
   Zap,
   Brain,
   Shield,
+  DollarSign,
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
@@ -220,155 +222,202 @@ function HeuristicForecast({ trades, summary }: { trades: Trade[]; summary: any 
 }
 
 function PropTracker({ trades }: { trades: Trade[] }) {
-  const [propInitial, setPropInitial] = useState<number | "">(100000);
+  const [propInitial, setPropInitial] = useState<number>(100000);
+  const [phase, setPhase] = useState<1 | 2>(1);
+  const [preset, setPreset] = useState<string>("custom");
+
+  // Rules state (initialized from presets)
   const [propTargetPercent, setPropTargetPercent] = useState<number>(10);
   const [propMaxDrawdownPercent, setPropMaxDrawdownPercent] = useState<number>(5);
-  const [propMinWinRate, setPropMinWinRate] = useState<number>(50);
+  const [propDailyDrawdownPercent, setPropDailyDrawdownPercent] = useState<number>(5);
+
+  const applyPreset = (p: string) => {
+    setPreset(p);
+    switch (p) {
+      case "ftmo":
+        setPropTargetPercent(phase === 1 ? 10 : 5);
+        setPropMaxDrawdownPercent(10);
+        setPropDailyDrawdownPercent(5);
+        break;
+      case "apex":
+        setPropTargetPercent(6);
+        setPropMaxDrawdownPercent(6); // trailing usually, but simplified here
+        setPropDailyDrawdownPercent(100); // apex doesn't usually have a hard daily if under max
+        break;
+      case "topstep":
+        setPropTargetPercent(6);
+        setPropMaxDrawdownPercent(4);
+        setPropDailyDrawdownPercent(2);
+        break;
+      default:
+        break;
+    }
+  };
 
   const propStatus = useMemo(() => {
-    const initial = typeof propInitial === "number" && propInitial > 0 ? propInitial : 100000;
+    const initial = propInitial || 100000;
     const pnl = trades.reduce((s, t) => s + parsePL(t.pnl), 0);
     const current = initial + pnl;
     const pctGain = ((current - initial) / initial) * 100;
+
     let peak = initial;
-    let maxDD = 0;
+    let maxDDUSD = 0;
     let equity = initial;
+
     const sortedChron = [...trades].sort((a, b) => {
-      const aTime = new Date(a.openTime as any);
-      const bTime = new Date(b.openTime as any);
-      const aValid = !isNaN(aTime.getTime()) ? aTime.getTime() : 0;
-      const bValid = !isNaN(bTime.getTime()) ? bTime.getTime() : 0;
-      return aValid - bValid;
+      const aTime = new Date((a as any).openTime || 0).getTime();
+      const bTime = new Date((b as any).openTime || 0).getTime();
+      return aTime - bTime;
     });
+
     for (const t of sortedChron) {
       equity += parsePL(t.pnl);
       if (equity > peak) peak = equity;
-      const dd = ((peak - equity) / peak) * 100;
-      if (dd > maxDD) maxDD = dd;
+      const dd = peak - equity;
+      if (dd > maxDDUSD) maxDDUSD = dd;
     }
-    const winCount = trades.filter(t => (t.outcome ?? "").toLowerCase() === "win").length;
-    const total = trades.length;
-    const winRate = total ? (winCount / total) * 100 : 0;
+
+    const maxDDPct = (maxDDUSD / initial) * 100;
+    const targetUSD = initial * (propTargetPercent / 100);
+    const limitUSD = initial * (propMaxDrawdownPercent / 100);
+
+    const distanceToTarget = targetUSD - pnl;
+    const distanceToBreach = limitUSD - maxDDUSD;
+
     const passedTarget = pctGain >= propTargetPercent;
-    const passedDD = maxDD <= propMaxDrawdownPercent;
-    const passedWinRate = winRate >= propMinWinRate;
+    const failedBreach = maxDDPct >= propMaxDrawdownPercent;
 
     return {
       initial,
       pnl,
       current,
       pctGain,
-      maxDD,
-      winRate,
+      maxDDPct,
+      distanceToTarget,
+      distanceToBreach,
       passedTarget,
-      passedDD,
-      passedWinRate,
-      milestones: [propTargetPercent, propTargetPercent * 2, propTargetPercent * 3].map(m => ({
-        percent: m,
-        achieved: pctGain >= m
-      }))
+      failedBreach,
+      progressToTarget: Math.min(100, Math.max(0, (pctGain / propTargetPercent) * 100)),
+      drawdownUsage: Math.min(100, Math.max(0, (maxDDPct / propMaxDrawdownPercent) * 100))
     };
-  }, [trades, propInitial, propTargetPercent, propMaxDrawdownPercent, propMinWinRate]);
+  }, [trades, propInitial, propTargetPercent, propMaxDrawdownPercent]);
 
   return (
-    <Card className="w-full overflow-hidden rounded-2xl shadow-md border bg-[#0f1319] border-[#202830]">
-      <CardContent className="p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <Flag className="h-5 w-5" />
-          <h3 className="font-semibold">Prop-Firm & Milestone Tracker</h3>
+    <Card className="w-full overflow-hidden rounded-2xl shadow-xl border bg-[#0D1117] border-white/5">
+      <CardContent className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+              <Target className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-lg">Prop Challenge Tracker</h3>
+              <p className="text-xs text-zinc-500">Real-time distance to target & drawdown</p>
+            </div>
+          </div>
+          <div className="flex bg-white/5 p-1 rounded-lg border border-white/5">
+            <button
+              onClick={() => { setPhase(1); if (preset !== 'custom') applyPreset(preset); }}
+              className={`px-3 py-1 text-xs rounded-md transition-all ${phase === 1 ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+            >
+              Phase 1
+            </button>
+            <button
+              onClick={() => { setPhase(2); if (preset !== 'custom') applyPreset(preset); }}
+              className={`px-3 py-1 text-xs rounded-md transition-all ${phase === 2 ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+            >
+              Phase 2
+            </button>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
-            <div className="text-xs text-zinc-400">Initial funded account</div>
-            <input
-              type="number"
-              placeholder="Initial capital"
-              className="w-full mt-2 p-2 rounded bg-[#0f1319]"
-              value={propInitial === "" ? "" : String(propInitial)}
-              onChange={(e) => setPropInitial(e.target.value === "" ? "" : Number(e.target.value))}
-            />
-            <div className="flex gap-2 mt-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Account Size</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="number"
-                placeholder="Target %"
-                className="w-1/2 p-2 rounded bg-[#0f1319]"
-                value={String(propTargetPercent)}
-                onChange={(e) => setPropTargetPercent(Number(e.target.value))}
-              />
-              <input
-                type="number"
-                placeholder="Max DD %"
-                className="w-1/2 p-2 rounded bg-[#0f1319]"
-                value={String(propMaxDrawdownPercent)}
-                onChange={(e) => setPropMaxDrawdownPercent(Number(e.target.value))}
-              />
-            </div>
-            <div className="flex gap-2 mt-3">
-              <input
-                type="number"
-                placeholder="Min WR %"
-                className="w-1/2 p-2 rounded bg-[#0f1319]"
-                value={String(propMinWinRate)}
-                onChange={(e) => setPropMinWinRate(Number(e.target.value))}
+                className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-blue-500/50 outline-none"
+                value={propInitial}
+                onChange={(e) => setPropInitial(Number(e.target.value))}
               />
             </div>
           </div>
-
-          <div className="rounded-lg border border-zinc-800 p-4 bg-[#0f1319]/50">
-            <div className="text-sm text-zinc-300">Progress</div>
-            <div className="text-2xl text-white my-2">{propStatus.pctGain.toFixed(2)}%</div>
-            <div className="text-xs text-zinc-400">
-              Net P/L: ${propStatus.pnl.toFixed(2)} - Current equity: ${propStatus.current.toFixed(2)}
-            </div>
-            <div className="mt-3 text-xs text-zinc-300 mb-2">
-              Max Drawdown: {propStatus.maxDD.toFixed(2)}% (limit {propMaxDrawdownPercent}%)
-            </div>
-            <div className="w-full bg-[#0f1319] rounded h-3 overflow-hidden">
-              <div
-                style={{ width: `${Math.min(100, Math.max(0, propStatus.maxDD))}%` }}
-                className={`h-3 ${propStatus.maxDD <= propMaxDrawdownPercent ? "bg-green-500" : "bg-red-500"}`}
-              />
-            </div>
-            <div className="mt-4 space-y-2">
-              <div className="text-xs text-zinc-300">
-                Win Rate: {propStatus.winRate.toFixed(1)}% - Required: {propMinWinRate}%
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    const status = [];
-                    if (propStatus.passedTarget) status.push("Target OK");
-                    if (propStatus.passedDD) status.push("Drawdown OK");
-                    if (propStatus.passedWinRate) status.push("WinRate OK");
-                    alert(`Prop check:\n${status.length ? status.join("\n") : "Not passing yet."}`);
-                  }}
+          <div className="space-y-2 md:col-span-2">
+            <Label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Quick Presets</Label>
+            <div className="flex gap-2">
+              {['ftmo', 'apex', 'topstep', 'custom'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => applyPreset(p)}
+                  className={`flex-1 py-2 px-3 text-[11px] font-bold rounded-xl border transition-all uppercase ${preset === p ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'}`}
                 >
-                  Check
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => alert("This tracker is heuristic. Use official prop-firm rules for compliance.")}
-                >
-                  Explain
-                </Button>
-              </div>
+                  {p}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <div>
-          <h4 className="text-sm font-semibold text-white mb-2">Milestones</h4>
-          <div className="flex flex-wrap gap-2">
-            {propStatus.milestones.map(m => (
-              <div
-                key={m.percent}
-                className={`p-3 rounded-md ${m.achieved ? "bg-green-800" : "bg-[#0f1319]/30"} border border-zinc-800 text-sm`}
-              >
-                {m.percent}% - {m.achieved ? "Achieved" : "Pending"}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+          {/* Target Progress */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">Profit Target</p>
+                <h4 className={`text-2xl font-black ${propStatus.passedTarget ? 'text-green-400' : 'text-white'}`}>
+                  {propStatus.pctGain.toFixed(2)}% <span className="text-zinc-600 text-sm font-normal">/ {propTargetPercent}%</span>
+                </h4>
               </div>
-            ))}
+              <div className="text-right">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">To Target</p>
+                <p className={`text-sm font-bold ${propStatus.distanceToTarget <= 0 ? 'text-green-400' : 'text-blue-400'}`}>
+                  {propStatus.distanceToTarget <= 0 ? 'GOAL MET' : `$${propStatus.distanceToTarget.toLocaleString()}`}
+                </p>
+              </div>
+            </div>
+            <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <div
+                className={`h-full transition-all duration-1000 ease-out ${propStatus.passedTarget ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-blue-500'}`}
+                style={{ width: `${propStatus.progressToTarget}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Drawdown Progress */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">Max Drawdown</p>
+                <h4 className={`text-2xl font-black ${propStatus.failedBreach ? 'text-red-500' : 'text-white'}`}>
+                  {propStatus.maxDDPct.toFixed(2)}% <span className="text-zinc-600 text-sm font-normal">/ {propMaxDrawdownPercent}%</span>
+                </h4>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold">To Breach</p>
+                <p className={`text-sm font-bold ${propStatus.failedBreach ? 'text-red-500' : 'text-amber-400'}`}>
+                  {propStatus.failedBreach ? 'BREACHED' : `$${propStatus.distanceToBreach.toLocaleString()}`}
+                </p>
+              </div>
+            </div>
+            <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <div
+                className={`h-full transition-all duration-1000 ease-out ${propStatus.failedBreach ? 'bg-red-600' : (propStatus.drawdownUsage > 70 ? 'bg-amber-500' : 'bg-amber-500/50')}`}
+                style={{ width: `${propStatus.drawdownUsage}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-[11px] text-zinc-500 font-medium">
+          <div className="flex gap-4">
+            <span>Net P/L: <span className={propStatus.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>${propStatus.pnl.toLocaleString()}</span></span>
+            <span>Current Equity: <span className="text-white">${propStatus.current.toLocaleString()}</span></span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Shield className="h-3 w-3 text-zinc-600" />
+            <span>Rules strictly monitored</span>
           </div>
         </div>
       </CardContent>

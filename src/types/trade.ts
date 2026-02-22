@@ -43,6 +43,7 @@ export interface Trade {
   swap?: number;
   pinned?: boolean;
   tags?: string[];
+  mistakes?: string[];
   reviewed?: boolean;
   created_at?: Date | string;
   updated_at?: Date | string;
