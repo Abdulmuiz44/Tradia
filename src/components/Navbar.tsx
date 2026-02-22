@@ -114,8 +114,8 @@ export default function Navbar() {
                                 <Link
                                     href={href}
                                     className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${isActive(href)
-                                        ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300"
-                                        : "text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                                        ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
+                                        : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
                                         }`}
                                 >
                                     {label}
@@ -129,13 +129,13 @@ export default function Navbar() {
                         <button
                             onClick={toggleTheme}
                             aria-label="Toggle theme"
-                            className="p-2 rounded-md transition text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                            className="p-2 rounded-md transition text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
                         >
                             {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
                         {mounted && (
                             <span
-                                className="hidden lg:inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-[#0f1319] border border-gray-200 dark:border-white/10 text-black dark:text-gray-300"
+                                className="hidden lg:inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/15 text-black dark:text-gray-100"
                                 title="Current theme"
                             >
                                 Theme: {(resolvedTheme || theme || 'system').toString().replace(/^./, c => c.toUpperCase())}
@@ -143,27 +143,27 @@ export default function Navbar() {
                         )}
 
                         {/* Auth links */}
-                        {authLinks.map(({ label, href, onClick }) => {
-                            const isCta = label === "Get Started";
-                            return (
-                                <Link
-                                    key={label}
-                                    href={href}
-                                    onClick={(e) => {
-                                        if (onClick) {
-                                            e.preventDefault();
-                                            onClick();
-                                        }
-                                    }}
-                                    className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${isCta
-                                        ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                                        : "text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-                                        }`}
-                                >
-                                    {label}
-                                </Link>
-                            );
-                        })}
+                         {authLinks.map(({ label, href, onClick }) => {
+                             const isCta = label === "Get Started";
+                             return (
+                                 <Link
+                                     key={label}
+                                     href={href}
+                                     onClick={(e) => {
+                                         if (onClick) {
+                                             e.preventDefault();
+                                             onClick();
+                                         }
+                                     }}
+                                     className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${isCta
+                                         ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                                         : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
+                                         }`}
+                                 >
+                                     {label}
+                                 </Link>
+                             );
+                         })}
 
                         {/* Profile pill */}
                         {session && <CoachPill />}
@@ -171,19 +171,19 @@ export default function Navbar() {
                 </nav>
 
                 {/* Mobile: right controls */}
-                <div className="md:hidden flex items-center gap-2">
-                    <button
-                        onClick={toggleTheme}
-                        aria-label="Toggle theme"
-                        className="p-2 rounded-md text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-                    >
-                        {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
-                    {mounted && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-[#0f1319] text-black dark:text-gray-300" title="Current theme">
-                            {(resolvedTheme || theme || 'system').toString()}
-                        </span>
-                    )}
+                 <div className="md:hidden flex items-center gap-2">
+                     <button
+                         onClick={toggleTheme}
+                         aria-label="Toggle theme"
+                         className="p-2 rounded-md text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                     >
+                         {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                     </button>
+                     {mounted && (
+                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/5 text-black dark:text-gray-100" title="Current theme">
+                             {(resolvedTheme || theme || 'system').toString()}
+                         </span>
+                     )}
 
                     <button
                         onClick={() => setMenuOpen((s) => !s)}
@@ -204,18 +204,18 @@ export default function Navbar() {
                 >
                     <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col gap-3">
                         {navLinks.map(({ label, href }) => (
-                            <Link
-                                key={href}
-                                href={href}
-                                onClick={() => setMenuOpen(false)}
-                                className={`text-base px-2 py-2 rounded-md transition-colors ${isActive(href)
-                                    ? "text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/10"
-                                    : "text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
-                                    }`}
-                            >
-                                {label}
-                            </Link>
-                        ))}
+                             <Link
+                                 key={href}
+                                 href={href}
+                                 onClick={() => setMenuOpen(false)}
+                                 className={`text-base px-2 py-2 rounded-md transition-colors ${isActive(href)
+                                     ? "text-indigo-700 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-500/15"
+                                     : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
+                                     }`}
+                             >
+                                 {label}
+                             </Link>
+                         ))}
 
                         <div className="flex flex-col gap-2 pt-2">
                             {authLinks.map(({ label, href, onClick }) => (
@@ -239,17 +239,17 @@ export default function Navbar() {
                             ))}
 
                             {session && (
-                                <button
-                                    onClick={() => {
-                                        setMenuOpen(false);
-                                        signOut().catch(() => { });
-                                    }}
-                                    className="w-full text-left flex items-center gap-2 text-black dark:text-gray-300 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5"
-                                >
-                                    <LogOut size={16} />
-                                    <span>Sign out</span>
-                                </button>
-                            )}
+                                 <button
+                                     onClick={() => {
+                                         setMenuOpen(false);
+                                         signOut().catch(() => { });
+                                     }}
+                                     className="w-full text-left flex items-center gap-2 text-black dark:text-gray-200 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/10"
+                                 >
+                                     <LogOut size={16} />
+                                     <span>Sign out</span>
+                                 </button>
+                             )}
                         </div>
                     </div>
                 </div>
@@ -280,7 +280,7 @@ function CoachPill() {
             positionClassName="right-4 top-16"
             panelClassName="w-[95%] max-w-sm"
             trigger={(
-                <button className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-[#0f1319] border border-gray-200 dark:border-white/10 shadow-sm" aria-label="Open account menu">
+                <button className="ml-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/15 shadow-sm" aria-label="Open account menu">
                     <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-semibold text-white">
                         {profileInitial}
                     </div>
@@ -288,25 +288,25 @@ function CoachPill() {
                         {session?.user?.name ?? session?.user?.email ?? "User"}
                     </span>
                     {points !== null && (
-                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200">
                             Pts: {points}
                         </span>
                     )}
                 </button>
             )}
         >
-            <div className="p-2 bg-white dark:bg-zinc-800">
-                <Link href="/dashboard/profile" className="block px-3 py-2 text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded">
+            <div className="p-2 bg-white dark:bg-zinc-900">
+                <Link href="/dashboard/profile" className="block px-3 py-2 text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10 rounded">
                     Profile
                 </Link>
-                <Link href="/dashboard/settings" className="block px-3 py-2 text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded">
+                <Link href="/dashboard/settings" className="block px-3 py-2 text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10 rounded">
                     Settings
                 </Link>
                 <button
                     onClick={() => {
                         signOut({ callbackUrl: "/" }).catch(() => { });
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900 rounded text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    className="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                 >
                     Sign Out
                 </button>
