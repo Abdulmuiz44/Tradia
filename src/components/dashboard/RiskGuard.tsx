@@ -156,7 +156,7 @@ export default function RiskGuard(): React.ReactElement | null {
               ))}
             </ul>
             <p className="mt-3 text-xs text-zinc-400 font-medium italic">
-              "System: Protect your capital. Markets will be here tomorrow."
+              &quot;System: Protect your capital. Markets will be here tomorrow.&quot;
             </p>
           </div>
         </div>
