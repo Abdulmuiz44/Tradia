@@ -2,23 +2,15 @@
  * TradiaLogo Component
  * 
  * Centralized component for displaying the Tradia logo throughout the app.
- * Ensures consistency and that ONLY TRADIA-LOGO.png is used everywhere.
- * 
- * Usage:
- * <TradiaLogo size="sm" /> // 32px
- * <TradiaLogo size="md" /> // 48px
- * <TradiaLogo size="lg" /> // 64px
- * <TradiaLogo size="xl" /> // 96px
+ * Simplified to a high-contrast Black/White SVG for a premium, minimal aesthetic.
  */
 
-import Image from "next/image";
 import React from "react";
 
 interface TradiaLogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
-  priority?: boolean;
-  alt?: string;
+  color?: "white" | "black" | "current";
 }
 
 const LOGO_SIZES = {
@@ -32,19 +24,27 @@ const LOGO_SIZES = {
 export default function TradiaLogo({
   size = "md",
   className = "",
-  priority = false,
-  alt = "Tradia logo",
+  color = "current",
 }: TradiaLogoProps) {
   const logoSize = LOGO_SIZES[size];
 
+  const fillClass = color === "white" ? "fill-white" : color === "black" ? "fill-black" : "fill-current";
+
   return (
-    <Image
-      src="/TRADIA-LOGO.png"
-      alt={alt}
+    <svg
       width={logoSize.width}
       height={logoSize.height}
-      className={`select-none ${logoSize.className} ${className}`}
-      priority={priority}
-    />
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`${logoSize.className} ${fillClass} ${className} select-none`}
+    >
+      {/* High-contrast minimal "T" logo */}
+      <rect width="100" height="100" rx="24" fill="currentColor" fillOpacity="0.05" />
+      <path
+        d="M25 35C25 32.2386 27.2386 30 30 30H70C72.7614 30 75 32.2386 75 35V42C75 44.7614 72.7614 47 70 47H55V70C55 72.7614 52.7614 75 50 75C47.2386 75 45 72.7614 45 70V47H30C27.2386 47 25 44.7614 25 42V35Z"
+        fill="currentColor"
+      />
+    </svg>
   );
 }
