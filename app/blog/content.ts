@@ -1235,12 +1235,11 @@ Amateurs trade when they feel like it. Pros follow a routine.
 4. **Set your profit target**. "I'll stop trading after $500 profit."
 
 Example:
-```
-Daily Bias: Bullish USD
-Setups: (1) EURUSD break below 1.0950, (2) GBPUSD reversal at 1.2750
-Risk Limit: $300 max daily loss
-Profit Target: $500 and I'm done
-```
+
+    Daily Bias: Bullish USD
+    Setups: (1) EURUSD break below 1.0950, (2) GBPUSD reversal at 1.2750
+    Risk Limit: $300 max daily loss
+    Profit Target: $500 and I'm done
 
 ## 8:00 AM - Market Opens
 
@@ -1727,13 +1726,12 @@ Before you trade, write:
 * **Planned setups**: List 3-5 specific setups you'll look for
 
 Example:
-```
-Monday 8 AM
-Bias: Bullish USD (strong NFP Friday, inflation controlled)
-Risk limit: $200
-Profit target: $500 (then I'm off)
-Setups: (1) EURUSD break below 1.0950, (2) GBPUSD reversal at support
-```
+
+    Monday 8 AM
+    Bias: Bullish USD (strong NFP Friday, inflation controlled)
+    Risk limit: $200
+    Profit target: $500 (then I'm off)
+    Setups: (1) EURUSD break below 1.0950, (2) GBPUSD reversal at support
 
 ### Entry 2: Post-Market (Evening)
 
@@ -1747,20 +1745,19 @@ After trading, write:
 * **Emotional state**: Tilt? Overconfident? Bored?
 
 Example:
-```
-Monday 6 PM
-Trades: 2 taken
-1. EURUSD short at 1.0952, stop 1.0960, target 1.0920 → HIT TARGET: +32 pips = +$320
-2. GBPUSD long at 1.2760, stop 1.2750 → STOPPED OUT: -10 pips = -$100
 
-Followed plan? Yes (both setups were on my list)
-Rule breaks? No
-Best trade: #1, perfect execution
-Biggest mistake: Wanted to chase a 3rd trade when I was at my profit target. Didn't.
-Emotional state: Confident, disciplined today.
+    Monday 6 PM
+    Trades: 2 taken
+    1. EURUSD short at 1.0952, stop 1.0960, target 1.0920 → HIT TARGET: +32 pips = +$320
+    2. GBPUSD long at 1.2760, stop 1.2750 → STOPPED OUT: -10 pips = -$100
 
-Grade: A
-```
+    Followed plan? Yes (both setups were on my list)
+    Rule breaks? No
+    Best trade: #1, perfect execution
+    Biggest mistake: Wanted to chase a 3rd trade when I was at my profit target. Didn't.
+    Emotional state: Confident, disciplined today.
+
+    Grade: A
 
 ## Weekly Review
 
@@ -1774,18 +1771,17 @@ Every Friday evening, aggregate the week:
 * **Biggest mistake (repeating)**: What happened multiple times?
 
 Example:
-```
-Week of Jan 6
 
-P&L: +$890 (great week!)
-Trades: 15
-Win rate: 60%
-Best session: London
-Best pair: GBPUSD (5-1 W/L)
-Repeating mistake: Overtrading after a win (taking 2nd trade against my plan)
+    Week of Jan 6
 
-Adjustment: Next week, I will STOP after my profit target. No exceptions.
-```
+    P&L: +$890 (great week!)
+    Trades: 15
+    Win rate: 60%
+    Best session: London
+    Best pair: GBPUSD (5-1 W/L)
+    Repeating mistake: Overtrading after a win (taking 2nd trade against my plan)
+
+    Adjustment: Next week, I will STOP after my profit target. No exceptions.
 
 ## Monthly Review
 
@@ -1798,17 +1794,16 @@ Every month, write a summary:
 * **Adjustment for next month**: One rule change
 
 Example:
-```
-January Summary
 
-P&L: +$3,200 (great month!)
-Return: +3.2% (realistic, sustainable)
-Profitable days: 18/23 (78% - excellent)
+    January Summary
 
-Biggest lesson: Specializing in GBPUSD in the London session increased my win rate by 15%.
+    P&L: +$3,200 (great month!)
+    Return: +3.2% (realistic, sustainable)
+    Profitable days: 18/23 (78% - excellent)
 
-Adjustment: In February, I will ONLY trade GBPUSD in London session (8 AM - 12 PM). No EURUSD, no other sessions.
-```
+    Biggest lesson: Specializing in GBPUSD in the London session increased my win rate by 15%.
+
+    Adjustment: In February, I will ONLY trade GBPUSD in London session (8 AM - 12 PM). No EURUSD, no other sessions.
 
 ## Tools for Your Diary
 
