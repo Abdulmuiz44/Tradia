@@ -7,11 +7,16 @@ Disallow: /admin/
 Disallow: /_next/
 Disallow: /dashboard/
 
-# Allow access to main content
+# Explicitly allow public content
 Allow: /
 Allow: /pricing
 Allow: /signup
 Allow: /login
+Allow: /blog
+Allow: /blog/
+Allow: /about
+Allow: /contact
+Allow: /chat
 
 # Sitemap
 Sitemap: https://tradiaai.app/sitemap.xml
