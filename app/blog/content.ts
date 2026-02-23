@@ -3171,15 +3171,13 @@ Before market opens, check the daily chart:
 - Set your daily bias: "Bullish or Bearish?"
 
 Example:
-```
-Daily EURUSD:
-High: 1.0980
-Low: 1.0920
-Support: 1.0915
-Resistance: 1.0995
 
-Bias: BULLISH (above 1.0950)
-```
+**Daily EURUSD:**
+- High: 1.0980
+- Low: 1.0920
+- Support: 1.0915
+- Resistance: 1.0995
+- Bias: BULLISH (above 1.0950)
 
 ### Level 2: 4H Confirmation (Mid-term)
 
@@ -3190,12 +3188,11 @@ Now zoom into the 4H chart:
 - Only trade in the direction of daily bias
 
 Example:
-```
-4H EURUSD:
-Sees a reversal pattern at 1.0920 (daily support)
-= Bullish confirmation
-Entry trigger: Break above 1.0935
-```
+
+**4H EURUSD:**
+- Sees a reversal pattern at 1.0920 (daily support)
+- = Bullish confirmation
+- Entry trigger: Break above 1.0935
 
 ### Level 3: 1H Execution (Exact Entry)
 
@@ -3206,17 +3203,15 @@ Zoom into 1H for precise entry:
 - Set stop loss below the reversal point
 
 Example:
-```
-1H EURUSD:
-Breaks above 1.0935
-Entry: 1.0936
-Stop loss: 1.0910 (below 4H reversal)
-Target: 1.0980 (daily resistance)
 
-Risk: 26 pips
-Reward: 44 pips
-Ratio: 1.7R
-```
+**1H EURUSD:**
+- Breaks above 1.0935
+- Entry: 1.0936
+- Stop loss: 1.0910 (below 4H reversal)
+- Target: 1.0980 (daily resistance)
+- Risk: 26 pips
+- Reward: 44 pips
+- Ratio: 1.7R
 
 ## The Win Rate Difference
 
@@ -3350,12 +3345,10 @@ The all-day trader earns:
 
 After 50 trades, you'll see clear patterns:
 
-```
-Session Analysis (50 trades):
-London: 68% win, 2.0R, +$2,800 profit
-Asia: 35% win, 0.9R, -$800 profit
-NY: 48% win, 1.2R, +$400 profit
-```
+**Session Analysis (50 trades):**
+- London: 68% win, 2.0R, +$2,800 profit
+- Asia: 35% win, 0.9R, -$800 profit
+- NY: 48% win, 1.2R, +$400 profit
 
 **Obvious choice: Trade ONLY London.**
 
@@ -3635,16 +3628,12 @@ This SAVES you from bigger losses.
 ### Method 1: Manual Tracking
 [Create a daily checklist in Tradia](/dashboard/trade-journal/journal):
 
-```
-Monday, Feb 23
-Daily loss limit: $500 (5% of $10k account)
-Trades: 
-1. EURUSD: +$150 (account: -4 pips)
-2. GBPUSD: -$180 (account: -8 pips)
-3. USDJPY: +$200 (account: +12 pips)
-
-Current: +$170 profit. Safe zone.
-```
+**Monday, Feb 23**
+- Daily loss limit: $500 (5% of $10k account)
+- Trade 1: EURUSD: +$150 (account: -4 pips)
+- Trade 2: GBPUSD: -$180 (account: -8 pips)
+- Trade 3: USDJPY: +$200 (account: +12 pips)
+- Current: +$170 profit. Safe zone.
 
 ### Method 2: Automated (Better)
 [Use Tradia's Risk Guard feature](/dashboard/risk-management):
