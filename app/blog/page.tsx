@@ -26,7 +26,7 @@ export default function BlogIndex() {
                     <Link
                         key={p.slug}
                         href={`/blog/${p.slug}`}
-                        className="group flex flex-col h-full p-6 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f1319] hover:border-blue-400 dark:hover:border-indigo-500/50 hover:shadow-lg dark:hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)] transition-all duration-300"
+                        className="group flex flex-col h-full p-6 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-transparent hover:border-blue-400 dark:hover:border-indigo-500/50 hover:shadow-lg dark:hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)] transition-all duration-300"
                     >
                         <div className="text-xs font-medium text-blue-600 dark:text-indigo-400 mb-3">{new Date(p.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                         <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-indigo-300 transition-colors line-clamp-3">
