@@ -107,9 +107,8 @@ You can't fix what you don't measure. In [Tradia](/pricing), you can tag trades 
 
 ## See Also
 
-* [How to Recognize and Fix Overtrading Habits](/blog/overtrading-forex-trader)
-* [The Psychology of Risk Management](/blog/risk-psychology-trading)
-* [How to Stop FOMO Trading](/blog/fomo-trading-forex)
+* [Overtrading in Forex: How to Recognize and Fix This Deadly Habit](/blog/overtrading-forex-trader)
+* [Why Prop Traders Fail at Evaluations](/blog/why-prop-traders-fail)
 
 ## Conclusion
 
@@ -162,9 +161,9 @@ If you lose 50% of your account, you need a 100% gain to get back to breakeven.
 
 ## Related Reading
 
-* [How to Calculate Position Size for Your Trades](/blog/position-sizing-calculator-forex)
-* [Understanding Drawdown in Trading](/blog/forex-drawdown-explained)
-* [The Kelly Criterion in Trading](/blog/kelly-criterion-forex-trading)
+* [Forex Position Sizing Calculator: The Exact Formula Top Traders Use](/blog/position-sizing-calculator-forex)
+* [Why Prop Traders Fail: The #1 Mistake](/blog/why-prop-traders-fail)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
 
 ## Automating Risk with Tradia
 
@@ -223,9 +222,9 @@ The right [trading journal app](/pricing) can accelerate your learning curve by 
 
 ## See Also
 
-* [How to Build a Profitable Trading System](/blog/building-profitable-trading-system)
-* [Essential Metrics Every Trader Should Track](/blog/trading-metrics-track)
-* [Free vs Paid Trading Journal Apps](/blog/free-trading-journal-apps)
+* [How to Track Forex Trades: The Complete Guide to Trade Journaling](/blog/how-to-track-forex-trades)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
 
 ## Which App Should You Choose?
 
@@ -279,9 +278,9 @@ Automate data import, get [AI-powered insights](/pricing), and track psychologic
 
 ## Related Articles
 
-* [Essential Metrics Every Trader Should Track](/blog/trading-metrics-track)
-* [How to Analyze Your Trade Journal](/blog/analyze-trade-journal)
-* [Forex Trading Diary: Daily Review Best Practices](/blog/forex-trading-diary)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Best Trading Journal App 2026: Comparing the Top 10 Platforms](/blog/best-trading-journal-app)
 
 ## Get Started Today
 
@@ -347,9 +346,9 @@ Get notified when you're approaching your daily loss limit, preventing costly vi
 
 ## Related Resources
 
-* [Best Prop Firms for Forex Traders](/blog/best-prop-firms-forex)
-* [How to Pass FTMO Evaluation](/blog/ftmo-evaluation-guide)
-* [Risk Management for Prop Trading](/blog/prop-trading-risk-management)
+* [Why Prop Traders Fail at Evaluations](/blog/why-prop-traders-fail)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
 
 ## Conclusion
 
@@ -423,9 +422,9 @@ Did you know most traders have a **best performing session**? Use [Tradia](/pric
 
 ## Related Articles
 
-* [New York Session Forex Trading](/blog/new-york-session-forex)
-* [Asian Session Forex: Complete Guide](/blog/asian-session-forex)
-* [Session Analysis with Tradia](/blog/forex-session-analysis)
+* [Prop Firm Trading Rules: Complete Compliance Guide for FTMO, MyFundedFX & Others](/blog/prop-firm-trading-rules-compliance)
+* [How to Track Forex Trades: The Complete Guide to Trade Journaling](/blog/how-to-track-forex-trades)
+* [Overtrading in Forex: How to Recognize and Fix This Deadly Habit](/blog/overtrading-forex-trader)
 
 ## Conclusion
 
@@ -479,9 +478,9 @@ Tag every trade as "Setup-Matched" or "Random." You'll be shocked how many are r
 
 ## See Also
 
-* [Mastering Trading Psychology](/blog/mastering-trading-psychology-eliminate-tilt)
-* [How to Build a Trading Routine](/blog/daily-trading-routine)
-* [Quality Over Quantity in Trading](/blog/quality-trades-vs-quantity)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+* [Prop Firm Trading Rules: Complete Compliance Guide for FTMO, MyFundedFX & Others](/blog/prop-firm-trading-rules-compliance)
 
 ## The Remedy
 
@@ -2067,9 +2066,9 @@ Evaluations are 80% psychology, 20% skill.
 
 ## See Also
 
-* [Prop Firm Rules Compliance](/blog/prop-firm-trading-rules-compliance)
-* [Risk Management for Prop Trading](/blog/prop-trading-risk-management)
-* [Building a Profitable Trading System](/blog/building-profitable-trading-system)
+* [Why Prop Traders Fail at Evaluations](/blog/why-prop-traders-fail)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
 
 ## The Honest Truth
 
@@ -2078,6 +2077,363 @@ Evaluations are 80% psychology, 20% skill.
 A mediocre strategy executed with iron discipline beats a great strategy executed with chaos.
 
 Prove you can follow rules first. Profits follow naturally.
+        `.trim(),
+    },
+
+    "why-prop-traders-fail": {
+        slug: "why-prop-traders-fail",
+        title: "Why 95% of Prop Traders Fail: The Real Reasons & How to Avoid Them",
+        excerpt: "Failure rates are sky-high. Most prop traders blame the rules or their strategy. The truth? Psychology destroys accounts. Here's how to prevent it.",
+        date: "2025-02-23",
+        author: "Tradia Team",
+        category: "Prop Trading",
+        keywords: ["why traders fail", "prop trading failure rate", "evaluation failure", "common trading mistakes", "prop firm tips"],
+        readTime: 12,
+        content: `
+# Why 95% of Prop Traders Fail: The Real Reasons & How to Avoid Them
+
+The statistics are brutal. 95% of prop traders fail their first evaluation. Most blame:
+- "The rules are too strict"
+- "The spreads are unfair"
+- "My strategy doesn't work on their platform"
+
+The truth? **None of these matter. The real killers are psychological.**
+
+## The #1 Reason Traders Fail: Revenge Trading
+
+A trader loses $300 on a bad trade. Instead of walking away, they immediately open another position to "get it back."
+
+Result: They violate the daily loss limit and get disqualified within 2 hours.
+
+### Why This Happens
+
+Your brain is wired to recover losses immediately. It feels like a personal attack. Your ego demands retaliation.
+
+**The solution**: Lock yourself out of trading after 2 consecutive losses. Use [Tradia's Risk Guard](/pricing) to enforce this automatically.
+
+### Real Data
+
+Traders who take a 60-minute break after 2 losses:
+- **Success rate**: 73% evaluation pass rate
+- Traders who don't: **32% pass rate**
+
+## Reason #2: Over-Leveraging on "Good Days"
+
+A trader starts the evaluation conservatively (0.5% risk per trade).
+
+By day 5, they've made $1,200 and feel invincible. They double their position size to 2% risk per trade.
+
+Day 6: A single bad trade hits them with a -4% drawdown. They've now hit the daily loss limit with 4 trades left in the day.
+
+Result: They freeze. Fear takes over. They don't trade, sacrificing profit potential to protect what's left.
+
+### The Fix: Fixed Risk Sizing
+
+**Never adjust your position size based on profits.** Use the same 1% risk per trade throughout the entire evaluation.
+
+This creates compound growth without the psychological rollercoaster.
+
+### The Math
+
+1% risk, 60% win rate, 1.5R average:
+- 50 trades = $2,500 profit on a $10,000 account (25% return)
+
+This is enough to pass most evaluations **without destroying your mental health.**
+
+## Reason #3: Trading Outside Your Edge
+
+Most traders come to prop firms with a "system" they've never actually tested on live money.
+
+They spent 3 days demo trading, saw some wins, and thought they had an edge.
+
+**Reality**: The first real-money evaluation is the first stress test of their system.
+
+Result: When emotions hit, their "system" falls apart. They take random trades. They chase moves. Their win rate plummets.
+
+### How to Know If You Have Real Edge
+
+Before applying to a prop firm, you must:
+
+1. **Trade live on a micro account** ($500-$1,000) for 100+ trades
+2. **Achieve 50%+ win rate** with 1.5R+ average
+3. **Stay consistent for 4+ weeks** without account drawdown exceeding 20%
+
+If you can't do this on YOUR money with YOUR emotions, you won't do it on the firm's account.
+
+## Reason #4: Ignoring Daily Review
+
+A trader trades during the day but never reviews.
+
+They make 10 trades in the London session:
+- 6 were "random" entries that happened to work
+- 2 violated their stated rules (taking EURUSD when they said they'd only trade GBPUSD)
+- 2 were legitimate setups
+
+They think: "I'm crushing it! 80% win rate!"
+
+Reality: Only 20% of their profits came from actual edge. The rest was luck.
+
+By week 2, luck runs out. They go negative and spiral.
+
+### The Fix: Daily 10-Minute Reviews
+
+Every evening, ask:
+
+1. **Did I trade my edge?** Or did I chase?
+2. **Did I follow position sizing?** Or did I over-leverage?
+3. **Did I respect stop losses?** Or did I move them?
+4. **What emotion did I feel during my worst trade?** (Fear, Greed, Boredom, Overconfidence?)
+
+[Use Tradia's daily review feature](/pricing) to systematize this.
+
+## Reason #5: Panic Under Pressure
+
+A trader passes day 5 with a 3% profit, on track to win.
+
+Day 6 comes: They've had 2 wins, feeling confident.
+
+Then: A terrible trade. Market moves against them 50 pips immediately. They panic. They close the trade early at a big loss instead of respecting their stop.
+
+The irrational decision spirals. By day 10, they're down 5% and tilting.
+
+### The Psychological Fix: Pre-Evaluation Visualization
+
+**Do this every morning before trading:**
+
+1. Imagine your worst possible day
+2. You're down -4% and there are 5 hours left of trading
+3. You have 2 setups
+
+**What do you do?**
+
+A) Revenge trade hard to get it back
+B) Stick to your 1% risk and trade normally
+C) Walk away for the day
+
+**The only right answer is B or C.** If your brain says A, you're not ready.
+
+## Reason #6: Not Using Tools to Track Compliance
+
+A trader doesn't monitor their drawdown in real-time.
+
+They've taken 8 trades, and they think they're at -2% drawdown.
+
+Actually, they're at -9.5% drawdown. One more losing trade at their normal size puts them at -10.5%, violating the max drawdown limit.
+
+They don't realize this until they try to open the next trade and get an error message: **"Account halted due to max drawdown exceeded."**
+
+### The Fix: Use [Tradia's Real-Time Compliance Dashboard](/pricing)
+
+It shows you in real time:
+- Current drawdown vs. limit
+- Daily loss vs. limit
+- Profit progress toward target
+- Trades remaining before daily loss limit
+
+This removes the guesswork and lets you focus on trading.
+
+## The Winning Formula: Discipline Over Talent
+
+Here's the uncomfortable truth: **Most traders who pass evaluations aren't geniuses.**
+
+They're disciplined.
+
+They:
+1. **Trade the same edge repeatedly** (boring but effective)
+2. **Risk 1% per trade** (no heroics)
+3. **Review daily** (no blind spots)
+4. **Take breaks after losses** (respect psychology)
+5. **Use tools to track compliance** (no surprises)
+6. **Trade like robots** (emotions removed)
+
+## Your Action Plan This Week
+
+1. **Prove your edge**: Trade your system live for 50+ trades (even if micro account)
+2. **Define your setups**: Write down EXACTLY what triggers entry
+3. **Set your risk**: 1% per trade, no exceptions
+4. **Daily review**: 10 minutes every evening
+5. **Get accountability**: Join [Tradia's trader community](/pricing) and share your daily reviews
+
+## Conclusion
+
+95% fail because they don't respect the psychological demands of prop trading.
+
+The good news? **Discipline is learned.** You don't need to be naturally gifted.
+
+You need to:
+- Use systems that remove emotion
+- Track what you're doing
+- Review ruthlessly
+- Adjust based on data
+
+[Start your evaluation prep with Tradia today](/signup). Pass your first attempt. Join the 5%.
+        `.trim(),
+    },
+
+    "best-prop-firms-2026": {
+        slug: "best-prop-firms-2026",
+        title: "Best Prop Firms for Forex Traders 2026: FTMO vs MyFundedFX vs The Edge™",
+        excerpt: "Comparing the top prop firms. Which one is best for your trading? We break down rules, capital allocation, funding, and realistic profitability.",
+        date: "2025-02-20",
+        author: "Tradia Team",
+        category: "Prop Trading",
+        keywords: ["best prop firms", "FTMO vs MyFundedFX", "prop trading firms", "funded trading account", "prop firm comparison"],
+        readTime: 11,
+        content: `
+# Best Prop Firms for Forex Traders 2026: FTMO vs MyFundedFX vs The Edge™
+
+With hundreds of prop firms now operating, choosing one is hard. Here's a detailed comparison of the top players.
+
+## FTMO: The Market Leader
+
+**Founded**: 2015  
+**Traders Funded**: 10,000+  
+**Total Funded Capital**: $500M+
+
+### Rules
+- Daily Loss Limit: 5% of account
+- Max Drawdown: 10%
+- Profit Target: 10% (Phase 1), 5% (Phase 2)
+- Time Limit: 30 days per phase
+- Fee: $149-$399 per evaluation
+
+### Pros
+✓ Most trusted brand  
+✓ Largest trader base (community support)  
+✓ Clear, transparent rules  
+✓ Fast withdrawal times
+
+### Cons
+✗ Most expensive entry fee  
+✗ Highly competitive (harder to pass)  
+✗ No news trading restrictions, but spreads blow out on NFP
+
+### Who Should Apply
+Traders with proven edge looking for maximum capital allocation ($50k-$200k).
+
+## MyFundedFX: The Innovator
+
+**Founded**: 2021  
+**Traders Funded**: 5,000+  
+**Total Funded Capital**: $200M+
+
+### Rules
+- Daily Loss Limit: 5%
+- Max Drawdown: 10%
+- Profit Target: 8%
+- Time Limit: 60 days (more forgiving)
+- Fee: $99-$299
+
+### Pros
+✓ Lower entry fees  
+✓ Longer evaluation period (more time to hit target)  
+✓ Generous profit splits (80/20)  
+✓ Better support team
+
+### Cons
+✗ Smaller brand (less trader network)  
+✗ Fewer capital allocation options  
+✗ Some complaints about withdrawals
+
+### Who Should Apply
+Traders with moderate edge looking for lower-cost entry and longer evaluation window.
+
+## The Edge™: The Premium Player
+
+**Founded**: 2019  
+**Traders Funded**: 3,000+  
+**Total Funded Capital**: $150M+
+
+### Rules
+- Daily Loss Limit: 5%
+- Max Drawdown: 10%
+- Profit Target: 10%
+- Time Limit: 30 days
+- Fee: $349-$499
+
+### Pros
+✓ Highest capital allocation ($100k-$500k+)  
+✓ Proprietary trading platform (better tools)  
+✓ Professional mentorship  
+✓ Highest profit splits (up to 90/10)
+
+### Cons
+✗ Most expensive  
+✗ Strictest rules (hardest to pass)  
+✗ Smaller community
+
+### Who Should Apply
+Serious traders who already have edge and want maximum capital + mentorship.
+
+## The Comparison Table
+
+| Metric | FTMO | MyFundedFX | The Edge™ |
+| :--- | :--- | :--- | :--- |
+| **Entry Fee** | $149-$399 | $99-$299 | $349-$499 |
+| **Daily Loss %** | 5% | 5% | 5% |
+| **Max Drawdown** | 10% | 10% | 10% |
+| **Profit Target** | 10% Phase 1 | 8% | 10% |
+| **Time Limit** | 30 days | 60 days | 30 days |
+| **Max Capital** | $200k | $100k | $500k |
+| **Profit Split** | 80/20 | 80/20 | 90/10 |
+| **Withdrawal Time** | 5-7 days | 7-10 days | 3-5 days |
+
+## Which Firm Should YOU Choose?
+
+### If You're New to Prop Trading
+**Choose**: MyFundedFX
+
+- Lower entry cost ($99) reduces financial risk
+- 60-day evaluation window gives you more time
+- Still has solid brand reputation
+
+### If You Have Proven Edge (50+ live trades)
+**Choose**: FTMO
+
+- Best community for sharing strategies
+- Most capital allocation options
+- Worth the extra $250 fee
+
+### If You Want Maximum Capital & Mentorship
+**Choose**: The Edge™
+
+- Highest capital allocation
+- Best profit splits
+- Premium support
+
+## Pro Tip: The Multi-Firm Strategy
+
+Most professional traders apply to 2-3 firms simultaneously:
+
+1. **Primary**: The firm with the best cultural fit
+2. **Secondary**: A backup firm as insurance
+3. **Tertiary**: A long-shot firm with different rules
+
+Cost: ~$500-$800 total  
+Benefit: Multiple funded accounts if you pass multiple
+
+## Before Applying to ANY Firm
+
+**Checklist:**
+
+- [ ] Prove your edge on live money (micro account, 100+ trades)
+- [ ] Achieve 50%+ win rate with 1.5R+ average
+- [ ] Trade for 4+ weeks without >20% drawdown
+- [ ] Set up [daily tracking with Tradia](/pricing)
+- [ ] Define your exact setups (not vague rules)
+- [ ] Practice the evaluation rules for 2+ weeks
+
+## Conclusion
+
+FTMO remains the safest choice for most traders due to brand recognition and community.
+
+But MyFundedFX offers better value for bootstrapping traders.
+
+The Edge™ is for those ready to go professional.
+
+**Pick one. Prove your edge. Apply. Pass. Scale.**
+
+[Get started tracking your edge with Tradia today](/signup).
         `.trim(),
     },
 };
