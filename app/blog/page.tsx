@@ -1,17 +1,75 @@
 import Link from "next/link";
 import { posts } from "./content";
+import { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
     title: "Tradia Blog — AI Trading Journal & Analytics Insights",
-    description: "Expert articles on automated trading analysis, psychology, risk management, and how to use AI to become a profitable trader.",
-    keywords: ["trading blog", "ai trading", "forex education", "trading psychology", "risk management"],
+    description: "Expert articles on automated trading analysis, psychology, risk management, and how to use AI to become a profitable trader. Read 48+ in-depth trading guides.",
+    keywords: ["trading blog", "ai trading", "forex education", "trading psychology", "risk management", "prop firm evaluation", "trading journal"],
+    openGraph: {
+        title: "Tradia Blog — AI Trading Journal & Analytics Insights",
+        description: "Expert articles on trading psychology, risk management, and how to become a profitable trader with AI analysis.",
+        type: "website",
+        url: "https://tradiaai.app/blog",
+        siteName: "Tradia",
+        images: [
+            {
+                url: "https://tradiaai.app/TradiaDashboard.png",
+                width: 1200,
+                height: 630,
+                alt: "Tradia Blog"
+            }
+        ]
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Tradia Blog — AI Trading Journal & Analytics Insights",
+        description: "Expert articles on trading psychology and AI analysis.",
+        images: ["https://tradiaai.app/TradiaDashboard.png"]
+    },
+    alternates: {
+        canonical: "https://tradiaai.app/blog",
+    }
 };
 
 export default function BlogIndex() {
     const postList = Object.values(posts).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    // Structured data for blog collection
+    const blogCollectionSchema = {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "Tradia Blog",
+        "description": "Expert articles on trading psychology, risk management, and AI analysis",
+        "url": "https://tradiaai.app/blog",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Tradia",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://tradiaai.app/TRADIA-LOGO.png"
+            }
+        },
+        "blogPost": postList.map(post => ({
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.excerpt,
+            "url": `https://tradiaai.app/blog/${post.slug}`,
+            "datePublished": post.date,
+            "author": {
+                "@type": "Person",
+                "name": post.author || "Tradia Team"
+            }
+        }))
+    };
+
     return (
-        <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto bg-white dark:bg-transparent">
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(blogCollectionSchema) }}
+            />
+            <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto bg-white dark:bg-transparent">
             <div className="text-center mb-16">
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">
                     Tradia Blog
@@ -45,7 +103,8 @@ export default function BlogIndex() {
                     </Link>
                 ))}
             </div>
-        </main>
+            </main>
+        </>
     );
 }
 
