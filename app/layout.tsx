@@ -31,6 +31,23 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: [
+      { url: '/TRADIA-LOGO.png?v=1', sizes: 'any', type: 'image/png' },
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '16x16', type: 'image/png' },
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '32x32', type: 'image/png' },
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '48x48', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '180x180', type: 'image/png' },
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '152x152', type: 'image/png' },
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '120x120', type: 'image/png' },
+      { url: '/TRADIA-LOGO.png?v=1', sizes: '76x76', type: 'image/png' },
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/TRADIA-LOGO.png?v=1', color: '#3b82f6' },
+    ],
+  },
   openGraph: {
     title: "Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
     description: "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Master your edge with institutional-grade analytics and AI coaching.",
@@ -151,16 +168,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon and Icons - Using Tradia Logo ONLY */}
-        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="any" />
-        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="16x16" />
-        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="32x32" />
-        <link rel="icon" href="/TRADIA-LOGO.png" type="image/png" sizes="48x48" />
-        <link rel="shortcut icon" href="/TRADIA-LOGO.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="180x180" />
-        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="152x152" />
-        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="120x120" />
-        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png" sizes="76x76" />
-        <link rel="mask-icon" href="/TRADIA-LOGO.png" color="#0f1319" />
+        {/* Core favicon - multiple sizes for browser compatibility */}
+        <link rel="icon" href="/TRADIA-LOGO.png?v=1" type="image/png" sizes="any" />
+        <link rel="icon" href="/TRADIA-LOGO.png?v=1" type="image/png" sizes="16x16" />
+        <link rel="icon" href="/TRADIA-LOGO.png?v=1" type="image/png" sizes="32x32" />
+        <link rel="icon" href="/TRADIA-LOGO.png?v=1" type="image/png" sizes="48x48" />
+        <link rel="shortcut icon" href="/TRADIA-LOGO.png?v=1" type="image/png" />
+        
+        {/* Apple Touch Icons for iOS */}
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png?v=1" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png?v=1" sizes="152x152" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png?v=1" sizes="120x120" />
+        <link rel="apple-touch-icon" href="/TRADIA-LOGO.png?v=1" sizes="76x76" />
+        
+        {/* Safari and OS mask icon */}
+        <link rel="mask-icon" href="/TRADIA-LOGO.png?v=1" color="#3b82f6" />
+        
+        {/* Web App Manifest for PWA support */}
+        <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
