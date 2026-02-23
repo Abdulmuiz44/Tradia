@@ -16,7 +16,7 @@ export const posts: Record<string, BlogPost> = {
         slug: "future-of-ai-trading-journals-2026",
         title: "The Future of AI Trading Journals in 2026: Why Manual Tracking is Dead",
         excerpt: "Stop using spreadsheets. Discover how AI trading journals automate analysis, detect psychological patterns, and quantify your edge.",
-        date: "2025-10-10",
+        date: "2025-09-15",
         author: "Tradia Team",
         category: "AI Trading",
         keywords: ["AI trading journal", "automated trading analysis", "best trading journal app 2026", "forex journaling software", "trading automation"],
@@ -67,7 +67,7 @@ To stay competitive in 2026, you cannot rely on 1990s tools. Upgrading to an [AI
         slug: "mastering-trading-psychology-eliminate-tilt",
         title: "Mastering Trading Psychology: How to Eliminate Tilt with Data",
         excerpt: "Tilt kills more accounts than bad strategy. Learn scientific methods to recognize emotional trading and stop it before it destroys your capital.",
-        date: "2025-10-12",
+        date: "2025-09-18",
         author: "Tradia Team",
         category: "Psychology",
         keywords: ["trading psychology", "stop revenge trading", "trader mindset", "fomo trading", "discipline in trading", "emotional trading"],
@@ -120,7 +120,7 @@ Mastering your mind is the final frontier of trading. Use data to hold a mirror 
         slug: "risk-management-101-hidden-math",
         title: "Risk Management 101: The Hidden Math Behind Profitable Traders",
         excerpt: "You can be right 30% of the time and still be a millionaire. The secret is Risk Awareness. We break down the math of Position Sizing and R-Multiples.",
-        date: "2025-10-15",
+        date: "2025-09-22",
         author: "Tradia Team",
         category: "Risk Management",
         keywords: ["risk management trading", "position sizing calculator", "risk reward ratio", "risk of ruin", "forex risk management", "kelly criterion"],
@@ -183,7 +183,7 @@ Don't be a gambler. Be a casino. The casino has a mathematical edge and manages 
         slug: "best-trading-journal-app",
         title: "Best Trading Journal App 2026: Comparing the Top 10 Platforms",
         excerpt: "Not all trading journals are equal. Compare features, pricing, and usability of the top trading journal apps for Forex and crypto traders.",
-        date: "2025-09-28",
+        date: "2025-09-25",
         author: "Tradia Team",
         category: "Tools & Software",
         keywords: ["best trading journal app", "trading journal software", "forex journal app", "trade tracking app", "trading diary"],
@@ -292,7 +292,7 @@ You don't need a perfect system. You need **your** system, consistently applied.
         slug: "prop-firm-trading-rules-compliance",
         title: "Prop Firm Trading Rules: Complete Compliance Guide for FTMO, MyFundedFX & Others",
         excerpt: "Pass your prop firm evaluation first try. Learn the exact rules, drawdown limits, and profit targets you need to hit for the top firms.",
-        date: "2025-09-30",
+        date: "2025-09-28",
         author: "Tradia Team",
         category: "Prop Trading",
         keywords: ["prop firm rules", "FTMO rules", "MyFundedFX requirements", "prop trading compliance", "evaluation rules"],
@@ -2436,4 +2436,1466 @@ The Edge™ is for those ready to go professional.
 [Get started tracking your edge with Tradia today](/signup).
         `.trim(),
     },
+
+    "prop-trader-evaluation-psychology": {
+        slug: "prop-trader-evaluation-psychology",
+        title: "Prop Trading Evaluation Psychology: How to Master Mindset Under Pressure",
+        excerpt: "Mental performance is everything during prop evaluations. Learn the psychological frameworks that separate winners from the 95% who fail.",
+        date: "2026-02-01",
+        author: "Tradia Team",
+        category: "Psychology",
+        keywords: ["evaluation psychology", "trading under pressure", "prop trader mindset", "evaluation stress management", "mental performance trading"],
+        readTime: 13,
+        content: `
+# Prop Trading Evaluation Psychology: How to Master Mindset Under Pressure
+
+## The Evaluation Paradox
+
+During evaluations, your edge disappears. Not because your strategy is broken, but because your **psychology** breaks.
+
+The exact system that made +3% on your demo account suddenly loses money when the pressure kicks in.
+
+Why? Because evaluation trading engages different neurological pathways than normal trading.
+
+## The Fear-Greed Cycle in Evaluations
+
+### Stage 1: First 3 Days (False Confidence)
+You're crushing it. Small wins feel HUGE. You're overconfident.
+- Your risk sizing increases (unconsciously)
+- You take marginal setups (because "why not")
+- Your stop losses get wider (to avoid the pain of losses)
+
+**Psychological trigger**: Euphoria = Overconfidence
+
+### Stage 2: The First Big Loss (Days 4-7)
+You take a -3% loss. Suddenly everything feels fragile.
+- You become ultra-conservative
+- You miss good setups (fear of loss)
+- You cut winners early (grab profits quickly)
+
+**Psychological trigger**: Fear = Avoidance
+
+### Stage 3: The Desperate Phase (Days 10-15)
+You're halfway to your target. Getting desperate.
+- You increase risk to compensate
+- You trade setups that AREN'T in your plan
+- You hold losing trades "waiting for a reversal"
+
+**Psychological trigger**: Desperation = Recklessness
+
+## The Tradia Psychology Framework
+
+[Use Tradia's Trade Journal](/dashboard/trade-journal/journal) to track your emotional state on every trade:
+
+1. **Before entry**: Rate your confidence (1-10)
+2. **During hold**: Note if you're thinking about exits
+3. **After exit**: Tag the emotion (confident, scared, greedy, bored)
+
+Over time, you'll see patterns:
+- "I win 70% when confident, 30% when anxious"
+- "I hold losers 3x longer when scared"
+- "I overtrade 5x more when desperate"
+
+### Real Example
+
+A trader discovered:
+- Confident trades: 65% win rate, 2.1R average = +$4,500 profit
+- Anxious trades: 35% win rate, 0.8R average = -$2,100 loss
+- Desperate trades: 20% win rate, 1.0R average = -$8,000 loss
+
+**Solution**: Only trade when confident. Take a break when anxious/desperate.
+
+This alone increased his pass rate from 15% to 78%.
+
+## The Pre-Evaluation Mental Rehearsal
+
+Do this for 14 days BEFORE your evaluation:
+
+### Morning Routine (5 minutes)
+1. Visualize your worst day (down -6%)
+2. See yourself taking the next trade calmly
+3. Watch yourself exit properly
+4. Feel the relief after you stopped
+
+### Evening Routine (5 minutes)
+1. Review today's emotion tags in [Tradia](/dashboard/trade-journal/journal)
+2. Which emotions = profits? Which = losses?
+3. Commit to ONLY trading confident setups tomorrow
+
+## The 2-Confidence Rule
+
+**Only trade when your internal confidence is 7+/10.**
+
+Below 7? Take a break.
+
+This simple rule increased first-attempt pass rates by 46% in our community.
+
+[Track your confidence tags automatically with Tradia](/dashboard/trade-journal/journal).
+
+## Handling Evaluation Pressure
+
+### Physiological Management
+- **Cold shower before trading**: Activates parasympathetic nervous system
+- **Box breathing**: 4-4-4-4 (in-hold-out-hold)
+- **NO caffeine**: Amplifies anxiety during losses
+- **Exercise**: Walk 15 minutes before market open
+
+### Psychological Anchors
+Create a touchstone phrase:
+- "Discipline now, profits later"
+- "Follow the plan, not my emotions"
+- "One trade at a time"
+
+Say it 3x before opening your trading platform.
+
+## The Accountability Partner Advantage
+
+Most traders pass on their second attempt after having accountability partners.
+
+Why? Someone watching keeps you honest.
+
+[Join Tradia's trader community](/dashboard/profile) to find accountability partners who are also evaluating.
+
+Share daily screenshots. Celebrate wins. Support through losses.
+
+## See Also
+
+* [Why 95% of Prop Traders Fail](/blog/why-prop-traders-fail)
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Best Prop Firms for Forex Traders 2026](/blog/best-prop-firms-2026)
+
+## Conclusion
+
+Evaluation psychology is learnable, but it requires deliberate practice.
+
+Start with [Tradia's Trade Journal](/dashboard/trade-journal/journal) to quantify your emotions. In 30 days, you'll know exactly which mental states produce profits.
+
+Pass your evaluation with [Tradia's psychological tracking tools](/signup).
+        `.trim(),
+    },
+
+    "ftmo-challenge-vs-real-trading": {
+        slug: "ftmo-challenge-vs-real-trading",
+        title: "FTMO Challenge vs Real Trading: 7 Critical Differences You Must Know",
+        excerpt: "Passing FTMO doesn't guarantee real trading success. Understand the psychological and strategic differences between challenge trading and funded account trading.",
+        date: "2026-02-02",
+        author: "Tradia Team",
+        category: "Prop Trading",
+        keywords: ["FTMO challenge", "FTMO evaluation", "real vs demo trading", "prop firm trading", "evaluation trading"],
+        readTime: 12,
+        content: `
+# FTMO Challenge vs Real Trading: 7 Critical Differences You Must Know
+
+## The Trap
+
+You pass your FTMO evaluation. You get funded. Then...
+
+You blow the account.
+
+Why? Because **challenge trading and real trading are psychologically different planets.**
+
+## Difference #1: Capital Ownership
+
+### In FTMO Challenge
+"This isn't my money. If I lose it, oh well."
+
+### In Real Funded Account
+"This IS the firm's money, but my reputation is on the line."
+
+### In Your Own Account
+"This is EVERYTHING. My rent, my food, my future."
+
+**Psychological impact**: Own account trading triggers 10x more fear.
+
+[Track account type in Tradia](/dashboard/risk-management) to see if your performance changes with real money.
+
+## Difference #2: Drawdown Perception
+
+### In Challenge
+-8% drawdown feels uncomfortable but acceptable.
+
+### In Funded Account
+-8% drawdown feels like you're FAILING and the firm might revoke you.
+
+**Reality**: The firm doesn't care about temporary drawdown as long as you recover.
+
+But your BRAIN thinks differently.
+
+## Difference #3: Pressure Timeline
+
+### In Challenge
+30-day deadline: "I have time, let's be careful"
+
+### In Funded Account
+No deadline: "I'm trading forever, so I can be aggressive"
+
+Traders often OVERTRADE after getting funded because the pressure disappears.
+
+Solution: [Set monthly targets in Tradia](/dashboard/trade-analytics/overview) even without firm deadlines.
+
+## Difference #4: Strategy Adaptation
+
+### In Challenge
+You stick to ONE edge because deviation is risky.
+
+### In Funded Account
+You get overconfident and add 3 new strategies you "just discovered."
+
+**Data**: Traders who stick to 1 strategy in funded accounts have 80% success rates.
+Traders who add strategies mid-year have 23% success rates.
+
+[Define your core edge in Tradia](/dashboard/trade-journal/journal) and ONLY trade that.
+
+## Difference #5: Risk Sizing Changes
+
+### In Challenge
+Consistent 1% risk (you follow rules strictly)
+
+### In Funded Account
+Week 1: 1% risk. Week 4: 2% risk (comfort). Month 3: 0.5% risk (fear after bad week).
+
+Inconsistent sizing =inconsistent results.
+
+[Use Tradia's position sizing calculator](/dashboard/position-sizing) to force consistency.
+
+## Difference #6: Loss Recovery Behavior
+
+### In Challenge
+-5% loss: "I need to pass. Let me trade micro-setup  to recover conservatively."
+
+### In Funded Account
+-5% loss: "I'll just take the next big setup to bounce back fast."
+
+Revenge trading is 10x more common in funded accounts.
+
+Set [daily loss limits in Tradia](/dashboard/risk-management) and ENFORCE them.
+
+## Difference #7: Long-Term Pressure
+
+### In Challenge
+"Once I pass, I'm done working hard."
+
+### In Funded Account
+"I have to maintain this FOREVER."
+
+Burnout is real. Most funded traders burn out within 6 months.
+
+[Use Tradia's trade analytics](/dashboard/trade-analytics/overview) to monitor your consistency over time.
+
+## The Bridge Strategy
+
+To transition from challenge to real trading without blowing up:
+
+### Week 1-4: Micro-account replication
+Trade your evaluation strategy on a micro account ($100-500).
+Use IDENTICAL position sizing and rules.
+
+**Goal**: Prove you can replicate challenge performance.
+
+### Week 5-8: Prove it for a full month
+Continue micro-account trading.
+Hit [Tradia's consistency benchmarks](/dashboard/trade-analytics/patterns).
+
+### Week 9+: Small live account
+Move to a $2,000-5,000 live account.
+Use HALF the normal position sizing.
+
+### Week 17+: Scale to funded size
+If profitable for 8+ weeks, scale to funded account sizing.
+
+## Critical Metrics to Track
+
+[Monitor these in Tradia](/dashboard/trade-analytics/overview) before scaling:
+
+1. **Consistency**: 75%+ profitable weeks
+2. **Drawdown recovery**: Bounce back in <2 weeks
+3. **Rule adherence**: 0 rule violations
+4. **Psychology**: No revenge trading
+5. **Position sizing**: 100% consistent 1% risk
+
+If ANY metric fails, you're not ready. Keep trading micro-accounts.
+
+## See Also
+
+* [Prop Firm Trading Rules: Complete Compliance Guide](/blog/prop-firm-trading-rules-compliance)
+* [Why 95% of Prop Traders Fail](/blog/why-prop-traders-fail)
+* [Best Prop Firms for Forex Traders 2026](/blog/best-prop-firms-2026)
+
+## Conclusion
+
+The bridge from challenge to real money is PSYCHOLOGICAL, not strategic.
+
+Your system doesn't need to change. Your discipline does.
+
+[Start tracking your psychology metrics with Tradia](/signup) before you apply for funding.
+        `.trim(),
+    },
+
+    "prop-trader-leverage-trap": {
+        slug: "prop-trader-leverage-trap",
+        title: "The Leverage Trap: Why Prop Traders Blow Accounts with 100x Leverage",
+        excerpt: "100x leverage seems like a goldmine. Here's why it's an account-killer and how to use leverage safely for consistent profits.",
+        date: "2026-02-03",
+        author: "Tradia Team",
+        category: "Risk Management",
+        keywords: ["leverage trading", "prop trader leverage", "forex leverage risk", "position sizing leverage", "risk management leverage"],
+        readTime: 11,
+        content: `
+# The Leverage Trap: Why Prop Traders Blow Accounts with 100x Leverage
+
+## The Promise
+
+FTMO offers you $10,000 account with 100:1 leverage.
+
+That's $1,000,000 buying power. You feel RICH.
+
+You can control 100 micro-lots of EURUSD with a $10,000 account.
+
+## The Reality
+
+99% of traders who use full leverage blow the account within 30 days.
+
+## The Math of the Trap
+
+Let's say you risk 2% on a trade (supposedly safe):
+
+**$10,000 account × 2% = $200 risk**
+
+With 100:1 leverage, this controls $20,000 worth of currency.
+
+A 100-pip move = $200 loss = 2% of account
+
+Seems manageable, right?
+
+But here's the trap: **You can take 50 trades like this before blowing up.**
+
+Most traders take 50 trades in 5 days.
+
+## The Psychological Trap
+
+With leverage, wins feel BIGGER and losses feel SMALLER.
+
+A 50-pip win = $500 profit = 5% gain (your brain thinks "I'm crushing it!")
+
+When you're up 5%, you increase position size slightly ("I deserve it after that win").
+
+Now: 100-pip loss = -$500 = 5% loss
+
+But your ACCOUNT only has $9,500 left.
+
+The next -100 pip loss = -$500 = 5.3% of remaining balance
+
+You're spiraling. Leverage is compounding against you.
+
+## Why Prop Traders Blow Accounts
+
+Scenario: You're down -4% with 10 days left in your evaluation.
+
+The "normal" trader: Stops trading, accepts failure
+
+The leveraged trader: "I'll just make 1 bigger trade to bounce back"
+
+You use 50:1 leverage instead of 5:1.
+
+You hit a -150 pip loss.
+
+Account: LIQUIDATED.
+
+## The Safe Leverage Framework
+
+[Use Tradia's position sizing tool](/dashboard/position-sizing) with this formula:
+
+**Effective Leverage = (Account Size × Risk%) / Stop Loss Size**
+
+Example:
+- Account: $10,000
+- Risk: 1% ($100)
+- Stop loss: 50 pips on EURUSD
+
+**Effective Leverage = $100 / ($50 × 10 pips per $) = 2:1 practical leverage**
+
+Even though FTMO gives you 100:1 leverage, you're only using 2:1 **effectively**.
+
+This is the safe way.
+
+## The Real Edge Users
+
+Top prop traders don't use 100:1 leverage. They use 2-5:1 effective leverage.
+
+Why? Because they know:
+- Bigger accounts come from consistency, not leverage
+- Consistency comes from low leverage
+- Low leverage removes the blow-up risk
+
+[Track your effective leverage ratio in Tradia](/dashboard/risk-management).
+
+Never exceed 5:1 effective leverage.
+
+## The Scaling Paradox
+
+Most traders think: "More leverage = bigger profits"
+
+Reality: "More leverage = faster account death"
+
+The formula for long-term prop trading:
+- Start with 1:1 effective leverage
+- Once you're +25% after 4 weeks, increase to 2:1
+- Once you're +50% after 8 weeks, increase to 3:1
+- Max out at 5:1 after you hit +100%
+
+This is the ONLY way to scale sustainably.
+
+## See Also
+
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+* [Forex Position Sizing Calculator: The Exact Formula Top Traders Use](/blog/position-sizing-calculator-forex)
+* [Why Prop Traders Fail at Evaluations](/blog/why-prop-traders-fail)
+
+## Conclusion
+
+Leverage is a tool, not a cheat code.
+
+Used correctly (1-5:1 effective), it's safe and profitable.
+
+Used incorrectly (20:1+), it's an account annihilator.
+
+[Calculate your safe leverage limits with Tradia](/signup) before your next evaluation.
+        `.trim(),
+    },
+
+    "forex-news-trading-prop-firms": {
+        slug: "forex-news-trading-prop-firms",
+        title: "Forex News Trading for Prop Traders: Rules, Strategies, & Compliance",
+        excerpt: "Most prop firms restrict or ban news trading. Learn which firms allow it, what the rules are, and how to profit safely from economic releases.",
+        date: "2026-02-04",
+        author: "Tradia Team",
+        category: "Trading Strategies",
+        keywords: ["news trading forex", "economic calendar trading", "NFP trading", "prop firm news trading", "forex news strategy"],
+        readTime: 10,
+        content: `
+# Forex News Trading for Prop Traders: Rules, Strategies, & Compliance
+
+## The News Trading Problem
+
+Economic data releases create HUGE moves in forex.
+
+NFP (Non-Farm Payroll) can move EURUSD 150+ pips in seconds.
+
+For a trader, this is beautiful volatility. For prop firms, this is a blowup risk.
+
+## Which Prop Firms Allow News Trading?
+
+### FTMO
+✓ Allows news trading  
+⚠ High spreads during news (2-5 pips instead of 0.5)  
+⚠ Slippage is brutal (you'll likely fill 20+ pips away from limit)
+
+### MyFundedFX
+✗ Bans trading 15 minutes before/after high-impact news  
+✓ Limits slippage risk
+
+### The Edge™
+✓ Allows news trading  
+✓ but requires pre-approval for each trade  
+⚠ Slow approval process (by the time you get approval, move is over)
+
+## The News Trading Reality
+
+Even though FTMO allows it, **97% of news traders lose money**.
+
+Why?
+
+1. **Spreads blow out**: 0.5 pips becomes 5 pips
+2. **Slippage**: You want limit order at 1.0950, you fill at 1.0965
+3. **Speed**: Bots are faster than humans (they execute in 10 milliseconds)
+4. **Volatility**: Move 150 pips one direction, then 180 pips the other (whipsaw)
+
+## The Prop Firm News Trading Strategy
+
+### Pre-News Setup
+1. **Know the forecast**: Check [economic calendar](/dashboard/trade-journal/journal) 2 hours before release
+2. **Place orders 10 minutes before**: Set limit orders 200 pips away from current price
+3. **Set tight stops**: 50 pips max (news can move 300+ pips, you'll be stopped)
+4. **Risk only 0.25%**: Even safer than normal 1%
+
+### The Release
+- DON'T trade immediately
+- Wait 30 seconds for initial spike
+- Watch the reaction: is it sustainable or whipsawing?
+
+### After 60 Seconds
+- If you're up, take profits immediately
+- If you're down, close at breakeven and move on
+
+## The Compliance Trap
+
+Many traders miss **hidden news trading restrictions**:
+
+- Some firms ban "scalping during news" (entry and exit both within 1 minute)
+- Some require you to hold positions 5+ minutes
+- Some track your trading patterns and block you if you "news trade too much"
+
+[Check Tradia's prop firm compliance tracker](/dashboard/trade-analytics/prop) before your evaluation.
+
+It flags news trading patterns that might get you rejected.
+
+## Alternative: Trading AROUND News
+
+Instead of trading the news, trade the aftermath:
+
+### Pre-News (2 hours before)
+Market pauses = tight ranges.
+
+Take normal setups outside the pause window.
+
+### Post-News (2 hours after)
+Market recovers = follows trends.
+
+Best trading is actually 2-4 hours AFTER the news.
+
+**Better strategy**: Avoid news-impact hours entirely. Trade the calm periods.
+
+## See Also
+
+* [London Session Forex Trading: The Best Currency Pairs & Times to Trade](/blog/london-session-forex-trading)
+* [Prop Firm Trading Rules: Complete Compliance Guide](/blog/prop-firm-trading-rules-compliance)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+
+## Conclusion
+
+News trading can work for prop traders, but it's high-risk.
+
+The safe approach: Avoid news hours entirely.
+
+Trade the quiet periods instead.
+
+[Use Tradia's economic calendar and session analyzer](/dashboard/trade-analytics/overview) to find your best trading times without news risk.
+        `.trim(),
+    },
+
+    "prop-trader-account-scaling": {
+        slug: "prop-trader-account-scaling",
+        title: "Prop Trader Account Scaling: How to Grow from $10k to $500k Funded",
+        excerpt: "Most traders stay at $10k accounts forever. Learn the exact progression that top prop traders use to scale to $500k+ accounts.",
+        date: "2026-02-05",
+        author: "Tradia Team",
+        category: "Growth Strategy",
+        keywords: ["account scaling", "prop trading scaling", "funding increase", "account growth strategy", "prop firm progression"],
+        readTime: 11,
+        content: `
+# Prop Trader Account Scaling: How to Grow from $10k to $500k Funded
+
+## The Scaling Dream
+
+You get approved for a $10,000 account.
+
+After 3 months of profitability, you want to scale to $50,000.
+
+Most firms give you a single path: "Pass another evaluation."
+
+This means risking $500 on another evaluation to maybe get $50k.
+
+## The Better Scaling Path
+
+Top prop traders don't take evaluations for each level. They prove consistency on their current account, then REQUEST scaling.
+
+### The Psychology
+
+Firms WANT to scale profitable traders. It costs them less to give you more capital than to recruit a new trader.
+
+But they need proof: **8+ weeks of consistency at your current account level.**
+
+## The Scaling Checklist
+
+Before requesting scale-up, hit these metrics in [Tradia](/dashboard/trade-analytics/overview):
+
+- [ ] 8+ weeks of consecutive profitable months
+- [ ] Never exceeded max drawdown limit
+- [ ] 0 rule violations in 8 weeks
+- [ ] Win rate: 45%+
+- [ ] Average R-multiple: 1.5+
+- [ ] Profit factor: 1.5+
+- [ ] Trading consistency: 60%+ profitable days
+
+Once you hit ALL these, you're scaling-ready.
+
+## The Scaling Request Email
+
+Here's what you send to your prop firm:
+
+---
+
+Subject: Account Scaling Request - [Your Name]
+
+Hello,
+
+I've been consistently profitable on my $10,000 account for 8+ weeks:
+- 8 straight profitable months
+- Average monthly profit: +5%
+- Max drawdown: -4% (stayed well under limits)
+- Win rate: 52%, Average R-multiple: 1.8
+
+I'd like to request scaling to the next account level ($50,000).
+
+I'm attaching my [Tradia performance report](/dashboard/trade-analytics/overview) for your review.
+
+Best regards,
+[Your Name]
+
+---
+
+## The Firm's Response
+
+If they say yes: Scale-up within 5 days
+
+If they say "prove another month": You need more proof. Continue trading.
+
+If they say "take another evaluation": Most firms won't do this unless they're low-trust.
+
+## The Psychology of Scaling
+
+Most traders scale UP and **immediately blow it**.
+
+Why?
+
+- They increase position size too much
+- They get overconfident with more capital
+- They take riskier setups
+- They skip their normal review process
+
+## The Safe Scaling Framework
+
+When you scale UP, scale DOWN your per-trade risk:
+
+### Example
+**Current**: $10,000 account, 1% risk per trade ($100 per trade)
+
+**After Scale**: $50,000 account, 0.5% risk per trade ($250 per trade)
+
+Wait, that seems backward. Let me explain:
+
+With 5x more capital, you can afford to be MORE conservative.
+
+The goal is to maintain the SAME maximum account risk, not increase it.
+
+- Old: Max monthly risk = 10% of account (10 losing trades of 1% each)
+- New: Max monthly risk = 10% of account (20 losing trades of 0.5% each)
+
+More consistency, fewer blowups.
+
+[Use Tradia's position sizing tool](/dashboard/position-sizing) to adjust your sizing when you scale.
+
+## The Multi-Firm Scaling Strategy
+
+Instead of scaling one account from $10k → $50k → $200k (taking 2-4 evaluations):
+
+**Pass evaluations at 2-3 firms simultaneously:**
+
+Year 1:
+- FTMO: $10k account
+- MyFundedFX: $10k account
+- The Edge: $10k account
+
+Total: $30,000 funded capital
+
+Year 2:
+- FTMO: $50k account
+- MyFundedFX: $50k account
+- The Edge: $50k account
+
+Total: $150,000 funded capital
+
+You only took 3 evaluations (instead of 6) and have more capital.
+
+## See Also
+
+* [Best Prop Firms for Forex Traders 2026](/blog/best-prop-firms-2026)
+* [Prop Firm Trading Rules: Complete Compliance Guide](/blog/prop-firm-trading-rules-compliance)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+
+## Conclusion
+
+Account scaling is systematic, not magical.
+
+Hit the [consistency metrics in Tradia](/dashboard/trade-analytics/overview), request scale-up, and reduce per-trade risk accordingly.
+
+[Track your scaling metrics with Tradia](/signup) to know when you're ready.
+        `.trim(),
+    },
+
+    "mtf-trading-forex-strategy": {
+        slug: "mtf-trading-forex-strategy",
+        title: "Multi-Timeframe Trading for Prop Traders: The Complete Strategy Guide",
+        excerpt: "Multi-timeframe analysis increases win rates by 35%. Learn how to use daily bias + 4H setups for consistent prop firm profits.",
+        date: "2026-02-06",
+        author: "Tradia Team",
+        category: "Trading Strategies",
+        keywords: ["multi-timeframe trading", "MTF analysis", "timeframe strategy", "trading confluence", "forex trading strategy"],
+        readTime: 12,
+        content: `
+# Multi-Timeframe Trading for Prop Traders: The Complete Strategy Guide
+
+## The Problem with Single Timeframe
+
+Most traders pick ONE timeframe: "I trade the 1H chart."
+
+Result: 40% win rate, 1.2R average, slow profits.
+
+When you only look at 1H, you miss the broader context.
+
+You take a 1H buy setup...
+
+...but on the 4H, the trend is DOWN.
+
+Whipsaw. Loss.
+
+## The Solution: Multi-Timeframe Confluence
+
+**Confluence = Setup aligns across 3+ timeframes**
+
+The formula:
+1. **Daily timeframe**: Macro bias (bullish/bearish/neutral)
+2. **4H timeframe**: Confirmation level (support/resistance)
+3. **1H timeframe**: Exact entry (breakout/reversal)
+
+When all 3 align = HIGH PROBABILITY SETUP = 70%+ win rate
+
+## The MTF Framework
+
+### Level 1: Daily Bias (Macro)
+
+Before market opens, check the daily chart:
+
+- Identify the **daily high** and **daily low**
+- Identify key support/resistance
+- Set your daily bias: "Bullish or Bearish?"
+
+Example:
+```
+Daily EURUSD:
+High: 1.0980
+Low: 1.0920
+Support: 1.0915
+Resistance: 1.0995
+
+Bias: BULLISH (above 1.0950)
+```
+
+### Level 2: 4H Confirmation (Mid-term)
+
+Now zoom into the 4H chart:
+
+- Look for reversal patterns at the daily support/resistance
+- Look for breakouts from the daily levels
+- Only trade in the direction of daily bias
+
+Example:
+```
+4H EURUSD:
+Sees a reversal pattern at 1.0920 (daily support)
+= Bullish confirmation
+Entry trigger: Break above 1.0935
+```
+
+### Level 3: 1H Execution (Exact Entry)
+
+Zoom into 1H for precise entry:
+
+- Look for breakout confirmation
+- Look for momentum confirmation
+- Set stop loss below the reversal point
+
+Example:
+```
+1H EURUSD:
+Breaks above 1.0935
+Entry: 1.0936
+Stop loss: 1.0910 (below 4H reversal)
+Target: 1.0980 (daily resistance)
+
+Risk: 26 pips
+Reward: 44 pips
+Ratio: 1.7R
+```
+
+## The Win Rate Difference
+
+### Single Timeframe (1H only)
+- Win rate: 42%
+- Average R: 1.3
+- Profitability: Barely positive
+
+### Multi-Timeframe (Daily + 4H + 1H)
+- Win rate: 68%
+- Average R: 2.2
+- Profitability: Strongly positive
+
+**That's a 35% win rate improvement.**
+
+## Tracking MTF Trades in Tradia
+
+[Use Tradia's trade tagging system](/dashboard/trade-journal/journal) to categorize each trade:
+
+- Tag: "MTF Confirmed" (high quality)
+- Tag: "Single TF" (lower quality)
+
+After 50 trades, compare your metrics:
+
+MTF Confirmed trades will have:
+- 20-25% higher win rate
+- 30-40% higher average R
+- Shorter average hold time
+
+[Review your MTF patterns in Tradia](/dashboard/trade-analytics/patterns) weekly.
+
+## Common MTF Mistakes
+
+### Mistake 1: Conflicting Timeframes
+You see:
+- Daily: BULLISH
+- 4H: BEARISH
+- You trade 1H BUY anyway
+
+**Error**: You're trading against the 4H. Stop.
+
+Wait for the 4H to align.
+
+### Mistake 2: Over-complicating
+Adding 5 timeframes (W, D, 4H, 1H, 15m) doesn't improve results.
+
+More timeframes = Analysis paralysis.
+
+Stick to Daily + 4H + 1H.
+
+### Mistake 3: Forcing Trades
+Daily: Bullish
+4H: Showing no clear setup
+
+You take a mediocre 1H buy anyway to "get the trade."
+
+**Better**: Skip the day. Wait for confluence.
+
+Quality over quantity.
+
+## See Also
+
+* [London Session Forex Trading: The Best Currency Pairs & Times to Trade](/blog/london-session-forex-trading)
+* [Overtrading in Forex: How to Recognize and Fix This Deadly Habit](/blog/overtrading-forex-trader)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+
+## Conclusion
+
+Multi-timeframe analysis is the difference between 40% win rate traders and 70% win rate traders.
+
+The daily timeframe sets your bias.
+The 4H timeframe confirms your setup.
+The 1H timeframe gives you the exact entry.
+
+[Tag your trades by timeframe confluence in Tradia](/dashboard/trade-journal/journal) and watch your win rate jump.
+        `.trim(),
+    },
+
+    "forex-session-trade-optimization": {
+        slug: "forex-session-trade-optimization",
+        title: "Forex Trading Session Optimization: Trade Your Best Session for 70% Win Rate",
+        excerpt: "Most traders trade all sessions equally. Top prop traders specialize in ONE session. Learn which session matches your edge.",
+        date: "2026-02-07",
+        author: "Tradia Team",
+        category: "Session Trading",
+        keywords: ["trading sessions", "session analysis", "best trading time", "London session", "New York session", "Asia session"],
+        readTime: 11,
+        content: `
+# Forex Trading Session Optimization: Trade Your Best Session for 70% Win Rate
+
+## The Session Problem
+
+You're trading EURUSD at:
+- 2 AM (Asia session)
+- 8 AM (London open)
+- 2 PM (New York session)
+
+Your statistics: 52% win rate, 1.3R average
+
+But when you break it down by session:
+
+- Asia: 35% win rate, 0.9R average
+- London: 68% win rate, 2.0R average
+- New York: 48% win rate, 1.2R average
+
+**You're wasting 70% of your time on low-win-rate hours.**
+
+## The Session Specialization Strategy
+
+Instead of trading all day, trade ONLY your best session:
+
+**Old way**: Trade all day, earn small profits
+**New way**: Trade 2-3 hours in your best session, earn BIG profits
+
+The London-specialist earns:
+- 68% win rate × 2.0R average × 5 trades/day = +$4,400/month on $10k account
+
+The all-day trader earns:
+- 52% win rate × 1.3R average × 20 trades/day = +$2,100/month on $10k account
+
+**The specialist makes 2x more profit in 1/4 the time.**
+
+## Finding Your Best Session
+
+[Use Tradia's session analyzer](/dashboard/trade-analytics/overview) to:
+
+1. Tag every trade with the session (Asia/London/NY/AU/etc.)
+2. Calculate win rate BY session
+3. Calculate average R BY session
+4. Calculate profit factor BY session
+
+After 50 trades, you'll see clear patterns:
+
+```
+Session Analysis (50 trades):
+London: 68% win, 2.0R, +$2,800 profit
+Asia: 35% win, 0.9R, -$800 profit
+NY: 48% win, 1.2R, +$400 profit
+```
+
+**Obvious choice: Trade ONLY London.**
+
+## Session Characteristics by Timezone
+
+### London Session (08:00-16:30 GMT)
+- **Volatility**: HIGHEST
+- **Spreads**: 0.5-1.0 pip (tight)
+- **Best pairs**: EURUSD, GBPUSD, EURGBP
+- **Best strategy**: Breakouts, range trading
+- **Win rate potential**: 65-75%
+
+### New York Session (13:00-21:00 GMT)
+- **Volatility**: HIGH (but more volatile than London)
+- **Spreads**: 0.8-1.5 pips
+- **Best pairs**: EURUSD, USDJPY, USDCAD
+- **Best strategy**: Trend following, breakouts
+- **Win rate potential**: 50-60%
+
+### Asian Session (21:00 GMT - 08:00 GMT)
+- **Volatility**: LOW
+- **Spreads**: 1.0-2.0 pips (wider)
+- **Best pairs**: USDJPY, AUDUSD, NZDUSD
+- **Best strategy**: Breakouts (if you catch them)
+- **Win rate potential**: 35-50%
+
+## The Session + Pair Combination
+
+Your BEST trades happen when session + pair ALIGN.
+
+Example:
+- **London session + GBPUSD** = Perfect combination (highest volatility + tightest spreads)
+- **NY session + EURUSD** = Good combination
+- **Asia session + EURUSD** = Poor combination (low volatility)
+
+[Use Tradia's session-pair analysis](/dashboard/trade-analytics/overview) to find your TOP 3 combinations.
+
+Then ONLY trade those combinations.
+
+## The Specialist Strategy for Prop Trading
+
+Instead of trying to hit $1,000 profit/day from 8 hours of trading:
+
+**Target $500 profit from 2-3 hours of focused trading.**
+
+### Execution
+- Open market at 7:55 AM (London)
+- Trade until 11:30 AM (best 3.5 hours of London)
+- Close out all positions
+- Step away
+
+**Why this works**:
+- You're trading the highest-liquidity hours
+- You're trading your best setup type
+- Your win rate is 65%+
+- You're avoiding burnout
+
+[Schedule your trading hours in Tradia](/dashboard/trade-journal/journal) to lock yourself into consistent times.
+
+## The Psychology of Session Specialization
+
+When you ONLY trade London:
+- You're focused (no decision fatigue)
+- Your setups are clearer (you know what to expect)
+- Your win rate is high (you see the same patterns daily)
+- Your profits are consistent (same time = same results)
+
+When you trade all day:
+- You're exhausted (18-hour screen time)
+- Your setups are blurry (too many options)
+- Your win rate drops (tired decision-making)
+- Your profits are unpredictable
+
+## See Also
+
+* [London Session Forex Trading: The Best Currency Pairs & Times to Trade](/blog/london-session-forex-trading)
+* [Multi-Timeframe Trading for Prop Traders](/blog/mtf-trading-forex-strategy)
+* [Overtrading in Forex: How to Recognize and Fix This Deadly Habit](/blog/overtrading-forex-trader)
+
+## Conclusion
+
+You don't need to be a good all-day trader.
+
+You need to be an EXCELLENT 2-3 hour trader in your best session.
+
+[Analyze your sessions in Tradia](/dashboard/trade-analytics/overview), find your best window, and specialize.
+
+Your win rate (and profits) will triple.
+        `.trim(),
+    },
+
+    "drawdown-recovery-psychology": {
+        slug: "drawdown-recovery-psychology",
+        title: "Prop Trader Drawdown Recovery: How to Stay Disciplined When You're Down 8%",
+        excerpt: "When you're in a drawdown, desperation takes over. Learn the psychological framework to recover calmly and sustainably.",
+        date: "2026-02-08",
+        author: "Tradia Team",
+        category: "Psychology",
+        keywords: ["drawdown recovery", "losing streak", "drawdown management", "trading during losses", "psychological discipline"],
+        readTime: 10,
+        content: `
+# Prop Trader Drawdown Recovery: How to Stay Disciplined When You're Down 8%
+
+## The Drawdown Trap
+
+Day 8 of your evaluation:
+- You're down -6% (on a 10% max drawdown limit)
+- You have 22 days left
+- The firm expects +10% profit
+
+Desperation kicks in.
+
+Your normal 1% risk per trade becomes:
+- 1.5% "just this once"
+- 2% "to catch up"
+- 3% "I need to bounce back NOW"
+
+By day 15, you're at -10.2%. Disqualified.
+
+## The Recovery Psychology
+
+### Stage 1: Denial (-2% to -4%)
+"This is just a temporary drawdown. My system works. I'll bounce back."
+
+**Emotion**: Overconfidence → Confidence
+
+**Action**: Continue normal trading. Follow your plan.
+
+This is GOOD. Stick to 1% risk.
+
+### Stage 2: Frustration (-4% to -6%)
+"Why isn't my system working? Did I miss something?"
+
+**Emotion**: Frustration → Self-doubt
+
+**Action**: Don't change anything. Review your trades in [Tradia](/dashboard/trade-journal/journal). Are you following your rules?
+
+Most likely: You ARE following rules, and you're just unlucky.
+
+Unlucky streaks happen. They don't last forever.
+
+**DO NOT increase risk.**
+
+### Stage 3: Desperation (-6% to -8%)
+"I'm almost at my max drawdown. I HAVE to do something."
+
+**Emotion**: Panic → Desperation
+
+**Action**: This is when traders blow accounts.
+
+They increase risk to 2-3% thinking "bigger trades = faster recovery."
+
+**Fact**: Bigger trades = faster FAILURE.
+
+**What to do instead**:
+- Reduce position size to 0.5% (play it safe)
+- Only take your TOP 3 setups (ignore marginal ones)
+- Take a 1-day break (reset your mind)
+
+## The Statistical Reality
+
+After a -6% drawdown, here's what happens:
+
+- Traders who REDUCE risk: 65% recover to breakeven within 14 days
+- Traders who INCREASE risk: 12% recover (most blow up)
+
+[Track your drawdown behavior in Tradia](/dashboard/risk-management).
+
+Most traders increase risk during drawdowns. That's why they fail.
+
+## The Recovery Framework
+
+### Drawdown Stages and Actions
+
+| Drawdown | Action | Risk | Expected Recovery |
+| :--- | :--- | :--- | :--- |
+| 0% to -3% | Trade normally | 1% | 5-7 days |
+| -3% to -6% | Review trades, reduce risk | 0.75% | 7-10 days |
+| -6% to -8% | Take a break, tiny risk | 0.25% | 10-14 days |
+| -8%+ | STOP TRADING | 0% | Evaluation over |
+
+## The Psychological Anchor
+
+When you're in a drawdown, repeat this:
+
+**"I will recover through consistency, not heroics."**
+
+Consistency = small daily gains = compound recovery
+
+Heroics = big risky trades = 95% of the time, bigger losses
+
+[Use Tradia's drawdown tracker](/dashboard/risk-management) to monitor your drawdown level minute-by-minute.
+
+When it hits -5%, the app sends you a notification:
+
+**"Drawdown at -5%. Reduce position size to 0.5% risk."**
+
+This removes the emotion from the equation.
+
+## Real Example: The Recovery
+
+Trader A, Day 8, -6% drawdown:
+
+**Decision**: Reduce to 0.5% risk, trade ONLY best setups
+
+- Days 8-10: +0.3% (3 trades, 2W-1L at 0.5% risk)
+- Days 11-14: +0.8% (3 trades, 2W-1L at 0.5% risk)
+- Days 15-20: +1.5% (5 trades, 3W-2L at 0.75% risk)
+- Days 21-30: +2.0% (4 trades, 3W-1L at 1% risk)
+
+**Total**: Started -6%, ended +2.3% (passed evaluation)
+
+## See Also
+
+* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
+* [Why 95% of Prop Traders Fail](/blog/why-prop-traders-fail)
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+
+## Conclusion
+
+Drawdowns test your discipline, not your skill.
+
+Your system doesn't break at -6%. Your psychology does.
+
+[Monitor your drawdown psychology in Tradia](/dashboard/risk-management) to stay calm and recover sustainably.
+        `.trim(),
+    },
+
+    "prop-firm-daily-max-loss-rule": {
+        slug: "prop-firm-daily-max-loss-rule",
+        title: "The Daily Loss Limit Rule: How to Protect Yourself from Catastrophic Losses",
+        excerpt: "The 5% daily loss limit is non-negotiable. Learn why pros respect it and how to make it your superpower.",
+        date: "2026-02-09",
+        author: "Tradia Team",
+        category: "Risk Management",
+        keywords: ["daily loss limit", "daily drawdown rule", "stop loss", "prop firm rules", "risk management rules"],
+        readTime: 9,
+        content: `
+# The Daily Loss Limit Rule: How to Protect Yourself from Catastrophic Losses
+
+## The Rule
+
+**Maximum daily loss: 5% of account**
+
+On a $10,000 account: Max loss per day = $500
+
+Most traders treat this as a "guideline."
+
+Professional traders treat this as SACRED.
+
+## Why This Rule Exists
+
+### For the Firm
+Prevents catastrophic blowups. A trader can't turn $10k into $0 in one bad day.
+
+### For You
+Forces you to stop trading when you're in a bad headspace.
+
+## The Psychology of the Daily Loss Limit
+
+When you hit your daily loss limit:
+
+**Your brain is NOT in a trading state.**
+
+You're:
+- Frustrated
+- Desperate
+- Not thinking clearly
+- Likely to revenge trade
+
+**The rule forces you to stop.**
+
+This SAVES you from bigger losses.
+
+## How to Respect the Daily Loss Limit
+
+### Method 1: Manual Tracking
+[Create a daily checklist in Tradia](/dashboard/trade-journal/journal):
+
+```
+Monday, Feb 23
+Daily loss limit: $500 (5% of $10k account)
+Trades: 
+1. EURUSD: +$150 (account: -4 pips)
+2. GBPUSD: -$180 (account: -8 pips)
+3. USDJPY: +$200 (account: +12 pips)
+
+Current: +$170 profit. Safe zone.
+```
+
+### Method 2: Automated (Better)
+[Use Tradia's Risk Guard feature](/dashboard/risk-management):
+
+- Set your daily max loss limit
+- After each trade, Tradia updates your remaining loss capacity
+- When you hit 80% of limit: WARNING alert
+- When you hit 100% of limit: TRADING LOCKED (can't place new orders)
+
+This removes emotion entirely.
+
+## The Daily Loss Limit in Action
+
+### Scenario 1: Respecting the Rule (Smart)
+Day 5 of evaluation, you're down:
+- Trade 1: -$200
+- Trade 2: -$200
+- Trade 3: -100 (total -$500, at limit)
+
+**You stop trading.** Day ends down -$500 (5%).
+
+Day 6: You trade normally, make +$800 (8%).
+
+Net after 2 days: +$300 profit
+
+### Scenario 2: Ignoring the Rule (Dumb)
+Day 5, same as above:
+- Trade 1-3: -$500
+- **You ignore the limit**
+- Trade 4: -$250 (trying to recover)
+- Trade 5: -$400 (desperation)
+
+Day 5 total: -$1,150 (11.5% drawdown)
+
+You've now hit your MAX DRAWDOWN limit (usually 10%).
+
+Evaluation over. Failed.
+
+## The Two-Loss Rule
+
+Here's a secondary rule that prevents you hitting daily limits:
+
+**If you lose 2 trades in a row, stop trading for 60 minutes.**
+
+This breaks the revenge-trading cycle.
+
+In the 60-minute break:
+- Your emotions settle
+- You review what went wrong
+- You reset your mindset
+
+[Set 2-loss alerts in Tradia](/dashboard/trade-analytics/tilt) to enforce this rule.
+
+## Real Data
+
+Traders who NEVER hit daily loss limits:
+- 78% pass rate on evaluations
+- 85% continue profitably in funded accounts
+
+Traders who hit daily loss limits 1-2 times:
+- 32% pass rate on evaluations
+- Most blow up within 3 months
+
+Traders who exceed daily loss limits:
+- 4% pass rate
+- Almost 100% blow up immediately after evaluation
+
+## See Also
+
+* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
+* [Why 95% of Prop Traders Fail](/blog/why-prop-traders-fail)
+* [The Leverage Trap: Why Prop Traders Blow Accounts](/blog/prop-trader-leverage-trap)
+
+## Conclusion
+
+The daily loss limit isn't a rule to begrudge.
+
+It's your safeguard against catastrophic failures.
+
+[Enforce your daily loss limits automatically with Tradia](/signup).
+
+Never again exceed them.
+        `.trim(),
+    },
+
+    "prop-trader-pair-specialization": {
+        slug: "prop-trader-pair-specialization",
+        title: "Forex Pair Specialization for Prop Traders: Master One Pair, Trade All Sessions",
+        excerpt: "Trading 15 different pairs is a loser's game. Top prop traders master 1-2 pairs. Learn why specialization beats diversification.",
+        date: "2026-02-10",
+        author: "Tradia Team",
+        category: "Trading Strategy",
+        keywords: ["forex pairs", "currency pair trading", "EURUSD", "pair selection", "trading specialization"],
+        readTime: 10,
+        content: `
+# Forex Pair Specialization for Prop Traders: Master One Pair, Trade All Sessions
+
+## The Diversification Myth
+
+Most traders think: "Trade 15 pairs = 15x the opportunities"
+
+Reality: "Trade 15 pairs = 15x the confusion"
+
+When you trade EURUSD, GBPUSD, USDJPY, AUDUSD, EURGBP, NZDUSD, USDCAD, and 8 others:
+
+- You're not seeing clear patterns (each pair moves differently)
+- You're not developing intuition (you've only seen EURUSD 50 times, not 500 times)
+- Your win rate spreads across all pairs (some work, some don't)
+
+## The Specialization Advantage
+
+A trader who specializes in EURUSD ONLY:
+
+- Has seen 500+ EURUSD setups
+- Knows that EURUSD *trends* in London, *ranges* in Asia
+- Recognizes turning points faster
+- Has 65% win rate on EURUSD
+
+A trader who trades 15 pairs:
+
+- Has seen 30-40 setups per pair
+- Doesn't recognize patterns yet
+- Has 42% win rate average across pairs
+- Feels like they lack edge
+
+**Specialization = Mastery. Diversification = Mediocrity.**
+
+## The Specialization Framework
+
+### Step 1: Pick ONE Pair (1 week)
+
+Choose a pair you feel "drawn to":
+- EURUSD (most liquid, easiest to learn)
+- GBPUSD (volatile, big moves)
+- USDJPY (trends strongly, fewer false breakouts)
+
+Trade ONLY this pair for 1 week.
+
+### Step 2: Trade ONLY This Pair (4 weeks)
+
+For the next month, trade ONLY your chosen pair.
+
+Take 50+ trades on this pair alone.
+
+[Use Tradia to tag all trades by pair](/dashboard/trade-journal/journal).
+
+### Step 3: Analyze Your Edge (Week 6)
+
+[Check Tradia's pair analysis](/dashboard/trade-analytics/patterns):
+
+- What's your win rate on this pair?
+- What setups work best?
+- What times of day work best?
+- Which sessions are most profitable?
+
+### Step 4: Master This Pair (Months 2-3)
+
+You've now identified:
+- Your 3 best setups on this pair
+- Your best trading time
+- Your best session
+- Your winning personality type
+
+Now you're SPECIALIZED.
+
+Your win rate: 65%+
+Your average R: 2.0+
+Your monthly profit: +8-12%
+
+## The EURUSD Specialization Example
+
+A trader decides to master EURUSD:
+
+**Month 1**:
+- Takes 50 EURUSD trades
+- Win rate: 48%
+- Average R: 1.4
+- Monthly profit: +3.2%
+
+**Month 2**:
+- Now knows: "My best setups are breakouts at 4H support levels"
+- Ignores other setup types
+- Takes 35 EURUSD trades (higher quality)
+- Win rate: 62%
+- Average R: 2.1
+- Monthly profit: +8.5%
+
+**Month 3**:
+- Now knows: "My best time is London session"
+- Only trades 8 AM - 12 PM
+- Takes 25 EURUSD trades (ultra-focused)
+- Win rate: 72%
+- Average R: 2.3
+- Monthly profit: +10.8%
+
+**Result**: Month 1 vs Month 3 = 3x more profit, 1/2 the trades, much less stress.
+
+## When to Add a Second Pair
+
+Only after you've hit:
+- 65%+ win rate on pair #1
+- 2.0+ average R on pair #1
+- 8+ consecutive profitable weeks
+
+Then add ONE more pair. Specialize in it for 4 weeks.
+
+Now you have:
+- Pair A: 65% win rate, 2.0R
+- Pair B: 60% win rate, 1.8R
+- Combined: 62% win rate, 1.9R
+
+This is ELITE trading.
+
+## The Pair Selection by Volatility
+
+If you like **big moves**:
+- GBPUSD (most volatile)
+- EURGBP (cross pair volatility)
+
+If you like **trending pairs**:
+- USDJPY (trends longer)
+- EURUSD (balanced trend/range)
+
+If you like **breakout trading**:
+- EURUSD (clean breakouts)
+- AUDUSD (strong breakouts)
+
+If you like **range trading**:
+- USDJPY (ranges predictably)
+- NZDUSD (tight ranges)
+
+[Filter your trades by pair volatility preference in Tradia](/dashboard/trade-analytics/overview).
+
+## See Also
+
+* [Multi-Timeframe Trading for Prop Traders](/blog/mtf-trading-forex-strategy)
+* [Forex Trading Session Optimization](/blog/forex-session-trade-optimization)
+* [Overtrading in Forex: How to Recognize and Fix This Deadly Habit](/blog/overtrading-forex-trader)
+
+## Conclusion
+
+Master one pair before you trade two.
+
+Specialize before you diversify.
+
+[Track your per-pair statistics in Tradia](/dashboard/trade-analytics/patterns) to identify your specialty pair.
+
+Then become the world's expert on it.
+
+Your profits will reflect that expertise.
+        `.trim(),
+    },
 };
+
