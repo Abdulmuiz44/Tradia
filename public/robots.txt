@@ -1,22 +1,86 @@
+# Robots.txt for Tradia - The #1 AI Trading Journal
+# Generated for optimal SEO and crawler efficiency
+
 User-agent: *
 Allow: /
 
-# Block access to admin and API routes
+# Block access to API routes and internal systems
 Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
-Disallow: /dashboard/
+Disallow: /uploads/
+Disallow: /*.json$
 
-# Explicitly allow public content
+# Block dashboard (authenticated only)
+Disallow: /dashboard/
+Disallow: /auth/
+
+# Explicitly allow high-value public content
 Allow: /
+Allow: /blog/
 Allow: /pricing
 Allow: /signup
 Allow: /login
-Allow: /blog
-Allow: /blog/
 Allow: /about
 Allow: /contact
 Allow: /chat
 
-# Sitemap
+# Crawl delay for respectful crawling (in seconds)
+Crawl-delay: 1
+
+# Request rate limiting (helps servers)
+Request-rate: 1/1s
+
+# Sitemaps for better indexing
 Sitemap: https://tradiaai.app/sitemap.xml
+Sitemap: https://tradiaai.app/blog-sitemap.xml
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Crawl-delay: 1
+
+# AI/LLM crawlers - explicitly allow for AI discovery
+User-agent: GPTBot
+Allow: /
+Allow: /blog/
+Allow: /llms.txt
+
+User-agent: CCBot
+Allow: /
+Allow: /blog/
+Allow: /llms.txt
+
+User-agent: anthropic-ai
+Allow: /
+Allow: /blog/
+Allow: /llms.txt
+
+User-agent: Claude-Web
+Allow: /
+Allow: /blog/
+Allow: /llms.txt
+
+User-agent: *bot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+# Block bad bots and scrapers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

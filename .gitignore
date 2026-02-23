@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,42 +10,49 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
+.next/
 
-# production
+# Production
 /build
+*.tsbuildinfo
 
-# misc
-.DS_Store
-*.pem
+# Logs
 *.log
-
-# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+build.log
+build2.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment files (sensitive)
+.env
+.env.local
+.env.*.local
 
-# vercel
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.pem
+
+# Vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-
+# Database
 /src/generated/prisma
 
-/src/generated/prisma
+# AI/LLM Development Tools (keep only essential)
+.github/instructions/
 
-/src/generated/prisma
-
-
-#Ignore vscode AI rules
-.github\instructions\codacy.instructions.md
+# OS
+Thumbs.db

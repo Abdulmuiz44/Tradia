@@ -1,0 +1,238 @@
+# Tradia - The #1 AI Trading Journal for Serious Forex & Prop Firm Traders
+
+## Project Overview
+
+Tradia is a cutting-edge AI-powered trading journal platform designed specifically for professional and aspiring forex traders, prop firm traders, and funded account holders. We combine trade tracking, advanced analytics, and machine learning to help traders identify patterns, eliminate emotional trading, optimize risk management, and accelerate their path to profitability.
+
+## Target Audience
+
+- **Professional Forex Traders**: Track multiple accounts, sessions, and pairs with institutional-grade analytics
+- **Prop Firm Traders**: Pass evaluations with data-driven strategies and compliance tracking
+- **Funded Account Holders**: Manage drawdown, optimize session performance, and maintain discipline
+- **Trading Educators**: Provide students with AI-powered insights and accountability tools
+- **Retail Traders**: Upgrade from spreadsheets to intelligent, automated trade analysis
+
+## Core Features
+
+### AI-Powered Trade Analysis
+- **Automated Pattern Recognition**: Machine learning detects recurring mistakes, psychological patterns, and hidden correlations in your trading history
+- **Emotional State Tracking**: Quantify confidence, tilt, hesitation, and FOMO to correlate with win rates and P&L
+- **Conversational AI Coach**: Chat with your journal - ask natural questions like "Show me my worst pairs this month" and get instant insights
+- **Risk Quantification**: Automatically calculates R-multiples, position sizing, and risk of ruin metrics
+
+### Trade Tracking & Management
+- **CSV Import**: Supports all brokers (MT4, MT5, cTrader, etc.) - simply export and import
+- **Smart Tagging**: Auto-categorizes trades by session (London, New York, Tokyo), currency pair, and setup type
+- **Performance Metrics**: Win rate, profit factor, average win/loss, Sharpe ratio, and custom metrics
+- **Trade Calendar**: Visual overview of profitable/losing days, drawdown periods, and recovery patterns
+- **Multi-Account Support**: Manage multiple trading accounts and funding challenges simultaneously
+
+### Session & Pair Analysis
+- **Session Performance**: Breakdown profitability by London, New York, Tokyo, and Asian sessions
+- **Pair Specialization**: Identify which currency pairs perform best with your strategy
+- **Time-Based Patterns**: Discover if you trade better at specific times or under specific market conditions
+- **Day-of-Week Analytics**: Detect if you lose more on Fridays, Mondays, or specific days
+
+### Risk Management Tools
+- **Position Sizing Calculator**: Auto-calculates lot sizes based on account size, risk %, and stop loss
+- **Risk Guard**: Locks you out of trading if you hit daily or monthly drawdown limits (psychological guardrail)
+- **Drawdown Management**: Visualize drawdown curves and recovery requirements
+- **Kelly Criterion Calculator**: Optimize position size based on your win rate and R-multiple
+
+### Journal & Reflection
+- **Daily Trade Diary**: Log trade setups, execution notes, and emotional state
+- **Weekly Reviews**: Automated summaries of profitability, repeating mistakes, and adjustments
+- **Monthly Performance Reviews**: Long-term trend analysis and trading evolution
+- **Trading Psychology Insights**: AI-detected patterns like revenge trading, overtrading, hesitation, and tilt
+
+### Prop Firm Features
+- **Evaluation Rules Tracker**: Stay compliant with FTMO, TradingView, E8, and other prop firm rules
+- **Drawdown Management**: Track maximum drawdown against firm limits
+- **Daily Loss Limit Monitoring**: Real-time alerts when approaching daily loss limits
+- **Profit Target Tracking**: Monitor progress toward evaluation profit targets
+- **Challenge Comparison**: Compare performance across multiple funded challenges
+
+### Advanced Analytics
+- **Trade Analytics Dashboard**: Comprehensive view of P&L, win rate, best/worst trades, and performance trends
+- **Pattern Matching**: AI identifies similar setups and compares their outcomes
+- **Tilt Detection**: Behavioral analysis flags when you're likely tilting based on position sizing and frequency spikes
+- **Edge Quantification**: Statistical analysis of your strategy's profitability and consistency
+- **Forecast Charts**: Projected equity curves and drawdown scenarios based on historical data
+
+### Mobile & Cross-Device
+- **Fully Responsive Design**: Seamlessly access your journal on mobile, tablet, and desktop
+- **Progressive Web App (PWA)**: Install as an app on any device - works offline
+- **Real-Time Sync**: All devices stay synchronized across your trading day
+- **Mobile-First UI**: Optimized for traders on the move or trading from multiple locations
+
+## Technology Stack
+
+### Frontend
+- **Framework**: Next.js 14+ (React, TypeScript, SSR/SSG)
+- **Styling**: Tailwind CSS, custom CSS modules
+- **State Management**: React Context, custom hooks
+- **Charting**: Recharts, Chart.js for trade analytics
+- **UI Components**: Shadcn/ui, Radix UI primitives
+- **Performance**: Image optimization, code splitting, lazy loading
+
+### Backend
+- **API**: Next.js API routes, RESTful architecture
+- **Database**: Supabase (PostgreSQL) with row-level security
+- **Authentication**: Supabase Auth (JWT-based)
+- **File Storage**: Supabase Storage for uploads and avatar management
+- **Real-time**: Supabase Realtime for instant updates
+
+### AI & ML
+- **LLM Integration**: Mistral AI for conversational insights
+- **Pattern Recognition**: Statistical analysis, anomaly detection
+- **Recommendation Engine**: Trade setup matching and optimization suggestions
+- **Natural Language Processing**: Extract trade insights from user queries
+
+### Deployment & Infrastructure
+- **Hosting**: Vercel (Edge Functions, auto-scaling)
+- **Database**: Supabase Cloud (managed PostgreSQL)
+- **Analytics**: Vercel Analytics, PostHog for user behavior
+- **Error Tracking**: Sentry for error monitoring
+- **Performance**: Next.js SWC compiler, gzip compression
+
+## Business Model
+
+### Free Tier (Forever)
+- CSV trade import (up to 100 trades)
+- Basic performance metrics (win rate, P&L)
+- 30 days of trade history
+- Mobile responsive access
+- Dashboard overview
+
+### Pro Tier ($9/month or $79/year)
+- Unlimited CSV imports
+- AI-powered trade analysis
+- Conversational AI coach
+- Unlimited trade history
+- Advanced session & pair analytics
+- Position sizing calculator
+- Pattern matching
+- Custom tags and rules
+
+### Plus Tier ($19/month or $169/year)
+- Everything in Pro, plus:
+- MT4/MT5 API integration (direct broker sync)
+- Prop firm evaluation tracking
+- Risk Guard (drawdown limits)
+- Weekly automated summaries
+- Priority support
+- Export reports (PDF, CSV)
+- Team collaboration (invite mentors/partners)
+
+## Competitive Advantages
+
+1. **AI First**: Only trading journal with conversational AI analysis built-in
+2. **Prop Firm Focused**: Specific tools for evaluation challenges (drawdown tracking, rules compliance)
+3. **Behavioral Science**: Emotional state tracking correlated with trading outcomes
+4. **Session Specialization**: Unique analytics for different trading sessions
+5. **Affordable**: Cheaper than Edgewonk, more powerful than TradingView journaling
+6. **Modern UX**: Beautiful, responsive interface vs. clunky competitors
+7. **Mobile First**: Trade from anywhere, not just your desk
+8. **Privacy First**: Row-level security ensures traders' sensitive data is protected
+
+## Use Cases
+
+### Professional Prop Trader
+- Pass FTMO or similar evaluation on first attempt
+- Optimize strategy based on session performance
+- Maintain discipline with Risk Guard features
+- Track multiple funded challenges simultaneously
+- Export reports for fund managers
+
+### Aspiring Funded Trader
+- Track progress toward $50K funded account
+- Identify edge before risking real capital
+- Learn from AI analysis of mistakes
+- Build consistent, measurable improvement
+- Reduce account blowup risk
+
+### Forex Educator
+- Track student progress on platform
+- Provide accountability with automated summaries
+- Analyze why students succeed or fail
+- Create data-backed trading strategies
+- Share insights with students (team collaboration)
+
+### Retail Trader Scaling Up
+- Graduate from Excel/Google Sheets
+- Discover hidden patterns in 500+ historical trades
+- Optimize position sizing scientifically
+- Reduce emotional trading through quantification
+- Build sustainable income stream
+
+## Market Opportunity
+
+- **Global Forex Market**: $1.5 trillion daily trading volume
+- **Prop Firm Industry**: $50+ billion AUM across firms
+- **Trading Education**: $2+ billion annual market
+- **Target TAM**: 500K+ serious traders globally seeking professional tools
+- **Current Competitors**: Edgewonk (outdated, limited AI), TradingView (broad but shallow journaling), manual spreadsheets
+
+## Roadmap
+
+### Q1 2026
+- [ ] Broker API integrations (cTrader, Interactive Brokers)
+- [ ] Team collaboration (mentor invitations, result sharing)
+- [ ] Advanced reporting (PDF exports, equity curves)
+- [ ] Mobile app (iOS, Android native)
+
+### Q2 2026
+- [ ] Performance prediction (forecast future outcomes)
+- [ ] Strategy templates (pre-built trading strategies)
+- [ ] Community features (leaderboards, peer learning)
+- [ ] Enterprise plan (agencies, prop firms, hedge funds)
+
+### Q3 2026
+- [ ] Discord/Slack bot integration
+- [ ] Options trading support
+- [ ] Crypto trading analytics
+- [ ] Social trading (share strategies anonymously)
+
+### Q4 2026
+- [ ] Automated backtesting
+- [ ] Machine learning strategy optimizer
+- [ ] Global expansion (multi-language)
+- [ ] Enterprise SLA guarantees
+
+## Getting Started
+
+### For Traders
+1. Visit https://tradiaai.app
+2. Sign up with email (free forever)
+3. Upload your trade history via CSV
+4. Get instant AI insights and join 10K+ traders improving their edge
+
+### For Developers
+1. Clone: `git clone https://github.com/abdulmuiz44/tradia`
+2. Install: `pnpm install`
+3. Setup: `cp .env.example .env.local` and add Supabase credentials
+4. Run: `pnpm dev` - then open http://localhost:3000
+5. Deploy: `git push` to Vercel automatically
+
+### For Contributors
+- We welcome traders, engineers, and designers
+- Star the repo, open issues, submit PRs
+- Join our Discord for roadmap discussions
+
+## Contact & Support
+
+- **Website**: https://tradiaai.app
+- **Email**: support@tradiaai.app
+- **Twitter**: @tradia_app
+- **Blog**: https://tradiaai.app/blog
+- **Docs**: https://tradiaai.app/docs
+
+## License
+
+MIT License - See LICENSE file in repository
+
+---
+
+**Tradia: Where Data Meets Trading Excellence**
+
+Stop guessing. Start analyzing. Build your edge with AI.

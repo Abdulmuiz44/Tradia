@@ -17,11 +17,13 @@ import TrialBanner from "@/components/TrialBanner";
 // SEO Metadata
 export const metadata: Metadata = {
   title: "Tradia | The #1 AI Trading Journal for Serious Forex & Prop Firm Traders",
-  description: "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Track drawdown, analyze London/NY sessions, and scale your funded journey with institutional-grade analytics.",
-  keywords: "Forex trading journal, Prop firm trade tracker, AI trading coach, trade analysis, funded trader analytics, drawdown management, session performance, risk management",
+  description: "The #1 AI Trading Journal for serious Forex & Prop Firm traders. Track drawdown, analyze London/NY sessions, and scale your funded journey with institutional-grade analytics. 10,000+ traders improving their edge daily.",
+  keywords: "Forex trading journal, Prop firm trade tracker, AI trading coach, trade analysis, funded trader analytics, drawdown management, session performance, risk management, FTMO evaluation, trading psychology, position sizing",
   authors: [{ name: "Tradia Team" }],
   creator: "Tradia",
   publisher: "Tradia",
+  applicationName: "Tradia",
+  category: "Finance",
   formatDetection: {
     email: false,
     address: false,
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL('https://tradiaai.app'),
   alternates: {
-    canonical: '/',
+    canonical: 'https://tradiaai.app',
   },
   icons: {
     icon: [

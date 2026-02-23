@@ -3,7 +3,7 @@ const nextConfig = {
   // Fix for Node 22 compatibility - disable custom generateBuildId
   generateBuildId: undefined,
 
-  // Security headers
+  // Security and SEO headers
   async headers() {
     return [
       {
@@ -11,7 +11,7 @@ const nextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
@@ -24,6 +24,10 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'X-UA-Compatible',
+            value: 'IE=edge',
           },
         ],
       },
