@@ -19,6 +19,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         description: post.excerpt,
         keywords: post.keywords,
         authors: [{ name: post.author || "Tradia Team" }],
+        robots: {
+            index: true,
+            follow: true,
+            nocache: false,
+            googleBot: {
+                index: true,
+                follow: true,
+                noimageindex: false,
+            },
+        },
         openGraph: {
             title: post.title,
             description: post.excerpt,

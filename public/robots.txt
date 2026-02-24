@@ -54,26 +54,46 @@ User-agent: GPTBot
 Allow: /
 Allow: /blog/
 Allow: /llms.txt
+Allow: /blog/**
 
 User-agent: CCBot
 Allow: /
 Allow: /blog/
 Allow: /llms.txt
+Allow: /blog/**
 
 User-agent: anthropic-ai
 Allow: /
 Allow: /blog/
 Allow: /llms.txt
+Allow: /blog/**
 
 User-agent: Claude-Web
 Allow: /
 Allow: /blog/
 Allow: /llms.txt
+Allow: /blog/**
+
+User-agent: Perplexity
+Allow: /
+Allow: /blog/
+Allow: /llms.txt
+Allow: /blog/**
+
+User-agent: FacebookBot
+Allow: /
+Allow: /blog/
+Allow: /llms.txt
+
+User-agent: TwitterBot
+Allow: /
+Allow: /blog/
 
 User-agent: *bot
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Allow: /blog/
 
 # Block bad bots and scrapers
 User-agent: AhrefsBot

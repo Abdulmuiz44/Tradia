@@ -32,6 +32,19 @@ const nextConfig = {
         ],
       },
       {
+        source: '/blog/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
         source: '/api/(.*)',
         headers: [
           {
