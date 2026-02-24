@@ -6,22 +6,27 @@ interface MarkdownRendererProps {
 
 /**
  * Server-side markdown renderer for SEO optimization
- * Renders markdown on the server, not in the browser
- * This allows search engines to see the full blog content
+ * Renders markdown to semantic HTML using markdown-it library
+ * The HTML is rendered on the server so search engines see all content
  */
 export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const md = new MarkdownIt({
         html: true,
         linkify: true,
         typographer: true,
+        breaks: true,
     });
 
     const html = md.render(content);
 
     return (
-        <div
-            className="prose prose-gray dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: html }}
-        />
+        <article className="prose prose-gray dark:prose-invert max-w-none">
+            <div
+                dangerouslySetInnerHTML={{
+                    __html: html,
+                }}
+                suppressHydrationWarning
+            />
+        </article>
     );
 }

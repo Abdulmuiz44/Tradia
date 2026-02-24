@@ -3,6 +3,9 @@ import { posts } from "../content";
 import MarkdownRenderer from "@/components/blog/MarkdownRendererServer";
 import { Metadata } from "next";
 
+// Force static generation for all blog posts
+export const revalidate = 86400; // Revalidate every 24 hours (ISR)
+
 // Generate static params for all blog posts (pre-render at build time)
 export async function generateStaticParams() {
     return Object.keys(posts).map((slug) => ({

@@ -6,6 +6,15 @@ export const metadata: Metadata = {
     title: "Tradia Blog — AI Trading Journal & Analytics Insights",
     description: "Expert articles on automated trading analysis, psychology, risk management, and how to use AI to become a profitable trader. Read 48+ in-depth trading guides.",
     keywords: ["trading blog", "ai trading", "forex education", "trading psychology", "risk management", "prop firm evaluation", "trading journal"],
+    robots: {
+        index: true,
+        follow: true,
+        nocache: false,
+        googleBot: {
+            index: true,
+            follow: true,
+        },
+    },
     openGraph: {
         title: "Tradia Blog — AI Trading Journal & Analytics Insights",
         description: "Expert articles on trading psychology, risk management, and how to become a profitable trader with AI analysis.",
