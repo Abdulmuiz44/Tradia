@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { posts } from "../content";
+import { posts } from "../../blog/content";
 
 /**
  * Dynamic JSON Index for all blog posts.
- * Provides a structured, machine-readable feed of all content.
- * Helps AI crawlers and search indexers ingest the entire blog structure in one request.
+ * Moved to API route to avoid folder-based routing conflict with /blog page.
  */
 export async function GET() {
     const postList = Object.values(posts)

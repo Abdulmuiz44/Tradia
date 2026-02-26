@@ -156,15 +156,15 @@ const nextConfig = {
     ];
   },
 
-  // Rewrites for API routes (if needed)
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: '/api/:path*',
-  //       destination: '/api/:path*',
-  //     },
-  //   ];
-  // },
+  // Rewrites for API routes and preserving old URL structures
+  async rewrites() {
+    return [
+      {
+        source: '/blog/index.json',
+        destination: '/api/blog-index',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
