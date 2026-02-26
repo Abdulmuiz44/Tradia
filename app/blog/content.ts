@@ -435,56 +435,65 @@ Every trader has a best session. Find yours with [Tradia](/pricing), then make i
     // Tier 3: Long-Tail & Specific Question Content (50+ total)
     "overtrading-forex-trader": {
         slug: "overtrading-forex-trader",
-        title: "Overtrading in Forex: How to Recognize and Fix This Deadly Habit",
-        excerpt: "Overtrading destroys accounts faster than bad strategy. Learn the warning signs and proven techniques to trade less and earn more.",
-        date: "2025-09-20",
+        title: "Overtrading as a Forex Trader: How to Stop Killing Your Account",
+        excerpt: "Overtrading is the silent killer of prop accounts. Learn the causes, warning signs, and how to stop before you blow your evaluation.",
+        date: "2026-02-11",
         author: "Tradia Team",
         category: "Psychology",
-        keywords: ["overtrading forex", "taking too many trades", "trade frequency", "discipline trading"],
-        readTime: 8,
+        keywords: ["overtrading", "forex psychology", "risk management", "prop trading mistakes"],
+        readTime: 10,
         content: `
-# Overtrading in Forex: How to Recognize and Fix This Deadly Habit
+# Overtrading as a Forex Trader: How to Stop Killing Your Account
 
-More trades ≠ More profit. In fact, it's the opposite.
+## Key Takeaways
+- **Overtrading is a psychological trap** triggered by dopamine seek or revenge trading.
+- **Signs include** trading outside sessions, ignoring setups, or increasing size after losses.
+- **The fix** involves strict session management, daily loss limits, and automated journal tracking.
+- **Tradia's tools** can detect overtrading patterns before they blow your account.
 
-## Signs You're Overtrading
+## The Silent Killer
+Overtrading isn't just "trading too much." It's the act of taking trades that **don't have an edge**. 
 
-* **Taking marginal setups**: You trade when conditions aren't ideal.
-* **Trading every hour**: Your edge requires fewer, higher-quality trades.
-* **Chasing FOMO**: You see a move and jump in late.
-* **Revenge trading**: Opening a position to recover a loss immediately.
+In the prop firm world, overtrading is the number one reason traders lose their evaluations within the first week.
 
-## The Math of Overtrading
+## Why We Overtrade: The Neurology
+When you win a trade, your brain releases dopamine. You want more. This leads to seeking "mirage setups" that aren't actually in your plan.
 
-If you take 100 trades with a 50% win rate and 1.5R average:
-* Profit = (50 × 1.5R) - (50 × 1R) = 25R
+When you lose, your brain enters a "fight or flight" mode (Tilt). You want to win back the money immediately. This is **revenge trading**.
 
-If you take 30 high-quality trades with a 60% win rate and 2.5R average:
-* Profit = (18 × 2.5R) - (12 × 1R) = 33R
+## 5 Warning Signs You're Overtrading
+1. **Trading because you're bored**: The market is quiet, but you "feel" like something is about to happen.
+2. **Ignoring your session**: You're trading EURUSD at 9 PM EST (Asia session) when your edge is in London.
+3. **Revenge trading**: You lost $200 and immediately open a new position to "get it back."
+4. **Micro-managing**: You're staring at the 1-minute chart for hours, looking for any reason to enter.
+5. **Increasing size**: You're taking bigger risks to compensate for smaller losses.
 
-**Same account risk, higher profit, less stress.**
+## How to Stop Overtrading Forever
 
-## How to Fix Overtrading
+### 1. The "2-Trade Rule"
+If you lose 2 trades in a row, you are **DONE** for the day. No exceptions. This prevents the tilt-spiral.
 
-### Step 1: Set a Trade Limit
-"I will take maximum 5 trades per day."
+### 2. Strict Session Specialization
+Only trade during your high-probability sessions (e.g., London or New York). Close your platform when the session ends.
 
-### Step 2: Define Your Setup
-Write down EXACTLY what triggers your edge. If it's not that setup, you don't trade.
+### 3. Automated Accountability
+[Use Tradia's Risk Management tools](/dashboard/risk-management) to set hard stops for your daily trade count.
 
-### Step 3: Use [Tradia](/pricing) to Audit
+## FAQ: Frequently Asked Questions
 
-Tag every trade as "Setup-Matched" or "Random." You'll be shocked how many are random.
+### What is the difference between high-frequency trading and overtrading?
+High-frequency trading follows a strict mathematical edge with thousands of trades. Overtrading is taking trades **without** a proven edge or outside your plan.
 
-## See Also
+### Can I pass a prop evaluation with 20 trades a day?
+Unless you are a scalper with a very high win rate, 20 trades a day often indicates overtrading. Most successful prop traders take 1-3 high-quality setups daily.
 
-* [Mastering Trading Psychology: How to Eliminate Tilt with Data](/blog/mastering-trading-psychology-eliminate-tilt)
-* [Risk Management 101: The Hidden Math Behind Profitable Traders](/blog/risk-management-101-hidden-math)
-* [Prop Firm Trading Rules: Complete Compliance Guide for FTMO, MyFundedFX & Others](/blog/prop-firm-trading-rules-compliance)
+### How does Tradia help with overtrading?
+[Tradia's Session Analyzer](/dashboard/trade-analytics/overview) shows you exactly which hours you lose money in. Usually, it's the "extra" trades outside your main session that kill your profit factor.
 
-## The Remedy
+## Conclusion
+Overtrading is a habit that can be broken with data and discipline. 
 
-Quality beats quantity, always. [Track your trades](/pricing) and watch your profitability improve as your trade count decreases.
+Stop being a "gambler" and start being a professional. [Sign up for Tradia today](/signup) and let the data protect your capital.
         `.trim(),
     },
 
