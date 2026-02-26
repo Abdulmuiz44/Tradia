@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { posts } from "./content";
 import { Metadata } from "next";
+import BlogSearch from "@/components/blog/BlogSearch";
 
 export const metadata: Metadata = {
     title: "Tradia Blog — AI Trading Journal & Analytics Insights | 37+ Expert Guides",
@@ -155,6 +156,9 @@ export default function BlogIndex() {
                         guides to help you pass evaluations and build sustainable profitability.
                     </p>
                 </div>
+
+                {/* Real-time Blog Search */}
+                <BlogSearch />
 
                 {/* Category Filter Tabs */}
                 <nav
