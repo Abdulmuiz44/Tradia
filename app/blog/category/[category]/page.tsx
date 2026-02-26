@@ -57,6 +57,9 @@ export async function generateMetadata({ params }: { params: { category: string 
         },
         alternates: {
             canonical: `${site}/blog/category/${params.category}`,
+            types: {
+                "application/json": "https://tradiaai.app/blog/index.json",
+            },
         },
     };
 }
@@ -92,11 +95,27 @@ export default function CategoryPage({ params }: { params: { category: string } 
         })),
     };
 
+    // ItemList schema for richer structure
+    const itemListSchema = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": categoryPosts.map((post, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "url": `https://tradiaai.app/blog/${post.slug}`,
+            "name": post.title,
+        })),
+    };
+
     return (
         <>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
             />
             <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto bg-white dark:bg-transparent">
                 <Breadcrumbs
@@ -129,8 +148,8 @@ export default function CategoryPage({ params }: { params: { category: string } 
                             key={cat}
                             href={`/blog/category/${categoryToSlug(cat)}`}
                             className={`text-xs uppercase tracking-wider px-4 py-2 rounded-full border transition-all ${cat === category
-                                    ? "border-blue-500 dark:border-indigo-500 bg-blue-50 dark:bg-indigo-500/10 text-blue-600 dark:text-indigo-400 font-bold"
-                                    : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-blue-400 dark:hover:border-indigo-500 hover:text-blue-600 dark:hover:text-indigo-400"
+                                ? "border-blue-500 dark:border-indigo-500 bg-blue-50 dark:bg-indigo-500/10 text-blue-600 dark:text-indigo-400 font-bold"
+                                : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-blue-400 dark:hover:border-indigo-500 hover:text-blue-600 dark:hover:text-indigo-400"
                                 }`}
                         >
                             {cat}

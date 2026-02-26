@@ -53,6 +53,9 @@ export const metadata: Metadata = {
     },
     alternates: {
         canonical: "https://tradiaai.app/blog",
+        types: {
+            "application/json": "https://tradiaai.app/blog/index.json",
+        },
     },
 };
 
@@ -114,12 +117,30 @@ export default function BlogIndex() {
         })),
     };
 
+    // ItemList schema for rich list results
+    const itemListSchema = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": postList.map((post, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "url": `https://tradiaai.app/blog/${post.slug}`,
+            "name": post.title,
+        })),
+    };
+
     return (
         <>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify(blogCollectionSchema),
+                }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(itemListSchema),
                 }}
             />
             <main className="min-h-screen py-16 px-6 max-w-6xl mx-auto bg-white dark:bg-transparent">
