@@ -10,6 +10,7 @@ import { Menu, Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
+import TradiaLogo from "@/components/TradiaLogo";
 
 /**
  * Navbar redesigned to match the dark/glass aesthetic used across the app pages.
@@ -22,7 +23,7 @@ import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
  * Drop this file in place of your previous Navbar component.
  */
 
-export default function Navbar() {
+export default function Navbar({ className }: { className?: string }) {
     const pathname = usePathname();
     const { theme, setTheme, resolvedTheme } = useTheme();
     const { data: session } = useSession();
@@ -83,23 +84,16 @@ export default function Navbar() {
 
     return (
         <header
-            className="w-full px-6 py-3 sticky top-0 z-50 bg-white dark:bg-[#0f1319] border-b border-gray-200 dark:border-white/10"
+            className={`w-full px-6 py-3 sticky top-0 z-50 bg-white dark:bg-[#0f1319] border-b border-gray-200 dark:border-white/10 ${className || ""}`}
             aria-label="Main navigation"
         >
             <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
                 {/* Brand */}
                 <div className="flex items-center gap-3">
-                    <Link href="/" className="flex items-center gap-3 no-underline" aria-label="Tradia Home">
-                        <Image
-                            src="/TRADIA-LOGO.png"
-                            alt="Tradia logo"
-                            width={48}
-                            height={48}
-                            className="h-10 w-auto select-none sm:h-12"
-                            priority
-                        />
+                    <Link href="/" className="flex items-center gap-3 no-underline group" aria-label="Tradia Home">
+                        <TradiaLogo size="sm" className="text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110" />
                         <div className="hidden sm:block">
-                            <div className="text-[12px] sm:text-sm text-black dark:text-gray-300 -mt-0.5 font-medium">
+                            <div className="text-[12px] sm:text-sm text-black dark:text-gray-300 -mt-0.5 font-bold tracking-tight">
                                 AI Trading Performance
                             </div>
                         </div>
@@ -129,7 +123,7 @@ export default function Navbar() {
                         <button
                             onClick={toggleTheme}
                             aria-label="Toggle theme"
-                            className="p-2 rounded-md transition text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                            className="p-2 rounded-md transition text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10"
                         >
                             {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
@@ -143,27 +137,27 @@ export default function Navbar() {
                         )}
 
                         {/* Auth links */}
-                         {authLinks.map(({ label, href, onClick }) => {
-                             const isCta = label === "Get Started";
-                             return (
-                                 <Link
-                                     key={label}
-                                     href={href}
-                                     onClick={(e) => {
-                                         if (onClick) {
-                                             e.preventDefault();
-                                             onClick();
-                                         }
-                                     }}
-                                     className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${isCta
-                                         ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                                         : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
-                                         }`}
-                                 >
-                                     {label}
-                                 </Link>
-                             );
-                         })}
+                        {authLinks.map(({ label, href, onClick }) => {
+                            const isCta = label === "Get Started";
+                            return (
+                                <Link
+                                    key={label}
+                                    href={href}
+                                    onClick={(e) => {
+                                        if (onClick) {
+                                            e.preventDefault();
+                                            onClick();
+                                        }
+                                    }}
+                                    className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${isCta
+                                        ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                                        : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
+                                        }`}
+                                >
+                                    {label}
+                                </Link>
+                            );
+                        })}
 
                         {/* Profile pill */}
                         {session && <CoachPill />}
@@ -171,19 +165,19 @@ export default function Navbar() {
                 </nav>
 
                 {/* Mobile: right controls */}
-                 <div className="md:hidden flex items-center gap-2">
-                     <button
-                         onClick={toggleTheme}
-                         aria-label="Toggle theme"
-                         className="p-2 rounded-md text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
-                     >
-                         {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-                     </button>
-                     {mounted && (
-                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/5 text-black dark:text-gray-100" title="Current theme">
-                             {(resolvedTheme || theme || 'system').toString()}
-                         </span>
-                     )}
+                <div className="md:hidden flex items-center gap-2">
+                    <button
+                        onClick={toggleTheme}
+                        aria-label="Toggle theme"
+                        className="p-2 rounded-md text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                    >
+                        {mounted && theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                    {mounted && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/5 text-black dark:text-gray-100" title="Current theme">
+                            {(resolvedTheme || theme || 'system').toString()}
+                        </span>
+                    )}
 
                     <button
                         onClick={() => setMenuOpen((s) => !s)}
@@ -198,24 +192,24 @@ export default function Navbar() {
             {/* Mobile dropdown */}
             {menuOpen && (
                 <div
-                    className="md:hidden mt-3 w-full bg-white dark:bg-[#0f1319] border-t border-gray-200 dark:border-white/10 shadow-lg"
+                    className="md:hidden mt-3 w-full bg-[#141920] border-t border-white/10 shadow-lg"
                     role="dialog"
                     aria-modal="true"
                 >
                     <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col gap-3">
                         {navLinks.map(({ label, href }) => (
-                             <Link
-                                 key={href}
-                                 href={href}
-                                 onClick={() => setMenuOpen(false)}
-                                 className={`text-base px-2 py-2 rounded-md transition-colors ${isActive(href)
-                                     ? "text-indigo-700 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-500/15"
-                                     : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
-                                     }`}
-                             >
-                                 {label}
-                             </Link>
-                         ))}
+                            <Link
+                                key={href}
+                                href={href}
+                                onClick={() => setMenuOpen(false)}
+                                className={`text-base px-2 py-2 rounded-md transition-colors ${isActive(href)
+                                    ? "text-indigo-700 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-500/15"
+                                    : "text-black dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
+                                    }`}
+                            >
+                                {label}
+                            </Link>
+                        ))}
 
                         <div className="flex flex-col gap-2 pt-2">
                             {authLinks.map(({ label, href, onClick }) => (
@@ -239,17 +233,17 @@ export default function Navbar() {
                             ))}
 
                             {session && (
-                                 <button
-                                     onClick={() => {
-                                         setMenuOpen(false);
-                                         signOut().catch(() => { });
-                                     }}
-                                     className="w-full text-left flex items-center gap-2 text-black dark:text-gray-200 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/10"
-                                 >
-                                     <LogOut size={16} />
-                                     <span>Sign out</span>
-                                 </button>
-                             )}
+                                <button
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        signOut().catch(() => { });
+                                    }}
+                                    className="w-full text-left flex items-center gap-2 text-black dark:text-gray-200 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/10"
+                                >
+                                    <LogOut size={16} />
+                                    <span>Sign out</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -295,11 +289,11 @@ function CoachPill() {
                 </button>
             )}
         >
-            <div className="p-2 bg-white dark:bg-zinc-900">
-                <Link href="/dashboard/profile" className="block px-3 py-2 text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10 rounded">
+            <div className="p-2 bg-white dark:bg-[#141920] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl">
+                <Link href="/dashboard/profile" className="block px-3 py-2 text-slate-700 dark:text-gray-100 hover:bg-slate-100 dark:hover:bg-white/10 rounded">
                     Profile
                 </Link>
-                <Link href="/dashboard/settings" className="block px-3 py-2 text-black dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10 rounded">
+                <Link href="/dashboard/settings" className="block px-3 py-2 text-slate-700 dark:text-gray-100 hover:bg-slate-100 dark:hover:bg-white/10 rounded">
                     Settings
                 </Link>
                 <button

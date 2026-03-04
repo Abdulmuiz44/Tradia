@@ -74,7 +74,7 @@ export default function ComparisonPage({ params }: Props) {
             <JsonLd data={faqSchema} />
 
             <div className="bg-[#0a0d11]">
-                <Navbar />
+                <Navbar className="!bg-[#0a0d11] !border-white/10" />
             </div>
 
             <main className="bg-[#0a0d11]">
@@ -103,10 +103,10 @@ export default function ComparisonPage({ params }: Props) {
                         </p>
 
                         <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-                            <Link href="/signup" className="w-full sm:w-auto px-14 py-6 rounded-2xl bg-white text-black hover:bg-gray-200 font-black text-xl transition-all shadow-[0_20px_40px_-15px_rgba(255,255,255,0.2)] transform hover:-translate-y-1 active:scale-95">
-                                Start Free Trial
+                            <Link href="/signup" className="w-full sm:w-auto px-14 py-6 rounded-2xl bg-blue-600 text-white hover:bg-blue-500 font-black text-xl transition-all shadow-[0_20px_50px_-15px_rgba(59,130,246,0.5)] transform hover:-translate-y-1 active:scale-95 leading-none">
+                                Start Free Trial Now
                             </Link>
-                            <Link href="/pricing" className="w-full sm:w-auto px-14 py-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/20 text-white font-black text-xl transition-all backdrop-blur-md">
+                            <Link href="/pricing" className="w-full sm:w-auto px-14 py-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/20 text-white font-black text-xl transition-all backdrop-blur-md leading-none">
                                 View Pricing
                             </Link>
                         </div>
