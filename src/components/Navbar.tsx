@@ -10,7 +10,6 @@ import { Menu, Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
 import AnimatedDropdown from "@/components/ui/AnimatedDropdown";
-import TradiaLogo from "@/components/TradiaLogo";
 
 /**
  * Navbar redesigned to match the dark/glass aesthetic used across the app pages.
@@ -90,10 +89,17 @@ export default function Navbar({ className }: { className?: string }) {
             <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
                 {/* Brand */}
                 <div className="flex items-center gap-3">
-                    <Link href="/" className="flex items-center gap-3 no-underline group" aria-label="Tradia Home">
-                        <TradiaLogo size="sm" className="text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110" />
+                    <Link href="/" className="flex items-center gap-3 no-underline" aria-label="Tradia Home">
+                        <Image
+                            src="/TRADIA-LOGO.png"
+                            alt="Tradia logo"
+                            width={48}
+                            height={48}
+                            className="h-10 w-auto select-none sm:h-12"
+                            priority
+                        />
                         <div className="hidden sm:block">
-                            <div className="text-[12px] sm:text-sm text-black dark:text-gray-300 -mt-0.5 font-bold tracking-tight">
+                            <div className="text-[12px] sm:text-sm text-black dark:text-gray-300 -mt-0.5 font-medium">
                                 AI Trading Performance
                             </div>
                         </div>
