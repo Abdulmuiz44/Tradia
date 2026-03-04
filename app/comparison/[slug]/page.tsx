@@ -68,42 +68,45 @@ export default function ComparisonPage({ params }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0f1319] text-black dark:text-white transition-colors duration-300">
+        /* Force dark mode locally for the comparison page */
+        <div className="dark bg-[#0a0d11] text-white min-h-screen transition-colors duration-500">
             <JsonLd data={softwareSchema} />
             <JsonLd data={faqSchema} />
 
-            <Navbar />
+            <div className="bg-[#0a0d11]">
+                <Navbar />
+            </div>
 
-            <main>
+            <main className="bg-[#0a0d11]">
                 {/* Hero Section */}
-                <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-                    {/* Subtle Brand Ambient Light */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+                <section className="relative pt-32 pb-20 px-6 overflow-hidden bg-[#0a0d11]">
+                    {/* Deep Brand Glow */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[700px] bg-gradient-to-b from-blue-600/10 via-[#0a0d11]/50 to-transparent pointer-events-none" />
 
                     <div className="max-w-7xl mx-auto text-center relative z-10">
-                        <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-8">
-                            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                            <span className="text-sm font-bold tracking-wider text-blue-600 dark:text-blue-400 uppercase">2026 Comparison Edition</span>
+                        <div className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-blue-500/10 border border-blue-500/30 mb-10">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                            <span className="text-sm font-black tracking-[0.2em] text-blue-400 uppercase">2026 Comparison Edition</span>
                         </div>
 
-                        <h1 className="text-5xl md:text-8xl font-black mb-8 leading-tight tracking-tight text-black dark:text-white">
+                        <h1 className="text-6xl md:text-9xl font-black mb-10 leading-none tracking-tighter text-white drop-shadow-2xl">
                             {data.heroHeadline.split('vs').map((part, i) => (
-                                <span key={i}>
-                                    {i > 0 && <span className="text-blue-600 dark:text-blue-500"> vs </span>}
+                                <span key={i} className="inline-block">
+                                    {i > 0 && <span className="text-blue-500 mx-4 opacity-80 italic">vs</span>}
                                     {part}
                                 </span>
                             ))}
                         </h1>
 
-                        <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
+                        <p className="text-xl md:text-2xl text-gray-400 mb-14 max-w-4xl mx-auto leading-relaxed font-semibold">
                             {data.heroSubheadline}
                         </p>
 
-                        <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                            <Link href="/signup" className="w-full sm:w-auto px-12 py-5 rounded-2xl bg-black dark:bg-white text-white dark:text-black hover:opacity-90 font-bold text-lg transition-all shadow-xl transform hover:-translate-y-1">
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
+                            <Link href="/signup" className="w-full sm:w-auto px-14 py-6 rounded-2xl bg-white text-black hover:bg-gray-200 font-black text-xl transition-all shadow-[0_20px_40px_-15px_rgba(255,255,255,0.2)] transform hover:-translate-y-1 active:scale-95">
                                 Start Free Trial
                             </Link>
-                            <Link href="/pricing" className="w-full sm:w-auto px-12 py-5 rounded-2xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 text-black dark:text-white font-bold text-lg transition-all">
+                            <Link href="/pricing" className="w-full sm:w-auto px-14 py-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/20 text-white font-black text-xl transition-all backdrop-blur-md">
                                 View Pricing
                             </Link>
                         </div>
@@ -111,40 +114,40 @@ export default function ComparisonPage({ params }: Props) {
                 </section>
 
                 {/* The Pain vs Solution Section */}
-                <section className="py-24 px-6 relative">
+                <section className="py-28 px-6 relative bg-[#0a0d11]">
                     <div className="max-w-7xl mx-auto">
-                        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                        <div className="grid lg:grid-cols-2 gap-10">
                             {/* Pain Points */}
-                            <div className="p-8 lg:p-12 rounded-[2.5rem] bg-gray-50 dark:bg-[#141920] border border-gray-200 dark:border-gray-800 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-8 text-gray-200 dark:text-white/5 transform translate-x-4 -translate-y-4">
-                                    <X size={120} />
+                            <div className="p-10 lg:p-14 rounded-[3rem] bg-[#0f1319] border border-white/5 relative overflow-hidden group hover:border-white/10 transition-all">
+                                <div className="absolute top-0 right-0 p-10 text-white opacity-[0.03] transform translate-x-6 -translate-y-6">
+                                    <X size={150} />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-8 text-gray-700 dark:text-gray-300">The Problem with {data.competitorName}</h3>
-                                <ul className="space-y-6">
+                                <h3 className="text-3xl font-black mb-10 text-gray-500">The Problem with {data.competitorName}</h3>
+                                <ul className="space-y-8">
                                     {data.painPoints.map((point, i) => (
-                                        <li key={i} className="flex items-start space-x-4">
-                                            <div className="mt-1 p-1 rounded-md bg-red-500/10 text-red-600 dark:text-red-500">
-                                                <X size={18} />
+                                        <li key={i} className="flex items-start space-x-5">
+                                            <div className="mt-1.5 p-1.5 rounded-lg bg-red-500/10 text-red-500 shrink-0">
+                                                <X size={20} />
                                             </div>
-                                            <span className="text-lg text-gray-600 dark:text-gray-300">{point}</span>
+                                            <span className="text-xl text-gray-400 font-medium leading-snug">{point}</span>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
 
                             {/* Advantages */}
-                            <div className="p-8 lg:p-12 rounded-[2.5rem] bg-blue-500/5 dark:bg-blue-500/[0.03] border border-blue-200 dark:border-blue-500/20 relative overflow-hidden group shadow-sm dark:shadow-[0_0_50px_-12px_rgba(59,130,246,0.15)]">
-                                <div className="absolute top-0 right-0 p-8 text-blue-500 dark:text-blue-500/10 transform translate-x-4 -translate-y-4">
-                                    <Check size={120} />
+                            <div className="p-10 lg:p-14 rounded-[3rem] bg-blue-600/[0.04] border border-blue-500/20 relative overflow-hidden group shadow-[0_0_80px_-20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 transition-all">
+                                <div className="absolute top-0 right-0 p-10 text-blue-500 opacity-10 transform translate-x-6 -translate-y-6">
+                                    <Check size={150} />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-8 text-blue-600 dark:text-blue-400">The Tradia Edge</h3>
-                                <ul className="space-y-6">
+                                <h3 className="text-3xl font-black mb-10 text-blue-400">The Tradia Edge</h3>
+                                <ul className="space-y-8">
                                     {data.tradiaAdvantages.map((point, i) => (
-                                        <li key={i} className="flex items-start space-x-4">
-                                            <div className="mt-1 p-1 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-500">
-                                                <Check size={18} />
+                                        <li key={i} className="flex items-start space-x-5">
+                                            <div className="mt-1.5 p-1.5 rounded-lg bg-blue-500/20 text-blue-400 shrink-0 shadow-[0_0_10px_rgba(96,165,250,0.3)]">
+                                                <Check size={20} />
                                             </div>
-                                            <span className="text-lg text-black dark:text-gray-100 font-bold">{point}</span>
+                                            <span className="text-xl text-white font-black leading-snug drop-shadow-sm">{point}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -154,28 +157,28 @@ export default function ComparisonPage({ params }: Props) {
                 </section>
 
                 {/* Feature Matrix */}
-                <section className="py-24 px-6 bg-gray-50/50 dark:bg-white/[0.02]">
+                <section className="py-28 px-6 bg-[#07090c]">
                     <div className="max-w-5xl mx-auto">
-                        <h2 className="text-4xl font-black mb-16 text-center text-black dark:text-white">Feature Breakdown</h2>
-                        <div className="overflow-hidden rounded-[2rem] border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141920]">
+                        <h2 className="text-5xl font-black mb-20 text-center text-white">Deep Feature Comparison</h2>
+                        <div className="overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0a0d11] shadow-3xl">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-black/20">
-                                            <th className="p-8 text-sm font-black uppercase tracking-wider text-gray-500 dark:text-gray-500">Feature</th>
-                                            <th className="p-8 text-sm font-black uppercase tracking-wider text-gray-500 dark:text-gray-500">{data.competitorName}</th>
-                                            <th className="p-8 text-sm font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Tradia AI</th>
+                                        <tr className="border-b border-white/5 bg-black/40">
+                                            <th className="p-10 text-xs font-black uppercase tracking-[0.3em] text-gray-500">Infrastructure</th>
+                                            <th className="p-10 text-xs font-black uppercase tracking-[0.3em] text-gray-500">{data.competitorName}</th>
+                                            <th className="p-10 text-xs font-black uppercase tracking-[0.3em] text-blue-400">Tradia AI</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                    <tbody className="divide-y divide-white/[0.03]">
                                         {data.features.map((feature, i) => (
-                                            <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                                <td className="p-8 font-bold text-lg text-black dark:text-white">{feature.name}</td>
-                                                <td className="p-8 text-gray-600 dark:text-gray-400">{feature.competitorValue}</td>
-                                                <td className="p-8">
-                                                    <div className={`inline-flex items-center space-x-2 ${feature.isTradiaBetter ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-black dark:text-white font-bold'}`}>
-                                                        {feature.isTradiaBetter && <Check size={18} className="shrink-0" />}
-                                                        <span>{feature.tradiaValue}</span>
+                                            <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
+                                                <td className="p-10 font-bold text-xl text-white">{feature.name}</td>
+                                                <td className="p-10 text-gray-500 font-medium">{feature.competitorValue}</td>
+                                                <td className="p-10">
+                                                    <div className={`inline-flex items-center space-x-3 ${feature.isTradiaBetter ? 'text-blue-400 font-black scale-105 transform origin-left' : 'text-gray-300 font-bold'}`}>
+                                                        {feature.isTradiaBetter && <Check size={22} className="shrink-0 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" />}
+                                                        <span className="text-lg">{feature.tradiaValue}</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -188,14 +191,14 @@ export default function ComparisonPage({ params }: Props) {
                 </section>
 
                 {/* FAQ Section */}
-                <section className="py-24 px-6">
-                    <div className="max-w-3xl mx-auto">
-                        <h2 className="text-4xl font-black mb-16 text-center text-black dark:text-white">Frequently Asked Questions</h2>
-                        <div className="space-y-6">
+                <section className="py-28 px-6 bg-[#0a0d11]">
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-5xl font-black mb-20 text-center text-white">Inside the Engine</h2>
+                        <div className="grid gap-6">
                             {data.faq.map((item, i) => (
-                                <div key={i} className="p-8 rounded-3xl bg-gray-50 dark:bg-[#141920] border border-gray-200 dark:border-gray-800 transition-all hover:border-gray-300 dark:hover:border-gray-700">
-                                    <h4 className="text-xl font-black mb-4 text-black dark:text-white">{item.question}</h4>
-                                    <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">{item.answer}</p>
+                                <div key={i} className="p-10 rounded-[2rem] bg-[#0f1319] border border-white/5 hover:border-white/10 transition-all shadow-inner">
+                                    <h4 className="text-2xl font-black mb-5 text-white">{item.question}</h4>
+                                    <p className="text-xl text-gray-400 leading-relaxed font-medium">{item.answer}</p>
                                 </div>
                             ))}
                         </div>
@@ -203,22 +206,24 @@ export default function ComparisonPage({ params }: Props) {
                 </section>
 
                 {/* Final CTA */}
-                <section className="py-32 px-6 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black dark:bg-white" />
-                    <div className="max-w-4xl mx-auto text-center relative z-10">
-                        <h2 className="text-5xl md:text-7xl font-black mb-8 text-white dark:text-black">Ready to evolve your trading?</h2>
-                        <p className="text-xl text-white/80 dark:text-black/80 mb-12 font-bold">
-                            Join thousands of prop firm traders who switched to Tradia AI and unlocked their behavioral edge.
+                <section className="py-40 px-6 relative overflow-hidden bg-black border-t border-white/10">
+                    <div className="absolute inset-0 bg-blue-600/5" />
+                    <div className="max-w-6xl mx-auto text-center relative z-10">
+                        <h2 className="text-6xl md:text-8xl font-black mb-10 text-white leading-none tracking-tighter">Ready to dominate?</h2>
+                        <p className="text-2xl text-gray-400 mb-16 font-bold max-w-2xl mx-auto">
+                            Stop hemorrhaging capital. Join the elite top 1% who leverage AI to secure their funding.
                         </p>
-                        <Link href="/signup" className="inline-block px-16 py-6 rounded-2xl bg-white dark:bg-black text-black dark:text-white font-black text-2xl transition-all shadow-2xl hover:scale-105 active:scale-95">
-                            Get Started for Free
+                        <Link href="/signup" className="inline-block px-20 py-8 rounded-3xl bg-blue-600 text-white font-black text-3xl transition-all shadow-[0_30px_60px_-15px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95">
+                            Secure Your Edge Now
                         </Link>
-                        <p className="mt-8 text-sm font-bold text-white/60 dark:text-black/60 uppercase tracking-widest">No credit card required. Cancel anytime.</p>
+                        <p className="mt-12 text-sm font-black text-white/30 uppercase tracking-[0.5em]">No credit card required. Pure performance.</p>
                     </div>
                 </section>
             </main>
 
-            <Footer />
+            <div className="bg-[#0a0d11]">
+                <Footer />
+            </div>
         </div>
     );
 }
