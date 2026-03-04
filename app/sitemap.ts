@@ -91,7 +91,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.7,
     }));
 
-    return [...staticPages, ...blogPages, ...categoryPages];
+    // Comparison pages
+    const comparisonPages: MetadataRoute.Sitemap = [
+        {
+            url: `${site}/comparison/tradersync-vs-tradia`,
+            lastModified: now,
+            changeFrequency: "monthly",
+            priority: 0.8,
+        },
+        {
+            url: `${site}/comparison/edgewonk-vs-tradia`,
+            lastModified: now,
+            changeFrequency: "monthly",
+            priority: 0.8,
+        },
+        {
+            url: `${site}/comparison/tradezella-vs-tradia`,
+            lastModified: now,
+            changeFrequency: "monthly",
+            priority: 0.8,
+        },
+        {
+            url: `${site}/comparison/tradervue-vs-tradia`,
+            lastModified: now,
+            changeFrequency: "monthly",
+            priority: 0.8,
+        },
+        {
+            url: `${site}/comparison/tradesviz-vs-tradia`,
+            lastModified: now,
+            changeFrequency: "monthly",
+            priority: 0.8,
+        },
+    ];
+
+    return [...staticPages, ...blogPages, ...categoryPages, ...comparisonPages];
 }
 
 function getCategoryPriority(category: string): number {
