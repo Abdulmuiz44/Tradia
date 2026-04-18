@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const VALID_SESSIONS: MarketSession[] = ["ASIA", "LONDON", "NEW_YORK", "OVERLAP"];
 const VALID_BIAS: DirectionalBias[] = ["bullish", "bearish", "neutral"];
+const VALID_TIMEFRAMES = ["M5", "M15", "M30", "H1", "H4", "D1"] as const;
 
 const isValidNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -67,7 +68,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid request payload" }, { status: 400 });
+    }
+
     const pairSymbol = String(body.pairSymbol || "").trim().toUpperCase();
     const timeframe = String(body.timeframe || "").trim().toUpperCase();
     const marketSession = String(body.marketSession || "").trim().toUpperCase() as MarketSession;
@@ -84,6 +89,9 @@ export async function POST(request: NextRequest) {
 
     if (!timeframe) {
       return NextResponse.json({ error: "timeframe is required" }, { status: 400 });
+    }
+    if (!VALID_TIMEFRAMES.includes(timeframe as (typeof VALID_TIMEFRAMES)[number])) {
+      return NextResponse.json({ error: "timeframe is invalid" }, { status: 400 });
     }
 
     if (!VALID_SESSIONS.includes(marketSession)) {
