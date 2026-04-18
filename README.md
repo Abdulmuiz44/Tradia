@@ -88,8 +88,8 @@ Tradia is a next-generation AI-powered trading journal platform that helps forex
 
 ## 📊 Key Metrics
 
-- **10,000+ traders** using Tradia daily
-- **500K+ trades** analyzed monthly
+- **150+ traders** using Tradia daily
+- **5K+ trades** analyzed monthly
 - **48 blog articles** covering trading psychology and strategy
 - **99.9% uptime** on Vercel infrastructure
 - **< 2s** page load time (optimized)
