@@ -435,6 +435,6 @@ Stop using spreadsheets. Start building your edge with AI.
 
 **Made with ❤️ for serious traders**
 
-[Website](https://tradiaai.app) • [Blog](https://tradiaai.app/blog) • [Twitter](https://twitter.com/tradia_app) • [GitHub](https://github.com/abdulmuiz44/tradia)
+[Website](https://tradiaai.app) • [Blog](https://tradiaai.app/blog) • [Twitter](https://twitter.com/TradiaAI) • [GitHub](https://github.com/abdulmuiz44/tradia)
 
 </div>
