@@ -345,13 +345,13 @@ Tradia is open-source software licensed under the [MIT License](./LICENSE).
 ## 🌟 Support
 
 ### Get Help
-- **Email**: support@tradiaai.app
-- **Twitter**: [@tradia_app](https://twitter.com/tradia_app)
+- **Email**: Tradiamedia@gmail.com
+- **Twitter**: [@TradiaAI](https://twitter.com/TradiaAI)
 - **Website**: [tradiaai.app](https://tradiaai.app)
 - **Blog**: [tradiaai.app/blog](https://tradiaai.app/blog)
 
 ### Community
-- Join 10,000+ traders improving their edge
+- Join 100+ traders improving their edge
 - Share trade journals and insights
 - Learn from successful traders
 
@@ -407,7 +407,7 @@ Special thanks to:
 - [Supabase](https://supabase.com) for database and auth
 - [Mistral AI](https://mistral.ai) for LLM capabilities
 - [Shadcn/ui](https://ui.shadcn.com) for component library
-- Our community of 10,000+ traders
+- Our community of 150+ traders
 
 ---
 
@@ -415,7 +415,7 @@ Special thanks to:
 
 - Built with Next.js 14+, fully typed in TypeScript
 - 99.9% uptime on Vercel global CDN
-- Processes 500K+ trades monthly
+- Processes 100+ trades monthly
 - Blog posts ranked in top 10 for "trading journal" on Google
 - 48 high-value articles on trading psychology and strategy
 
