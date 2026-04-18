@@ -37,6 +37,7 @@ const BASE_TAB_DEFS: DashboardTabDef[] = [
     { value: "tradia-predict", label: "Tradia Predict", icon: "Brain", href: "/tradia-predict" },
     { value: "risk", label: "Risk Management", icon: "Shield", href: "/dashboard/risk-management" },
     { value: "reporting", label: "Reporting", icon: "FileText", href: "/dashboard/reporting" },
+    { value: "pre-trade-brief", label: "Pre-Trade Brief", icon: "FileText", href: "/dashboard/pre-trade-brief" },
     { value: "planner", label: "Trade Planner", icon: "Target", href: "/dashboard/trade-planner" },
     { value: "position-sizing", label: "Position Sizing", icon: "Calculator", href: "/dashboard/position-sizing" },
     { value: "education", label: "Trade Education", icon: "GraduationCap", href: "/dashboard/trade-education" },

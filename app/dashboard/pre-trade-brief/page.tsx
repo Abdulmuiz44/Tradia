@@ -208,16 +208,13 @@ function PreTradeBriefContent() {
   };
 
   const toggleChecklistItem = (item: string, checked: boolean) => {
-    setChecklistStateDraft((prev) => {
-      const current = prev[item] || { completed: false };
-      return {
-        ...prev,
-        [item]: {
-          completed: checked,
-          completedAt: checked ? new Date().toISOString() : current.completedAt,
-        },
-      };
-    });
+    setChecklistStateDraft((prev) => ({
+      ...prev,
+      [item]: {
+        completed: checked,
+        completedAt: checked ? new Date().toISOString() : undefined,
+      },
+    }));
   };
 
   const handleSaveDetail = async () => {
@@ -433,8 +430,8 @@ function PreTradeBriefContent() {
                       {renderList(result.ai_checklist || [])}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Pair: {result.pair_symbol_snapshot} · Timeframe: {result.timeframe} · Session: {result.market_session}
-                      {result.risk_reward_ratio != null ? ` · R:R ${result.risk_reward_ratio}` : ""}
+                      Pair: {result.pair_symbol_snapshot} | Timeframe: {result.timeframe} | Session: {result.market_session}
+                      {result.risk_reward_ratio != null ? ` | R:R ${result.risk_reward_ratio}` : ""}
                     </div>
                   </div>
                 )}
@@ -461,10 +458,10 @@ function PreTradeBriefContent() {
                           }`}
                         >
                           <div className="font-medium text-gray-900 dark:text-gray-100">
-                            {brief.pair_symbol_snapshot} · {brief.timeframe}
+                            {brief.pair_symbol_snapshot} | {brief.timeframe}
                           </div>
                           <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                            {brief.market_session} · {brief.directional_bias_input} · {brief.status}
+                            {brief.market_session} | {brief.directional_bias_input} | {brief.status}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDate(brief.created_at)}</div>
                         </button>
@@ -594,3 +591,4 @@ export default function PreTradeBriefPage() {
     </LayoutClient>
   );
 }
+
