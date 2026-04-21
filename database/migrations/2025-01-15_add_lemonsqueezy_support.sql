@@ -58,14 +58,14 @@ BEGIN
 END $$;
 
 -- 3. Create indexes for faster lookups
-CREATE INDEX IF NOT EXISTS idx_user_plans_lemonsqueezy_order_id 
-  ON user_plans(lemonsqueezy_order_id);
-
-CREATE INDEX IF NOT EXISTS idx_user_plans_lemonsqueezy_subscription_id 
-  ON user_plans(lemonsqueezy_subscription_id);
-
-CREATE INDEX IF NOT EXISTS idx_user_plans_checkout_id 
-  ON user_plans(checkout_id);
+DO $$
+BEGIN
+  IF to_regclass('public.user_plans') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS idx_user_plans_lemonsqueezy_order_id ON user_plans(lemonsqueezy_order_id);
+    CREATE INDEX IF NOT EXISTS idx_user_plans_lemonsqueezy_subscription_id ON user_plans(lemonsqueezy_subscription_id);
+    CREATE INDEX IF NOT EXISTS idx_user_plans_checkout_id ON user_plans(checkout_id);
+  END IF;
+END $$;
 
 -- 4. Create indexes on lemonsqueezy_products
 CREATE INDEX IF NOT EXISTS idx_lemonsqueezy_products_plan_key 
@@ -76,4 +76,9 @@ CREATE INDEX IF NOT EXISTS idx_lemonsqueezy_products_variant_id
 
 -- 5. Add comment for documentation
 COMMENT ON TABLE lemonsqueezy_products IS 'Stores mapping of plan keys to LemonSqueezy variant IDs for checkout processing';
-COMMENT ON TABLE user_plans IS 'User subscription and billing plan records, supports both legacy Flutterwave and LemonSqueezy payments';
+DO $$
+BEGIN
+  IF to_regclass('public.user_plans') IS NOT NULL THEN
+    COMMENT ON TABLE user_plans IS 'User subscription and billing plan records, supports both legacy Flutterwave and LemonSqueezy payments';
+  END IF;
+END $$;

@@ -2,6 +2,14 @@
 -- This ensures authenticated users can perform all operations on their own trades
 
 -- First, ensure RLS is enabled
+DO $$
+BEGIN
+  IF to_regclass('public.trades') IS NULL THEN
+    RAISE NOTICE 'public.trades missing, skipping 006_fix_rls.sql';
+    RETURN;
+  END IF;
+END $$;
+
 ALTER TABLE public.trades ENABLE ROW LEVEL SECURITY;
 
 -- Drop any existing policies that might be causing issues

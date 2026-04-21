@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LayoutClient from "@/components/LayoutClient";
@@ -12,6 +12,7 @@ import type {
   PreTradeBriefListItem,
   PreTradeBriefRecord,
 } from "@/types/preTradeBrief";
+import type { MarketBiasRecord } from "@/types/marketBias";
 
 type PairOption = {
   id: string;
@@ -41,6 +42,9 @@ const TIMEFRAMES = ["M5", "M15", "M30", "H1", "H4", "D1"];
 const SESSIONS = ["ASIA", "LONDON", "NEW_YORK", "OVERLAP"];
 const BIASES = ["bullish", "bearish", "neutral"];
 const EDITABLE_STATUSES: EditablePreTradeBriefStatus[] = ["draft", "ready", "invalidated", "executed", "skipped"];
+const BRIEF_STATUS_FILTERS = ["all", "ready", "invalidated", "executed"] as const;
+type BriefStatusFilter = (typeof BRIEF_STATUS_FILTERS)[number];
+const BIAS_TIMEFRAMES = ["M15", "M30", "H1", "H4", "D1"] as const;
 
 const formatDate = (iso: string) => {
   try {
@@ -64,6 +68,7 @@ function PreTradeBriefContent() {
 
   const [selectedBriefId, setSelectedBriefId] = useState<string | null>(null);
   const [selectedBrief, setSelectedBrief] = useState<PreTradeBriefRecord | null>(null);
+  const detailCacheRef = useRef<Record<string, PreTradeBriefRecord>>({});
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
 
@@ -80,6 +85,14 @@ function PreTradeBriefContent() {
   const [plannedEntry, setPlannedEntry] = useState("");
   const [plannedStopLoss, setPlannedStopLoss] = useState("");
   const [plannedTakeProfit, setPlannedTakeProfit] = useState("");
+  const [briefStatusFilter, setBriefStatusFilter] = useState<BriefStatusFilter>("all");
+
+  const [biasTimeframes, setBiasTimeframes] = useState<string[]>(["H4", "H1", "M15"]);
+  const [biasSessionContext, setBiasSessionContext] = useState("");
+  const [biasBackdrop, setBiasBackdrop] = useState("");
+  const [generatingBias, setGeneratingBias] = useState(false);
+  const [biasError, setBiasError] = useState<string | null>(null);
+  const [latestBias, setLatestBias] = useState<MarketBiasRecord | null>(null);
 
   const canSubmit = useMemo(() => {
     return Boolean(pairSymbol && timeframe && marketSession && directionalBiasInput);
@@ -90,7 +103,7 @@ function PreTradeBriefContent() {
     setGlobalError(null);
 
     try {
-      const response = await fetch("/api/pre-trade-brief", { method: "GET" });
+      const response = await fetch(`/api/pre-trade-brief?status=${briefStatusFilter}`, { method: "GET" });
       if (!response.ok) {
         const payload = await response.json();
         throw new Error(payload.error || "Failed to load pre-trade brief data");
@@ -107,7 +120,12 @@ function PreTradeBriefContent() {
         setPairSymbol(nextPairs[0].symbol);
       }
 
-      if (!selectedBriefId && nextBriefs.length) {
+      if (selectedBriefId && !nextBriefs.some((brief) => brief.id === selectedBriefId)) {
+        setSelectedBriefId(nextBriefs[0]?.id ?? null);
+        if (!nextBriefs.length) {
+          setSelectedBrief(null);
+        }
+      } else if (!selectedBriefId && nextBriefs.length) {
         setSelectedBriefId(nextBriefs[0].id);
       }
     } catch (err) {
@@ -118,6 +136,17 @@ function PreTradeBriefContent() {
   };
 
   const loadBriefDetail = async (briefId: string) => {
+    const cachedDetail = detailCacheRef.current[briefId];
+    if (cachedDetail) {
+      setSelectedBrief(cachedDetail);
+      setTraderNotesDraft(cachedDetail.trader_notes || "");
+      setStatusDraft(
+        cachedDetail.status === "generated" || cachedDetail.status === "failed" ? "draft" : cachedDetail.status
+      );
+      setChecklistStateDraft(cachedDetail.checklist_state || {});
+      return;
+    }
+
     setDetailLoading(true);
     setDetailError(null);
 
@@ -129,6 +158,7 @@ function PreTradeBriefContent() {
       }
 
       const detail: PreTradeBriefRecord = await response.json();
+      detailCacheRef.current[briefId] = detail;
       setSelectedBrief(detail);
       setTraderNotesDraft(detail.trader_notes || "");
       setStatusDraft(
@@ -147,13 +177,19 @@ function PreTradeBriefContent() {
     if (status === "authenticated") {
       void loadData();
     }
-  }, [status]);
+  }, [status, briefStatusFilter]);
 
   useEffect(() => {
     if (status === "authenticated" && selectedBriefId) {
       void loadBriefDetail(selectedBriefId);
     }
   }, [status, selectedBriefId]);
+
+  useEffect(() => {
+    if (status === "authenticated" && pairSymbol) {
+      void loadLatestBias();
+    }
+  }, [status, pairSymbol]);
 
   if (status === "loading" || loading) {
     return (
@@ -241,22 +277,82 @@ function PreTradeBriefContent() {
       }
 
       const updated: PreTradeBriefRecord = await response.json();
+      detailCacheRef.current[selectedBriefId] = updated;
       setSelectedBrief((prev) => ({ ...(prev || {}), ...updated } as PreTradeBriefRecord));
 
       setRecentBriefs((prev) =>
-        prev.map((brief) =>
-          brief.id === updated.id
-            ? {
-                ...brief,
-                status: updated.status,
-              }
-            : brief
-        )
+        prev
+          .map((brief) =>
+            brief.id === updated.id
+              ? {
+                  ...brief,
+                  status: updated.status,
+                }
+              : brief
+          )
+          .filter((brief) => briefStatusFilter === "all" || brief.status === briefStatusFilter)
       );
     } catch (err) {
       setDetailError(err instanceof Error ? err.message : "Failed to save brief detail");
     } finally {
       setSavingDetail(false);
+    }
+  };
+
+  const toggleBiasTimeframe = (tf: string) => {
+    setBiasTimeframes((prev) => {
+      if (prev.includes(tf)) {
+        const next = prev.filter((item) => item !== tf);
+        return next.length ? next : prev;
+      }
+      return [...prev, tf];
+    });
+  };
+
+  const loadLatestBias = async () => {
+    setBiasError(null);
+    try {
+      const response = await fetch(`/api/market-bias?pairSymbol=${pairSymbol}`);
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.error || "Failed to load market bias");
+      }
+      const payload = await response.json();
+      const reports = (payload.reports || []) as MarketBiasRecord[];
+      setLatestBias(reports[0] || null);
+    } catch (err) {
+      setBiasError(err instanceof Error ? err.message : "Failed to load market bias");
+      setLatestBias(null);
+    }
+  };
+
+  const handleGenerateBias = async () => {
+    setBiasError(null);
+    setGeneratingBias(true);
+
+    try {
+      const response = await fetch("/api/market-bias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pairSymbol,
+          timeframeSet: biasTimeframes,
+          sessionContext: biasSessionContext,
+          recentBackdrop: biasBackdrop,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.error || "Failed to generate market bias");
+      }
+
+      const created = (await response.json()) as MarketBiasRecord;
+      setLatestBias(created);
+    } catch (err) {
+      setBiasError(err instanceof Error ? err.message : "Failed to generate market bias");
+    } finally {
+      setGeneratingBias(false);
     }
   };
 
@@ -438,9 +534,130 @@ function PreTradeBriefContent() {
               </section>
             </div>
 
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <section className="bg-white dark:bg-[#161B22] border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Market Bias Snapshot</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Generate directional context before execution. This is decision-support only.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Timeframes</p>
+                    <div className="flex flex-wrap gap-2">
+                      {BIAS_TIMEFRAMES.map((tf) => {
+                        const active = biasTimeframes.includes(tf);
+                        return (
+                          <button
+                            key={tf}
+                            type="button"
+                            onClick={() => toggleBiasTimeframe(tf)}
+                            className={`rounded-md border px-3 py-1 text-sm ${
+                              active
+                                ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                                : "border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-[#0D1117] dark:text-gray-300"
+                            }`}
+                          >
+                            {tf}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                      Session Context (optional)
+                    </label>
+                    <input
+                      value={biasSessionContext}
+                      onChange={(e) => setBiasSessionContext(e.target.value)}
+                      placeholder="Example: London open, moderate volatility"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0D1117] px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                      Recent Backdrop (optional)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={biasBackdrop}
+                      onChange={(e) => setBiasBackdrop(e.target.value)}
+                      placeholder="Key events, recent structure, or volatility notes..."
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0D1117] px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  {biasError && (
+                    <div className="rounded-md border border-red-300 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-300">
+                      {biasError}
+                    </div>
+                  )}
+
+                  <Button type="button" onClick={handleGenerateBias} disabled={generatingBias || !pairSymbol}>
+                    {generatingBias ? "Generating Bias..." : `Generate Bias for ${pairSymbol}`}
+                  </Button>
+                </div>
+              </section>
+
+              <section className="bg-white dark:bg-[#161B22] border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Latest Bias Result</h2>
+                {!latestBias ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No saved bias report for {pairSymbol}. Generate a snapshot to begin.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">Direction:</span> {latestBias.bias_direction} |{" "}
+                      <span className="font-medium">Confidence:</span> {latestBias.confidence_score}
+                    </div>
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">Timeframes:</span> {latestBias.timeframe_set.join(", ")}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-white">Assumptions</h3>
+                      {renderList(latestBias.assumptions || [])}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-white">Invalidation Conditions</h3>
+                      {renderList(latestBias.invalidation_conditions || [])}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-white">Alternate Scenario</h3>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{latestBias.alternate_scenario || "N/A"}</p>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Generated: {formatDate(latestBias.created_at)}
+                    </div>
+                  </div>
+                )}
+              </section>
+            </div>
+
             <div className="mt-6 grid gap-6 lg:grid-cols-5">
               <section className="lg:col-span-2 bg-white dark:bg-[#161B22] border border-gray-200 dark:border-gray-800 rounded-xl p-5">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Saved Briefs</h2>
+                <div className="mb-4 flex items-end justify-between gap-3">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Saved Briefs</h2>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Status
+                    </label>
+                    <select
+                      value={briefStatusFilter}
+                      onChange={(e) => setBriefStatusFilter(e.target.value as BriefStatusFilter)}
+                      className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-[#0D1117]"
+                    >
+                      {BRIEF_STATUS_FILTERS.map((filterValue) => (
+                        <option key={filterValue} value={filterValue}>
+                          {filterValue}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 {!recentBriefs.length ? (
                   <p className="text-sm text-gray-500 dark:text-gray-400">No briefs saved yet.</p>
                 ) : (

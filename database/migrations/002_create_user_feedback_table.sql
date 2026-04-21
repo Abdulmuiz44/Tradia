@@ -1,5 +1,5 @@
 -- Create the user_feedback table
-CREATE TABLE public.user_feedback (
+CREATE TABLE IF NOT EXISTS public.user_feedback (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   focus text NULL,
@@ -14,15 +14,37 @@ CREATE TABLE public.user_feedback (
 ALTER TABLE public.user_feedback ENABLE ROW LEVEL SECURITY;
 
 -- Create a policy to allow users to insert their own feedback
-CREATE POLICY "Allow users to insert their own feedback"
-ON public.user_feedback
-FOR INSERT
-TO authenticated
-WITH CHECK (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'user_feedback'
+      AND policyname = 'Allow users to insert their own feedback'
+  ) THEN
+    CREATE POLICY "Allow users to insert their own feedback"
+    ON public.user_feedback
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Create a policy to allow users to view their own feedback
-CREATE POLICY "Allow users to view their own feedback"
-ON public.user_feedback
-FOR SELECT
-TO authenticated
-USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'user_feedback'
+      AND policyname = 'Allow users to view their own feedback'
+  ) THEN
+    CREATE POLICY "Allow users to view their own feedback"
+    ON public.user_feedback
+    FOR SELECT
+    TO authenticated
+    USING (auth.uid() = user_id);
+  END IF;
+END $$;

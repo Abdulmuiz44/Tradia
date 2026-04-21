@@ -37,6 +37,10 @@ CREATE TABLE IF NOT EXISTS public.trades (
     mt5_account_id UUID REFERENCES public.mt5_accounts(id)
 );
 
+-- Existing trades table may predate mt5_account_id; ensure column exists in that case.
+ALTER TABLE IF EXISTS public.trades
+ADD COLUMN IF NOT EXISTS mt5_account_id UUID REFERENCES public.mt5_accounts(id);
+
 -- Add index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_mt5_accounts_user_id ON public.mt5_accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_trades_user_id ON public.trades(user_id);

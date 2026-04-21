@@ -9,7 +9,12 @@ DROP TABLE IF EXISTS mt5_connection_monitoring CASCADE;
 DROP TABLE IF EXISTS mt5_security_audit CASCADE;
 
 -- Drop triggers (they depend on the tables)
-DROP TRIGGER IF EXISTS trigger_mt5_sync_sessions_updated_at ON mt5_sync_sessions;
+DO $$
+BEGIN
+  IF to_regclass('public.mt5_sync_sessions') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS trigger_mt5_sync_sessions_updated_at ON mt5_sync_sessions;
+  END IF;
+END $$;
 
 -- Drop functions
 DROP FUNCTION IF EXISTS update_mt5_sync_sessions_updated_at();

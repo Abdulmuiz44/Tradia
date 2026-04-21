@@ -10,6 +10,15 @@ export const dynamic = "force-dynamic";
 const VALID_SESSIONS: MarketSession[] = ["ASIA", "LONDON", "NEW_YORK", "OVERLAP"];
 const VALID_BIAS: DirectionalBias[] = ["bullish", "bearish", "neutral"];
 const VALID_TIMEFRAMES = ["M5", "M15", "M30", "H1", "H4", "D1"] as const;
+const FILTERABLE_STATUSES = [
+  "generated",
+  "draft",
+  "ready",
+  "invalidated",
+  "executed",
+  "skipped",
+  "failed",
+] as const;
 
 const isValidNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -20,14 +29,34 @@ const normalizeOptionalNumber = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const statusFilterRaw = request.nextUrl.searchParams.get("status");
+    const statusFilter = statusFilterRaw ? statusFilterRaw.trim().toLowerCase() : "all";
+
+    if (
+      statusFilter !== "all" &&
+      !FILTERABLE_STATUSES.includes(statusFilter as (typeof FILTERABLE_STATUSES)[number])
+    ) {
+      return NextResponse.json({ error: "status filter is invalid" }, { status: 400 });
+    }
+
     const supabase = createClient();
+    let briefsQuery = supabase
+      .from("pre_trade_briefs")
+      .select("id, pair_symbol_snapshot, timeframe, market_session, directional_bias_input, status, created_at")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (statusFilter !== "all") {
+      briefsQuery = briefsQuery.eq("status", statusFilter);
+    }
 
     const [pairsResult, briefsResult] = await Promise.all([
       supabase
@@ -35,12 +64,7 @@ export async function GET() {
         .select("id, symbol, base_currency, quote_currency, category")
         .eq("is_active", true)
         .order("symbol", { ascending: true }),
-      supabase
-        .from("pre_trade_briefs")
-        .select("id, pair_symbol_snapshot, timeframe, market_session, directional_bias_input, status, created_at")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false })
-        .limit(10),
+      briefsQuery,
     ]);
 
     if (pairsResult.error) {
