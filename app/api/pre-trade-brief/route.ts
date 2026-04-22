@@ -3,7 +3,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
 import { calculateRiskReward, generatePreTradeBrief } from "@/lib/forex/preTradeBriefService";
+import { evaluateEventRisk } from "@/lib/forex/eventAwarenessService";
 import type { DirectionalBias, MarketSession, PreTradeBriefInput } from "@/types/preTradeBrief";
+import type { EconomicEvent } from "@/types/eventAwareness";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,18 @@ const normalizeOptionalNumber = (value: unknown): number | null => {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizePlannedExecutionAt = (value: unknown): string | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
+const mapImpact = (value: unknown): EconomicEvent["impact"] => {
+  const candidate = String(value || "").trim().toLowerCase();
+  if (candidate === "high" || candidate === "medium" || candidate === "low") return candidate;
+  return "medium";
 };
 
 export async function GET(request: NextRequest) {
@@ -106,6 +120,7 @@ export async function POST(request: NextRequest) {
     const plannedEntry = normalizeOptionalNumber(body.plannedEntry);
     const plannedStopLoss = normalizeOptionalNumber(body.plannedStopLoss);
     const plannedTakeProfit = normalizeOptionalNumber(body.plannedTakeProfit);
+    const plannedExecutionAt = normalizePlannedExecutionAt(body.plannedExecutionAt);
 
     if (!pairSymbol) {
       return NextResponse.json({ error: "pairSymbol is required" }, { status: 400 });
@@ -140,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     const { data: pairData, error: pairError } = await supabase
       .from("forex_pairs")
-      .select("id, symbol")
+      .select("id, symbol, base_currency, quote_currency")
       .eq("symbol", pairSymbol)
       .eq("is_active", true)
       .single();
@@ -163,6 +178,33 @@ export async function POST(request: NextRequest) {
     const aiBrief = await generatePreTradeBrief(input);
     const riskRewardRatio = calculateRiskReward(plannedEntry, plannedStopLoss, plannedTakeProfit);
 
+    const executionAt = plannedExecutionAt || new Date().toISOString();
+    const executionDate = new Date(executionAt);
+    const windowStart = new Date(executionDate.getTime() - 2 * 60 * 60 * 1000).toISOString();
+    const windowEnd = new Date(executionDate.getTime() + 6 * 60 * 60 * 1000).toISOString();
+
+    const eventsResult = await supabase
+      .from("economic_events")
+      .select("id, title, currency, country, impact, scheduled_at")
+      .in("currency", [pairData.base_currency, pairData.quote_currency])
+      .gte("scheduled_at", windowStart)
+      .lte("scheduled_at", windowEnd)
+      .order("scheduled_at", { ascending: true });
+
+    const mappedEvents: EconomicEvent[] = eventsResult.error
+      ? []
+      : (eventsResult.data || []).map((event) => ({
+          id: String(event.id),
+          title: String(event.title || "Untitled event"),
+          currency: String(event.currency || "").toUpperCase(),
+          country: event.country ? String(event.country) : null,
+          impact: mapImpact(event.impact),
+          scheduled_at: String(event.scheduled_at),
+        }));
+
+    const eventRisk = evaluateEventRisk(mappedEvents, executionAt, pairSymbol);
+    const approvalState = eventRisk.action === "wait" ? "blocked" : "ready";
+
     const insertPayload = {
       user_id: session.user.id,
       forex_pair_id: pairData.id,
@@ -181,6 +223,14 @@ export async function POST(request: NextRequest) {
       ai_risks: aiBrief.risks,
       ai_invalidators: aiBrief.invalidationSignals,
       ai_checklist: aiBrief.checklist,
+      ai_model: aiBrief.aiModel,
+      prompt_version: aiBrief.promptVersion,
+      generation_latency_ms: aiBrief.generationLatencyMs,
+      event_risk_action: eventRisk.action,
+      event_risk_summary: eventRisk.summary,
+      event_risk_window_start: eventRisk.windowStart,
+      event_risk_window_end: eventRisk.windowEnd,
+      approval_state: approvalState,
       raw_ai_response: aiBrief,
       status: "generated",
     };
@@ -188,7 +238,7 @@ export async function POST(request: NextRequest) {
     const { data: created, error: createError } = await supabase
       .from("pre_trade_briefs")
       .insert([insertPayload])
-      .select("id, pair_symbol_snapshot, timeframe, market_session, directional_bias_input, risk_reward_ratio, ai_summary, ai_bias, ai_confluence, ai_risks, ai_invalidators, ai_checklist, created_at")
+      .select("id, pair_symbol_snapshot, timeframe, market_session, directional_bias_input, risk_reward_ratio, ai_summary, ai_bias, ai_confluence, ai_risks, ai_invalidators, ai_checklist, ai_model, prompt_version, generation_latency_ms, event_risk_action, event_risk_summary, event_risk_window_start, event_risk_window_end, approval_state, created_at")
       .single();
 
     if (createError) {

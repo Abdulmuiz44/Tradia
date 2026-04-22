@@ -2,6 +2,10 @@ import { mistral } from "@ai-sdk/mistral";
 import { generateText } from "ai";
 import type { GeneratedMarketBias, MarketBiasInput } from "@/types/marketBias";
 
+const MARKET_BIAS_MODEL = "mistral-large-latest";
+const MARKET_BIAS_PROMPT_VERSION = "market_bias_v1";
+type ParsedMarketBias = Omit<GeneratedMarketBias, "aiModel" | "promptVersion" | "generationLatencyMs">;
+
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const toStringArray = (value: unknown, fallback: string[]): string[] => {
@@ -39,6 +43,9 @@ const fallbackBias = (input: MarketBiasInput): GeneratedMarketBias => ({
   ],
   alternateScenario: "If the current structure fails, switch to scenario-based planning and wait for confirmation.",
   confidenceRationale: "Confidence is moderate due to incomplete confluence and no guaranteed directional continuation.",
+  aiModel: MARKET_BIAS_MODEL,
+  promptVersion: MARKET_BIAS_PROMPT_VERSION,
+  generationLatencyMs: 0,
 });
 
 const parseDirection = (value: unknown): GeneratedMarketBias["biasDirection"] => {
@@ -47,7 +54,7 @@ const parseDirection = (value: unknown): GeneratedMarketBias["biasDirection"] =>
   return "neutral";
 };
 
-const parseModelOutput = (raw: string, input: MarketBiasInput): GeneratedMarketBias => {
+const parseModelOutput = (raw: string, input: MarketBiasInput): ParsedMarketBias => {
   try {
     const parsed = JSON.parse(raw);
     const fallback = fallbackBias(input);
@@ -72,6 +79,7 @@ const parseModelOutput = (raw: string, input: MarketBiasInput): GeneratedMarketB
 };
 
 export async function generateMarketBias(input: MarketBiasInput): Promise<GeneratedMarketBias> {
+  const startedAt = Date.now();
   const prompt = `You are Tradia's Forex market bias assistant.
 
 Return only valid JSON with this exact shape:
@@ -103,15 +111,24 @@ Context:
 
   try {
     const result = await generateText({
-      model: mistral("mistral-large-latest") as any,
+      model: mistral(MARKET_BIAS_MODEL) as any,
       prompt,
       temperature: 0.2,
       maxTokens: 700,
     });
 
-    return parseModelOutput(result.text, input);
+    const parsed = parseModelOutput(result.text, input);
+    return {
+      ...parsed,
+      aiModel: MARKET_BIAS_MODEL,
+      promptVersion: MARKET_BIAS_PROMPT_VERSION,
+      generationLatencyMs: Date.now() - startedAt,
+    };
   } catch (error) {
     console.error("Market bias AI generation failed:", error);
-    return fallbackBias(input);
+    return {
+      ...fallbackBias(input),
+      generationLatencyMs: Date.now() - startedAt,
+    };
   }
 }

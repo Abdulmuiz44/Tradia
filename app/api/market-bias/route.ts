@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("market_bias_reports")
       .select(
-        "id, pair_symbol_snapshot, timeframe_set, bias_direction, confidence_score, key_levels, assumptions, invalidation_conditions, alternate_scenario, confidence_rationale, source, created_at"
+        "id, pair_symbol_snapshot, timeframe_set, bias_direction, confidence_score, key_levels, assumptions, invalidation_conditions, alternate_scenario, confidence_rationale, ai_model, prompt_version, generation_latency_ms, source, created_at"
       )
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false })
@@ -115,12 +115,15 @@ export async function POST(request: NextRequest) {
           invalidation_conditions: generated.invalidationConditions,
           alternate_scenario: generated.alternateScenario,
           confidence_rationale: generated.confidenceRationale,
+          ai_model: generated.aiModel,
+          prompt_version: generated.promptVersion,
+          generation_latency_ms: generated.generationLatencyMs,
           source: "ai",
           raw_ai_response: generated,
         },
       ])
       .select(
-        "id, pair_symbol_snapshot, timeframe_set, bias_direction, confidence_score, key_levels, assumptions, invalidation_conditions, alternate_scenario, confidence_rationale, source, created_at"
+        "id, pair_symbol_snapshot, timeframe_set, bias_direction, confidence_score, key_levels, assumptions, invalidation_conditions, alternate_scenario, confidence_rationale, ai_model, prompt_version, generation_latency_ms, source, created_at"
       )
       .single();
 

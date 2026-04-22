@@ -20,6 +20,9 @@ export interface GeneratedMarketBias {
   invalidationConditions: string[];
   alternateScenario: string;
   confidenceRationale: string;
+  aiModel: string;
+  promptVersion: string;
+  generationLatencyMs: number;
 }
 
 export interface MarketBiasRecord {
@@ -39,6 +42,9 @@ export interface MarketBiasRecord {
   invalidation_conditions: string[];
   alternate_scenario: string | null;
   confidence_rationale: string | null;
+  ai_model?: string | null;
+  prompt_version?: string | null;
+  generation_latency_ms?: number | null;
   source: BiasSource;
   created_at: string;
   updated_at: string;
