@@ -74,6 +74,13 @@ const formatDate = (iso: string) => {
   }
 };
 
+const toSafeStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean);
+};
+
 function PreTradeBriefContent() {
   const { status } = useSession();
   const router = useRouter();
@@ -454,13 +461,20 @@ function PreTradeBriefContent() {
     }
   };
 
-  const renderList = (items: string[]) => (
+  const renderList = (items: unknown) => {
+    const safeItems = toSafeStringArray(items);
+    if (!safeItems.length) {
+      return <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">N/A</p>;
+    }
+
+    return (
     <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
-      {items.map((item, idx) => (
+      {safeItems.map((item, idx) => (
         <li key={`${item}-${idx}`}>{item}</li>
       ))}
     </ul>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-white dark:bg-[#0D1117] transition-colors duration-300">
@@ -786,15 +800,16 @@ function PreTradeBriefContent() {
                       <span className="font-medium">Confidence:</span> {latestBias.confidence_score}
                     </div>
                     <div className="text-sm text-gray-700 dark:text-gray-300">
-                      <span className="font-medium">Timeframes:</span> {latestBias.timeframe_set.join(", ")}
+                      <span className="font-medium">Timeframes:</span>{" "}
+                      {toSafeStringArray(latestBias.timeframe_set).join(", ") || "N/A"}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Assumptions</h3>
-                      {renderList(latestBias.assumptions || [])}
+                      {renderList(latestBias.assumptions)}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Invalidation Conditions</h3>
-                      {renderList(latestBias.invalidation_conditions || [])}
+                      {renderList(latestBias.invalidation_conditions)}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Alternate Scenario</h3>
@@ -837,7 +852,7 @@ function PreTradeBriefContent() {
                     )}
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Relevant Events</h3>
-                      {!eventRisk.events.length ? (
+                      {!Array.isArray(eventRisk.events) || !eventRisk.events.length ? (
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No mapped events in window.</p>
                       ) : (
                         <ul className="mt-1 space-y-2">
@@ -959,15 +974,15 @@ function PreTradeBriefContent() {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Confluence</h3>
-                      {renderList(selectedBrief.ai_confluence || [])}
+                      {renderList(selectedBrief.ai_confluence)}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Risks</h3>
-                      {renderList(selectedBrief.ai_risks || [])}
+                      {renderList(selectedBrief.ai_risks)}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Invalidation</h3>
-                      {renderList(selectedBrief.ai_invalidators || [])}
+                      {renderList(selectedBrief.ai_invalidators)}
                     </div>
 
                     <div>
@@ -985,7 +1000,7 @@ function PreTradeBriefContent() {
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white mb-2">Checklist Progress</h3>
                       <div className="space-y-2">
-                        {(selectedBrief.ai_checklist || []).map((item, idx) => {
+                        {toSafeStringArray(selectedBrief.ai_checklist).map((item, idx) => {
                           const checked = checklistStateDraft[item]?.completed || false;
                           return (
                             <label key={`${item}-${idx}`} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
