@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { createClient } from "@/utils/supabase/server";
-import type { ChecklistStateMap, EditablePreTradeBriefStatus } from "@/types/preTradeBrief";
+import type { ChecklistStateMap, EditablePreTradeBriefStatus, PreTradeApprovalState } from "@/types/preTradeBrief";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,8 @@ const EDITABLE_STATUSES: EditablePreTradeBriefStatus[] = [
   "executed",
   "skipped",
 ];
+
+const APPROVAL_STATES: PreTradeApprovalState[] = ["ready", "blocked", "manual_override"];
 
 const isChecklistStateMap = (value: unknown): value is ChecklistStateMap => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -57,6 +59,14 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
         ai_risks,
         ai_invalidators,
         ai_checklist,
+        ai_model,
+        prompt_version,
+        generation_latency_ms,
+        event_risk_action,
+        event_risk_summary,
+        event_risk_window_start,
+        event_risk_window_end,
+        approval_state,
         raw_ai_response,
         status,
         trader_notes,
@@ -97,7 +107,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       trader_notes?: string | null;
       checklist_state?: ChecklistStateMap | null;
       last_reviewed_at?: string | null;
+      approval_state?: PreTradeApprovalState;
     } = {};
+    const manualApprovalRequested = body.approval_state !== undefined;
 
     if (body.status !== undefined) {
       const status = String(body.status || "").trim().toLowerCase() as EditablePreTradeBriefStatus;
@@ -137,11 +149,44 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       }
     }
 
+    if (body.approval_state !== undefined) {
+      const requested = String(body.approval_state || "").trim().toLowerCase() as PreTradeApprovalState;
+      if (!APPROVAL_STATES.includes(requested)) {
+        return NextResponse.json({ error: "Invalid approval_state value" }, { status: 400 });
+      }
+      updatePayload.approval_state = requested;
+    }
+
     if (Object.keys(updatePayload).length === 0) {
       return NextResponse.json({ error: "No supported fields provided" }, { status: 400 });
     }
 
     const supabase = createClient();
+
+    const { data: current, error: currentError } = await supabase
+      .from("pre_trade_briefs")
+      .select("id, ai_checklist, checklist_state, event_risk_action, approval_state")
+      .eq("id", params.id)
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (currentError || !current) {
+      return NextResponse.json({ error: "Brief not found or update failed" }, { status: 404 });
+    }
+
+    if (!manualApprovalRequested || updatePayload.approval_state !== "manual_override") {
+      const mergedChecklistState = {
+        ...((current.checklist_state as ChecklistStateMap | null) || {}),
+        ...((updatePayload.checklist_state as ChecklistStateMap | null) || {}),
+      } as ChecklistStateMap;
+
+      const aiChecklist = Array.isArray(current.ai_checklist) ? (current.ai_checklist as string[]) : [];
+      const allAiChecklistComplete = aiChecklist.every((item) => mergedChecklistState[item]?.completed === true);
+      const eventRiskAck = mergedChecklistState["Event risk acknowledged"]?.completed === true;
+      const blockedByEventRisk = current.event_risk_action === "wait" && !eventRiskAck;
+
+      updatePayload.approval_state = allAiChecklistComplete && !blockedByEventRisk ? "ready" : "blocked";
+    }
 
     const { data, error } = await supabase
       .from("pre_trade_briefs")
@@ -165,6 +210,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         ai_risks,
         ai_invalidators,
         ai_checklist,
+        ai_model,
+        prompt_version,
+        generation_latency_ms,
+        event_risk_action,
+        event_risk_summary,
+        event_risk_window_start,
+        event_risk_window_end,
+        approval_state,
         status,
         trader_notes,
         checklist_state,

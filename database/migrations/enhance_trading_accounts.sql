@@ -7,6 +7,9 @@ ADD COLUMN IF NOT EXISTS account_size NUMERIC(14,2) DEFAULT 0;
 
 -- Add a constraint to ensure account_size is not negative
 ALTER TABLE trading_accounts
+DROP CONSTRAINT IF EXISTS check_account_size_positive;
+
+ALTER TABLE trading_accounts
 ADD CONSTRAINT check_account_size_positive CHECK (account_size >= 0);
 
 -- Create an index on user_id and is_active for faster queries

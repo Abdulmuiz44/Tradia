@@ -7,6 +7,40 @@ import bcrypt from "bcryptjs";
 import { createAdminSupabase } from "@/utils/supabase/admin";
 import type { NextAuthOptions } from "next-auth";
 
+const DEFAULT_PROD_BASE_URL = "https://tradiaai.app";
+
+const sanitizeUrl = (raw?: string | null): string | null => {
+  if (!raw) return null;
+
+  const trimmed = raw.trim().replace(/^['"]+|['"]+$/g, "");
+  if (!trimmed) return null;
+
+  const repaired = trimmed.replace(/^([a-zA-Z][a-zA-Z0-9+\-.]*)"\/\//, "$1://");
+
+  try {
+    return new URL(repaired).origin;
+  } catch {
+    return null;
+  }
+};
+
+const resolveSafeBaseUrl = (baseUrl: string): string => {
+  const isProd = process.env.NODE_ENV === "production";
+  const candidates = [
+    sanitizeUrl(baseUrl),
+    sanitizeUrl(process.env.NEXTAUTH_URL),
+    sanitizeUrl(process.env.NEXT_PUBLIC_BASE_URL),
+  ].filter(Boolean) as string[];
+
+  const firstNonLocal = candidates.find((candidate) => !candidate.includes("localhost"));
+  if (isProd && firstNonLocal) return firstNonLocal;
+
+  const firstCandidate = candidates[0];
+  if (firstCandidate) return firstCandidate;
+
+  return isProd ? DEFAULT_PROD_BASE_URL : "http://localhost:3000";
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -167,12 +201,15 @@ export const authOptions: NextAuthOptions = {
     },
 
     async redirect({ url, baseUrl }) {
+      const safeBaseUrl = resolveSafeBaseUrl(baseUrl);
+
       // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/")) return `${safeBaseUrl}${url}`;
       // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
+      const safeCallbackUrl = sanitizeUrl(url);
+      if (safeCallbackUrl && safeCallbackUrl === safeBaseUrl) return url;
       // Default redirect to dashboard after successful login
-      return `${baseUrl}/dashboard`;
+      return `${safeBaseUrl}/dashboard`;
     },
   },
 
@@ -182,4 +219,3 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-

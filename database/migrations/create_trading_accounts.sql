@@ -28,6 +28,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_trading_accounts_updated ON trading_accounts;
 CREATE TRIGGER trg_trading_accounts_updated
   BEFORE UPDATE ON trading_accounts
   FOR EACH ROW

@@ -4,6 +4,10 @@ import type { GeneratedPreTradeBrief, PreTradeBriefInput } from "@/types/preTrad
 
 const SAFETY_DISCLAIMER =
   "This analysis is decision-support only, not financial advice, and does not guarantee outcomes.";
+const PRE_TRADE_BRIEF_MODEL = "mistral-large-latest";
+const PRE_TRADE_BRIEF_PROMPT_VERSION = "pre_trade_brief_v2";
+
+type ParsedPreTradeBrief = Omit<GeneratedPreTradeBrief, "aiModel" | "promptVersion" | "generationLatencyMs">;
 
 const cleanText = (value: string): string => {
   const blockedPhrases = [
@@ -58,9 +62,12 @@ const fallbackBrief = (input: PreTradeBriefInput): GeneratedPreTradeBrief => ({
     "Entry, stop-loss, and take-profit are defined before execution.",
     "No certainty assumptions; scenario-based execution only.",
   ],
+  aiModel: PRE_TRADE_BRIEF_MODEL,
+  promptVersion: PRE_TRADE_BRIEF_PROMPT_VERSION,
+  generationLatencyMs: 0,
 });
 
-const parseModelOutput = (rawText: string, input: PreTradeBriefInput): GeneratedPreTradeBrief => {
+const parseModelOutput = (rawText: string, input: PreTradeBriefInput): ParsedPreTradeBrief => {
   try {
     const parsed = JSON.parse(rawText);
 
@@ -78,6 +85,7 @@ const parseModelOutput = (rawText: string, input: PreTradeBriefInput): Generated
 };
 
 export async function generatePreTradeBrief(input: PreTradeBriefInput): Promise<GeneratedPreTradeBrief> {
+  const startedAt = Date.now();
   const prompt = `You are Tradia's Forex pre-trade analysis assistant.
 
 Task:
@@ -110,7 +118,7 @@ Context:
 
   try {
     const result = await generateText({
-      model: mistral("mistral-large-latest") as any,
+      model: mistral(PRE_TRADE_BRIEF_MODEL) as any,
       prompt,
       temperature: 0.2,
       maxTokens: 500,
@@ -121,10 +129,16 @@ Context:
     return {
       ...parsed,
       summary: `${parsed.summary} ${SAFETY_DISCLAIMER}`.trim(),
+      aiModel: PRE_TRADE_BRIEF_MODEL,
+      promptVersion: PRE_TRADE_BRIEF_PROMPT_VERSION,
+      generationLatencyMs: Date.now() - startedAt,
     };
   } catch (error) {
     console.error("Pre-trade brief AI generation failed:", error);
-    return fallbackBrief(input);
+    return {
+      ...fallbackBrief(input),
+      generationLatencyMs: Date.now() - startedAt,
+    };
   }
 }
 

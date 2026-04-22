@@ -3,6 +3,7 @@ export type DirectionalBias = "bullish" | "bearish" | "neutral";
 
 export type EditablePreTradeBriefStatus = "draft" | "ready" | "invalidated" | "executed" | "skipped";
 export type PreTradeBriefStatus = "generated" | "failed" | EditablePreTradeBriefStatus;
+export type PreTradeApprovalState = "ready" | "blocked" | "manual_override";
 
 export interface PreTradeBriefInput {
   pairSymbol: string;
@@ -22,6 +23,9 @@ export interface GeneratedPreTradeBrief {
   risks: string[];
   invalidationSignals: string[];
   checklist: string[];
+  aiModel: string;
+  promptVersion: string;
+  generationLatencyMs: number;
 }
 
 export interface ChecklistItemState {
@@ -50,7 +54,15 @@ export interface PreTradeBriefRecord {
   ai_risks: string[];
   ai_invalidators: string[];
   ai_checklist: string[];
+  ai_model?: string | null;
+  prompt_version?: string | null;
+  generation_latency_ms?: number | null;
   raw_ai_response: unknown;
+  event_risk_action?: "proceed" | "size_down" | "wait" | null;
+  event_risk_summary?: string | null;
+  event_risk_window_start?: string | null;
+  event_risk_window_end?: string | null;
+  approval_state?: PreTradeApprovalState | null;
   trader_notes?: string | null;
   checklist_state?: ChecklistStateMap | null;
   last_reviewed_at?: string | null;
@@ -77,4 +89,5 @@ export interface UpdatePreTradeBriefPayload {
   trader_notes?: string | null;
   checklist_state?: ChecklistStateMap | null;
   last_reviewed_at?: string | null;
+  approval_state?: PreTradeApprovalState;
 }

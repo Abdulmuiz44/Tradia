@@ -1,6 +1,14 @@
 -- FINAL RLS FIX: Completely disable RLS for trades table to allow operations
 -- This will allow all authenticated operations while we debug the policy
 
+DO $$
+BEGIN
+  IF to_regclass('public.trades') IS NULL THEN
+    RAISE NOTICE 'public.trades missing, skipping 008_final_rls_fix.sql';
+    RETURN;
+  END IF;
+END $$;
+
 ALTER TABLE public.trades DISABLE ROW LEVEL SECURITY;
 
 -- Drop any existing policies that might be interfering
