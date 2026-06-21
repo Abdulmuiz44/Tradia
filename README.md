@@ -1,6 +1,6 @@
 # Tradia - The #1 AI Trading Journal for Serious Forex & Prop Firm Traders
 
-[![GitHub](https://img.shields.io/badge/github-abdulmuiz44%2Ftradia-blue?logo=github)](https://github.com/abdulmuiz44/tradia)
+[![GitHub](https://img.shields.io/badge/github-abdulmuiz44%2Ftradia-blue?logo=github)](https://github.com/talocode/tradia)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/next.js-14%2B-black?logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0%2B-blue?logo=typescript)](https://www.typescriptlang.org)
