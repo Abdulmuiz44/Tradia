@@ -1,6 +1,6 @@
 {
   "name": "@talocode/tradia",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agentic trading intelligence for trade proposals, risk checks, journals, performance reports and public accountability updates.",
   "type": "module",
   "main": "dist/index.js",
