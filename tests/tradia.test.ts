@@ -4,28 +4,28 @@ import {
   proposeTrade, journalTrade, analyzePerformance,
   generatePortfolioReport, generatePublicUpdate, simulateBacktest,
   generateAccountabilityCard, exportMarkdown, exportJson,
-} from '../src/engine'
+} from '../src/tradia/engine'
 import {
   checkRiskInternal, calculatePositionSize, calculateRiskReward,
   calculateDrawdown, calculateExposure, validateRiskRules,
   detectRevengeTrading, detectOverleveraging, detectRuleViolation,
-} from '../src/risk'
+} from '../src/tradia/risk'
 import {
   createJournalEntryInternal, extractTradeLessonInternal,
   classifyTradeMistake, scoreDiscipline, summarizeTradeOutcome,
-} from '../src/journal'
+} from '../src/tradia/journal'
 import {
   computeWinRate, computeAverageR, computeProfitFactor,
   computeExpectancy, computeMaxDrawdown,
   compute7d28d365dPerformance, computeSinceInception,
-} from '../src/reporting'
+} from '../src/tradia/reporting'
 import {
   TradiaClient, createTradiaClient,
   TradiaError, TradiaAuthError, TradiaInsufficientCreditsError,
   TradiaValidationError, TradiaRateLimitError, TradiaRiskError,
   TradiaSafetyError, TradiaUnsupportedError,
-} from '../src/client'
-import type { TradePosition, TradeProposalResult, JournalResult, PublicUpdateResult, BacktestResult, AccountabilityCardResult, RiskResult } from '../src/types'
+} from '../src/tradia/client'
+import type { TradePosition, TradeProposalResult, JournalResult, PublicUpdateResult, BacktestResult, AccountabilityCardResult, RiskResult } from '../src/tradia/types'
 
 const sampleTrades: TradePosition[] = [
   { symbol: 'XAUUSD', direction: 'long', entry: 2350, stopLoss: 2340, takeProfit: 2370, riskAmount: 10, profitLoss: 20, rMultiple: 2, status: 'closed' },
