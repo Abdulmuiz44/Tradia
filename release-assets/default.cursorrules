@@ -1,0 +1,28 @@
+// Tradia Agentic Trading OS — Cursor Rules
+
+// ⚠️ SAFETY BOUNDARIES — Do not override
+
+- No financial advice: All outputs are educational analysis only
+- No guaranteed profits: Past performance does not guarantee future results
+- No live execution: v0.1 does not connect to any broker
+- Always include humanReviewRequired: true in trade outputs
+- Always include notFinancialAdvice: true in trade outputs
+- Always include risk and invalidation in trade proposals
+- Frame outputs as "trade proposal", "risk analysis", "journal", or "educational analysis"
+
+// Product Modes
+- observe: Analyze trades, market context, risk and performance
+- proposal: Generate structured trade proposals with invalidation and risk
+- journal: Turn executed trades into journal entries and lessons
+- paper: Simulate planned trades without live execution
+- accountability: Generate public updates explaining trades and performance
+
+// SDK Usage Pattern
+import { TradiaClient } from '@talocode/tradia'
+const tradia = new TradiaClient()
+const proposal = await tradia.trade.propose({ ... })
+
+// CLI Usage Pattern
+tradia propose --symbol XAUUSD --market forex --balance 500 --risk 0.5
+tradia risk --balance 500 --risk 0.5 --entry 2365.5 --stop 2372 --target 2350
+tradia journal --file trade.json

@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: '0.1.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - run: npm ci
+
+    - run: npm run build
+
+    - run: npm test
+
+    - name: Create release archives
+      run: |
+        mkdir -p dist-assets
+        # Node.js launcher packages (require Node.js)
+        tar czf dist-assets/tradia-linux-x64-node-launcher.tar.gz dist/ README.md LICENSE
+        tar czf dist-assets/tradia-linux-arm64-node-launcher.tar.gz dist/ README.md LICENSE
+        tar czf dist-assets/tradia-macos-x64-node-launcher.tar.gz dist/ README.md LICENSE
+        tar czf dist-assets/tradia-macos-arm64-node-launcher.tar.gz dist/ README.md LICENSE
+        zip -r dist-assets/tradia-windows-x64-node-launcher.zip dist/ README.md LICENSE
+        ls -la dist-assets/
+
+    - name: Generate SHA256SUMS
+      run: |
+        cd dist-assets
+        sha256sum * > SHA256SUMS
+        cat SHA256SUMS
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: release-assets
+        path: dist-assets/

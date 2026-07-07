@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - run: npm ci
+
+    - run: npm run build
+
+    - run: npm test
+
+    - run: npm pack --dry-run
+
+    - run: npm pack
+
+    - name: Test tarball install
+      run: |
+        mkdir -p /tmp/tradia-ci-test
+        cp *.tgz /tmp/tradia-ci-test/
+        cd /tmp/tradia-ci-test
+        npm init -y
+        npm install ./talocode-tradia-*.tgz
+        npx tradia --help
+        npx tradia --version
+        npx tradia risk --balance 500 --risk 0.5 --entry 2365.5 --stop 2372 --target 2350

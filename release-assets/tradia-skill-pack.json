@@ -1,0 +1,57 @@
+{
+  "name": "Tradia Agentic Trading OS",
+  "slug": "tradia-agentic-trading-os",
+  "version": "0.1.0",
+  "description": "Risk-first agentic trading intelligence for proposals, journals, reports and public accountability.",
+  "tools": [
+    {
+      "name": "tradia_trade_propose",
+      "description": "Generate a structured trade proposal with risk analysis, invalidation, and safety warnings. Not financial advice."
+    },
+    {
+      "name": "tradia_risk_check",
+      "description": "Check risk parameters for a trade idea. Returns approval status, violations, and warnings."
+    },
+    {
+      "name": "tradia_trade_journal",
+      "description": "Create a journal entry for a completed trade with lessons and discipline score."
+    },
+    {
+      "name": "tradia_performance_analyze",
+      "description": "Analyze trading performance including win rate, profit factor, expectancy, and drawdown."
+    },
+    {
+      "name": "tradia_backtest_simulate",
+      "description": "Run a backtest simulation on historical trades with equity curve and drawdown analysis."
+    },
+    {
+      "name": "tradia_public_update_generate",
+      "description": "Generate a public accountability update explaining trades and performance."
+    },
+    {
+      "name": "tradia_accountability_card",
+      "description": "Generate an accountability card combining trade details, journal entries, and performance."
+    }
+  ],
+  "rules": [
+    "All trade outputs must include humanReviewRequired: true",
+    "All trade outputs must include notFinancialAdvice: true",
+    "No live order execution",
+    "No guaranteed profit claims",
+    "No financial advice",
+    "No broker integration in v0.1",
+    "Frame outputs as educational analysis"
+  ],
+  "prompts": [
+    {
+      "name": "risk-check-trade",
+      "description": "Risk-check a trade idea before considering it",
+      "template": "Use Tradia to risk-check this {{symbol}} {{direction}} trade idea. Account balance: ${{balance}}. Risk: {{riskPercent}}%. Entry: {{entry}}. Stop: {{stopLoss}}. Target: {{takeProfit}}."
+    },
+    {
+      "name": "journal-trade",
+      "description": "Journal a completed trade for review",
+      "template": "Use Tradia to journal this completed {{symbol}} trade. Direction: {{direction}}. Entry: {{entry}}. Exit: {{exit}}. P&L: ${{pnl}}. R: {{rMultiple}}."
+    }
+  ]
+}

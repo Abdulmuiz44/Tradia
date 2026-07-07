@@ -1,0 +1,23 @@
+{
+  "strategy": "liquidity_sweep",
+  "startingBalance": 1000,
+  "riskPercent": 0.5,
+  "trades": [
+    {
+      "symbol": "XAUUSD", "direction": "long", "entry": 2350, "stopLoss": 2340, "takeProfit": 2370,
+      "riskAmount": 10, "profitLoss": 20, "rMultiple": 2, "status": "closed"
+    },
+    {
+      "symbol": "XAUUSD", "direction": "short", "entry": 2370, "stopLoss": 2380, "takeProfit": 2350,
+      "riskAmount": 10, "profitLoss": -10, "rMultiple": -1, "status": "closed"
+    },
+    {
+      "symbol": "EURUSD", "direction": "long", "entry": 1.10, "stopLoss": 1.09, "takeProfit": 1.12,
+      "riskAmount": 10, "profitLoss": 20, "rMultiple": 2, "status": "closed"
+    },
+    {
+      "symbol": "BTCUSD", "direction": "long", "entry": 60000, "stopLoss": 59000, "takeProfit": 62000,
+      "riskAmount": 100, "profitLoss": 200, "rMultiple": 2, "status": "closed"
+    }
+  ]
+}
