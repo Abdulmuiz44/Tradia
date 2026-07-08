@@ -1,64 +1,71 @@
 # Tradia Agentic Trading OS
 
-Agentic trading intelligence for trade proposals, risk checks, journals, performance reports and public accountability updates.
+**Your trading journal, risk engine, and proposal system — in one CLI and SDK.**
 
-**⚠️ Not financial advice. Human review required before acting on any trade.**
-
-## Features
-
-- **Proposal Mode** — Generate structured trade proposals with invalidation and risk
-- **Risk Engine** — Position sizing, risk-reward, drawdown, exposure, revenge trading detection
-- **Journal Mode** — Create trade journal entries with lessons and discipline scores
-- **Performance Analysis** — Win rate, profit factor, expectancy, max drawdown, R-multiples
-- **Backtest Simulation** — Equity curves, win rates, drawdown analysis
-- **Public Accountability** — Generate public updates explaining trades and performance
-- **Portfolio Reports** — Account-level performance summaries
-- **CLI** — Full command-line interface for local usage
-- **API Server** — REST API for hosted and local usage
-- **SDK** — TypeScript client for Node.js applications
-- **MCP Tools** — Model Context Protocol tools for AI agent integration
-
-## Supported Markets
-
-`forex` · `crypto` · `stocks` · `indices` · `commodities` · `prop_firm_account` · `paper_account`
-
-## Supported Strategies
-
-`liquidity_sweep` · `trend_continuation` · `breakout_retest` · `support_resistance` · `mean_reversion` · `momentum` · `news_avoidance` · `custom`
-
-## Installation
+Stop spreadsheeting your trades. Tradia gives you structured proposals, position sizing, risk checks, journals, backtests, and accountability reports from your terminal.
 
 ```bash
 npm install @talocode/tradia
 ```
 
-## CLI Usage
+**⚠️ Not financial advice. Human review required before acting on any trade.**
+
+---
+
+## Why Tradia?
+
+Every trader hits the same wall: **you take a trade, forget why, and repeat the same mistake.** Tradia codifies your process so every decision is planned, reviewed, and learned from.
+
+| Without Tradia | With Tradia |
+|----------------|-------------|
+| Gut-feel entries | Structured proposals with invalidation criteria |
+| Forgot why you entered | Journals with lessons and discipline scores |
+| No idea if your strategy works | Backtest equity curves, win rates, drawdowns |
+| No accountability | Public updates explaining your trades |
+
+---
+
+## One workflow, four commands
 
 ```bash
-# Generate a trade proposal
+# 1. Propose a trade — get a structured plan with risk baked in
 tradia propose --symbol XAUUSD --market forex --strategy liquidity_sweep --balance 500 --risk 0.5 --entry 2365.5 --stop 2372 --target 2350
 
-# Check risk parameters
-tradia risk --balance 500 --risk 0.5 --entry 2365.5 --stop 2372 --target 2350
+# 2. Journal the result — capture the lesson
+tradia journal --file trade-result.json
 
-# Journal a trade
-tradia journal --file trade.json
+# 3. Analyze your performance
+tradia performance --file trades.json
 
-# Run a backtest
-tradia backtest --file trades.json --balance 500 --risk 0.5
-
-# Generate a public accountability update
-tradia public-update --file trade-result.json
+# 4. Share accountability
+tradia public-update --file performance-report.json
 ```
 
-## SDK Usage
+---
+
+## What's inside
+
+| Capability | What it does |
+|------------|-------------|
+| **Proposal Engine** | Generates structured trade proposals with entry, stop, target, invalidation, and risk-reward |
+| **Risk Engine** | Position sizing, max drawdown, exposure limits, revenge trading detection |
+| **Journals** | Trade entries with lessons, discipline scores, emotional state tracking |
+| **Performance Analysis** | Win rate, profit factor, expectancy, max drawdown, R-multiples |
+| **Backtest Simulation** | Equity curves, Monte Carlo, strategy comparison |
+| **Accountability Cards** | Public-facing trade explanations for transparency |
+| **Portfolio Reports** | Account-level performance summaries across all positions |
+| **Exports** | Markdown and JSON for sharing or further analysis |
+
+---
+
+## SDK (in your code)
 
 ```typescript
 import { TradiaClient } from '@talocode/tradia'
 
 const tradia = new TradiaClient()
 
-// Local mode (no API key required)
+// Propose a trade with full risk analysis
 const proposal = await tradia.trade.propose({
   market: 'forex',
   symbol: 'XAUUSD',
@@ -69,20 +76,48 @@ const proposal = await tradia.trade.propose({
   stopLoss: 2372,
   takeProfit: 2350,
 })
+// → { entry, stopLoss, takeProfit, riskReward, positionSize, maxDrawdown, invalidation }
 
-console.log(proposal)
+// Journal the outcome
+const journal = await tradia.trade.journal({
+  trade: proposal,
+  outcome: { pnl: 45.20, closed: true },
+  lessons: ['Waited for confirmation — good discipline'],
+})
+// → { disciplineScore, lessons, emotionalState }
+
+// Analyze performance over time
+const analysis = await tradia.performance.analyze({
+  trades: [journal, journal2, journal3],
+  accountBalance: 500,
+})
+// → { winRate, profitFactor, expectancy, maxDrawdown }
 ```
+
+---
+
+## CLI Reference
+
+| Command | Description |
+|---------|-------------|
+| `tradia propose` | Generate a structured trade proposal |
+| `tradia risk` | Check risk parameters and position sizing |
+| `tradia journal` | Create a trade journal entry |
+| `tradia performance` | Analyze trading performance |
+| `tradia backtest` | Run a backtest simulation |
+| `tradia portfolio` | Generate a portfolio report |
+| `tradia public-update` | Generate a public accountability update |
+| `tradia export` | Export data as markdown or JSON |
+
+---
 
 ## API Server
 
 ```bash
-# Start the server
+# Start local server
 PORT=3070 npx tradia-server
 
-# Health check
-curl http://localhost:3070/health
-
-# Trade proposal
+# Use any endpoint
 curl -X POST http://localhost:3070/v1/tradia/trade/propose \
   -H 'Content-Type: application/json' \
   -d '{
@@ -96,27 +131,9 @@ curl -X POST http://localhost:3070/v1/tradia/trade/propose \
   }'
 ```
 
-## API Routes
+---
 
-| Method | Path | Description | Credits |
-|--------|------|-------------|---------|
-| GET | `/health` | Health check | — |
-| GET | `/v1/tradia/health` | Health check | — |
-| POST | `/v1/tradia/agent/plan` | Generate agent plan | 40 |
-| POST | `/v1/tradia/market/analyze` | Analyze market context | 30 |
-| POST | `/v1/tradia/signal/evaluate` | Evaluate a signal | 30 |
-| POST | `/v1/tradia/risk/check` | Check risk parameters | 20 |
-| POST | `/v1/tradia/trade/propose` | Generate trade proposal | 40 |
-| POST | `/v1/tradia/trade/journal` | Create journal entry | 25 |
-| POST | `/v1/tradia/portfolio/report` | Portfolio report | 50 |
-| POST | `/v1/tradia/performance/analyze` | Performance analysis | 35 |
-| POST | `/v1/tradia/public-update/generate` | Public accountability update | 30 |
-| POST | `/v1/tradia/backtest/simulate` | Backtest simulation | 60 |
-| POST | `/v1/tradia/accountability/card` | Accountability card | 25 |
-| POST | `/v1/tradia/export/markdown` | Export as markdown | 5 |
-| POST | `/v1/tradia/export/json` | Export as JSON | 5 |
-
-## Talocode Cloud Usage
+## Talocode Cloud
 
 ```typescript
 import { TradiaClient } from '@talocode/tradia'
@@ -125,35 +142,22 @@ const tradia = new TradiaClient({
   apiKey: process.env.TALOCODE_API_KEY,
   useCloud: true,
 })
-
-const proposal = await tradia.trade.propose({
-  market: 'forex',
-  symbol: 'XAUUSD',
-  accountBalance: 500,
-  riskPercent: 0.5,
-  strategy: 'liquidity_sweep',
-  entry: 2365.5,
-  stopLoss: 2372,
-  takeProfit: 2350,
-})
 ```
 
-## Safety Boundaries
+All 14 endpoints available via Talocode Cloud API at `api.talocode.site`.
+
+---
+
+## Safety
 
 Tradia v0.1 is **agentic trading intelligence**, not live autonomous execution.
 
-- **No real trade execution** — v0.1 does not connect to any broker
-- **No financial advice** — All outputs are educational analysis
-- **No guaranteed profits** — Past performance does not guarantee future results
-- **Human review required** — Every output requires human review before action
-- **Proposal/simulation mode only** — No live order placement
-- **Risk warnings included** — Every output includes risk disclaimers
+- No real trade execution — does not connect to any broker
+- No financial advice — all outputs are educational analysis
+- No guaranteed profits — past performance does not guarantee future results
+- Human review required before action
 
-## Support
-
-Open-source Talocode products are built and maintained by Abdulmuiz Adeyemo.
-
-Sponsor the work: https://github.com/sponsors/Abdulmuiz44
+---
 
 ## License
 
