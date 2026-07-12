@@ -1,0 +1,46 @@
+Metadata-Version: 2.4
+Name: tradia
+Version: 0.1.0
+Summary: Agentic trading intelligence — trade proposals, risk checks, journals, performance reports, and public accountability updates
+Author: Talocode
+License: MIT
+Project-URL: Homepage, https://github.com/talocode/tradia
+Project-URL: PyPI, https://pypi.org/project/tradia/
+Project-URL: npm, https://www.npmjs.com/package/@talocode/tradia
+Keywords: trading,forex,crypto,risk-management,journal,backtesting,talocode
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+
+# Tradia
+
+Agentic trading intelligence — trade proposals, risk checks, journals, performance reports, and public accountability updates.
+
+```bash
+pip install tradia
+```
+
+## Usage
+
+```python
+from tradia import TradiaClient
+
+client = TradiaClient(api_key="your_talocode_key")
+plan = client.agent_plan(symbol="XAUUSD", strategy="trend_continuation")
+print(plan["result"]["thesis"])
+```
+
+## CLI
+
+```bash
+tradia health
+tradia propose --data '{"symbol":"XAUUSD","strategy":"trend_continuation","accountBalance":10000,"riskPercent":1,"entry":1950,"stopLoss":1940,"takeProfit":1970}'
+```
+
+Requires `TALOCODE_API_KEY` environment variable or pass `--cloud` with `api_key` parameter.

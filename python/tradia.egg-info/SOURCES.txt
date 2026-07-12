@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+tradia/__init__.py
+tradia/__main__.py
+tradia/client.py
+tradia.egg-info/PKG-INFO
+tradia.egg-info/SOURCES.txt
+tradia.egg-info/dependency_links.txt
+tradia.egg-info/entry_points.txt
+tradia.egg-info/top_level.txt
